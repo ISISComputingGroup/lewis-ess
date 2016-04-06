@@ -1,0 +1,152 @@
+<?xml version='1.0'?>
+<!DOCTYPE qfsmproject SYSTEM 'qfsm.dtd'>
+<qfsmproject version="0.54" author="Qfsm">
+  <machine nummooreout="0" transfontitalic="0" draw_it="1" statefontsize="8" transfont="Helvetica" statefontitalic="0" author="" description="" version="" name="CHIC" arrowtype="1" numbits="5" statefontweight="50" statefont="Helvetica" numin="0" transfontsize="8" transfontweight="50" type="2" numout="0" initialstate="22">
+    <outputnames_moore></outputnames_moore>
+    <inputnames></inputnames>
+    <outputnames></outputnames>
+    <itransition ypos="560" endx="410" xpos="360" endy="560"/>
+    <state pencolor="0" exit_actions="" radius="40" description="" finalstate="0" entry_actions="" moore_outputs="" ypos="560" code="1" xpos="810" linewidth="1">Resting</state>
+    <state pencolor="0" exit_actions="" radius="35" description="" finalstate="0" entry_actions="" moore_outputs="" ypos="670" code="2" xpos="920" linewidth="1">Delevitating</state>
+    <state pencolor="0" exit_actions="" radius="40" description="" finalstate="0" entry_actions="" moore_outputs="" ypos="560" code="3" xpos="1040" linewidth="1">Levitated</state>
+    <state pencolor="0" exit_actions="" radius="35" description="" finalstate="0" entry_actions="" moore_outputs="" ypos="450" code="4" xpos="920" linewidth="1">Levitating</state>
+    <state pencolor="0" exit_actions="" radius="35" description="" finalstate="0" entry_actions="" moore_outputs="" ypos="260" code="5" xpos="1450" linewidth="1">Speed setting</state>
+    <state pencolor="0" exit_actions="" radius="40" description="" finalstate="0" entry_actions="" moore_outputs="" ypos="470" code="6" xpos="1450" linewidth="1">Rotating</state>
+    <state pencolor="0" exit_actions="" radius="35" description="" finalstate="0" entry_actions="" moore_outputs="" ypos="470" code="7" xpos="1760" linewidth="1">Phase locking</state>
+    <state pencolor="0" exit_actions="" radius="40" description="" finalstate="0" entry_actions="" moore_outputs="" ypos="470" code="8" xpos="1970" linewidth="1">Phase locked</state>
+    <state pencolor="0" exit_actions="" radius="40" description="" finalstate="0" entry_actions="" moore_outputs="" ypos="680" code="9" xpos="1450" linewidth="1">Stopping</state>
+    <state pencolor="0" exit_actions="" radius="40" description="" finalstate="0" entry_actions="" moore_outputs="" ypos="560" code="22" xpos="450" linewidth="1">Init</state>
+    <transition c1x="857.2732683844649" c2y="493.7377344785321" c1y="512.7267316155351" description="" straight="1" type="2" ypos="531.7157287525381" endx="895.2512626584709" xpos="838.2842712474619" endy="474.7487373415291" c2x="876.2622655214678">
+      <from>1</from>
+      <to>4</to>
+      <inputs default="0" any="0" invert="0">levitate</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="733.2869758809189" c2y="604.3835321650367" c1y="610.1671619514789" description="" straight="0" type="2" ypos="577.8885438199983" endx="485.7770876399966" xpos="774.2229123600034" endy="577.8885438199983" c2x="524.1061807611086">
+      <from>1</from>
+      <to>22</to>
+      <inputs default="0" any="0" invert="0">Interlocks_released</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="868.8222219123155" c2y="614.8383702754942" c1y="636.3947287774747" description="" straight="1" type="2" ypos="657.9510872794551" endx="832.1880078490092" xpos="887.1393289439686" endy="593.2820117735138" c2x="850.5051148806623">
+      <from>2</from>
+      <to>1</to>
+      <inputs default="0" any="0" invert="0">delevitation_complete</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="989.3933982822017" c2y="626.2622655214678" c1y="607.2732683844649" description="" straight="1" type="2" ypos="588.2842712474619" endx="944.7487373415291" xpos="1011.715728752538" endy="645.2512626584709" c2x="967.0710678118654">
+      <from>3</from>
+      <to>2</to>
+      <inputs default="0" any="0" invert="0">delevitate</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1126.89561265889" c2y="264.4100311785484" c1y="347.2014811698285" description="" straight="0" type="2" ypos="521.1942999941867" endx="1415" xpos="1049.701425001453" endy="260" c2x="1176.41721235419">
+      <from>3</from>
+      <to>5</to>
+      <inputs default="0" any="0" invert="0">set_speed</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="967.8371779634181" c2y="512.3250017649824" c1y="492.9342747774267" description="" straight="1" type="2" ypos="473.5435477898709" endx="1011.715728752538" xpos="945.8979025688581" endy="531.7157287525381" c2x="989.776453357978">
+      <from>4</from>
+      <to>3</to>
+      <inputs default="0" any="0" invert="0">levitation_complete</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1509.030969256891" c2y="386.9261019883963" c1y="345.038325680526" description="" straight="0" type="2" ypos="289.1217603018245" endx="1467.888543819998" xpos="1469.414506867883" endy="434.2229123600034" c2x="1512.627843330923">
+      <from>5</from>
+      <to>6</to>
+      <inputs default="0" any="0" invert="0">speed_setpoint_reached</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="2365.377354807883" c2y="1205.379889470703" c1y="-131.0173086985898" description="" straight="0" type="2" ypos="240.585493132117" endx="1482" xpos="1479.121760301824" endy="704" c2x="2146.63294931394">
+      <from>5</from>
+      <to>9</to>
+      <inputs default="0" any="0" invert="0">stop</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1346.29038227341" c2y="145.5491026024824" c1y="210.3077954704714" description="" straight="1" type="2" ypos="237.2223019290409" endx="1444.284371557255" xpos="1423.426018917215" endy="225.4698451856281" c2x="1461.224619588338">
+      <from>5</from>
+      <to>5</to>
+      <inputs default="0" any="0" invert="0">set_speed</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1388.736492478033" c2y="348.3205029433784" c1y="387.5192455849324" description="" straight="0" type="2" ypos="436.7179882264862" endx="1430.585493132117" xpos="1427.811992150991" endy="289.1217603018245" c2x="1389.660992805075">
+      <from>6</from>
+      <to>5</to>
+      <inputs default="0" any="0" invert="0">set_speed</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1568.333333333333" c2y="470" c1y="470" description="" straight="1" type="2" ypos="470" endx="1725" xpos="1490" endy="470" c2x="1646.666666666667">
+      <from>6</from>
+      <to>7</to>
+      <inputs default="0" any="0" invert="0">lock_phase</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1450.605904553011" c2y="596.6632244739326" c1y="553.3264489478652" description="" straight="1" type="2" ypos="509.9896734217977" endx="1450.000001230769" xpos="1450.908856214132" endy="640" c2x="1450.30295289189">
+      <from>6</from>
+      <to>9</to>
+      <inputs default="0" any="0" invert="0">stop</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1825.135945065623" c2y="431.1105671495375" c1y="427.7281127576427" description="" straight="0" type="2" ypos="458.9320281894107" endx="1931.194299994187" xpos="1793.203915431768" endy="460.2985749985467" c2x="1896.912289942895">
+      <from>7</from>
+      <to>8</to>
+      <inputs default="0" any="0" invert="0">phase_lock_obtained</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1671.261512363485" c2y="638.7561488797169" c1y="579.1031556113496" description="" straight="0" type="2" ypos="494.7487373415291" endx="1488.805700005813" xpos="1735.251262658471" endy="670.2985749985467" c2x="1612.077462074313">
+      <from>7</from>
+      <to>9</to>
+      <inputs default="0" any="0" invert="0">stop</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1673.617783576184" c2y="362.8627521249547" c1y="394.0848323079696" description="" straight="1" type="2" ypos="440.8782396981755" endx="1763.846731592316" xpos="1740.585493132117" endy="435.2120328841038" c2x="1801.792464844289">
+      <from>7</from>
+      <to>7</to>
+      <inputs default="0" any="0" invert="0">set_phase</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1863.350889359326" c2y="266.6666666666667" c1y="315.3860014113128" description="" straight="0" type="2" ypos="432.0526680779794" endx="1485" xpos="1957.350889359326" endy="260" c2x="1671">
+      <from>8</from>
+      <to>5</to>
+      <inputs default="0" any="0" invert="0">set_speed</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1902.595605138109" c2y="510.7799530176488" c1y="515.0574156049831" description="" straight="0" type="2" ypos="479.7014250014533" endx="1793.203915431768" xpos="1931.194299994187" endy="481.0679718105893" c2x="1833.006525719613">
+      <from>8</from>
+      <to>7</to>
+      <inputs default="0" any="0" invert="0">set_phase</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1825.834974711172" c2y="677.7177011126716" c1y="631.2473943763341" description="" straight="0" type="2" ypos="505.7770876399966" endx="1490" xpos="1952.111456180002" endy="680" c2x="1649.558493242343">
+      <from>8</from>
+      <to>9</to>
+      <inputs default="0" any="0" invert="0">stop</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1263.550068490155" c2y="740.114660332986" c1y="765.1896404432459" description="" straight="0" type="2" ypos="708.2842712474619" endx="953.203915431768" xpos="1421.715728752538" endy="681.0679718105894" c2x="1140.262091187334">
+      <from>9</from>
+      <to>2</to>
+      <inputs default="0" any="0" invert="0">stopped</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1534.000676654467" c2y="788.2447376411487" c1y="765.6964778832348" description="" straight="1" type="2" ypos="714.8391387097171" endx="1442.660787906586" xpos="1469.652847477277" endy="719.3209354650661" c2x="1398.201575574166">
+      <from>9</from>
+      <to>9</to>
+      <inputs default="0" any="0" invert="0">stop</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="1267.112284231573" c2y="413.0405937760077" c1y="643.1467061547419" description="" straight="0" type="2" ypos="677.7811992150992" endx="1420.878239698176" xpos="1410.061585871784" endy="279.414506867883" c2x="1237.91733929312">
+      <from>9</from>
+      <to>5</to>
+      <inputs default="0" any="0" invert="0">set_speed</inputs>
+      <outputs></outputs>
+    </transition>
+    <transition c1x="539.2253986003137" c2y="528.0304988338846" c1y="523.9480393564197" description="" straight="0" type="2" ypos="550.2985749985467" endx="771.1942999941867" xpos="488.8057000058133" endy="550.2985749985467" c2x="724.5867391350217">
+      <from>22</from>
+      <to>1</to>
+      <inputs default="0" any="0" invert="0">Interlocks_fulfilled</inputs>
+      <outputs></outputs>
+    </transition>
+  </machine>
+</qfsmproject>
