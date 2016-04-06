@@ -10,6 +10,7 @@ The design should closely model the physical choppers. For our current purposes 
  - `Motor`: Here we probably don't need any more granularity at the moment. Sub-classes should implement concrete behavior, such as delays when setting speed/phase, speed- and phase jitter, and so on.
  - `Disc`: This does currently nothing, so maybe we can leave it out in the first approximation. Later on I think this should contain the geometry of the disc (diameter, cut-outs, position of TDC and so on).
  - `ReferencePulseSource`: Not sure about the naming on this one, but we need something that actually gives us a pulse with respect to which the phase is defined.
+ - `InterlockSystem`: This will probably be something that we could choose to attach to a chopper so that it won't start unless this object says it's okay for the chopper to start operation.
  
 The `Bearing` and `Motor` classes will have some internal state machines according to the document we had before. Although they seem connected at first I think there's merit in separating them from each other (especially since the state machine of a `MechanicalBearing` will be very different from the `MagneticBearing`-machine). Furthermore it will be easier to test and change the state machines inside these classes compared to a monolithic one.
 
