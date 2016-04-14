@@ -34,4 +34,22 @@ exposed:
 | DIRECTION  |  Enum for rotation direction (clockwise, counter clockwise). | - | Read/Write |
 | COMMAND  |  String field to accept commands. | - | Read/Write |
 
+**Possible values for STATE**
+- Delevitated
+- Levitating
+- Delevitating
+- Levitated
+- Locking
+- Locked
+- Coasting
+- Parking
+- Parked
+- Error
 
+**Possible value for COMMAND**
+- START: Speed and phase are adjusted to match the corresponding setpoints
+- COAST: Switch off motor, but do not actively decelerate disc
+- STOP: Go to velocity 0, disc remains levitated
+- PARK: Go to velocity 0, disc remains levitated, is rotated to PARKEDANGLE:SP
+- LEVITATE: Levitate disc if it's not levitated
+- DELEVITATE: Delevitate disc if possible
