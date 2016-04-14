@@ -46,7 +46,7 @@ exposed:
 - Parked
 - Error
 
-**Possible value for COMMAND**
+**Possible values for COMMAND**
 - START: Speed and phase are adjusted to match the corresponding setpoints
 - COAST: Switch off motor, but do not actively decelerate disc
 - STOP: Go to velocity 0, disc remains levitated
