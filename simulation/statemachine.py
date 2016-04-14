@@ -14,10 +14,10 @@ class StateMachine(object):
         self._handler = {}      # Nested dict mapping [state][event] = handler
         self._transition = {}   # Nested dict mapping [from_state][to_state] = transition
         self._prefix = {        # Default prefixes used when calling handler/transition functions by name
-            'on_entry':   'on_entry_',
-            'in_state':   'in_state_',
-            'on_exit':    'on_exit_',
-            'transition': 'check_'
+            'on_entry':   '_on_entry_',
+            'in_state':   '_in_state_',
+            'on_exit':    '_on_exit_',
+            'transition': '_check_'
         }
 
         # The None state represents the condition when the machine has not yet entered
@@ -153,7 +153,7 @@ class SimpleChopper(object):
                 ('idle',            'off',              lambda: not self.power_switch),
                 ('idle',            'adjust_speed',     'target_speed_changed'),
 
-                ('adjust_speed',    'speed_locked',     self.check_target_speed_reached),
+                ('adjust_speed',    'speed_locked',     self._check_target_speed_reached),
                 ('adjust_speed',    'stopping',         'target_speed_zero'),
 
                 ('speed_locked',    'adjust_speed',     'target_speed_changed'),
@@ -194,34 +194,34 @@ class SimpleChopper(object):
     def speed(self, value): self._speed_target = value
 
     # Condition Functions (called by name based on init
-    def check_target_speed_changed(self):
+    def _check_target_speed_changed(self):
         return self._speed_target != self._speed and self._speed_target != 0
 
-    def check_target_speed_reached(self):
+    def _check_target_speed_reached(self):
         return self._speed_target == self._speed and self._speed_target != 0
 
-    def check_target_speed_zero(self):
+    def _check_target_speed_zero(self):
         return self._speed_target == 0
 
     # State Handlers
-    def on_entry_off(self, dt):
+    def _on_entry_off(self, dt):
         self._init_vars()
 
-    def on_exit_off(self, dt):
+    def _on_exit_off(self, dt):
         print "Hello World! Initializing bearings!"
         self._timer_bearings = 3.0
 
-    def in_state_parked(self, dt):
+    def _in_state_parked(self, dt):
         if self._timer_bearings > 0:
             self._timer_bearings -= dt
 
         if self._timer_bearings <= 0:
             self._bearings_ready = True
 
-    def on_exit_parked(self, dt):
+    def _on_exit_parked(self, dt):
         print "Bearings initialized, ready to go!"
 
-    def in_state_idle(self, dt):
+    def _in_state_idle(self, dt):
         # Decelerate gradually if we're still spinning
         if self._speed > 0:
             self._speed -= ((self._speed / 5) * dt)
@@ -229,14 +229,14 @@ class SimpleChopper(object):
         if self._speed < 0:
             self._speed = 0
 
-    def in_state_adjust_speed(self, dt):
+    def _in_state_adjust_speed(self, dt):
         # Approach target speed, rate based on dt
         if abs(self._speed - self._speed_target) < 0.1:
             self._speed = self._speed_target
         else:
             self._speed += ((self._speed_target - self._speed) / (3 / dt))
 
-    def in_state_stopping(self, dt):
+    def _in_state_stopping(self, dt):
         # Decelerate quickly based on dt
         if self._speed < 0.1:
             self._speed = 0
