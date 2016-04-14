@@ -24,8 +24,15 @@ exposed:
 
 | PV  | Description  | Unit | Access |
 |---|---|---|---|---|
-| speed  |  Current rotation speed of the chopper disc. | Hz  | Read |
-| speed:sp  | Speed setpoint.  | Hz | Read/Write |
-| phase  |  Current phase of the chopper disc. | Degree | Read |
-| phase:sp  |  Phase setpoint | Degree | Read/Write |
+| SPEED  |  Current rotation speed of the chopper disc. | Hz  | Read |
+| PHASE  |  Current phase of the chopper disc. | Degree | Read |
+| STATE  |  Enum for chopper state. | - | Read |
+| TDCE  |  Vector of TDC (top dead center) events in last accelerator pulse. | to be determined | Read |
+
+| SPEED:SP  | Speed setpoint.  | Hz | Read/Write |
+| PHASE:SP  |  Phase setpoint. | Degree | Read/Write |
+| PARKEDANGLE:SP  |  Position to which the disc should rotate in parked state. | Degree | Read/Write |
+| DIRECTION  |  Enum for rotation direction (clockwise, counter clockwise). | - | Read/Write |
+| COMMAND  |  String field to accept commands. | - | Read/Write |
+
 
