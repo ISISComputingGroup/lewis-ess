@@ -28,7 +28,6 @@ exposed:
 | PHASE  |  Current phase of the chopper disc. | Degree | Read |
 | STATE  |  Enum for chopper state. | - | Read |
 | TDCE  |  Vector of TDC (top dead center) events in last accelerator pulse. | to be determined | Read |
-
 | SPEED:SP  | Speed setpoint.  | Hz | Read/Write |
 | PHASE:SP  |  Phase setpoint. | Degree | Read/Write |
 | PARKEDANGLE:SP  |  Position to which the disc should rotate in parked state. | Degree | Read/Write |
