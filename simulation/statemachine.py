@@ -327,7 +327,7 @@ if __name__ == '__main__':
     for x in xrange(100):
         chop.process(0.5)
         t += 0.5
-        print "Tick: %.1f | State: %s | --> speed = %.1f" % (t, chop.state, chop.speed)
+        print "Tick: %.1f | State: %s | Speed: %.1f" % (t, chop.state, chop.speed)
         sleep(0.25)
         if chop.speed == 0:
             break
