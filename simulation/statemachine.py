@@ -1,5 +1,6 @@
 # pylint: disable=W0201
 
+
 class StateMachineException(Exception):
     pass
 
@@ -50,9 +51,9 @@ class StateMachine(object):
             self._initial = cfg['initial']
 
         for from_state, to_state, check_func in cfg.get('transitions', []):
-            if from_state not in self._state:
+            if from_state not in self._handler:
                 self._add_state(from_state)
-            if to_state not in self._state:
+            if to_state not in self._handler:
                 self._add_state(to_state)
             self._add_transition(from_state, to_state, check_func)
 
@@ -123,7 +124,7 @@ class StateMachine(object):
         handler = self._handler[self._state][event]
 
         if handler and not callable(handler):
-            handler = getattr(self._target, handler)
+            handler = getattr(self._target, handler, None)
 
         if handler and callable(handler):
             handler(dt)
@@ -141,7 +142,7 @@ class SimpleChopper(object):
 
     def __init__(self):
         self._csm = StateMachine(self, {
-            'initial': 'init',
+            'initial': 'off',
             'transitions': [
                 # From State        To State            Condition Function
                 ('off',             'parked',           lambda: self.power_switch),
@@ -192,12 +193,12 @@ class SimpleChopper(object):
     @speed.setter
     def speed(self, value): self._speed_target = value
 
-    # Condition Functions
+    # Condition Functions (called by name based on init
     def check_target_speed_changed(self):
-        return self._speed_target != self.speed
+        return self._speed_target != self._speed and self._speed_target != 0
 
     def check_target_speed_reached(self):
-        return self._speed_target == self.speed
+        return self._speed_target == self._speed and self._speed_target != 0
 
     def check_target_speed_zero(self):
         return self._speed_target == 0
@@ -208,7 +209,7 @@ class SimpleChopper(object):
 
     def on_exit_off(self, dt):
         print "Hello World! Initializing bearings!"
-        self._timer_init_bearings = 3.0
+        self._timer_bearings = 3.0
 
     def in_state_parked(self, dt):
         if self._timer_bearings > 0:
@@ -220,15 +221,67 @@ class SimpleChopper(object):
     def on_exit_parked(self, dt):
         print "Bearings initialized, ready to go!"
 
+    def in_state_idle(self, dt):
+        # Decelerate gradually if we're still spinning
+        if self._speed > 0:
+            self._speed -= ((self._speed / 5) * dt)
+
+        if self._speed < 0:
+            self._speed = 0
+
     def in_state_adjust_speed(self, dt):
-        # Modify speed based on dt
-        pass
+        # Approach target speed, rate based on dt
+        if abs(self._speed - self._speed_target) < 0.1:
+            self._speed = self._speed_target
+        else:
+            self._speed += ((self._speed_target - self._speed) / (3 / dt))
+
+    def in_state_stopping(self, dt):
+        # Decelerate quickly based on dt
+        if self._speed < 0.1:
+            self._speed = 0
+        else:
+            self._speed -= (self._speed / (3 / dt))
+
+
+from time import sleep
 
 if __name__ == '__main__':
     chop = SimpleChopper()
+    t = 0.0
 
-    while True:
-        # pcaspy.process() would be here
+    for x in xrange(5):
         chop.process(0.1)
+        t += 0.1
+        print "Tick", t
+        sleep(0.05)
 
+    chop.power_switch = True
 
+    for x in xrange(10):
+        chop.process(0.4)
+        t += 0.4
+        print "Tick", t
+        sleep(0.2)
+
+    print "Setting target speed to 60"
+    chop.speed = 60
+
+    for x in xrange(100):
+        chop.process(0.5)
+        t += 0.5
+        print "Tick", t, "--> speed =", chop.speed
+        sleep(0.25)
+        if chop.speed == 60:
+            break
+
+    print "Stopping chopper"
+    chop.speed = 0
+
+    for x in xrange(100):
+        chop.process(0.5)
+        t += 0.5
+        print "Tick", t, "--> speed =", chop.speed
+        sleep(0.25)
+        if chop.speed == 0:
+            break
