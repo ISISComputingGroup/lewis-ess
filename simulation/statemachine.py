@@ -50,12 +50,16 @@ class StateMachine(object):
         if 'initial' in cfg:
             self._initial = cfg['initial']
 
+        # TODO: Allow user to explicitly specify states and their handlers?
+
         for from_state, to_state, check_func in cfg.get('transitions', []):
             if from_state not in self._handler:
                 self._add_state(from_state)
             if to_state not in self._handler:
                 self._add_state(to_state)
             self._add_transition(from_state, to_state, check_func)
+
+        # TODO: Allow user to override handler prefix settings?
 
     def process(self, dt):
         """
@@ -152,12 +156,14 @@ class SimpleChopper(object):
 
                 ('idle',            'off',              lambda: not self.power_switch),
                 ('idle',            'adjust_speed',     'target_speed_changed'),
+                ('idle',            'stopping',         'target_speed_zero'),
 
                 ('adjust_speed',    'speed_locked',     self._check_target_speed_reached),
                 ('adjust_speed',    'stopping',         'target_speed_zero'),
 
                 ('speed_locked',    'adjust_speed',     'target_speed_changed'),
                 ('speed_locked',    'stopping',         'target_speed_zero'),
+                ('speed_locked',    'idle',             lambda: not self._speed_locked),
 
                 ('stopping',        'idle',             lambda: self.speed == 0),
             ]
@@ -171,13 +177,17 @@ class SimpleChopper(object):
         self._bearings_ready = False
         self._speed = 0
         self._speed_target = 0
+        self._speed_locked = False
+        self._command_issued = False
 
         # Internal
         self._timer_bearings = 0
 
+    # Client should call this to trigger a cycle
     def process(self, dt):
         self._csm.process(dt)
 
+    # Properties and functions that the client can access
     @property
     def power_switch(self): return self._power_switch
 
@@ -190,20 +200,29 @@ class SimpleChopper(object):
     @property
     def speed(self): return self._speed
 
-    @speed.setter
-    def speed(self, value): self._speed_target = value
+    @property
+    def state(self): return self._csm.state
 
-    # Condition Functions (called by name based on init
+    @property
+    def speed_locked(self): return self._speed_locked
+
+    def unlock(self): self._speed_locked = False
+
+    def speed_command(self, speed):
+        self._speed_target = speed
+        self._command_issued = True
+
+    # Condition Functions (StateMachine calls these by name, based on init settings)
     def _check_target_speed_changed(self):
-        return self._speed_target != self._speed and self._speed_target != 0
+        return self._speed_target != self._speed and self._speed_target != 0 and self._command_issued
 
     def _check_target_speed_reached(self):
         return self._speed_target == self._speed and self._speed_target != 0
 
     def _check_target_speed_zero(self):
-        return self._speed_target == 0
+        return self._speed_target == 0 and self._speed != 0 and self._command_issued
 
-    # State Handlers
+    # State Handlers (StateMachine calls these by name if defined, based on state names)
     def _on_entry_off(self, dt):
         self._init_vars()
 
@@ -223,11 +242,13 @@ class SimpleChopper(object):
 
     def _in_state_idle(self, dt):
         # Decelerate gradually if we're still spinning
-        if self._speed > 0:
-            self._speed -= ((self._speed / 5) * dt)
-
-        if self._speed < 0:
+        if self._speed < 0.1:
             self._speed = 0
+        else:
+            self._speed -= (self._speed / (8 / dt))
+
+    def _on_entry_adjust_speed(self, dt):
+        self._command_issued = False
 
     def _in_state_adjust_speed(self, dt):
         # Approach target speed, rate based on dt
@@ -235,6 +256,14 @@ class SimpleChopper(object):
             self._speed = self._speed_target
         else:
             self._speed += ((self._speed_target - self._speed) / (3 / dt))
+
+    def _on_entry_speed_locked(self, dt):
+        # Notice there's an exit condition from Speed_Locked to Idle based on _locked == False
+        # But this will not be checked until the next cycle, so setting it True here works fine
+        self._speed_locked = True
+
+    def _on_entry_stopping(self, dt):
+        self._command_issued = False
 
     def _in_state_stopping(self, dt):
         # Decelerate quickly based on dt
@@ -253,35 +282,58 @@ if __name__ == '__main__':
     for x in xrange(5):
         chop.process(0.1)
         t += 0.1
-        print "Tick", t
+        print "Tick: %.1f | State: %s | Speed: %.1f" % (t, chop.state, chop.speed)
         sleep(0.05)
 
     chop.power_switch = True
 
-    for x in xrange(10):
+    for x in xrange(12):
         chop.process(0.4)
         t += 0.4
-        print "Tick", t
+        print "Tick: %.1f | State: %s | Speed: %.1f" % (t, chop.state, chop.speed)
         sleep(0.2)
 
-    print "Setting target speed to 60"
-    chop.speed = 60
+    print "*** Setting target speed to 60 ***"
+    chop.speed_command(60)
 
     for x in xrange(100):
         chop.process(0.5)
         t += 0.5
-        print "Tick", t, "--> speed =", chop.speed
+        print "Tick: %.1f | State: %s | Speed: %.1f" % (t, chop.state, chop.speed)
         sleep(0.25)
         if chop.speed == 60:
             break
 
-    print "Stopping chopper"
-    chop.speed = 0
+    for x in xrange(4):
+        chop.process(0.5)
+        t += 0.5
+        print "Tick: %.1f | State: %s | Speed: %.1f" % (t, chop.state, chop.speed)
+        sleep(0.25)
+
+    print "*** Unlocking chopper ***"
+    chop.unlock()
 
     for x in xrange(100):
         chop.process(0.5)
         t += 0.5
-        print "Tick", t, "--> speed =", chop.speed
+        print "Tick: %.1f | State: %s | Speed: %.1f" % (t, chop.state, chop.speed)
+        sleep(0.25)
+        if chop.speed < 30:
+            break
+
+    print "*** Stopping chopper ***"
+    chop.speed_command(0)
+
+    for x in xrange(100):
+        chop.process(0.5)
+        t += 0.5
+        print "Tick: %.1f | State: %s | --> speed = %.1f" % (t, chop.state, chop.speed)
         sleep(0.25)
         if chop.speed == 0:
             break
+
+    for x in xrange(4):
+        chop.process(0.5)
+        t += 0.5
+        print "Tick: %.1f | State: %s | Speed: %.1f" % (t, chop.state, chop.speed)
+        sleep(0.25)
