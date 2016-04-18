@@ -52,6 +52,8 @@ class SimDriver(Driver):
                 self.setParam(pv, binding['value_func']())
                 binding['poll_timer'] = 0
 
+        self.updatePVs()
+
 
 if __name__ == '__main__':
     """
