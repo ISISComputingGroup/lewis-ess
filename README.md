@@ -9,9 +9,6 @@ the state machine. While this is still work in progress, it gives an idea of how
 
 ## Python module
 
-The state machine that is sketched in the document mentioned above is implemented in Python using the
-[Fysom](https://pypi.python.org/pypi/fysom) library, which can be installed via the requirements file in simulation directory:
-
 ```
 pip install -r simulation/requirements.txt
 ```
