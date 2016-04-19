@@ -1,34 +1,39 @@
-from statemachine import StateMachine
+from simulation import StateMachine
+from simulation import CanProcessComposite
 
 
-class SimpleChopper(object):
+class SimpleChopper(CanProcessComposite, object):
     def print_status(self):
         pass
 
     def __init__(self):
+        super(SimpleChopper, self).__init__()
+
         self._csm = StateMachine(self, {
             'initial': 'off',
             'transitions': [
                 # From State        To State            Condition Function
-                ('off',             'parked',           lambda: self.power_switch),
+                ('off', 'parked', lambda: self.power_switch),
 
-                ('parked',          'off',              lambda: not self.power_switch),
-                ('parked',          'idle',             lambda: self.bearings_ready),
+                ('parked', 'off', lambda: not self.power_switch),
+                ('parked', 'idle', lambda: self.bearings_ready),
 
-                ('idle',            'off',              lambda: not self.power_switch),
-                ('idle',            'adjust_speed',     'target_speed_changed'),
-                ('idle',            'stopping',         'target_speed_zero'),
+                ('idle', 'off', lambda: not self.power_switch),
+                ('idle', 'adjust_speed', 'target_speed_changed'),
+                ('idle', 'stopping', 'target_speed_zero'),
 
-                ('adjust_speed',    'speed_locked',     self._check_target_speed_reached),
-                ('adjust_speed',    'stopping',         'target_speed_zero'),
+                ('adjust_speed', 'speed_locked', self._check_target_speed_reached),
+                ('adjust_speed', 'stopping', 'target_speed_zero'),
 
-                ('speed_locked',    'adjust_speed',     'target_speed_changed'),
-                ('speed_locked',    'stopping',         'target_speed_zero'),
-                ('speed_locked',    'idle',             lambda: not self._speed_locked),
+                ('speed_locked', 'adjust_speed', 'target_speed_changed'),
+                ('speed_locked', 'stopping', 'target_speed_zero'),
+                ('speed_locked', 'idle', lambda: not self._speed_locked),
 
-                ('stopping',        'idle',             lambda: self.speed == 0),
+                ('stopping', 'idle', lambda: self.speed == 0),
             ]
         })
+
+        self.__iadd__(self._csm)
 
         self._init_vars()
 
@@ -44,30 +49,33 @@ class SimpleChopper(object):
         # Internal
         self._timer_bearings = 0
 
-    # Client should call this to trigger a cycle
-    def process(self, dt):
-        self._csm.process(dt)
-
     # Properties and functions that the client can access
     @property
-    def power_switch(self): return self._power_switch
+    def power_switch(self):
+        return self._power_switch
 
     @power_switch.setter
-    def power_switch(self, value): self._power_switch = True if value else False
+    def power_switch(self, value):
+        self._power_switch = True if value else False
 
     @property
-    def bearings_ready(self): return self._bearings_ready
+    def bearings_ready(self):
+        return self._bearings_ready
 
     @property
-    def speed(self): return self._speed
+    def speed(self):
+        return self._speed
 
     @property
-    def state(self): return self._csm.state
+    def state(self):
+        return self._csm.state
 
     @property
-    def speed_locked(self): return self._speed_locked
+    def speed_locked(self):
+        return self._speed_locked
 
-    def unlock(self): self._speed_locked = False
+    def unlock(self):
+        self._speed_locked = False
 
     def speed_command(self, speed):
         self._speed_target = speed
@@ -101,7 +109,7 @@ class SimpleChopper(object):
             self._timer_bearings -= dt
 
         if self._timer_bearings <= 0:
-            self._bearings_ready = True     # Will trigger transition on next cycle
+            self._bearings_ready = True  # Will trigger transition on next cycle
 
     def _on_exit_parked(self, dt):
         print "Bearings initialized, ready to go!"

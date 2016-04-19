@@ -1,8 +1,11 @@
+from processor import CanProcess
+
+
 class StateMachineException(Exception):
     pass
 
 
-class StateMachine(object):
+class StateMachine(CanProcess, object):
     def __init__(self, target, cfg):
         """
         Cycle based state machine.
@@ -29,18 +32,20 @@ class StateMachine(object):
         Only one transition may occur per cycle. Every cycle will, at the very least,
         trigger a in_state event against the current state. See process() for details.
         """
+        super(StateMachine, self).__init__()
+
         self._target = None
         self._initial = None
         self._state = None
 
-        self._handler = {}      # Nested dict mapping [state][event] = handler
-        self._transition = {}   # Nested dict mapping [from_state][to_state] = transition
-        self._prefix = {        # Default prefixes used when calling handler/transition functions by name
-            'on_entry':   '_on_entry_',
-            'in_state':   '_in_state_',
-            'on_exit':    '_on_exit_',
-            'transition': '_check_'
-        }
+        self._handler = {}  # Nested dict mapping [state][event] = handler
+        self._transition = {}  # Nested dict mapping [from_state][to_state] = transition
+        self._prefix = {  # Default prefixes used when calling handler/transition functions by name
+                          'on_entry': '_on_entry_',
+                          'in_state': '_in_state_',
+                          'on_exit': '_on_exit_',
+                          'transition': '_check_'
+                          }
 
         # The None state represents the condition when the machine has not yet entered
         # the initial state. This will be the case before the first cycle and immediately
@@ -83,7 +88,7 @@ class StateMachine(object):
                 self._add_state(to_state)
             self._add_transition(from_state, to_state, check_func)
 
-        # TODO: Allow user to override handler prefix settings?
+            # TODO: Allow user to override handler prefix settings?
 
     def process(self, dt):
         """
@@ -153,7 +158,7 @@ class StateMachine(object):
 
         self._handler[state] = {'on_entry': on_entry,
                                 'in_state': in_state,
-                                'on_exit':  on_exit}
+                                'on_exit': on_exit}
 
     def _add_transition(self, from_state, to_state, transition_check):
         """

@@ -1,7 +1,10 @@
-from pcaspy import Driver, SimpleServer
-from cycle_demo_sim import SimpleChopper
 from datetime import datetime
 
+from pcaspy import Driver, SimpleServer
+
+from simulation import CanProcess
+
+from cycle_demo_sim import SimpleChopper
 
 prefix = 'SIM:'
 pvdb = {
@@ -16,7 +19,7 @@ pvdb = {
 }
 
 
-class SimDriver(Driver):
+class SimDriver(CanProcess, Driver):
     def __init__(self, chopper):
         super(SimDriver, self).__init__()
 
@@ -85,9 +88,9 @@ if __name__ == '__main__':
     driver.bindParam('BEARINGS_READY', lambda: chopper.bearings_ready, 1.0)
     driver.bindParam('STATE', lambda: chopper.state, 0.1)
 
-    delta = 0.0     # Delta between cycles
-    count = 0       # Cycles per second counter
-    timer = 0.0     # Second counter
+    delta = 0.0  # Delta between cycles
+    count = 0  # Cycles per second counter
+    timer = 0.0  # Second counter
     while True:
         start = datetime.now()
 
