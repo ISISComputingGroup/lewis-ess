@@ -90,7 +90,7 @@ class StateMachine(CanProcess, object):
 
             # TODO: Allow user to override handler prefix settings?
 
-    def process(self, dt):
+    def doProcess(self, dt):
         """
         Process a cycle of this state machine.
 

@@ -33,7 +33,7 @@ class SimpleChopper(CanProcessComposite, object):
             ]
         })
 
-        self.__iadd__(self._csm)
+        self.addProcessor(self._csm)
 
         self._init_vars()
 

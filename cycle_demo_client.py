@@ -47,7 +47,7 @@ class SimDriver(CanProcess, Driver):
             'poll_timer': 0.0
         }
 
-    def process(self, dt):
+    def doProcess(self, dt):
         # Updates bound parameters as needed
         for pv, binding in self._bindings.iteritems():
             binding['poll_timer'] += dt
