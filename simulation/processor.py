@@ -3,14 +3,32 @@ class CanProcess(object):
     The CanProcess class is meant as a base for all things that
     are able to process on the bases of a time delta (dt).
 
-    Subclasses should implement the process-method.
+    The base implementation does nothing.
+
+    There are three methods that can be implemented by sub-classes and are called in the process-method in this order:
+
+        1. doBeforeProcess
+        2. doProcess
+        3. doAfterProcess
+
+    The doBefore- and doAfterProcess methods are only called if a doProcess-method exists.
     """
 
     def __init__(self):
         super(CanProcess, self).__init__()
 
+    def __call__(self, dt):
+        self.process(dt)
+
     def process(self, dt):
-        pass
+        if hasattr(self, 'doProcess'):
+            if hasattr(self, 'doBeforeProcess'):
+                self.doBeforeProcess(dt)
+
+            self.doProcess(dt)
+
+            if hasattr(self, 'doAfterProcess'):
+                self.doAfterProcess(dt)
 
 
 class CanProcessComposite(CanProcess):
@@ -21,13 +39,12 @@ class CanProcessComposite(CanProcess):
     Items can be added to the composite like this:
 
         composite = CanProcessComposite()
-        composite += item_that_implements_CanProcess
+        composite.addProcessor(item_that_implements_CanProcess)
 
     The process-method calls the process-method of each contained
-    item. Before doing that it calls the 'compositeProcess'-method
-    that can optionally be implemented by sub-classes to add some
-    processing specific to the composite and not captured in the
-    process-methods of the contained items.
+    item. Specific things that have to be done before or after the
+    containing items are processed can be implemented in the doBefore-
+    and doAfterProcess methods.
     """
 
     def __init__(self, iterable=()):
@@ -36,18 +53,15 @@ class CanProcessComposite(CanProcess):
         self._processors = []
 
         for item in iterable:
-            self.__iadd__(item)
+            self.addProcessor(item)
 
-    def __iadd__(self, other):
+    def addProcessor(self, other):
         if isinstance(other, CanProcess):
-            self._appendSimulation(other)
+            self._appendProcessor(other)
 
-    def _appendSimulation(self, other):
-        self._processors.append(other)
+    def _appendProcessor(self, processor):
+        self._processors.append(processor)
 
-    def process(self, dt):
-        if hasattr(self, 'compositeProcess'):
-            self.compositeProcess(dt)
-
-        for simulation in self._processors:
-            simulation.process(dt)
+    def doProcess(self, dt):
+        for processor in self._processors:
+            processor.process(dt)
