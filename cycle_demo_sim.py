@@ -9,29 +9,30 @@ class SimpleChopper(CanProcessComposite, object):
     def __init__(self):
         super(SimpleChopper, self).__init__()
 
-        self._csm = StateMachine(self, {
+        self._csm = StateMachine({
             'initial': 'off',
             'transitions': [
-                # From State        To State            Condition Function
+                # From State, To State, Condition Function
                 ('off', 'parked', lambda: self.power_switch),
 
                 ('parked', 'off', lambda: not self.power_switch),
                 ('parked', 'idle', lambda: self.bearings_ready),
 
                 ('idle', 'off', lambda: not self.power_switch),
-                ('idle', 'adjust_speed', 'target_speed_changed'),
-                ('idle', 'stopping', 'target_speed_zero'),
+                ('idle', 'adjust_speed', self._check_target_speed_changed),
+                ('idle', 'stopping', self._check_target_speed_zero),
 
                 ('adjust_speed', 'speed_locked', self._check_target_speed_reached),
-                ('adjust_speed', 'stopping', 'target_speed_zero'),
+                ('adjust_speed', 'stopping', self._check_target_speed_zero),
 
-                ('speed_locked', 'adjust_speed', 'target_speed_changed'),
-                ('speed_locked', 'stopping', 'target_speed_zero'),
+                ('speed_locked', 'adjust_speed', self._check_target_speed_changed),
+                ('speed_locked', 'stopping', self._check_target_speed_zero),
                 ('speed_locked', 'idle', lambda: not self._speed_locked),
 
                 ('stopping', 'idle', lambda: self.speed == 0),
             ]
         })
+        self._csm.bind_handlers_by_name(self)
 
         self.__iadd__(self._csm)
 
