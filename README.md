@@ -45,6 +45,7 @@ exposed:
 
 **Possible values for COMMAND**
 - START: Speed and phase are adjusted to match the corresponding setpoints
+- PHASE: Phase is adjusted to match the corresponding setpoint
 - COAST: Switch off motor, but do not actively decelerate disc
 - STOP: Go to velocity 0, disc remains levitated
 - PARK: Go to velocity 0, disc remains levitated, is rotated to PARKEDANGLE:SP
