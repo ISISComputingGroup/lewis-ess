@@ -116,7 +116,7 @@ class StateMachine(CanProcess):
                     if callable(named_handler):
                         self._handler[state][event] = named_handler
 
-    def process(self, dt):
+    def doProcess(self, dt):
         """
         Process a cycle of this state machine.
 
