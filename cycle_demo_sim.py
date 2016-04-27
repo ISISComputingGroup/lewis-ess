@@ -13,7 +13,7 @@ class SimpleChopper(CanProcessComposite, object):
             'initial': 'off',
             'transitions': [
                 # From State, To State, Condition Function
-                ('off', 'parked', lambda: self.power_switch),
+                ('off', 'bearings', lambda: self.power_switch),
 
                 ('parked', 'off', lambda: not self.power_switch),
                 ('parked', 'idle', lambda: self.bearings_ready),
