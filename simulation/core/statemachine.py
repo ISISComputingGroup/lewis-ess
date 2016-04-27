@@ -1,13 +1,56 @@
-from processor import CanProcess
-import inspect
+from simulation.core.processor import CanProcess
 
 
 class StateMachineException(Exception):
     pass
 
 
+# Derived from http://stackoverflow.com/a/3603824
+class Context(object):
+    __is_frozen = False
+
+    def __setattr__(self, key, value):
+        if self.__is_frozen and not hasattr(self, key):
+            raise StateMachineException("Class {} does not have attribute: '{}'".format(self.__class__.__name__, key))
+        object.__setattr__(self, key, value)
+
+    def _freeze(self):
+        self.__is_frozen = True
+
+
+class HasContext(object):
+    def __init__(self):
+        super(HasContext, self).__init__()
+        self._context = None
+
+    def setContext(self, new_context):
+        self._context = new_context
+
+
+class State(HasContext):
+    def __init__(self):
+        super(State, self).__init__()
+
+    def in_state(self, dt):
+        pass
+
+    def on_entry(self, dt):
+        pass
+
+    def on_exit(self, dt):
+        pass
+
+
+class Transition(HasContext):
+    def __init__(self):
+        super(Transition, self).__init__()
+
+    def __call__(self):
+        return True
+
+
 class StateMachine(CanProcess):
-    def __init__(self, cfg):
+    def __init__(self, cfg, context=None):
         """
         Cycle based state machine.
 
@@ -35,10 +78,10 @@ class StateMachine(CanProcess):
         self._handler = {}  # Nested dict mapping [state][event] = handler
         self._transition = {}  # Dict mapping [from_state] = [ (to_state, transition), ... ]
         self._prefix = {  # Default prefixes used when calling handler functions by name
-                          'on_entry': '_on_entry_',
-                          'in_state': '_in_state_',
-                          'on_exit': '_on_exit_',
-                          }
+            'on_entry': '_on_entry_',
+            'in_state': '_in_state_',
+            'on_exit': '_on_exit_',
+        }
 
         # Specifying an initial state is not optional
         if 'initial' not in cfg:
@@ -48,8 +91,13 @@ class StateMachine(CanProcess):
 
         # Allow user to explicitly specify state handlers
         for state_name, handlers in cfg.get('states', {}).iteritems():
+            if isinstance(handlers, HasContext):
+                handlers.setContext(context)
+
             try:
-                if isinstance(handlers, dict):
+                if isinstance(handlers, State):
+                    self._set_handlers(state_name, handlers.on_entry, handlers.in_state, handlers.on_exit)
+                elif isinstance(handlers, dict):
                     self._set_handlers(state_name, **handlers)
                 elif hasattr(handlers, '__iter__'):
                     self._set_handlers(state_name, *handlers)
@@ -59,12 +107,17 @@ class StateMachine(CanProcess):
                 raise StateMachineException(
                     "Failed to parse state handlers for state '%s'. Must be dict or iterable." % state_name)
 
-        for from_state, to_state, check_func in cfg.get('transitions', []):
+        for states, check_func in cfg.get('transitions', {}).iteritems():
+            from_state, to_state = states
+
             # Set up default handlers if this state hasn't been mentioned before
             if from_state not in self._handler:
                 self._set_handlers(from_state)
             if to_state not in self._handler:
                 self._set_handlers(to_state)
+
+            if isinstance(check_func, HasContext):
+                check_func.setContext(context)
 
             # Set up the transition
             self._set_transition(from_state, to_state, check_func)
