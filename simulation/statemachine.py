@@ -33,12 +33,12 @@ class StateMachine(CanProcess):
 
         self._state = None  # We start outside of any state, first cycle enters initial state
         self._handler = {}  # Nested dict mapping [state][event] = handler
-        self._transition = {}  # Nested dict mapping [from_state][to_state] = transition
+        self._transition = {}  # Dict mapping [from_state] = [ (to_state, transition), ... ]
         self._prefix = {  # Default prefixes used when calling handler functions by name
-            'on_entry': '_on_entry_',
-            'in_state': '_in_state_',
-            'on_exit': '_on_exit_',
-        }
+                          'on_entry': '_on_entry_',
+                          'in_state': '_in_state_',
+                          'on_exit': '_on_exit_',
+                          }
 
         # Specifying an initial state is not optional
         if 'initial' not in cfg:
@@ -146,7 +146,7 @@ class StateMachine(CanProcess):
             return
 
         # General transition
-        for target_state, check_func in self._transition.get(self._state, {}).iteritems():
+        for target_state, check_func in self._transition.get(self._state, []):
             if check_func():
                 self._raise_event('on_exit', dt)
                 self._state = target_state
@@ -201,9 +201,14 @@ class StateMachine(CanProcess):
             raise StateMachineException("Transition condition must be callable.")
 
         if from_state not in self._transition.keys():
-            self._transition[from_state] = {}
+            self._transition[from_state] = []
 
-        self._transition[from_state][to_state] = transition_check
+        try:
+            del self._transition[from_state][[x[0] for x in self._transition[from_state]].index(to_state)]
+        except:
+            pass
+
+        self._transition[from_state].append((to_state, transition_check,))
 
     def _raise_event(self, event, dt):
         """

@@ -50,16 +50,105 @@ class SimulatedBearings(CanProcess, MagneticBearings):
         return self._csm.state == 'resting' and not self._levitate
 
 
+from abc import abstractproperty, abstractmethod
+
+
+class Parkable(object):
+    def __init__(self):
+        super(Parkable, self).__init__()
+        self.__in_progress = False
+
+    def park(self):
+        if self.canPark():
+            self.__in_progress = True
+
+            if hasattr(self, 'doPark'):
+                self.doPark()
+
+    @abstractmethod
+    def canPark(self):
+        return self._csm.can('stopped')
+
+    def doPark(self):
+        self._csm.start()
+
+    @abstractproperty
+    def parked(self):
+        pass
+
+    def __call__(self):
+
+    @abstractmethod
+    def parkingComplete(self):
+        pass
+
+    def _setParkingComplete(self):
+        self.__in_progress = False
+
+
+class Command(object):
+    def __init__(self):
+        self._triggered = False
+
+    def canTrigger(self):
+        pass
+
+    def doTrigger(self):
+        pass
+
+    @property
+    def triggered(self):
+        return caget('state') == 'parking'
+
+    def trigger(self):
+        if self.canTrigger():
+            self._triggered = True
+
+            self.doTrigger()
+
+    def reset(self):
+        self._triggered = False
+
+class Accelerating(object):
+    def __init__(self, obj):
+        self._obj = obj
+
+    def on_entry(self, dt):
+        pass
+
+    def in_state(self, dt):
+        pass
+
+    def on_exit(self, dt):
+        pass
+
+    def is_complete(self):
+        if isinstance(self._obj, 'HasSpeed'):
+            self._obj.speed == self._obj.speed_setpoint
+
+        return True
+
+class Idle(object):
+    def in_state(self, dt):
+        pass
+
+    def is_complete(self):
+        return True
+
+
+
 class SimulatedChopper(CanProcessComposite, object):
     def print_status(self):
         pass
 
-    def __init__(self):
+    def __init__(self, beschleuniger):
         super(SimulatedChopper, self).__init__()
 
         self._bearings = SimulatedBearings()
         self._interlocked = False
         self._in_shutdown = False
+
+        self.parking = Command()
 
         self._in_parking = False
         self._in_stopping = False
@@ -72,8 +161,8 @@ class SimulatedChopper(CanProcessComposite, object):
 
             'states': {
                 'bearings': {'in_state': self._bearings},
-                'parking': {'on_exit': self._setParkingComplete},
-                'accelerating': {'on_exit': self._setStartingComplete},
+                'parking': {'on_exit': self.parking.reset},
+                'accelerating': {'in_state': self._doStartingSimulation, 'on_exit': self._setStartingComplete},
                 'idle': {'on_entry': self._setIdlingComplete},
                 'phase_locking': {'on_exit': self._setPhaseLockingComplete},
                 'stopping': {'on_exit': self._setStoppingComplete},
@@ -86,7 +175,7 @@ class SimulatedChopper(CanProcessComposite, object):
                 ('stopped', 'bearings', lambda: self._in_shutdown),
                 ('bearings', 'init', lambda: self._bearings.idle),
 
-                ('stopped', 'parking', lambda: self._in_parking),
+                ('stopped', 'parking', lambda: self.parking.triggered and not self._parking_failure),
                 ('parking', 'parked', self.parkingComplete),
 
                 ('stopped', 'accelerating', lambda: self._in_starting),
@@ -104,7 +193,9 @@ class SimulatedChopper(CanProcessComposite, object):
                 ('parked', 'stopping', lambda: self._in_stopping),
                 ('idle', 'stopping', lambda: self._in_stopping),
 
+                ('stopping', 'accelerating', lambda: self._in_starting),
                 ('stopping', 'stopped', self.stoppingComplete),
+                ('stopping', 'idle', lambda: self._in_idling)
 
             ],
         })
@@ -124,19 +215,12 @@ class SimulatedChopper(CanProcessComposite, object):
         self._in_shutdown = True
         self._bearings.disengage()
 
-    # Parking stuff
     def park(self):
-        self._in_parking = True
+        self.parking.trigger()
 
     @property
     def parked(self):
         return self._csm.state == 'parked'
-
-    def parkingComplete(self):
-        return True
-
-    def _setParkingComplete(self):
-        self._in_parking = False
 
     # Stopping stuff
     def stop(self):
@@ -194,6 +278,11 @@ class SimulatedChopper(CanProcessComposite, object):
         self._in_locking = False
 
 
+def cycles(c, num):
+    for i in range(num):
+        c.process(0.1)
+
+
 if __name__ == '__main__':
     c = SimulatedChopper()
 
@@ -201,30 +290,42 @@ if __name__ == '__main__':
 
     c.interlock()
 
-    for i in range(4):
-        c.process(0.1)
+    cycles(c, 4)
 
     c.park()
 
-    for i in range(4):
-        c.process(0.1)
+    cycles(c, 4)
 
     c.stop()
 
-    for i in range(4):
-        c.process(0.1)
+    cycles(c, 4)
 
     c.start()
 
-    for i in range(1):
-        c.process(0.1)
+    cycles(c, 1)
 
     c.unlock()
 
-    for i in range(4):
-        c.process(0.1)
+    cycles(c, 4)
 
     c.start()
 
-    for i in range(10):
-        c.process(0.1)
+    cycles(c, 4)
+
+    c.lock()
+
+    cycles(c, 4)
+
+    c.stop()
+
+    cycles(c, 1)
+
+    c.start()
+
+    cycles(c, 4)
+
+    c.lock()
+
+    cycles(c, 1)
+
+    c.stop()
