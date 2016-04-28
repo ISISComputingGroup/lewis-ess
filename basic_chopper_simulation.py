@@ -13,6 +13,19 @@ pvdb = {
     'PARKPOSITION:SP': {'property': 'targetParkingPosition'},
 
     'STATE': {'type': 'string', 'property': 'state'},
+
+    'COMMAND': {'type': 'string',
+                'commands': {
+                    'START': 'start',
+                    'PHASE': 'phase',
+                    'COAST': 'unlock',
+                    'PARK': 'park',
+                    'INTERLOCK': 'interlock',
+                    'RELEASE': 'release'
+                },
+                'buffer': 'LAST_COMMAND'},
+
+    'LAST_COMMAND': {'type': 'string'}
 }
 
 chopper = SimulatedChopper()

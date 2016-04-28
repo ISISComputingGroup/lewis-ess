@@ -17,9 +17,18 @@ class PropertyExposingDriver(CanProcess, Driver):
         self._default_poll_interval = default_poll_interval
 
     def write(self, pv, value):
+        commands = self._pv_dict[pv].get('commands', {})
+        command = commands.get(value, None)
+
+        if command is not None:
+            getattr(self._target, command)()
+            self.setParam(pv, '')
+            self.setParam(self._pv_dict[pv]['buffer'], command)
+            return True
+
         try:
             setattr(self._target, self._pv_dict[pv]['property'], value)
-        except AttributeError:
+        except (AttributeError, KeyError):
             return False
 
         self.setParam(pv, value)
@@ -30,8 +39,11 @@ class PropertyExposingDriver(CanProcess, Driver):
         for pv, parameters in self._pv_dict.iteritems():
             self._timers[pv] += dt
             if self._timers[pv] >= parameters.get('poll_interval', self._default_poll_interval):
-                self.setParam(pv, getattr(self._target, parameters['property']))
-                self._timers[pv] = 0.0
+                try:
+                    self.setParam(pv, getattr(self._target, parameters['property']))
+                    self._timers[pv] = 0.0
+                except KeyError:
+                    pass
 
         self.updatePVs()
 
