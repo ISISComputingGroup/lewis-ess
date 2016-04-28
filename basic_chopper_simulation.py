@@ -17,6 +17,7 @@ pvdb = {
     'COMMAND': {'type': 'string',
                 'commands': {
                     'START': 'start',
+                    'STOP': 'stop',
                     'PHASE': 'phase',
                     'COAST': 'unlock',
                     'PARK': 'park',
