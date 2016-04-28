@@ -12,7 +12,7 @@ pvdb = {
     'PARKPOSITION': {'property': 'parkingPosition'},
     'PARKPOSITION:SP': {'property': 'targetParkingPosition'},
 
-    # 'STATE': {'type': 'string', 'property': 'state'},
+    'STATE': {'type': 'string', 'property': 'state'},
 }
 
 chopper = SimulatedChopper()

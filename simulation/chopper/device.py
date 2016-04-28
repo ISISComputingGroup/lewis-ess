@@ -144,6 +144,10 @@ class SimulatedChopper(CanProcessComposite, object):
         self.addProcessor(self._csm)
 
     @property
+    def state(self):
+        return self._csm.state
+
+    @property
     def interlocked(self):
         return self._context.interlocked
 
