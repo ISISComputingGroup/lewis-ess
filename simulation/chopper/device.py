@@ -103,28 +103,33 @@ class SimulatedChopper(CanProcessComposite, object):
         transition_handlers = OrderedDict([
             (('init', 'bearings'), lambda: self._context.interlocked),
             (('bearings', 'stopped'), lambda: self._bearings.ready),
-            (('stopped', 'bearings'), lambda: self._context.shutdown_commanded),
             (('bearings', 'init'), lambda: self._bearings.idle),
 
-            (('stopped', 'parking'), lambda: self._context.park_commanded),
             (('parking', 'parked'), lambda: self._context.parking_position == self._context.target_parking_position),
+            (('parking', 'stopping'), lambda: self._context.stop_commanded),
+
+            (('parked', 'stopping'), lambda: self._context.stop_commanded),
+            (('parked', 'accelerating'), lambda: self._context.start_commanded),
 
             (('stopped', 'accelerating'), lambda: self._context.start_commanded),
+            (('stopped', 'parking'), lambda: self._context.park_commanded),
+            (('stopped', 'bearings'), lambda: self._context.shutdown_commanded),
+
+            (('accelerating', 'stopping'), lambda: self._context.stop_commanded),
             (('accelerating', 'idle'), lambda: self._context.idle_commanded),
             (('accelerating', 'phase_locking'), lambda: self._context.speed == self._context.target_speed),
+
             (('idle', 'accelerating'), lambda: self._context.start_commanded),
-            (('phase_locked', 'accelerating'), lambda: self._context.start_commanded),
+            (('idle', 'stopping'), lambda: self._context.stop_commanded),
 
             (('phase_locking', 'stopping'), lambda: self._context.stop_commanded),
             (('phase_locking', 'phase_locked'), lambda: self._context.phase == self._context.target_phase),
+            (('phase_locking', 'idle'), lambda: self._context.idle_commanded),
 
+            (('phase_locked', 'accelerating'), lambda: self._context.start_commanded),
             (('phase_locked', 'phase_locking'), lambda: self._context.phase_commanded),
             (('phase_locked', 'stopping'), lambda: self._context.stop_commanded),
-
-            (('accelerating', 'stopping'), lambda: self._context.stop_commanded),
-            (('parking', 'stopping'), lambda: self._context.stop_commanded),
-            (('parked', 'stopping'), lambda: self._context.stop_commanded),
-            (('idle', 'stopping'), lambda: self._context.stop_commanded),
+            (('phase_locked', 'idle'), lambda: self._context.idle_commanded),
 
             (('stopping', 'accelerating'), lambda: self._context.start_commanded),
             (('stopping', 'stopped'), lambda: self._context.speed == 0.0),
@@ -156,7 +161,8 @@ class SimulatedChopper(CanProcessComposite, object):
         self._bearings.engage()
 
     def release(self):
-        self._context._in_shutdown = True
+        self._context.interlocked = False
+        self._context.shutdown_commanded = True
         self._bearings.disengage()
 
     def park(self):
