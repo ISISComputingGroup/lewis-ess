@@ -31,4 +31,6 @@ pvdb = {
 
 chopper = SimulatedChopper()
 
+# Run this in terminal window to monitor device:
+#   watch -n 0.1 caget SIM:STATE SIM:LAST_COMMAND SIM:SPEED SIM:SPEED:SP SIM:PHASE SIM:PHASE:SP SIM:PARKPOSITION SIM:PARKPOSITION:SP
 run_pcaspy_server(chopper, prefix, pvdb)
