@@ -23,11 +23,12 @@ exposed:
 |---|---|---|---|---|
 | SPEED  |  Current rotation speed of the chopper disc. | Hz  | Read |
 | PHASE  |  Current phase of the chopper disc. | Degree | Read |
+| PARKPOSITION  |  Current position of chopper disc if in parked state. | Degree | Read/Write |
 | STATE  |  Enum for chopper state. | - | Read |
 | TDCE  |  Vector of TDC (top dead center) events in last accelerator pulse. | to be determined | Read |
 | SPEED:SP  | Speed setpoint.  | Hz | Read/Write |
 | PHASE:SP  |  Phase setpoint. | Degree | Read/Write |
-| PARKEDANGLE:SP  |  Position to which the disc should rotate in parked state. | Degree | Read/Write |
+| PARKPOSITION:SP  |  Position to which the disc should rotate in parked state. | Degree | Read/Write |
 | DIRECTION  |  Enum for rotation direction (clockwise, counter clockwise). | - | Read/Write |
 | COMMAND  |  String field to accept commands. | - | Read/Write |
 
