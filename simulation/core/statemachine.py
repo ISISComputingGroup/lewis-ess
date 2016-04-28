@@ -9,10 +9,17 @@ class StateMachineException(Exception):
 class Context(object):
     __is_frozen = False
 
+    def __init__(self):
+        self.setInitialState()
+        self._freeze()
+
     def __setattr__(self, key, value):
         if self.__is_frozen and not hasattr(self, key):
             raise StateMachineException("Class {} does not have attribute: '{}'".format(self.__class__.__name__, key))
         object.__setattr__(self, key, value)
+
+    def setInitialState(self):
+        pass
 
     def _freeze(self):
         self.__is_frozen = True

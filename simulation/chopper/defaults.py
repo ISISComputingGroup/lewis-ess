@@ -3,7 +3,7 @@ from simulation.core import State
 
 class DefaultInitState(State):
     def on_entry(self, dt):
-        self._context.shutdown_commanded = False
+        self._context.setInitialState()
 
 
 class DefaultParkingState(State):

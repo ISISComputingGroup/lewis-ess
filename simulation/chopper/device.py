@@ -52,7 +52,7 @@ class SimulatedBearings(CanProcess, MagneticBearings):
 
 
 class ChopperContext(Context):
-    def __init__(self):
+    def setInitialState(self):
         self.speed = 0.0
         self.target_speed = 0.0
 
@@ -69,8 +69,6 @@ class ChopperContext(Context):
         self.phase_commanded = False
         self.shutdown_commanded = False
         self.interlocked = False
-
-        self._freeze()
 
 
 class SimulatedChopper(CanProcessComposite, object):
@@ -161,7 +159,6 @@ class SimulatedChopper(CanProcessComposite, object):
         self._bearings.engage()
 
     def release(self):
-        self._context.interlocked = False
         self._context.shutdown_commanded = True
         self._bearings.disengage()
 
