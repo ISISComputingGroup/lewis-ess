@@ -1,17 +1,46 @@
-# Chopper simulation
+# Plankton
 
-This repository contains a Virtual device for simulation of choppers at ESS. Choppers at ESS are abstracted in such a way that
-all of them are exposed via the same interface, regardless of manufacturer. The behavior of this abstraction layer can
-be modelled as a finite state machine.
+Plankton is a library that assists in building simulated hardware devices. Currently this repository contains
+a simulated neutron chopper as it will be present at [ESS](http://europeanspallationsource.se).
+Choppers at ESS are abstracted in such a way that all of them are exposed via the same interface,
+regardless of manufacturer. The behavior of this abstraction layer can be modelled as a finite state machine.
 
 The docs-directory contains an `fsm`-file (created using the program [qfsm](http://qfsm.sourceforge.net/)) which describes
 the state machine. While this is still work in progress, it gives an idea of how the choppers are going to operate internally.
 
 ## Python module
 
+Install dependencies through the requirements.txt file:
+
 ```
-pip install -r simulation/requirements.txt
+$ pip install -r requirements.txt
 ```
+
+Run the basic chopper simulation:
+
+```
+$ python basic_chopper_simulation.py
+
+```
+
+Observe available EPICS PVs in an automatically updating screen:
+
+```
+$ watch -n 1 caget SIM:STATE SIM:LAST_COMMAND SIM:SPEED SIM:SPEED:SP SIM:PHASE SIM:PHASE:SP SIM:PARKPOSITION SIM:PARKPOSITION:SP
+```
+
+The following series of `caput`-commands, executed from a different terminal, will move the chopper to the specified
+speed and phase:
+
+```
+$ caput SIM:COMMAND INTERLOCK
+$ caput SIM:SPEED:SP 100.0
+$ caput SIM:PHASE:SP 23.0
+$ caput SIM:COMMAND START
+```
+
+It may take a while until the simulation reaches the `phase_locked` state.
+
 
 ## EPICS interface
 
