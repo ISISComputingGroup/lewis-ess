@@ -20,7 +20,6 @@ Run the basic chopper simulation:
 
 ```
 $ python basic_chopper_simulation.py
-
 ```
 
 Observe available EPICS PVs in an automatically updating screen:
