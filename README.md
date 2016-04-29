@@ -86,3 +86,7 @@ The states marked with a * are not implemented yet and are not present in choppe
 - DELEVITATE*: Delevitate disc if possible
 
 The commands marked with a * are not implemented yet. There are however two additional commands, INTERLOCK and RELEASE. INTERLOCK takes the chopper from the initial `init` state to the `stopped` state, RELEASE does the opposite. This behavior will likely change soon.
+
+## Additional tools
+
+In a separate [repository](https://github.com/DMSC-Instrument-Data/plankton-misc) there is an OPI-file for use with CS-Studio and two files that expose the simulated chopper as a setup in NICOS (see readme there).
