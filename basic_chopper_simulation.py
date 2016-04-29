@@ -37,7 +37,7 @@ pvdb = {
                 'commands': {
                     'START': 'start',
                     'STOP': 'stop',
-                    'PHASE': 'phase',
+                    'PHASE': 'lockPhase',
                     'COAST': 'unlock',
                     'PARK': 'park',
                     'INTERLOCK': 'interlock',
