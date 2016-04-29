@@ -61,16 +61,20 @@ exposed:
 | COMMAND  |  String field to accept commands. | - | Read/Write |
 
 **Possible values for STATE**
-- Delevitated
-- Levitating
-- Delevitating
-- Levitated
-- Locking
-- Locked
-- Coasting
+- Resting*
+- Levitating*
+- Delevitating*
+- Accelerating
+- Phase locking
+- Phase locked
+- Idle
 - Parking
 - Parked
+- Stopping
+- Stopped
 - Error
+
+The states marked with a * are not implemented yet and are not present in choppers which work with mechanical bearings.
 
 **Possible values for COMMAND**
 - START: Speed and phase are adjusted to match the corresponding setpoints
@@ -78,5 +82,7 @@ exposed:
 - COAST: Switch off motor, but do not actively decelerate disc
 - STOP: Go to velocity 0, disc remains levitated
 - PARK: Go to velocity 0, disc remains levitated, is rotated to PARKEDANGLE:SP
-- LEVITATE: Levitate disc if it's not levitated
-- DELEVITATE: Delevitate disc if possible
+- LEVITATE*: Levitate disc if it's not levitated
+- DELEVITATE*: Delevitate disc if possible
+
+The commands marked with a * are not implemented yet. There are however two additional commands, INTERLOCK and RELEASE. INTERLOCK takes the chopper from the initial `init` state to the `stopped` state, RELEASE does the opposite. This behavior will likely change soon.
