@@ -51,7 +51,7 @@ exposed:
 |---|---|---|---|---|
 | SPEED  |  Current rotation speed of the chopper disc. | Hz  | Read |
 | PHASE  |  Current phase of the chopper disc. | Degree | Read |
-| PARKPOSITION  |  Current position of chopper disc if in parked state. | Degree | Read/Write |
+| PARKPOSITION  |  Current position of chopper disc if in parked state. | Degree | Read |
 | STATE  |  Enum for chopper state. | - | Read |
 | TDCE  |  Vector of TDC (top dead center) events in last accelerator pulse. | to be determined | Read |
 | SPEED:SP  | Speed setpoint.  | Hz | Read/Write |
@@ -61,18 +61,18 @@ exposed:
 | COMMAND  |  String field to accept commands. | - | Read/Write |
 
 **Possible values for STATE**
-- Resting*
-- Levitating*
-- Delevitating*
-- Accelerating
-- Phase locking
-- Phase locked
-- Idle
-- Parking
-- Parked
-- Stopping
-- Stopped
-- Error
+- Resting*: The chopper disc is resting, the magnetic bearings are off.
+- Levitating*: The chopper disc is in the process of being lifted up into stable levitation.
+- Delevitating*: The chopper disc is in the process of being let down into the resting state.
+- Accelerating: The chopper disc is accelerated to the speed setpoint.
+- Phase locking: The chopper is trying to acquire a phase lock.
+- Phase locked: Speed and phase are at the setpoints.
+- Idle: The motor is off, the disc is rotating only via inertia.
+- Parking: The chopper disc is in the process of rotating to the park position.
+- Parked: The chopper disc is parked in the specified position.
+- Stopping: The chopper disc is actively decelerated to speed 0.
+- Stopped: The chopper disc is at speed 0.
+- Error*: An error has occured (to be specified in more detail).
 
 The states marked with a * are not implemented yet and are not present in choppers which work with mechanical bearings.
 
