@@ -17,15 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from adapters.epics import EpicsAdapter as CommunicationAdapter
+from simulation import SimulatedChopper
 
-from scenarios.chopper.bindings import epics as bindings
-from scenarios.chopper.default import chopper as device
-
-prefix = 'SIM:'
-
-# Run this in terminal window to monitor device:
-#   watch -n 0.1 caget SIM:STATE SIM:LAST_COMMAND SIM:SPEED SIM:SPEED:SP SIM:PHASE SIM:PHASE:SP SIM:PARKPOSITION SIM:PARKPOSITION:SP
-
-adapter = CommunicationAdapter(bindings, prefix)
-adapter.run(device)
+chopper = SimulatedChopper()

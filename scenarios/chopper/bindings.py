@@ -17,15 +17,30 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from adapters.epics import EpicsAdapter as CommunicationAdapter
 
-from scenarios.chopper.bindings import epics as bindings
-from scenarios.chopper.default import chopper as device
+epics = {
+    'SPEED': {'property': 'speed'},
+    'SPEED:SP': {'property': 'targetSpeed'},
 
-prefix = 'SIM:'
+    'PHASE': {'property': 'phase'},
+    'PHASE:SP': {'property': 'targetPhase'},
 
-# Run this in terminal window to monitor device:
-#   watch -n 0.1 caget SIM:STATE SIM:LAST_COMMAND SIM:SPEED SIM:SPEED:SP SIM:PHASE SIM:PHASE:SP SIM:PARKPOSITION SIM:PARKPOSITION:SP
+    'PARKPOSITION': {'property': 'parkingPosition'},
+    'PARKPOSITION:SP': {'property': 'targetParkingPosition'},
 
-adapter = CommunicationAdapter(bindings, prefix)
-adapter.run(device)
+    'STATE': {'type': 'string', 'property': 'state'},
+
+    'COMMAND': {'type': 'string',
+                'commands': {
+                    'START': 'start',
+                    'STOP': 'stop',
+                    'PHASE': 'lockPhase',
+                    'COAST': 'unlock',
+                    'PARK': 'park',
+                    'INTERLOCK': 'interlock',
+                    'RELEASE': 'release'
+                },
+                'buffer': 'LAST_COMMAND'},
+
+    'LAST_COMMAND': {'type': 'string'}
+}
