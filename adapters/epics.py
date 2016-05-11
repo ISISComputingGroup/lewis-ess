@@ -66,11 +66,11 @@ class PropertyExposingDriver(CanProcess, Driver):
 
 
 class EpicsAdapter(Adapter):
-    def __init__(self, pv_db, pv_prefix, *args, **kwargs):
+    def __init__(self, pv_db, *args, **kwargs):
         super(EpicsAdapter, self).__init__(*args, **kwargs)
         self._pv_db = pv_db
         self._server = SimpleServer()
-        self._server.createPV(prefix=pv_prefix, pvdb=pv_db)
+        self._server.createPV(prefix=kwargs['pv_prefix'], pvdb=pv_db)
 
     def run(self, target):
         driver = PropertyExposingDriver(target=target, pv_dict=self._pv_db)

@@ -22,11 +22,19 @@ from adapters import import_adapter
 from scenarios import import_device, import_bindings
 
 
-class StoreNameValuePair(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        n, v = values.split('=')
+class StoreNameValuePairs(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        super(StoreNameValuePairs, self).__init__(option_strings, dest, nargs=nargs, **kwargs)
 
-        setattr(namespace, n, v)
+        self._param_name = dest
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        option_dict = {}
+        for option in values.split(','):
+            n, v = option.split('=')
+            option_dict[n] = v
+
+        setattr(namespace, self._param_name, option_dict)
 
 
 parser = argparse.ArgumentParser(
@@ -34,8 +42,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-d', '--device', help='Name of the device to simulate.', default='chopper', choices=['chopper'])
 parser.add_argument('-p', '--protocol', help='Communication protocol to expose simulation.', default='epics',
                     choices=['epics'])
-parser.add_argument('--parameters', help='Additional parameters for the protocol.', action=StoreNameValuePair,
-                    nargs='*')
+parser.add_argument('--parameters', help='Additional parameters for the protocol.', action=StoreNameValuePairs)
 parser.add_argument('-s', '--scenario', help='Name of the scenario to run.', default='default')
 
 arguments = parser.parse_args()
@@ -47,5 +54,5 @@ device = import_device(arguments.device, arguments.scenario)
 # Run this in terminal window to monitor device:
 #   watch -n 0.1 caget SIM:STATE SIM:LAST_COMMAND SIM:SPEED SIM:SPEED:SP SIM:PHASE SIM:PHASE:SP SIM:PARKPOSITION SIM:PARKPOSITION:SP
 
-adapter = CommunicationAdapter(bindings, 'SIM:')
+adapter = CommunicationAdapter(bindings, **arguments.parameters)
 adapter.run(device)
