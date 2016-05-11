@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from adapters import run_pcaspy_server
+from adapters.epics import EpicsAdapter
 from simulation import SimulatedChopper
 
 prefix = 'SIM:'
@@ -52,4 +52,6 @@ chopper = SimulatedChopper()
 
 # Run this in terminal window to monitor device:
 #   watch -n 0.1 caget SIM:STATE SIM:LAST_COMMAND SIM:SPEED SIM:SPEED:SP SIM:PHASE SIM:PHASE:SP SIM:PARKPOSITION SIM:PARKPOSITION:SP
-run_pcaspy_server(chopper, prefix, pvdb)
+
+adapter = EpicsAdapter(pvdb, prefix)
+adapter.run(chopper)
