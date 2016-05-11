@@ -20,6 +20,7 @@
 from datetime import datetime
 from pcaspy import Driver, SimpleServer
 from simulation.core import CanProcess
+from adapters import Adapter
 
 
 class PropertyExposingDriver(CanProcess, Driver):
@@ -64,8 +65,9 @@ class PropertyExposingDriver(CanProcess, Driver):
         self.updatePVs()
 
 
-class EpicsAdapter(object):
-    def __init__(self, pv_db, pv_prefix):
+class EpicsAdapter(Adapter):
+    def __init__(self, pv_db, pv_prefix, *args, **kwargs):
+        super(EpicsAdapter, self).__init__(*args, **kwargs)
         self._pv_db = pv_db
         self._server = SimpleServer()
         self._server.createPV(prefix=pv_prefix, pvdb=pv_db)
