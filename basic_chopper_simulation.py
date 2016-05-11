@@ -17,10 +17,47 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from adapters.epics import EpicsAdapter as CommunicationAdapter
+from importlib import import_module
+from adapters import Adapter
+from simulation.core import CanProcess
 
-from scenarios.chopper.bindings import epics as bindings
-from scenarios.chopper.default import chopper as device
+
+def get_adapter_from_module(module_name):
+    module = import_module('.{}'.format(module_name), 'adapters')
+
+    for module_member in dir(module):
+        module_object = getattr(module, module_member)
+
+        try:
+            if issubclass(module_object, Adapter) and module_object != Adapter:
+                return module_object
+        except TypeError:
+            pass
+
+    raise RuntimeError('No suitable Adapter found in module \'{}\''.format(module_name))
+
+
+def get_bindings_from_module(device_type, bindings):
+    module = import_module('.bindings', 'scenarios.{}'.format(device_type))
+
+    return getattr(module, bindings)
+
+
+def get_scenario_device(device_type, scenario):
+    module = import_module('.{}'.format(scenario), 'scenarios.{}'.format(device_type))
+
+    for module_member in dir(module):
+        module_object = getattr(module, module_member)
+
+        if isinstance(module_object, CanProcess):
+            return module_object
+
+    raise RuntimeError('Did not find anything that implements CanProcess.')
+
+
+CommunicationAdapter = get_adapter_from_module('epics')
+bindings = get_bindings_from_module('chopper', 'epics')
+device = get_scenario_device('chopper', 'default')
 
 prefix = 'SIM:'
 
