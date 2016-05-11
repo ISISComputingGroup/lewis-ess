@@ -17,9 +17,27 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+import importlib
+
+
 class Adapter(object):
     def __init__(self, *args, **kwargs):
         pass
 
     def run(self, target):
         pass
+
+
+def import_adapter(module_name):
+    module = importlib.import_module('.{}'.format(module_name), 'adapters')
+
+    for module_member in dir(module):
+        module_object = getattr(module, module_member)
+
+        try:
+            if issubclass(module_object, Adapter) and module_object != Adapter:
+                return module_object
+        except TypeError:
+            pass
+
+    raise RuntimeError('No suitable Adapter found in module \'{}\''.format(module_name))

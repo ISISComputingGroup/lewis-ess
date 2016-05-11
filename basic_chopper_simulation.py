@@ -17,52 +17,35 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from importlib import import_module
-from adapters import Adapter
-from simulation.core import CanProcess
+import argparse
+from adapters import import_adapter
+from scenarios import import_device, import_bindings
 
 
-def get_adapter_from_module(module_name):
-    module = import_module('.{}'.format(module_name), 'adapters')
+class StoreNameValuePair(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        n, v = values.split('=')
 
-    for module_member in dir(module):
-        module_object = getattr(module, module_member)
-
-        try:
-            if issubclass(module_object, Adapter) and module_object != Adapter:
-                return module_object
-        except TypeError:
-            pass
-
-    raise RuntimeError('No suitable Adapter found in module \'{}\''.format(module_name))
+        setattr(namespace, n, v)
 
 
-def get_bindings_from_module(device_type, bindings):
-    module = import_module('.bindings', 'scenarios.{}'.format(device_type))
+parser = argparse.ArgumentParser(
+    description='Run a simulated device and expose it via a specified communication protocol.')
+parser.add_argument('-d', '--device', help='Name of the device to simulate.', default='chopper', choices=['chopper'])
+parser.add_argument('-p', '--protocol', help='Communication protocol to expose simulation.', default='epics',
+                    choices=['epics'])
+parser.add_argument('--parameters', help='Additional parameters for the protocol.', action=StoreNameValuePair,
+                    nargs='*')
+parser.add_argument('-s', '--scenario', help='Name of the scenario to run.', default='default')
 
-    return getattr(module, bindings)
+arguments = parser.parse_args()
 
-
-def get_scenario_device(device_type, scenario):
-    module = import_module('.{}'.format(scenario), 'scenarios.{}'.format(device_type))
-
-    for module_member in dir(module):
-        module_object = getattr(module, module_member)
-
-        if isinstance(module_object, CanProcess):
-            return module_object
-
-    raise RuntimeError('Did not find anything that implements CanProcess.')
-
-
-CommunicationAdapter = get_adapter_from_module('epics')
-bindings = get_bindings_from_module('chopper', 'epics')
-device = get_scenario_device('chopper', 'default')
-
-prefix = 'SIM:'
+CommunicationAdapter = import_adapter(arguments.protocol)
+bindings = import_bindings(arguments.device, arguments.protocol)
+device = import_device(arguments.device, arguments.scenario)
 
 # Run this in terminal window to monitor device:
 #   watch -n 0.1 caget SIM:STATE SIM:LAST_COMMAND SIM:SPEED SIM:SPEED:SP SIM:PHASE SIM:PHASE:SP SIM:PARKPOSITION SIM:PARKPOSITION:SP
 
-adapter = CommunicationAdapter(bindings, prefix)
+adapter = CommunicationAdapter(bindings, 'SIM:')
 adapter.run(device)

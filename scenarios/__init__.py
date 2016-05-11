@@ -16,3 +16,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
+
+import importlib
+from simulation.core import CanProcess
+
+
+def import_device(device_type, scenario):
+    module_name = '.{}'.format(scenario)
+    scenario_package = 'scenarios.{}'.format(device_type)
+
+    module = importlib.import_module(module_name, scenario_package)
+
+    for module_member in dir(module):
+        module_object = getattr(module, module_member)
+
+        if isinstance(module_object, CanProcess):
+            return module_object
+
+    raise RuntimeError(
+        'Did not find anything that implements CanProcess in module \'{}\'.'.format(scenario_package + module_name))
+
+
+def import_bindings(device_type, bindings):
+    module = importlib.import_module('.bindings', 'scenarios.{}'.format(device_type))
+
+    return getattr(module, bindings)
