@@ -19,7 +19,7 @@ $ pip install -r requirements.txt
 Run the basic chopper simulation:
 
 ```
-$ python basic_chopper_simulation.py
+$ python simulation.py --device chopper --scenario default --protocol epics --parameters pv_prefix=SIM:
 ```
 
 Observe available EPICS PVs in an automatically updating screen:
