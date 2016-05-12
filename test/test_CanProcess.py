@@ -20,7 +20,7 @@
 from mock import call, patch
 import unittest
 
-from simulation import CanProcess, CanProcessComposite
+from simulation.core import CanProcess, CanProcessComposite
 
 
 class TestCanProcess(unittest.TestCase):
