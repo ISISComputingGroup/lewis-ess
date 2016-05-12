@@ -17,11 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from adapters import run_pcaspy_server
-from simulation import SimulatedChopper
 
-prefix = 'SIM:'
-pvdb = {
+epics = {
     'SPEED': {'property': 'speed'},
     'SPEED:SP': {'property': 'targetSpeed'},
 
@@ -47,9 +44,3 @@ pvdb = {
 
     'LAST_COMMAND': {'type': 'string'}
 }
-
-chopper = SimulatedChopper()
-
-# Run this in terminal window to monitor device:
-#   watch -n 0.1 caget SIM:STATE SIM:LAST_COMMAND SIM:SPEED SIM:SPEED:SP SIM:PHASE SIM:PHASE:SP SIM:PARKPOSITION SIM:PARKPOSITION:SP
-run_pcaspy_server(chopper, prefix, pvdb)

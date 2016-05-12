@@ -17,4 +17,45 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from epics import run_pcaspy_server
+import importlib
+
+
+class Adapter(object):
+    def run(cls, target, bindings, *args, **kwargs):
+        pass
+
+
+def import_adapter(module_name, class_name=None):
+    """
+    This function imports an Adapter class from a module in the adapters package.
+    It is equivalent to the following statement:
+
+        from adapter.module_name import class_name
+
+    But instead of importing class_name into the current namespace, the class
+    is returned so that it can be used to instantiate objects. The usage would be:
+
+        CommunicationAdapter = import_adapter('epics', 'EpicsAdapter')
+        adapter = CommunicationAdapter()
+
+    If class_name is omitted, the module will return the first subclass of Adapter
+    it can find in the module. If no suitable class is found, an exception is raised.
+
+
+    :param module_name: Submodule of 'adapters' from which to import the Adapter.
+    :param class_name: Class name of the Adapter.
+    :return: Adapter class.
+    """
+    module = importlib.import_module('.{}'.format(module_name), 'adapters')
+
+    for module_member in dir(module):
+        module_object = getattr(module, module_member)
+
+        try:
+            if issubclass(module_object, Adapter) and module_object != Adapter:
+                if class_name is None or module_member == class_name:
+                    return module_object
+        except TypeError:
+            pass
+
+    raise RuntimeError('No suitable Adapter found in module \'{}\''.format(module_name))
