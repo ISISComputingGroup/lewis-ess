@@ -66,14 +66,10 @@ class PropertyExposingDriver(CanProcess, Driver):
 
 
 class EpicsAdapter(Adapter):
-    def __init__(self, pv_db, *args, **kwargs):
-        super(EpicsAdapter, self).__init__(*args, **kwargs)
-        self._pv_db = pv_db
-        self._server = SimpleServer()
-        self._server.createPV(prefix=kwargs['pv_prefix'], pvdb=pv_db)
-
-    def run(self, target):
-        driver = PropertyExposingDriver(target=target, pv_dict=self._pv_db)
+    def run(self, target, bindings, *args, **kwargs):
+        server = SimpleServer()
+        server.createPV(prefix=kwargs['pv_prefix'], pvdb=bindings)
+        driver = PropertyExposingDriver(target=target, pv_dict=bindings)
 
         delta = 0.0  # Delta between cycles
         count = 0  # Cycles per second counter
@@ -86,7 +82,7 @@ class EpicsAdapter(Adapter):
             # Having "watch caget" running has a huge effect too (runs faster when watching!)
             # Additionally, if you don't call it every ~0.05s or less, PVs stop working. Annoying.
             # Set it to 0.0 for maximum cycle speed.
-            self._server.process(0.1)
+            server.process(0.1)
             target.process(delta)
             driver.process(delta)
 

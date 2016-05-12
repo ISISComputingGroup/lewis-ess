@@ -40,19 +40,22 @@ class StoreNameValuePairs(argparse.Action):
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
 parser.add_argument('-d', '--device', help='Name of the device to simulate.', default='chopper', choices=['chopper'])
+parser.add_argument('-s', '--scenario', help='Name of the scenario to run.', default='default')
+parser.add_argument('-b', '--bindings', help='Bindings to import from scenarios.device.bindings. '
+                                             'If not specified, this defaults to the value of --protocol.')
 parser.add_argument('-p', '--protocol', help='Communication protocol to expose simulation.', default='epics',
                     choices=['epics'])
+parser.add_argument('-a', '--adapter',
+                    help='Name of adapter class. If not specified, the loader will choose '
+                         'the first adapter it discovers.')
 parser.add_argument('--parameters', help='Additional parameters for the protocol.', action=StoreNameValuePairs)
-parser.add_argument('-s', '--scenario', help='Name of the scenario to run.', default='default')
 
 arguments = parser.parse_args()
 
-CommunicationAdapter = import_adapter(arguments.protocol)
-bindings = import_bindings(arguments.device, arguments.protocol)
+CommunicationAdapter = import_adapter(arguments.protocol, arguments.adapter)
+
+bindings = import_bindings(arguments.device, arguments.protocol if arguments.bindings is None else arguments.bindings)
 device = import_device(arguments.device, arguments.scenario)
 
-# Run this in terminal window to monitor device:
-#   watch -n 0.1 caget SIM:STATE SIM:LAST_COMMAND SIM:SPEED SIM:SPEED:SP SIM:PHASE SIM:PHASE:SP SIM:PARKPOSITION SIM:PARKPOSITION:SP
-
-adapter = CommunicationAdapter(bindings, **arguments.parameters)
-adapter.run(device)
+adapter = CommunicationAdapter()
+adapter.run(device, bindings, **arguments.parameters)
