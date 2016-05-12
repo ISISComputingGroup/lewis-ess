@@ -23,6 +23,11 @@ from scenarios import import_device, import_bindings
 
 
 class StoreNameValuePairs(argparse.Action):
+    """
+    This class is a slightly modified version of the solution presented in a stackoverflow answer:
+        http://stackoverflow.com/a/11762020
+    """
+
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         super(StoreNameValuePairs, self).__init__(option_strings, dest, nargs=nargs, **kwargs)
 
