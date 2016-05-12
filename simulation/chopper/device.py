@@ -71,7 +71,7 @@ class SimulatedBearings(CanProcess, MagneticBearings):
 
 
 class ChopperContext(Context):
-    def setInitialState(self):
+    def initialize(self):
         self.speed = 0.0
         self.target_speed = 0.0
 
