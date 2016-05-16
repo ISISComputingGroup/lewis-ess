@@ -21,11 +21,29 @@ from simulation.core.processor import CanProcess
 
 
 class StateMachineException(Exception):
+    """
+    Classes in this module should only raise this type of Exception.
+    """
     pass
 
 
 # Derived from http://stackoverflow.com/a/3603824
 class Context(object):
+    """
+    Device context.
+
+    Represents the internal memory of the device. This is used to share device
+    state (as opposed to state machine state) between a device class, its
+    states' implementations and their transitions.
+
+    Use by inheriting this class and overriding `initialize` to set any variables
+    that should be part of the device context.
+
+    The freeze mechanism automatically prevents this class from being extended
+    outside of `initialize`. This is to prevent bugs cause by typos and the
+    like, raising an Exception instead to draw attention to any potentially
+    misspelled attributes.
+    """
     __is_frozen = False
 
     def __init__(self):
@@ -45,6 +63,15 @@ class Context(object):
 
 
 class HasContext(object):
+    """
+    Mixin to provide a Context.
+
+    Creates a `_context` member variable that can be assigned with `setContext`.
+
+    Any state handler or transition callable that derives from this mixin will
+    receive a context from its StateMachine upon initialization (assuming the
+    StateMachine was provided with a context itself).
+    """
     def __init__(self):
         super(HasContext, self).__init__()
         self._context = None
@@ -54,24 +81,72 @@ class HasContext(object):
 
 
 class State(HasContext):
+    """
+    StateMachine state handler base class.
+
+    Provides a way to implement StateMachine event handling behaviour using an
+    object-oriented interface. Once the StateMachine is configured to do so, it
+    will automatically invoke the events in this class when appropriate.
+
+    To use this class, create a derived class and override any events that need
+    custom behaviour. Device context is provided via HasContext mixin.
+    """
     def __init__(self):
         super(State, self).__init__()
 
-    def in_state(self, dt):
+    def on_entry(self, dt):
+        """
+        Handle entry event. Raised once, when this state is entered.
+
+        :param dt: Delta T since last cycle.
+        """
         pass
 
-    def on_entry(self, dt):
+    def in_state(self, dt):
+        """
+        Handle in-state event.
+
+        Raised repeatedly, once per cycle, while idling in this state. Exactly one
+        in-state event occurs per cycle for every StateMachine. This is always the
+        last event of the cycle.
+
+        :param dt: Delta T since last cycle.
+        """
         pass
 
     def on_exit(self, dt):
+        """
+        Handle exit event. Raised once, when this state is exited.
+
+        :param dt: Delta T since last cycle.
+        """
         pass
 
 
 class Transition(HasContext):
+    """
+    StateMachine transition condition base class.
+
+    Provides a way to implement a transition that requires access to the device
+    context. The device context is provided via HasContext mixin, and can be
+    accessed as `self._context`.
+
+    To use this class, create a derived class and override the __call__ attribute.
+    """
     def __init__(self):
         super(Transition, self).__init__()
 
     def __call__(self):
+        """
+        This is invoked when the StateMachine wants to check whether this transition
+        should occur. This happens on cycles when the StateMachine starts the cycle
+        in the source state of this transition.
+
+        If this call returns True, the StateMachine will transition to the destination
+        state. Any remaining transition checks for the source state are not checked.
+
+        :return: True or False / Should transition occur or not
+        """
         return True
 
 
