@@ -19,6 +19,7 @@
 
 from collections import OrderedDict
 from simulation.core import StateMachine, CanProcessComposite, CanProcess, Context
+from simulation.core.utils import dict_strict_update
 from bearings import MagneticBearings
 from defaults import *
 
@@ -115,7 +116,7 @@ class SimulatedChopper(CanProcessComposite, object):
         }
 
         if override_states is not None:
-            state_handlers.update(override_states)
+            dict_strict_update(state_handlers, override_states)
 
         transition_handlers = OrderedDict([
             (('init', 'bearings'), lambda: self._context.interlocked),
@@ -154,7 +155,7 @@ class SimulatedChopper(CanProcessComposite, object):
         ])
 
         if override_transitions is not None:
-            transition_handlers.update(override_transitions)
+            dict_strict_update(transition_handlers, override_transitions)
 
         self._csm = StateMachine({
             'initial': 'init',
