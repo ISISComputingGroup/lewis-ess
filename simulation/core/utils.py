@@ -28,11 +28,10 @@ def dict_strict_update(base_dict, update_dict):
     :param base_dict: The dict that is to be updated. This dict is modified.
     :param update_dict: The dict containing the new values.
     """
-    if update_dict is not None:
-        additional_keys = update_dict.viewkeys() - base_dict.viewkeys()
-        if len(additional_keys) > 0:
-            raise RuntimeError(
-                'The update dictionary contains keys that are not part of the base dictionary: {}'.format(
-                    str(additional_keys)))
+    additional_keys = update_dict.viewkeys() - base_dict.viewkeys()
+    if len(additional_keys) > 0:
+        raise RuntimeError(
+            'The update dictionary contains keys that are not part of the base dictionary: {}'.format(
+                str(additional_keys)))
 
-        base_dict.update(update_dict)
+    base_dict.update(update_dict)
