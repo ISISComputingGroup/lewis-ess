@@ -21,11 +21,29 @@ from simulation.core.processor import CanProcess
 
 
 class StateMachineException(Exception):
+    """
+    Classes in this module should only raise this type of Exception.
+    """
     pass
 
 
 # Derived from http://stackoverflow.com/a/3603824
 class Context(object):
+    """
+    Device context.
+
+    Represents the internal memory of the device. This is used to share device
+    state (as opposed to state machine state) between a device class, its
+    states' implementations and their transitions.
+
+    Use by inheriting this class and overriding `initialize` to set any variables
+    that should be part of the device context.
+
+    The freeze mechanism automatically prevents this class from being extended
+    outside of `initialize`. This is to prevent bugs cause by typos and the
+    like, raising an Exception instead to draw attention to any potentially
+    misspelled attributes.
+    """
     __is_frozen = False
 
     def __init__(self):
@@ -45,6 +63,15 @@ class Context(object):
 
 
 class HasContext(object):
+    """
+    Mixin to provide a Context.
+
+    Creates a `_context` member variable that can be assigned with `setContext`.
+
+    Any state handler or transition callable that derives from this mixin will
+    receive a context from its StateMachine upon initialization (assuming the
+    StateMachine was provided with a context itself).
+    """
     def __init__(self):
         super(HasContext, self).__init__()
         self._context = None
@@ -54,24 +81,72 @@ class HasContext(object):
 
 
 class State(HasContext):
+    """
+    StateMachine state handler base class.
+
+    Provides a way to implement StateMachine event handling behaviour using an
+    object-oriented interface. Once the StateMachine is configured to do so, it
+    will automatically invoke the events in this class when appropriate.
+
+    To use this class, create a derived class and override any events that need
+    custom behaviour. Device context is provided via HasContext mixin.
+    """
     def __init__(self):
         super(State, self).__init__()
 
-    def in_state(self, dt):
+    def on_entry(self, dt):
+        """
+        Handle entry event. Raised once, when this state is entered.
+
+        :param dt: Delta T since last cycle.
+        """
         pass
 
-    def on_entry(self, dt):
+    def in_state(self, dt):
+        """
+        Handle in-state event.
+
+        Raised repeatedly, once per cycle, while idling in this state. Exactly one
+        in-state event occurs per cycle for every StateMachine. This is always the
+        last event of the cycle.
+
+        :param dt: Delta T since last cycle.
+        """
         pass
 
     def on_exit(self, dt):
+        """
+        Handle exit event. Raised once, when this state is exited.
+
+        :param dt: Delta T since last cycle.
+        """
         pass
 
 
 class Transition(HasContext):
+    """
+    StateMachine transition condition base class.
+
+    Provides a way to implement a transition that requires access to the device
+    context. The device context is provided via HasContext mixin, and can be
+    accessed as `self._context`.
+
+    To use this class, create a derived class and override the __call__ attribute.
+    """
     def __init__(self):
         super(Transition, self).__init__()
 
     def __call__(self):
+        """
+        This is invoked when the StateMachine wants to check whether this transition
+        should occur. This happens on cycles when the StateMachine starts the cycle
+        in the source state of this transition.
+
+        If this call returns True, the StateMachine will transition to the destination
+        state. Any remaining transition checks for the source state are not checked.
+
+        :return: True or False / Should transition occur or not
+        """
         return True
 
 
@@ -81,19 +156,30 @@ class StateMachine(CanProcess):
         Cycle based state machine.
 
         :param cfg: dict which contains state machine configuration.
+        :param context: object which is assigned to State and Transition objects as their _context.
 
-        The configuration may contain the following keys:
+        The configuration dict may contain the following keys:
         - initial: Name of the initial state of this machine
         - states: [optional] Dict of custom state handlers
-        - transitions: [optional] List of transitions in this state machine.
+        - transitions: [optional] Dict of transitions in this state machine.
 
-        Transitions should be provided as tuples with three elements:
-        - From State: String name of state that this transition leaves
-        - To State: String name of state that this transition enters
-        - Condition Function: Condition under which the transition should be executed
+        State handlers may be given as a dict, list or State class:
+        - dict: May contain keys 'on_entry', 'in_state' and 'on_exit'.
+        - list: May contain up to 3 entries, above events in that order.
+        - class: Should be an instance of a class that derives from State.
 
-        A condition function should take no arguments and return True or False. If True
-        is returned, the transition will be executed.
+        In case of handlers being provided as a dict or a list, values should be callable
+        and may take a single parameter: the Delta T since the last cycle.
+
+        Transitions should be provided as a dict where:
+        - Each key is a tuple of two values, the FROM and TO states respectively.
+        - Each value is a callable transition condition that return True or False.
+
+        Transition conditions are called once per cycle when in the FROM state. If one of
+        the transition conditions returns True, the transition is executed that cycle. The
+        remaining conditions aren't called.
+
+        Consider using an OrderedDict if order matters.
 
         Only one transition may occur per cycle. Every cycle will, at the very least,
         trigger an in_state event against the current state. See process() for details.
@@ -155,23 +241,23 @@ class StateMachine(CanProcess):
         """
         return self._state
 
-    def bind_handlers_by_name(self, instance, prefix=None, override=False):
+    def bind_handlers_by_name(self, instance, override=False, prefix=None):
         """
         Auto-bind state handlers based on naming convention.
 
         :param instance: Target object instance to search for handlers and bind events to.
-        :param prefix: [optional] Dict of prefixes to override defaults (keys: on_entry, in_state, on_exit)
         :param override: [optional] If set to True, matching handlers will replace previously registered handlers.
+        :param prefix: [optional] Dict of prefixes to override defaults (keys: on_entry, in_state, on_exit)
 
         This function enables automatically binding state handlers to events without having to specify them in the
         constructor. When called, this function searches `instance` for member functions that match the following
-        patterns for all known states:
+        patterns for all known states (states mentioned in 'states' or 'transitions' dicts of cfg):
 
         - instance._on_entry_[state]
         - instance._in_state_[state]
         - instance._on_exit_[state]
 
-        The default prefixes may be overridden using the second parameter. Supported keys are 'on_entry', 'in_state',
+        The default prefixes may be overridden using the prefix parameter. Supported keys are 'on_entry', 'in_state',
         and 'on_exit'. Values should include any and all desired underscores.
 
         Matching functions are assigned as handlers to the corresponding state events, iff no handler was previously
@@ -202,8 +288,10 @@ class StateMachine(CanProcess):
 
         :param dt: Delta T. "Time" passed since last cycle, passed on to event handlers.
 
-        A cycle will perform at most one transition. A transition will only occur if one
-        of the transition check functions leaving the current state returns True.
+        A cycle will perform at most one transition and exactly one in_state event.
+
+        A transition will only occur if one of the transition condition functions leaving
+        the current state returns True.
 
         When a transition occurs, the following events are raised:
          - on_exit_old_state()
@@ -246,11 +334,11 @@ class StateMachine(CanProcess):
         Add or update state handlers.
 
         :param state: Name of state to be added or updated
-        :param on_entry: Handler for on_entry events. May be None, function ref, or list of function refs.
-        :param in_state: Handler for in_state events. May be None, function ref, or list of function refs.
-        :param on_exit: Handler for on_exit events. May be None, function ref, or list of function refs.
+        :param on_entry: Handler for on_entry events. May be None, callable, or list of callables.
+        :param in_state: Handler for in_state events. May be None, callable, or list of callables.
+        :param on_exit: Handler for on_exit events. May be None, callable, or list of callables.
 
-        Handlers should take exactly one parameter (not counting self), delta T since last cycle, and return nothing.
+        Handlers may take up to one parameter (not counting self), delta T since last cycle, and should return nothing.
 
         When handlers are omitted or set to None, no event will be raised at all.
         """
@@ -282,6 +370,7 @@ class StateMachine(CanProcess):
         if from_state not in self._transition.keys():
             self._transition[from_state] = []
 
+        # Remove previously added transition with same From -> To mapping
         try:
             del self._transition[from_state][[x[0] for x in self._transition[from_state]].index(to_state)]
         except:

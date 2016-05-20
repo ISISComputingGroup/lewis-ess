@@ -162,7 +162,6 @@ class SimulatedChopper(CanProcessComposite, object):
             'states': state_handlers,
             'transitions': transition_handlers,
         }, context=self._context)
-        self._csm.bind_handlers_by_name(self)
 
         self.addProcessor(self._csm)
 
