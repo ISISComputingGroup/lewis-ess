@@ -241,13 +241,13 @@ class StateMachine(CanProcess):
         """
         return self._state
 
-    def bind_handlers_by_name(self, instance, prefix=None, override=False):
+    def bind_handlers_by_name(self, instance, override=False, prefix=None):
         """
         Auto-bind state handlers based on naming convention.
 
         :param instance: Target object instance to search for handlers and bind events to.
-        :param prefix: [optional] Dict of prefixes to override defaults (keys: on_entry, in_state, on_exit)
         :param override: [optional] If set to True, matching handlers will replace previously registered handlers.
+        :param prefix: [optional] Dict of prefixes to override defaults (keys: on_entry, in_state, on_exit)
 
         This function enables automatically binding state handlers to events without having to specify them in the
         constructor. When called, this function searches `instance` for member functions that match the following
@@ -257,7 +257,7 @@ class StateMachine(CanProcess):
         - instance._in_state_[state]
         - instance._on_exit_[state]
 
-        The default prefixes may be overridden using the second parameter. Supported keys are 'on_entry', 'in_state',
+        The default prefixes may be overridden using the prefix parameter. Supported keys are 'on_entry', 'in_state',
         and 'on_exit'. Values should include any and all desired underscores.
 
         Matching functions are assigned as handlers to the corresponding state events, iff no handler was previously
