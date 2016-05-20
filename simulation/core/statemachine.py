@@ -156,19 +156,30 @@ class StateMachine(CanProcess):
         Cycle based state machine.
 
         :param cfg: dict which contains state machine configuration.
+        :param context: object which is assigned to State and Transition objects as their _context.
 
-        The configuration may contain the following keys:
+        The configuration dict may contain the following keys:
         - initial: Name of the initial state of this machine
         - states: [optional] Dict of custom state handlers
-        - transitions: [optional] List of transitions in this state machine.
+        - transitions: [optional] Dict of transitions in this state machine.
 
-        Transitions should be provided as tuples with three elements:
-        - From State: String name of state that this transition leaves
-        - To State: String name of state that this transition enters
-        - Condition Function: Condition under which the transition should be executed
+        State handlers may be given as a dict, list or State class:
+        - dict: May contain keys 'on_entry', 'in_state' and 'on_exit'.
+        - list: May contain up to 3 entries, above events in that order.
+        - class: Should be an instance of a class that derives from State.
 
-        A condition function should take no arguments and return True or False. If True
-        is returned, the transition will be executed.
+        In case of handlers being provided as a dict or a list, values should be callable
+        and may take a single parameter: the Delta T since the last cycle.
+
+        Transitions should be provided as a dict where:
+        - Each key is a tuple of two values, the FROM and TO states respectively.
+        - Each value is a callable transition condition that return True or False.
+
+        Transition conditions are called once per cycle when in the FROM state. If one of
+        the transition conditions returns True, the transition is executed that cycle. The
+        remaining conditions aren't called.
+
+        Consider using an OrderedDict if order matters.
 
         Only one transition may occur per cycle. Every cycle will, at the very least,
         trigger an in_state event against the current state. See process() for details.
@@ -240,7 +251,7 @@ class StateMachine(CanProcess):
 
         This function enables automatically binding state handlers to events without having to specify them in the
         constructor. When called, this function searches `instance` for member functions that match the following
-        patterns for all known states:
+        patterns for all known states (states mentioned in 'states' or 'transitions' dicts of cfg):
 
         - instance._on_entry_[state]
         - instance._in_state_[state]
@@ -277,8 +288,10 @@ class StateMachine(CanProcess):
 
         :param dt: Delta T. "Time" passed since last cycle, passed on to event handlers.
 
-        A cycle will perform at most one transition. A transition will only occur if one
-        of the transition check functions leaving the current state returns True.
+        A cycle will perform at most one transition and exactly one in_state event.
+
+        A transition will only occur if one of the transition condition functions leaving
+        the current state returns True.
 
         When a transition occurs, the following events are raised:
          - on_exit_old_state()
@@ -321,11 +334,11 @@ class StateMachine(CanProcess):
         Add or update state handlers.
 
         :param state: Name of state to be added or updated
-        :param on_entry: Handler for on_entry events. May be None, function ref, or list of function refs.
-        :param in_state: Handler for in_state events. May be None, function ref, or list of function refs.
-        :param on_exit: Handler for on_exit events. May be None, function ref, or list of function refs.
+        :param on_entry: Handler for on_entry events. May be None, callable, or list of callables.
+        :param in_state: Handler for in_state events. May be None, callable, or list of callables.
+        :param on_exit: Handler for on_exit events. May be None, callable, or list of callables.
 
-        Handlers should take exactly one parameter (not counting self), delta T since last cycle, and return nothing.
+        Handlers may take up to one parameter (not counting self), delta T since last cycle, and should return nothing.
 
         When handlers are omitted or set to None, no event will be raised at all.
         """
@@ -357,6 +370,7 @@ class StateMachine(CanProcess):
         if from_state not in self._transition.keys():
             self._transition[from_state] = []
 
+        # Remove previously added transition with same From -> To mapping
         try:
             del self._transition[from_state][[x[0] for x in self._transition[from_state]].index(to_state)]
         except:
