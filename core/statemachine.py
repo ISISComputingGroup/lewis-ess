@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from simulation.core.processor import CanProcess
+from core.processor import CanProcess
 
 
 class StateMachineException(Exception):

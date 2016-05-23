@@ -18,9 +18,11 @@
 # *********************************************************************
 
 from datetime import datetime
+
 from pcaspy import Driver, SimpleServer
-from simulation.core import CanProcess
+
 from adapters import Adapter
+from core import CanProcess
 
 
 class PropertyExposingDriver(CanProcess, Driver):
