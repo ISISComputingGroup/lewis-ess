@@ -45,7 +45,7 @@ class StoreNameValuePairs(argparse.Action):
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
 parser.add_argument('-d', '--device', help='Name of the device to simulate.', default='chopper', choices=['chopper'])
-parser.add_argument('-s', '--setup', help='Name of the scenario to run.', default='default')
+parser.add_argument('-s', '--setup', help='Name of the setup to load.', default='default')
 parser.add_argument('-b', '--bindings', help='Bindings to import from setups.device.bindings. '
                                              'If not specified, this defaults to the value of --protocol.')
 parser.add_argument('-p', '--protocol', help='Communication protocol to expose devices.', default='epics',
@@ -60,7 +60,7 @@ arguments = parser.parse_args()
 CommunicationAdapter = import_adapter(arguments.protocol, arguments.adapter)
 
 bindings = import_bindings(arguments.device, arguments.protocol if arguments.bindings is None else arguments.bindings)
-device = import_device(arguments.device, arguments.scenario)
+device = import_device(arguments.device, arguments.setup)
 
 adapter = CommunicationAdapter()
 adapter.run(device, bindings, **arguments.parameters)
