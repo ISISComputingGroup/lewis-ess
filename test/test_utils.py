@@ -18,7 +18,8 @@
 # *********************************************************************
 
 import unittest
-from simulation.core.utils import dict_strict_update
+
+from core.utils import dict_strict_update
 
 
 class TestDictStrictUpdate(unittest.TestCase):

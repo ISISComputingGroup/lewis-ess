@@ -20,8 +20,8 @@
 import unittest
 from mock import Mock, patch
 
-from simulation.core.statemachine import StateMachine, State, Transition, Context
-from simulation.core.statemachine import StateMachineException
+from core.statemachine import StateMachine, State, Transition, Context
+from core.statemachine import StateMachineException
 
 
 class TestStateMachine(unittest.TestCase):
@@ -269,7 +269,7 @@ class TestStateMachine(unittest.TestCase):
         sm.bind_handlers_by_name(target, prefix={
             'on_entry': 'enter_',
             'in_state': 'do_',
-            'on_exit':  'exit_',
+            'on_exit': 'exit_',
         })
 
         # First cycle enters and executes initial state, but forces delta T to zero

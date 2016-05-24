@@ -17,10 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from mock import call, patch
 import unittest
+from mock import call, patch
 
-from simulation.core import CanProcess, CanProcessComposite
+from core.processor import CanProcess, CanProcessComposite
 
 
 class TestCanProcess(unittest.TestCase):

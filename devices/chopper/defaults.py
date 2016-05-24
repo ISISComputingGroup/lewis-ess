@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from simulation.core import State
+from core import State
 
 
 class DefaultInitState(State):
