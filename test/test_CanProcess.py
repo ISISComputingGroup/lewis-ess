@@ -94,9 +94,9 @@ class TestCanProcessComposite(unittest.TestCase):
 
     def test_init_from_iterable(self):
         with patch.object(CanProcess, 'doProcess', create=True) as mockProcessMethod:
-            simulations = (CanProcess(), CanProcess(),)
+            devices = (CanProcess(), CanProcess(),)
 
-            composite = CanProcessComposite(simulations)
+            composite = CanProcessComposite(devices)
             composite(4.0)
 
             mockProcessMethod.assert_has_calls([call(4.0), call(4.0)])

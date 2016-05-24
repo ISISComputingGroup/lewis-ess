@@ -22,25 +22,25 @@ import importlib
 from core import CanProcess
 
 
-def import_device(device_type, scenario):
+def import_device(device_type, setup):
     """
     This function is a helper that imports the first object which is an instance of devices.core.CanProcess
     from the setups package:
 
-        from setups.device_type.scenario import can_process_object.
+        from setups.device_type.setup import can_process_object.
 
-    The object is returned by the function, so to import the default scenario for chopper:
+    The object is returned by the function, so to import the default setup for chopper:
 
         chopper = import_device('chopper', 'default')
 
-    :param device_type: Sub-package from which to import the scenario.
-    :param scenario: Scenario module from which to import the device object.
-    :return: Device object as specified by device_type and scenario
+    :param device_type: Sub-package from which to import the setup.
+    :param setup: Setup module from which to import the device object.
+    :return: Device object as specified by device_type and setup
     """
-    module_name = '.{}'.format(scenario)
-    scenario_package = 'setups.{}'.format(device_type)
+    module_name = '.{}'.format(setup)
+    setup_package = 'setups.{}'.format(device_type)
 
-    module = importlib.import_module(module_name, scenario_package)
+    module = importlib.import_module(module_name, setup_package)
 
     for module_member in dir(module):
         module_object = getattr(module, module_member)
@@ -49,7 +49,7 @@ def import_device(device_type, scenario):
             return module_object
 
     raise RuntimeError(
-        'Did not find anything that implements CanProcess in module \'{}\'.'.format(scenario_package + module_name))
+        'Did not find anything that implements CanProcess in module \'{}\'.'.format(setup_package + module_name))
 
 
 def import_bindings(device_type, bindings_type):
