@@ -44,7 +44,7 @@ class StoreNameValuePairs(argparse.Action):
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
-parser.add_argument('-d', '--device', help='Name of the device to simulate.', default='chopper', choices=['chopper'])
+parser.add_argument('-d', '--device', help='Name of the device to simulate.', default='chopper', choices=['chopper', 'powersupply'])
 parser.add_argument('-s', '--setup', help='Name of the setup to load.', default='default')
 parser.add_argument('-b', '--bindings', help='Bindings to import from setups.device.bindings. '
                                              'If not specified, this defaults to the value of --protocol.')

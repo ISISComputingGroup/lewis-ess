@@ -17,5 +17,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from chopper import SimulatedChopper
-from powersupply import SimulatedPowerSupply
+
+epics = {
+    'STATE': {'type': 'string', 'property': 'state'},
+
+    'VOLTAGE': {'property': 'voltage'},
+    'VOLTAGE:SP': {'property': 'targetVoltage'},
+
+    'CURRENT': {'property': 'current'},
+    'CURRENT:SP': {'property': 'targetCurrent'},
+
+    'SWITCH': {'property': 'powerSwitch'},
+    'RESISTANCE': {'property': 'resistance'},
+
+    'POWER': {'property': 'power'},
+
+    'ACQUIRE_VOLT': {'property': 'voltageCommanded'},
+    'ACQUIRE_CURR': {'property': 'currentCommanded'},
+}

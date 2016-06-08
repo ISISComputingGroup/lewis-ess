@@ -17,5 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from chopper import SimulatedChopper
-from powersupply import SimulatedPowerSupply
+from devices import SimulatedPowerSupply
+
+powersupply = SimulatedPowerSupply()

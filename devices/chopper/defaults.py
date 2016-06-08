@@ -18,6 +18,7 @@
 # *********************************************************************
 
 from core import State
+import random
 
 
 class DefaultInitState(State):
@@ -42,6 +43,8 @@ class DefaultParkingState(State):
         if sign * self._context.parking_position > sign * self._context.target_parking_position:
             self._context.parking_position = self._context.target_parking_position
 
+        self._context.phase = random.uniform(0.0, 360.0)
+
     def on_entry(self, dt):
         self._context.park_commanded = False
 
@@ -61,6 +64,8 @@ class DefaultStoppingState(State):
         if self._context.speed < 0:
             self._context.speed = 0.0
 
+        self._context.phase = random.uniform(0.0, 360.0)
+
     def on_entry(self, dt):
         self._context.stop_commanded = False
 
@@ -79,6 +84,8 @@ class DefaultIdleState(State):
 
         if self._context.speed < 0:
             self._context.speed = 0.0
+
+        self._context.phase = random.uniform(0.0, 360.0)
 
     def on_entry(self, dt):
         self._context.idle_commanded = False
@@ -100,6 +107,8 @@ class DefaultAcceleratingState(State):
 
         if sign * self._context.speed > sign * self._context.target_speed:
             self._context.speed = self._context.target_speed
+
+        self._context.phase = random.uniform(0.0, 360.0)
 
     def on_entry(self, dt):
         self._context.start_commanded = False
