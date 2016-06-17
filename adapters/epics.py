@@ -42,7 +42,7 @@ class PropertyExposingDriver(CanProcess, Driver):
         if command is not None:
             getattr(self._target, command)()
             self.setParam(pv, '')
-            self.setParam(self._pv_dict[pv]['buffer'], command)
+            self.setParam(self._pv_dict[pv]['buffer'], value)
             return True
 
         try:

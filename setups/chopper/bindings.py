@@ -19,28 +19,30 @@
 
 
 epics = {
-    'SPEED': {'property': 'speed'},
-    'SPEED:SP': {'property': 'targetSpeed'},
+    'Spd-RB': {'property': 'speed'},
+    'ActSpd': {'property': 'speed'},
+    'Spd': {'property': 'targetSpeed'},
 
-    'PHASE': {'property': 'phase'},
-    'PHASE:SP': {'property': 'targetPhase'},
+    'Phs-RB': {'property': 'phase'},
+    'ActPhs': {'property': 'phase'},
+    'Phs': {'property': 'targetPhase'},
 
-    'PARKPOSITION': {'property': 'parkingPosition'},
-    'PARKPOSITION:SP': {'property': 'targetParkingPosition'},
+    'ParkAng-RB': {'property': 'parkingPosition'},
+    'ParkAng': {'property': 'targetParkingPosition'},
 
-    'STATE': {'type': 'string', 'property': 'state'},
+    'State': {'type': 'string', 'property': 'state'},
 
-    'COMMAND': {'type': 'string',
+    'CmdS': {'type': 'string',
                 'commands': {
-                    'START': 'start',
-                    'STOP': 'stop',
-                    'PHASE': 'lockPhase',
-                    'COAST': 'unlock',
-                    'PARK': 'park',
-                    'INIT': 'initialize',
-                    'DEINIT': 'deinitialize'
+                    'start': 'start',
+                    'stop': 'stop',
+                    'set_phase': 'lockPhase',
+                    'unlock': 'unlock',
+                    'park': 'park',
+                    'init': 'initialize',
+                    'deinit': 'deinitialize'
                 },
-                'buffer': 'LAST_COMMAND'},
+                'buffer': 'CmdL'},
 
-    'LAST_COMMAND': {'type': 'string'}
+    'CmdL': {'type': 'string'}
 }
