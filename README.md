@@ -27,17 +27,17 @@ $ python simulation.py --device chopper --setup default --protocol epics --param
 Observe available EPICS PVs in an automatically updating screen:
 
 ```
-$ watch -n 1 caget SIM:STATE SIM:LAST_COMMAND SIM:SPEED SIM:SPEED:SP SIM:PHASE SIM:PHASE:SP SIM:PARKPOSITION SIM:PARKPOSITION:SP
+$ watch -n 1 caget SIM:State SIM:CmdL SIM:Spd-RB SIM:Spd SIM:Phs-RB SIM:Phs SIM:ParkAng-RB SIM:ParkAng
 ```
 
 The following series of `caput`-commands, executed from a different terminal, will move the chopper to the specified
 speed and phase:
 
 ```
-$ caput SIM:COMMAND INIT
-$ caput SIM:SPEED:SP 100.0
-$ caput SIM:PHASE:SP 23.0
-$ caput SIM:COMMAND START
+$ caput SIM:CmdS init
+$ caput SIM:Spd 100.0
+$ caput SIM:Phs 23.0
+$ caput SIM:CmdS start
 ```
 
 It may take a while until the simulation reaches the `phase_locked` state.
@@ -51,16 +51,22 @@ exposed:
 
 | PV  | Description  | Unit | Access |
 |---|---|---|---|---|
-| SPEED  |  Current rotation speed of the chopper disc. | Hz  | Read |
-| PHASE  |  Current phase of the chopper disc. | Degree | Read |
-| PARKPOSITION  |  Current position of chopper disc if in parked state. | Degree | Read |
-| STATE  |  Enum for chopper state. | - | Read |
-| TDCE  |  Vector of TDC (top dead center) events in last accelerator pulse. | to be determined | Read |
-| SPEED:SP  | Speed setpoint.  | Hz | Read/Write |
-| PHASE:SP  |  Phase setpoint. | Degree | Read/Write |
-| PARKPOSITION:SP  |  Position to which the disc should rotate in parked state. | Degree | Read/Write |
-| DIRECTION  |  Enum for rotation direction (clockwise, counter clockwise). | - | Read/Write |
-| COMMAND  |  String field to accept commands. | - | Read/Write |
+| Spd-RB  |  Current rotation speed of the chopper disc. | Hz  | Read |
+| ActSpd  |  Current rotation speed of the chopper disc. | Hz  | Read |
+| Spd  | Speed setpoint.  | Hz | Read/Write |
+| Phs-RB  |  Current phase of the chopper disc. | Degree | Read |
+| ActPhs  |  Current phase of the chopper disc. | Degree | Read |
+| Phs  |  Phase setpoint. | Degree | Read/Write |
+| ParkAng-RB  |  Current position of chopper disc if in parked state. | Degree | Read |
+| ParkAng  |  Position to which the disc should rotate in parked state. | Degree | Read/Write |
+| State  |  Enum for chopper state. | - | Read |
+| TDCE*  |  Vector of TDC (top dead center) events in last accelerator pulse. | to be determined | Read |
+| Dir-RB*  |  Enum for rotation direction (clockwise, counter clockwise). | - | Read |
+| Dir*  |  Desired rotation direction. (clockwise, counter clockwise). | - | Read/Write |
+| CmdS  |  String field to accept commands. | - | Read/Write |
+| CmdL  |  String field with last command. | - | Read |
+
+Starred PVs are not implemented yet, but will become part of the interface.
 
 **Possible values for STATE**
 - Resting*: The chopper disc is resting, the magnetic bearings are off.
@@ -79,13 +85,13 @@ exposed:
 The states marked with a * are not implemented yet and are not present in choppers which work with mechanical bearings.
 
 **Possible values for COMMAND**
-- START: Speed and phase are adjusted to match the corresponding setpoints
-- PHASE: Phase is adjusted to match the corresponding setpoint
-- COAST: Switch off motor, but do not actively decelerate disc
-- STOP: Go to velocity 0, disc remains levitated
-- PARK: Go to velocity 0, disc remains levitated, is rotated to PARKEDANGLE:SP
-- LEVITATE*: Levitate disc if it's not levitated
-- DELEVITATE*: Delevitate disc if possible
+- start: Speed and phase are adjusted to match the corresponding setpoints
+- set_phase: Phase is adjusted to match the corresponding setpoint
+- unlock: Switch off motor, but do not actively decelerate disc
+- stop: Go to velocity 0, disc remains levitated
+- park: Go to velocity 0, disc remains levitated, is rotated to PARKEDANGLE:SP
+- levitate*: Levitate disc if it's not levitated
+- delevitate*: Delevitate disc if possible
 
 The commands marked with a * are not implemented yet. There are however two additional commands, INIT and DEINIT. INIT takes the chopper from the initial `init` state to the `stopped` state, DEINIT does the opposite.
 
