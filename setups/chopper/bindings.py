@@ -37,8 +37,8 @@ epics = {
                     'PHASE': 'lockPhase',
                     'COAST': 'unlock',
                     'PARK': 'park',
-                    'INTERLOCK': 'interlock',
-                    'RELEASE': 'release'
+                    'INIT': 'initialize',
+                    'DEINIT': 'deinitialize'
                 },
                 'buffer': 'LAST_COMMAND'},
 
