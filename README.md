@@ -34,7 +34,7 @@ The following series of `caput`-commands, executed from a different terminal, wi
 speed and phase:
 
 ```
-$ caput SIM:COMMAND INTERLOCK
+$ caput SIM:COMMAND INIT
 $ caput SIM:SPEED:SP 100.0
 $ caput SIM:PHASE:SP 23.0
 $ caput SIM:COMMAND START
@@ -87,7 +87,7 @@ The states marked with a * are not implemented yet and are not present in choppe
 - LEVITATE*: Levitate disc if it's not levitated
 - DELEVITATE*: Delevitate disc if possible
 
-The commands marked with a * are not implemented yet. There are however two additional commands, INTERLOCK and RELEASE. INTERLOCK takes the chopper from the initial `init` state to the `stopped` state, RELEASE does the opposite. This behavior will likely change soon.
+The commands marked with a * are not implemented yet. There are however two additional commands, INIT and DEINIT. INIT takes the chopper from the initial `init` state to the `stopped` state, DEINIT does the opposite.
 
 ## Additional tools
 

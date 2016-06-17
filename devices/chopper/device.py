@@ -90,7 +90,7 @@ class ChopperContext(Context):
         self.idle_commanded = False
         self.phase_commanded = False
         self.shutdown_commanded = False
-        self.interlocked = False
+        self.initialized = False
 
 
 class SimulatedChopper(CanProcessComposite, object):
@@ -121,7 +121,7 @@ class SimulatedChopper(CanProcessComposite, object):
             dict_strict_update(state_handlers, override_states)
 
         transition_handlers = OrderedDict([
-            (('init', 'bearings'), lambda: self._context.interlocked),
+            (('init', 'bearings'), lambda: self._context.initialized),
             (('bearings', 'stopped'), lambda: self._bearings.ready),
             (('bearings', 'init'), lambda: self._bearings.idle),
 
@@ -172,14 +172,14 @@ class SimulatedChopper(CanProcessComposite, object):
         return self._csm.state
 
     @property
-    def interlocked(self):
-        return self._context.interlocked
+    def initialized(self):
+        return self._context.initialized
 
-    def interlock(self):
-        self._context.interlocked = True
+    def initialize(self):
+        self._context.initialized = True
         self._bearings.engage()
 
-    def release(self):
+    def deinitialize(self):
         self._context.shutdown_commanded = True
         self._bearings.disengage()
 
