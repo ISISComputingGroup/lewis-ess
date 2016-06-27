@@ -69,7 +69,7 @@ class TestStateMachine(unittest.TestCase):
         transition.assert_not_called()
         self.assertEqual(sm.state, 'foo')
         sm.process(0.2)
-        transition.assert_called()
+        self.assertTrue(transition.called)
         self.assertEqual(sm.state, 'bar')
 
     @patch.object(Transition, '__call__', return_value=True)
@@ -88,7 +88,7 @@ class TestStateMachine(unittest.TestCase):
         tr_call.assert_not_called()
         self.assertEqual(sm.state, 'foo')
         sm.process(0.2)
-        tr_call.assert_called()
+        self.assertTrue(tr_call.called)
         self.assertEqual(sm.state, 'bar')
 
     def test_Transition_receives_Context(self):
