@@ -74,6 +74,9 @@ def generate_fake_package_structure():
     for abs_dir_name in dirs.values():
         os.mkdir(abs_dir_name)
 
+    with open(os.path.join(_tmp_package, '__init__.py'), 'w'):
+        pass
+
     with open(os.path.join(_tmp_package, 'some_dir', '__init__.py'), 'w'):
         pass
 
@@ -81,11 +84,11 @@ def generate_fake_package_structure():
 
 
 class TestExtractModuleName(unittest.TestCase):
-    def setUp(self):
-        self._tmp_package, tmp_dir, self._files, self._dirs, expected = generate_fake_package_structure()
+    def setUpClass(cls):
+        cls._tmp_package, tmp_dir, cls._files, cls._dirs, expected = generate_fake_package_structure()
 
-    def tearDown(self):
-        shutil.rmtree(self._tmp_package)
+    def tearDownClass(cls):
+        shutil.rmtree(cls._tmp_package)
 
     def test_directory_basename_is_returned(self):
         self.assertEqual(extract_module_name(self._dirs['valid']), 'some_dir')
@@ -101,3 +104,27 @@ class TestExtractModuleName(unittest.TestCase):
 
     def test_file_basename_without_extension(self):
         self.assertEqual(extract_module_name(self._files['valid']), 'some_file')
+
+
+from core.utils import is_module
+
+
+class TestIsModule(unittest.TestCase):
+    def setUpClass(cls):
+        cls._tmp_package, tmp_dir, cls._files, cls._dirs, _expected = generate_fake_package_structure()
+
+    def tearDownClass(cls):
+        shutil.rmtree(cls._tmp_package)
+        pass
+
+    def test_valid_directory(self):
+        self.assertTrue(is_module(self._dirs['valid'], [self._tmp_package]))
+
+    def test_invalid_directory(self):
+        self.assertFalse(is_module(self._dirs['invalid'], [self._tmp_package]))
+
+    def test_invalid_file_name(self):
+        self.assertFalse(is_module(self._files['invalid_name'], [self._tmp_package]))
+
+    def test_invalid_file_ext(self):
+        self.assertFalse(is_module(self._files['invalid_ext'], [self._tmp_package]))

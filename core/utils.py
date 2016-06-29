@@ -23,18 +23,19 @@ import os.path as osp
 from os import listdir
 
 
-def get_available_submodules(package):
+def get_available_submodules(package, search_path=None):
     """
     This function returns a list of available submodules in a package.
 
     :param package: Name of the package.
+    :param search_path: List of paths to search for package or None. Passed to imp.find_module
     :return: Available submodules in package.
     """
-    file_name, path, descriptor = imp.find_module(package)
+    file_name, path, descriptor = imp.find_module(package, search_path)
 
     submodule_candidates = [extract_module_name(osp.join(path, entry)) for entry in listdir(path)]
 
-    return [submodule for submodule in submodule_candidates if is_submodule(submodule, package)]
+    return [submodule for submodule in submodule_candidates if is_module(submodule, [path])]
 
 
 def extract_module_name(absolute_path):
@@ -67,18 +68,18 @@ def extract_module_name(absolute_path):
     return None
 
 
-def is_submodule(module, package):
+def is_module(module, paths):
     """
     Small helper function that returns True if module is a sub-module in package.
 
     :param module: Name of the sub-module to check.
-    :param package: Name of the package where the sub-module resides.
+    :param path: List of paths where the module is located.
     :return: True if module is a sub-module of package.
     """
     try:
-        importlib.import_module('{}.{}'.format(package, module))
+        imp.find_module(module, paths)
         return True
-    except ImportError:
+    except (ImportError, TypeError) as error:
         return False
 
 
