@@ -10,12 +10,33 @@ regardless of manufacturer. The behavior of this abstraction layer can be modell
 The docs-directory contains an `fsm`-file (created using the program [qfsm](http://qfsm.sourceforge.net/)) which describes
 the state machine. While this is still work in progress, it gives an idea of how the choppers are going to operate internally.
 
-## Python module
+# Chopper simulation
 
-Install dependencies through the requirements.txt file:
+There are two ways of installing and running the chopper simulation. The first option is to run it directly using Python,
+the second is to run it in a [Docker containter](https://www.docker.com/).
+
+## Installation and startup I: Python
+
+Clone the repository in a location of your choice:
+
+```
+$ git clone https://github.com/DMSC-Instrument-Data/plankton.git
+```
+
+If you do not have [git](https://git-scm.com/) available, you can also download this repository as an archive and unpack it somewhere. Plankton has a few dependencies that can be installed through pip via the requirements.txt file:
 
 ```
 $ pip install -r requirements.txt
+```
+
+Furthermore, [EPICS base](http://www.aps.anl.gov/epics/base/) has to be installed on the machine. Usually some environment
+variables have to be configured so everything is found on the network. For exposing the simulated chopper only on your
+`localhost`, the following exports can be used:
+
+```
+$ export EPICS_CAS_INTF_ADDR_LIST=localhost
+$ export EPICS_CA_AUTO_ADDR_LIST=NO
+$ export EPICS_CA_ADDR_LIST=localhost
 ```
 
 Run the basic chopper simulation:
@@ -24,7 +45,32 @@ Run the basic chopper simulation:
 $ python simulation.py --device chopper --setup default --protocol epics --parameters pv_prefix=SIM:
 ```
 
-Observe available EPICS PVs in an automatically updating screen:
+## Installation and startup II: Docker
+
+Another option to install and run plankton is via Docker (installation of Docker is outside the scope of this document,
+please refer to the instructions on the Docker website). Once Docker is installed on the machine,
+running the simulation is done via docker, with the same parameters passed to the simulation as in the Python case:
+
+```
+$ docker run -it dmscid/plankton --device chopper --setup default --protocol epics --parameters pv_prefix=SIM:
+```
+
+Please note that this currently only works on a Linux host, but a solution using `docker-machine` that runs on other systems
+is under development.
+
+When this method is used, the EPICS configuration on the host needs to be a bit different, because the docker container has its own IP address on the internal network that the containers and the host are part of.
+
+```
+$ export EPICS_CA_ADDR_LIST=172.17.0.255
+```
+
+If the Docker network is configured differently, this IP needs to be changed accordingly.
+
+## Interacting with the simulated chopper
+
+The simulated chopper is exposed via a set of EPICS PVs. For a detailed description of those, see the table of available PVs below.
+
+Observe some available EPICS PVs in an automatically updating screen:
 
 ```
 $ watch -n 1 caget SIM:State SIM:CmdL SIM:Spd-RB SIM:Spd SIM:Phs-RB SIM:Phs SIM:ParkAng-RB SIM:ParkAng
@@ -45,9 +91,9 @@ It may take a while until the simulation reaches the `phase_locked` state.
 
 ## EPICS interface
 
-The simulator is exposed to channel access, using the [pcaspy](https://pypi.python.org/pypi/pcaspy)-module. Depending on the level
-of simulation there may be different PVs available to control the simulated chopper. At a minimum, the following PVs will be
-exposed:
+The simulator is exposed to channel access, using the [pcaspy](https://pypi.python.org/pypi/pcaspy)-module.
+Depending on the level of simulation there may be different PVs available to control the simulated chopper.
+At a minimum, the following PVs will be exposed:
 
 | PV  | Description  | Unit | Access |
 |---|---|---|---|---|
