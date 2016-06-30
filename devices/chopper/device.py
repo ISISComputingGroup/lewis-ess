@@ -84,6 +84,7 @@ class ChopperContext(Context):
         self.parking_position = 0.0
         self.target_parking_position = 0.0
 
+        self.automatic_park_enabled = False
         self.park_commanded = False
         self.stop_commanded = False
         self.start_commanded = False
@@ -189,6 +190,14 @@ class SimulatedChopper(CanProcessComposite, object):
     @property
     def parked(self):
         return self._csm.state == 'parked'
+
+    @property
+    def autoPark(self):
+        return self._context.automatic_park_enabled
+
+    @autoPark.setter
+    def autoPark(self, enable):
+        self._context.automatic_park_enabled = bool(enable)
 
     # Stopping stuff
     def stop(self):

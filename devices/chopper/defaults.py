@@ -66,7 +66,9 @@ class DefaultStoppingState(State):
 
 
 class DefaultStoppedState(State):
-    pass
+    def on_entry(self, dt):
+        if self._context.automatic_park_enabled:
+            self._context.park_commanded = True
 
 
 class DefaultIdleState(State):
