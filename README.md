@@ -106,6 +106,7 @@ At a minimum, the following PVs will be exposed:
 | Phs  |  Phase setpoint. | Degree | Read/Write |
 | ParkAng-RB  |  Current position of chopper disc if in parked state. | Degree | Read |
 | ParkAng  |  Position to which the disc should rotate in parked state. | Degree | Read/Write |
+| AutoPark | Enum `false`/`true` (or 0/1). If enabled, the chopper will move to the parking state when the stop state is reached. | - | Read/Write |
 | State  |  Enum for chopper state. | - | Read |
 | TDCE*  |  Vector of TDC (top dead center) events in last accelerator pulse. | to be determined | Read |
 | Dir-RB*  |  Enum for rotation direction (clockwise, counter clockwise). | - | Read |

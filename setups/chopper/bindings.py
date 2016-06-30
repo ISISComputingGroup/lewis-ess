@@ -29,20 +29,23 @@ epics = {
 
     'ParkAng-RB': {'property': 'parkingPosition'},
     'ParkAng': {'property': 'targetParkingPosition'},
+    'AutoPark': {'type': 'enum',
+                 'enums': ['false', 'true'],
+                 'property': 'autoPark'},
 
     'State': {'type': 'string', 'property': 'state'},
 
     'CmdS': {'type': 'string',
-                'commands': {
-                    'start': 'start',
-                    'stop': 'stop',
-                    'set_phase': 'lockPhase',
-                    'unlock': 'unlock',
-                    'park': 'park',
-                    'init': 'initialize',
-                    'deinit': 'deinitialize'
-                },
-                'buffer': 'CmdL'},
+             'commands': {
+                 'start': 'start',
+                 'stop': 'stop',
+                 'set_phase': 'lockPhase',
+                 'unlock': 'unlock',
+                 'park': 'park',
+                 'init': 'initialize',
+                 'deinit': 'deinitialize'
+             },
+             'buffer': 'CmdL'},
 
     'CmdL': {'type': 'string'}
 }
