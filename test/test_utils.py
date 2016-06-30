@@ -151,4 +151,5 @@ from core.utils import get_available_submodules
 
 class TestGetAvailableSubModules(TestWithPackageStructure):
     def test_correct_modules_are_returned(self):
-        self.assertEqual(get_available_submodules(self._tmp_package_name, [self._tmp_dir]), self._expected_modules)
+        self.assertEqual(sorted(get_available_submodules(self._tmp_package_name, [self._tmp_dir])),
+                         sorted(self._expected_modules))
