@@ -62,7 +62,7 @@ is under development.
 When this method is used, the EPICS configuration on the host needs to be a bit different, because the docker container has its own IP address on the internal network that the containers and the host are part of.
 
 ```
-$ export EPICS_CA_ADDR_LIST=172.17.0.255
+$ export EPICS_CA_ADDR_LIST=172.17.255.255
 ```
 
 If the Docker network is configured differently, this IP needs to be changed accordingly.
