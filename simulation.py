@@ -18,6 +18,7 @@
 # *********************************************************************
 
 import argparse
+from core.utils import get_available_submodules
 from adapters import import_adapter
 from setups import import_device, import_bindings
 
@@ -44,16 +45,18 @@ class StoreNameValuePairs(argparse.Action):
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
-parser.add_argument('-d', '--device', help='Name of the device to simulate.', default='chopper', choices=['chopper'])
+parser.add_argument('-d', '--device', help='Name of the device to simulate.', default='chopper',
+                    choices=get_available_submodules('setups'))
 parser.add_argument('-s', '--setup', help='Name of the setup to load.', default='default')
 parser.add_argument('-b', '--bindings', help='Bindings to import from setups.device.bindings. '
                                              'If not specified, this defaults to the value of --protocol.')
 parser.add_argument('-p', '--protocol', help='Communication protocol to expose devices.', default='epics',
-                    choices=['epics'])
+                    choices=get_available_submodules('adapters'))
 parser.add_argument('-a', '--adapter',
                     help='Name of adapter class. If not specified, the loader will choose '
                          'the first adapter it discovers.')
-parser.add_argument('--parameters', help='Additional parameters for the protocol.', action=StoreNameValuePairs)
+parser.add_argument('--parameters', help='Additional parameters for the protocol, key=value pairs separated by comma.',
+                    action=StoreNameValuePairs)
 
 arguments = parser.parse_args()
 
