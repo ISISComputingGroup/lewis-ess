@@ -36,7 +36,15 @@ class DefaultStartedState(State):
 
 
 class DefaultHeatState(State):
-    pass
+    def in_state(self, dt):
+        self._context.pump_speed = int(30 * (50.0 / self._context.temperature_rate))
+        if self._context.pump_speed > 30:
+            self._context.pump_speed = 30
+            # TODO: Set error flag?
+
+        self._context.temperature += self._context.temperature_rate * (dt / 60.0)
+        if self._context.temperature > self._context.temperature_limit:
+            self._context.temperature = self._context.temperature_limit
 
 
 class DefaultHoldState(State):
@@ -44,4 +52,12 @@ class DefaultHoldState(State):
 
 
 class DefaultCoolState(State):
-    pass
+    def in_state(self, dt):
+        self._context.pump_speed = int(30 * (50.0 / self._context.temperature_rate))
+        if self._context.pump_speed > 30:
+            self._context.pump_speed = 30
+            # TODO: Set error flag?
+
+        self._context.temperature -= self._context.temperature_rate * (dt / 60.0)
+        if self._context.temperature < self._context.temperature_limit:
+            self._context.temperature = self._context.temperature_limit

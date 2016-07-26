@@ -67,20 +67,20 @@ class SimulatedLinkamT95(CanProcessComposite, object):
             (('stopped', 'started'), lambda: self._context.start_commanded),
 
             (('started', 'stopped'), lambda: self._context.stop_commanded),
-            (('started', 'heat'), lambda: False),
-            (('started', 'hold'), lambda: False),
-            (('started', 'cool'), lambda: False),
+            (('started', 'heat'), lambda: self._context.temperature < self._context.temperature_limit),
+            (('started', 'hold'), lambda: self._context.temperature == self._context.temperature_limit),
+            (('started', 'cool'), lambda: self._context.temperature > self._context.temperature_limit),
 
-            (('heat', 'hold'), lambda: False),
-            (('heat', 'cool'), lambda: False),
+            (('heat', 'hold'), lambda: self._context.temperature == self._context.temperature_limit),
+            (('heat', 'cool'), lambda: self._context.temperature > self._context.temperature_limit),
             (('heat', 'stopped'), lambda: self._context.stop_commanded),
 
-            (('hold', 'heat'), lambda: False),
-            (('hold', 'cool'), lambda: False),
+            (('hold', 'heat'), lambda: self._context.temperature < self._context.temperature_limit),
+            (('hold', 'cool'), lambda: self._context.temperature > self._context.temperature_limit),
             (('hold', 'stopped'), lambda: self._context.stop_commanded),
 
-            (('cool', 'heat'), lambda: False),
-            (('cool', 'hold'), lambda: False),
+            (('cool', 'heat'), lambda: self._context.temperature < self._context.temperature_limit),
+            (('cool', 'hold'), lambda: self._context.temperature == self._context.temperature_limit),
             (('cool', 'stopped'), lambda: self._context.stop_commanded),
         ])
 
@@ -116,7 +116,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
 
         # Temperature
         temphex = "%08x" % int(self._context.temperature)
-        tempbytes = [int(e) for e in [temphex[n:n+2] for n in xrange(0, len(temphex), 2)]]
+        tempbytes = [int(e, 16) for e in [temphex[n:n+2] for n in xrange(0, len(temphex), 2)]]
         Tarray[6:10] = tempbytes
 
         print self._csm.state
