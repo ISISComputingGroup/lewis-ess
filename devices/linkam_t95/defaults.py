@@ -20,9 +20,14 @@
 from core import State
 
 
-class DefaultStoppedState(State):
+class DefaultInitState(State):
     def on_entry(self, dt):
         self._context.initialize()
+
+
+class DefaultStoppedState(State):
+    def on_entry(self, dt):
+        self._context.stop_commanded = False
 
 
 class DefaultStartedState(State):
