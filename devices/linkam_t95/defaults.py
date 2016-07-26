@@ -17,5 +17,26 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from chopper import SimulatedChopper
-from linkam_t95 import SimulatedLinkamT95
+from core import State
+
+
+class DefaultStoppedState(State):
+    def on_entry(self, dt):
+        self._context.initialize()
+
+
+class DefaultStartedState(State):
+    def on_entry(self, dt):
+        self._context.start_commanded = False
+
+
+class DefaultHeatState(State):
+    pass
+
+
+class DefaultHoldState(State):
+    pass
+
+
+class DefaultCoolState(State):
+    pass

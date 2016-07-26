@@ -17,5 +17,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from chopper import SimulatedChopper
-from linkam_t95 import SimulatedLinkamT95
+
+stream = {
+    'T': 'getStatus',
+    'R1': 'setRate',
+    'L1': 'setLimit',
+    'S': 'start',
+    'E': 'stop',
+    'O': 'hold',
+    'H': 'heat',
+    'C': 'cool',
+    'P': 'pumpCommand',
+}
