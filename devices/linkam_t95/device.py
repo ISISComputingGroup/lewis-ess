@@ -115,7 +115,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         Tarray[2] = 0x80
 
         # Temperature
-        temphex = "%08x" % int(self._context.temperature)
+        temphex = "%08x" % int(self._context.temperature * 10)
         tempbytes = [int(e, 16) for e in [temphex[n:n+2] for n in xrange(0, len(temphex), 2)]]
         Tarray[6:10] = tempbytes
 
