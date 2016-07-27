@@ -112,7 +112,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         Tarray[1] = 0x00
 
         # Pump status byte (PB1)
-        Tarray[2] = 0x80
+        Tarray[2] = 0x80 + self._context.pump_speed
 
         # Temperature
         temphex = "%08x" % int(self._context.temperature * 10)
@@ -126,13 +126,13 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         rate = int(param)
         if 1 <= rate <= 9999:
             self._context.temperature_rate = rate / 100.0
-        print "New rate: %.2f C/min\n" % (self._context.temperature_rate,)
+        print "New rate: %.2f C/min" % (self._context.temperature_rate,)
 
     def setLimit(self, param):
         limit = int(param)
         if -9999 <= limit <= 9999:
             self._context.temperature_limit = limit / 10.0
-        print "New limit: %.1f C\n" % (self._context.temperature_limit,)
+        print "New limit: %.1f C" % (self._context.temperature_limit,)
 
     def start(self):
         self._context.start_commanded = True
@@ -152,4 +152,14 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         pass
 
     def pumpCommand(self, param):
-        pass
+        if param == "a0":
+            self._context.pump_manual_mode = False
+            return
+
+        if param == "m0":
+            self._context.pump_manual_mode = True
+            return
+
+        lookup = [c for c in "0123456789:;<=>?@ABCDEFGHIJKLMN"]
+        if param in lookup:
+            self._context.manual_target_speed = lookup.index(param)
