@@ -100,7 +100,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
     def getStatus(self):
         self._context.serial_command_mode = True
 
-        Tarray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "\n"]
+        Tarray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13]
 
         # Status byte (SB1)
         Tarray[0] = {
@@ -127,7 +127,9 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         Tarray[6:10] = tempbytes
 
         print self._csm.state
-        return str(Tarray) + "\n"  # TODO: Should be raw bytes
+        print str(Tarray)
+
+        return ''.join(chr(c) for c in Tarray)
 
     def setRate(self, param):
         # TODO: Is not having leading zeroes / 4 digits an error?
