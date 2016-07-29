@@ -37,16 +37,6 @@ class DefaultStartedState(State):
 
 class DefaultHeatState(State):
     def in_state(self, dt):
-        if self._context.pump_manual_mode:
-            self._context.pump_speed = self._context.manual_target_speed
-        else:
-            self._context.pump_speed = int(30 * (self._context.temperature_rate / 50.0))
-
-        if self._context.pump_speed > 30:
-            self._context.pump_speed = 30
-            # TODO: Set error flag?
-
-        # TODO: Should be based on pump speed somehow
         self._context.temperature += self._context.temperature_rate * (dt / 60.0)
         if self._context.temperature > self._context.temperature_limit:
             self._context.temperature = self._context.temperature_limit
@@ -62,13 +52,19 @@ class DefaultCoolState(State):
         if self._context.pump_manual_mode:
             self._context.pump_speed = self._context.manual_target_speed
         else:
+            # TODO: Figure out real correlation
             self._context.pump_speed = int(30 * (self._context.temperature_rate / 50.0))
 
         if self._context.pump_speed > 30:
             self._context.pump_speed = 30
-            # TODO: Set error flag?
+            self._context.pump_overspeed = True
+        else:
+            self._context.pump_overspeed = False
 
         # TODO: Should be based on pump speed somehow
         self._context.temperature -= self._context.temperature_rate * (dt / 60.0)
         if self._context.temperature < self._context.temperature_limit:
             self._context.temperature = self._context.temperature_limit
+
+    def on_exit(self, dt):
+        self._context.pump_overspeed = False

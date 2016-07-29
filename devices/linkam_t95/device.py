@@ -28,19 +28,21 @@ from defaults import *
 class LinkamT95Context(Context):
     def initialize(self):
         self.serial_command_mode = False
+        self.pump_overspeed = False
 
         self.start_commanded = False
         self.stop_commanded = False
         self.hold_commanded = False
+
+        # TODO: Actual rate and limit defaults?
+        self.temperature_rate = 0.01    # Rate of change of temperature in C/min
+        self.temperature_limit = 0.0    # Target temperature in C
 
         self.pump_speed = 0         # Pump speed in arbitrary unit, ranging 0 to 30
         self.temperature = 24.0     # Current temperature in C
 
         self.pump_manual_mode = False
         self.manual_target_speed = 0
-
-        self.temperature_rate = 0.0     # Rate of change of temperature in C/min
-        self.temperature_limit = 0.0    # Target temperature in C
 
 
 class SimulatedLinkamT95(CanProcessComposite, object):
@@ -105,11 +107,16 @@ class SimulatedLinkamT95(CanProcessComposite, object):
             'stopped': 0x01,
             'heat': 0x10,
             'cool': 0x20,
-            'hold': 0x30,  # TODO: Other hold states
+            'hold': 0x30,
         }.get(self._csm.state, 0x01)
+        if Tarray[0] == 0x30 and self._context.hold_commanded:
+            Tarray[0] = 0x40 if self._context.temperature == self._context.temperature_limit else 0x50
 
         # Error status byte (EB1)
-        Tarray[1] = 0x00
+        Tarray[1] = 0x80
+        if self._context.pump_overspeed:
+            Tarray[1] |= 0x01
+        # TODO: Add support for other error conditions?
 
         # Pump status byte (PB1)
         Tarray[2] = 0x80 + self._context.pump_speed
@@ -123,12 +130,16 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         return str(Tarray) + "\n"  # TODO: Should be raw bytes
 
     def setRate(self, param):
+        # TODO: Is not having leading zeroes / 4 digits an error?
+        # TODO: What is the upper limit in the real device?
         rate = int(param)
         if 1 <= rate <= 9999:
             self._context.temperature_rate = rate / 100.0
         print "New rate: %.2f C/min" % (self._context.temperature_rate,)
 
     def setLimit(self, param):
+        # TODO: Is not having leading zeroes / 4 digits an error?
+        # TODO: What are the upper and lower limits in the real device?
         limit = int(param)
         if -9999 <= limit <= 9999:
             self._context.temperature_limit = limit / 10.0
@@ -143,23 +154,22 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         print "Stop commanded"
 
     def hold(self):
-        pass
+        self._context.hold_commanded = True
 
     def heat(self):
-        pass
+        # TODO: Is this really all it does?
+        self._context.hold_commanded = False
 
     def cool(self):
-        pass
+        # TODO: Is this really all it does?
+        self._context.hold_commanded = False
 
     def pumpCommand(self, param):
+        lookup = [c for c in "0123456789:;<=>?@ABCDEFGHIJKLMN"]
+
         if param == "a0":
             self._context.pump_manual_mode = False
-            return
-
-        if param == "m0":
+        elif param == "m0":
             self._context.pump_manual_mode = True
-            return
-
-        lookup = [c for c in "0123456789:;<=>?@ABCDEFGHIJKLMN"]
-        if param in lookup:
+        elif param in lookup:
             self._context.manual_target_speed = lookup.index(param)
