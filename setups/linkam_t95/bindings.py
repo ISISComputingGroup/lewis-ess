@@ -19,13 +19,20 @@
 
 
 stream = {
-    'T': 'getStatus',
-    'R1': 'setRate',
-    'L1': 'setLimit',
-    'S': 'start',
-    'E': 'stop',
-    'O': 'hold',
-    'H': 'heat',
-    'C': 'cool',
-    'P': 'pumpCommand',
+    'meta': {
+        'in_terminator': "\n",
+        'out_terminator': "\n",
+    },
+
+    'commands': {
+        'T': 'getStatus',
+        'R1': 'setRate',
+        'L1': 'setLimit',
+        'S': 'start',
+        'E': 'stop',
+        'O': 'hold',
+        'H': 'heat',
+        'C': 'cool',
+        'P': 'pumpCommand',
+    }
 }

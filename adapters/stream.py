@@ -17,55 +17,62 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-import SocketServer
-import re
+
+import asyncore
+import asynchat
+import socket
 
 from adapters import Adapter
 from datetime import datetime
 
 
-class StreamHandler(SocketServer.StreamRequestHandler):
-    def handle(self):
-        request = self.rfile.readline().strip()
-        reply = None
+class StreamHandler(asynchat.async_chat):
+    def __init__(self, sock, target, bindings):
+        asynchat.async_chat.__init__(self, sock=sock)
+        self.set_terminator(bindings['meta']['in_terminator'])
+        self.target = target
+        self.bindings = bindings
+        self.buffer = []
 
-        for command, funcname in self.server.bindings.iteritems():
+    def collect_incoming_data(self, data):
+        self.buffer.append(data)
+
+    def found_terminator(self):
+        request = ''.join(self.buffer)
+        reply = None
+        self.buffer = []
+
+        for command, funcname in self.bindings['commands'].iteritems():
             if request.startswith(command):
-                func = getattr(self.server.target, funcname)
+                func = getattr(self.target, funcname)
                 args = request[len(command):]
                 reply = func(args) if args else func()
 
-        """
-        if request == "STATE?":
-            reply = self.server.target.state + "\n"
-        if request == "INIT!":
-            self.server.target.initialize()
-            reply = "Initializing\n"
-        if request == "STATS?":
-            speed = self.server.target.speed
-            phase = self.server.target.phase
-            reply = "%.2f rpm @ %.2f deg\n" % (speed, phase)
-        if request.startswith("GO!"):
-            m = re.match("GO!(\d+(?:\.\d+)?)@(\d+(?:\.\d+)?)", request)
-            if m is None:
-                reply = "INVALID FORMAT!\n"
-            else:
-                self.server.target.targetSpeed = float(m.group(1))
-                self.server.target.targetPhase = float(m.group(2))
-                self.server.target.start()
-                reply = "START COMMANDED!\n"
-        """
-
         if reply is not None:
-            self.request.sendall(str(reply))
+            self.push(str(reply) + self.bindings['meta']['out_terminator'])
+
+
+class StreamServer(asyncore.dispatcher):
+    def __init__(self, host, port, target, bindings):
+        asyncore.dispatcher.__init__(self)
+        self.target = target
+        self.bindings = bindings
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.set_reuse_addr()
+        self.bind((host, port))
+        self.listen(5)
+
+    def handle_accept(self):
+        pair = self.accept()
+        if pair is not None:
+            sock, addr = pair
+            print "Client connect from %s" % repr(addr)
+            StreamHandler(sock, self.target, self.bindings)
 
 
 class StreamAdapter(Adapter):
     def run(self, target, bindings, *args, **kwargs):
-        server = SocketServer.TCPServer(("localhost", 9999), StreamHandler)
-        server.timeout = 0.1
-        server.target = target
-        server.bindings = bindings
+        StreamServer("localhost", 9999, target, bindings)
 
         delta = 0.0  # Delta between cycles
         count = 0  # Cycles per second counter
@@ -74,7 +81,7 @@ class StreamAdapter(Adapter):
         while True:
             start = datetime.now()
 
-            server.handle_request()
+            asyncore.loop(0.1, count=1)
             target.process(delta)
 
             delta = (datetime.now() - start).total_seconds()
