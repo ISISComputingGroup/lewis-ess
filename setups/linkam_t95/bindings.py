@@ -20,8 +20,8 @@
 
 stream = {
     'meta': {
-        'in_terminator': "\n",
-        'out_terminator': "\n",
+        'in_terminator': "\r",
+        'out_terminator': "\r",
     },
 
     'commands': {

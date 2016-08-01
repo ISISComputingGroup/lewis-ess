@@ -135,33 +135,40 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         if 1 <= rate <= 9999:
             self._context.temperature_rate = rate / 100.0
         print "New rate: %.2f C/min" % (self._context.temperature_rate,)
+        return ""
 
     def setLimit(self, param):
         # TODO: Is not having leading zeroes / 4 digits an error?
         # TODO: What are the upper and lower limits in the real device?
         limit = int(param)
-        if -9999 <= limit <= 9999:
+        if -196 <= limit <= 1500:
             self._context.temperature_limit = limit / 10.0
         print "New limit: %.1f C" % (self._context.temperature_limit,)
+        return ""
 
     def start(self):
         self._context.start_commanded = True
         print "Start commanded"
+        return ""
 
     def stop(self):
         self._context.stop_commanded = True
         print "Stop commanded"
+        return ""
 
     def hold(self):
         self._context.hold_commanded = True
+        return ""
 
     def heat(self):
         # TODO: Is this really all it does?
         self._context.hold_commanded = False
+        return ""
 
     def cool(self):
         # TODO: Is this really all it does?
         self._context.hold_commanded = False
+        return ""
 
     def pumpCommand(self, param):
         lookup = [c for c in "0123456789:;<=>?@ABCDEFGHIJKLMN"]
@@ -172,3 +179,5 @@ class SimulatedLinkamT95(CanProcessComposite, object):
             self._context.pump_manual_mode = True
         elif param in lookup:
             self._context.manual_target_speed = lookup.index(param)
+
+        return ""
