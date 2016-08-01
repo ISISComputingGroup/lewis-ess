@@ -121,7 +121,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         Tarray[2] = 0x80 + self._context.pump_speed
 
         # Temperature
-        Tarray[6:10] = [x for x in "%04x" % (int(self._context.temperature * 10) & 0xFFFF)]
+        Tarray[6:10] = [ord(x) for x in "%04x" % (int(self._context.temperature * 10) & 0xFFFF)]
 
         print self._csm.state
         print str(Tarray)
