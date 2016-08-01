@@ -73,16 +73,16 @@ class SimulatedLinkamT95(CanProcessComposite, object):
             (('started', 'hold'), lambda: self._context.temperature == self._context.temperature_limit),
             (('started', 'cool'), lambda: self._context.temperature > self._context.temperature_limit),
 
-            (('heat', 'hold'), lambda: self._context.temperature == self._context.temperature_limit),
+            (('heat', 'hold'), lambda: self._context.temperature == self._context.temperature_limit or self._context.hold_commanded),
             (('heat', 'cool'), lambda: self._context.temperature > self._context.temperature_limit),
             (('heat', 'stopped'), lambda: self._context.stop_commanded),
 
-            (('hold', 'heat'), lambda: self._context.temperature < self._context.temperature_limit),
-            (('hold', 'cool'), lambda: self._context.temperature > self._context.temperature_limit),
+            (('hold', 'heat'), lambda: self._context.temperature < self._context.temperature_limit and not self._context.hold_commanded),
+            (('hold', 'cool'), lambda: self._context.temperature > self._context.temperature_limit and not self._context.hold_commanded),
             (('hold', 'stopped'), lambda: self._context.stop_commanded),
 
             (('cool', 'heat'), lambda: self._context.temperature < self._context.temperature_limit),
-            (('cool', 'hold'), lambda: self._context.temperature == self._context.temperature_limit),
+            (('cool', 'hold'), lambda: self._context.temperature == self._context.temperature_limit or self._context.hold_commanded),
             (('cool', 'stopped'), lambda: self._context.stop_commanded),
         ])
 
