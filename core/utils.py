@@ -34,6 +34,7 @@ def get_available_submodules(package, search_path=None):
     file_name, path, descriptor = imp.find_module(package, search_path)
 
     submodule_candidates = [extract_module_name(osp.join(path, entry)) for entry in listdir(path)]
+    submodule_candidates = filter(lambda x: x is not None, submodule_candidates)
 
     return [submodule for submodule in submodule_candidates if is_module(submodule, [path])]
 
