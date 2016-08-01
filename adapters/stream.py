@@ -72,7 +72,7 @@ class StreamServer(asyncore.dispatcher):
 
 class StreamAdapter(Adapter):
     def run(self, target, bindings, *args, **kwargs):
-        StreamServer("localhost", 9999, target, bindings)
+        StreamServer("0.0.0.0", 9999, target, bindings)
 
         delta = 0.0  # Delta between cycles
         count = 0  # Cycles per second counter

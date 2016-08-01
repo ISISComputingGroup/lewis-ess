@@ -100,7 +100,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
     def getStatus(self):
         self._context.serial_command_mode = True
 
-        Tarray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13]
+        Tarray = [0x80] * 10
 
         # Status byte (SB1)
         Tarray[0] = {
@@ -113,7 +113,6 @@ class SimulatedLinkamT95(CanProcessComposite, object):
             Tarray[0] = 0x40 if self._context.temperature == self._context.temperature_limit else 0x50
 
         # Error status byte (EB1)
-        Tarray[1] = 0x80
         if self._context.pump_overspeed:
             Tarray[1] |= 0x01
         # TODO: Add support for other error conditions?
@@ -122,9 +121,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         Tarray[2] = 0x80 + self._context.pump_speed
 
         # Temperature
-        temphex = "%08x" % int(self._context.temperature * 10)
-        tempbytes = [int(e, 16) for e in [temphex[n:n+2] for n in xrange(0, len(temphex), 2)]]
-        Tarray[6:10] = tempbytes
+        Tarray[6:10] = [x for x in "%04x" % (int(self._context.temperature * 10) & 0xFFFF)]
 
         print self._csm.state
         print str(Tarray)
