@@ -52,12 +52,13 @@ class DefaultCoolState(State):
             self._context.pump_speed = self._context.manual_target_speed
         else:
             # TODO: Figure out real correlation
-            self._context.pump_speed = int(30 * (self._context.temperature_rate / 50.0))
+            self._context.pump_speed = 30 * (self._context.temperature_rate / 50.0)
 
         if self._context.pump_speed > 30:
             self._context.pump_speed = 30
             self._context.pump_overspeed = True
         else:
+            self._context.pump_speed = int(self._context.pump_speed)
             self._context.pump_overspeed = False
 
         # TODO: Should be based on pump speed somehow
