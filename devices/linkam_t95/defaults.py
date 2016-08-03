@@ -43,8 +43,7 @@ class DefaultHeatState(State):
 
 
 class DefaultHoldState(State):
-    def on_entry(self, dt):
-        self._context.pump_speed = 0
+    pass
 
 
 class DefaultCoolState(State):
@@ -68,3 +67,4 @@ class DefaultCoolState(State):
 
     def on_exit(self, dt):
         self._context.pump_overspeed = False
+        self._context.pump_speed = 0
