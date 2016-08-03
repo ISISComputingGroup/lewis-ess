@@ -141,7 +141,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         # TODO: Is not having leading zeroes / 4 digits an error?
         # TODO: What are the upper and lower limits in the real device?
         limit = int(param)
-        if -196 <= limit <= 1500:
+        if -1960 <= limit <= 15000:
             self._context.temperature_limit = limit / 10.0
         print "New limit: %.1f C" % (self._context.temperature_limit,)
         return ""
