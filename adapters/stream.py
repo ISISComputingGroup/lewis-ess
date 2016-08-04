@@ -46,7 +46,10 @@ class StreamHandler(asynchat.async_chat):
             if request.startswith(command):
                 func = getattr(self.target, funcname)
                 args = request[len(command):]
-                reply = func(args) if args else func()
+                try:
+                    reply = func(args) if args else func()
+                except Exception:
+                    pass
 
         if reply is not None:
             self.push(str(reply) + self.bindings['meta']['out_terminator'])
