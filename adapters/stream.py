@@ -49,6 +49,8 @@ class StreamHandler(asynchat.async_chat):
                 try:
                     reply = func(args) if args else func()
                 except Exception:
+                    # We're ignoring this temporarily as per Linkam T95 spec
+                    # In the long term, we need to come up with a way for the device to decide how errors are handled.
                     pass
 
         if reply is not None:
