@@ -56,8 +56,7 @@ parser.add_argument('-p', '--protocol', help='Communication protocol to expose d
 parser.add_argument('-a', '--adapter',
                     help='Name of adapter class. If not specified, the loader will choose '
                          'the first adapter it discovers.')
-parser.add_argument('--parameters', help='Additional parameters for the protocol, key=value pairs separated by comma.',
-                    action=StoreNameValuePairs)
+parser.add_argument('adapter_args', nargs='*', help='Arguments for the adapter.')
 
 arguments = parser.parse_args()
 
@@ -67,4 +66,4 @@ bindings = import_bindings(arguments.device, arguments.protocol if arguments.bin
 device = import_device(arguments.device, arguments.setup)
 
 adapter = CommunicationAdapter()
-adapter.run(device, bindings, **arguments.parameters)
+adapter.run(device, bindings, arguments.adapter_args)

@@ -21,7 +21,7 @@ import importlib
 
 
 class Adapter(object):
-    def run(cls, target, bindings, *args, **kwargs):
+    def run(self, target, bindings, arguments):
         pass
 
 

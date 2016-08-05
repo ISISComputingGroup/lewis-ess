@@ -18,6 +18,7 @@
 # *********************************************************************
 
 from datetime import datetime
+from argparse import ArgumentParser
 
 from pcaspy import Driver, SimpleServer
 
@@ -68,9 +69,14 @@ class PropertyExposingDriver(CanProcess, Driver):
 
 
 class EpicsAdapter(Adapter):
-    def run(self, target, bindings, *args, **kwargs):
+    def run(self, target, bindings, arguments):
+        print arguments
+        parser = ArgumentParser(description="Adapter to expose a device via EPICS")
+        parser.add_argument('-p', '--prefix', help='Prefix to use for all PVs', default='')
+        arguments = parser.parse_args(arguments)
+
         server = SimpleServer()
-        server.createPV(prefix=kwargs['pv_prefix'], pvdb=bindings)
+        server.createPV(prefix=arguments.prefix, pvdb=bindings)
         driver = PropertyExposingDriver(target=target, pv_dict=bindings)
 
         delta = 0.0  # Delta between cycles

@@ -76,7 +76,10 @@ class StreamServer(asyncore.dispatcher):
 
 
 class StreamAdapter(Adapter):
-    def run(self, target, bindings, *args, **kwargs):
+    def run(self, target, bindings, arguments):
+        if arguments:
+            raise RuntimeError("Unknown TCP stream adapter argument: %s" % arguments[0])
+
         StreamServer("0.0.0.0", 9999, target, bindings)
 
         delta = 0.0  # Delta between cycles
