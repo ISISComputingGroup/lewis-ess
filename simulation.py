@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 # *********************************************************************
 # plankton - a library for creating hardware device simulators

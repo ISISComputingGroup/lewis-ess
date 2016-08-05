@@ -79,8 +79,7 @@ def is_module(module, paths):
     try:
         imp.find_module(module, paths)
         return True
-    except (ImportError, TypeError) as error:
-        print error.message
+    except (ImportError, TypeError):
         return False
 
 
