@@ -23,6 +23,7 @@ import asynchat
 import socket
 
 from adapters import Adapter
+from argparse import ArgumentParser
 from datetime import datetime
 
 
@@ -77,10 +78,12 @@ class StreamServer(asyncore.dispatcher):
 
 class StreamAdapter(Adapter):
     def run(self, target, bindings, arguments):
-        if arguments:
-            raise RuntimeError("Unknown TCP stream adapter argument: %s" % arguments[0])
+        parser = ArgumentParser(description='Adapter to expose a device via TCP Stream')
+        parser.add_argument('-b', '--bind-address', help='IP Address to bind and listen for connections on', default='0.0.0.0')
+        parser.add_argument('-p', '--port', help='Port to listen for connections on', type=int, default=9999)
+        arguments = parser.parse_args(arguments)
 
-        StreamServer("0.0.0.0", 9999, target, bindings)
+        StreamServer(arguments.bind_address, arguments.port, target, bindings)
 
         delta = 0.0  # Delta between cycles
         count = 0  # Cycles per second counter
