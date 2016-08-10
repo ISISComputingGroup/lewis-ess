@@ -18,10 +18,18 @@
 # *********************************************************************
 
 import importlib
+import argparse
 
 
 class Adapter(object):
+    def _parseArguments(self, arguments):
+        return argparse.Namespace()
+
     def run(self, target, bindings, arguments):
+        options = self._parseArguments(arguments)
+        self.doRun(target, bindings, **vars(options))
+
+    def doRun(self, target, bindings, **options):
         pass
 
 

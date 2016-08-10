@@ -69,13 +69,14 @@ class PropertyExposingDriver(CanProcess, Driver):
 
 
 class EpicsAdapter(Adapter):
-    def run(self, target, bindings, arguments):
+    def _parseArguments(self, arguments):
         parser = ArgumentParser(description="Adapter to expose a device via EPICS")
         parser.add_argument('-p', '--prefix', help='Prefix to use for all PVs', default='')
-        arguments = parser.parse_args(arguments)
+        return parser.parse_args(arguments)
 
+    def run(self, target, bindings, prefix):
         server = SimpleServer()
-        server.createPV(prefix=arguments.prefix, pvdb=bindings)
+        server.createPV(prefix=prefix, pvdb=bindings)
         driver = PropertyExposingDriver(target=target, pv_dict=bindings)
 
         delta = 0.0  # Delta between cycles
