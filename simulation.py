@@ -24,26 +24,6 @@ from adapters import import_adapter
 from setups import import_device, import_bindings
 
 
-class StoreNameValuePairs(argparse.Action):
-    """
-    This class is a slightly modified version of the solution presented in a stackoverflow answer:
-        http://stackoverflow.com/a/11762020
-    """
-
-    def __init__(self, option_strings, dest, nargs=None, **kwargs):
-        super(StoreNameValuePairs, self).__init__(option_strings, dest, nargs=nargs, **kwargs)
-
-        self._param_name = dest
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        option_dict = {}
-        for option in values.split(','):
-            n, v = option.split('=')
-            option_dict[n] = v
-
-        setattr(namespace, self._param_name, option_dict)
-
-
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
 parser.add_argument('-d', '--device', help='Name of the device to simulate.', default='chopper',
