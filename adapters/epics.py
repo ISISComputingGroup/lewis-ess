@@ -70,7 +70,6 @@ class PropertyExposingDriver(CanProcess, Driver):
 
 class EpicsAdapter(Adapter):
     def run(self, target, bindings, arguments):
-        print arguments
         parser = ArgumentParser(description="Adapter to expose a device via EPICS")
         parser.add_argument('-p', '--prefix', help='Prefix to use for all PVs', default='')
         arguments = parser.parse_args(arguments)
