@@ -74,9 +74,11 @@ class EpicsAdapter(Adapter):
         parser.add_argument('-p', '--prefix', help='Prefix to use for all PVs', default='')
         return parser.parse_args(arguments)
 
-    def run(self, target, bindings, prefix):
+    def run(self, target, bindings, arguments):
+        options = self._parseArguments(arguments)
+
         server = SimpleServer()
-        server.createPV(prefix=prefix, pvdb=bindings)
+        server.createPV(prefix=options.prefix, pvdb=bindings)
         driver = PropertyExposingDriver(target=target, pv_dict=bindings)
 
         delta = 0.0  # Delta between cycles

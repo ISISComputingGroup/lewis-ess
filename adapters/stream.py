@@ -84,8 +84,10 @@ class StreamAdapter(Adapter):
         parser.add_argument('-p', '--port', help='Port to listen for connections on', type=int, default=9999)
         return parser.parse_args(arguments)
 
-    def doRun(self, target, bindings, bind_address, port):
-        StreamServer(bind_address, port, target, bindings)
+    def run(self, target, bindings, arguments):
+        options = self._parseArguments(arguments)
+
+        StreamServer(options.bind_address, options.port, target, bindings)
 
         delta = 0.0  # Delta between cycles
         count = 0  # Cycles per second counter
