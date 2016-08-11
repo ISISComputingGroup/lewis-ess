@@ -21,23 +21,24 @@ from core import State
 
 
 class DefaultInitState(State):
-    def on_entry(self, dt):
-        self._context.initialize()
+    pass
 
 
 class DefaultStoppedState(State):
     def on_entry(self, dt):
+        # Reset the stop commanded flag once we enter the stopped state
         self._context.stop_commanded = False
 
 
 class DefaultStartedState(State):
     def on_entry(self, dt):
+        # Reset the start commanded flag once we enter the started state
         self._context.start_commanded = False
 
 
 class DefaultHeatState(State):
     def in_state(self, dt):
-        # Approach target temperature as set temperature rate
+        # Approach target temperature at set temperature rate
         self._context.temperature += self._context.temperature_rate * (dt / 60.0)
         if self._context.temperature > self._context.temperature_limit:
             self._context.temperature = self._context.temperature_limit
@@ -64,6 +65,7 @@ class DefaultCoolState(State):
             self._context.pump_speed = int(self._context.pump_speed)
             self._context.pump_overspeed = False
 
+        # Approach target temperature at set temperature rate
         # TODO: Should be based on pump speed somehow
         self._context.temperature -= self._context.temperature_rate * (dt / 60.0)
         if self._context.temperature < self._context.temperature_limit:
