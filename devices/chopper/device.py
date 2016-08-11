@@ -209,7 +209,10 @@ class SimulatedChopper(CanProcessComposite, object):
 
     # Accelerating stuff
     def start(self):
-        self._context.start_commanded = True
+        if self._context.target_speed > 0.0:
+            self._context.start_commanded = True
+        else:
+            self.stop()
 
     @property
     def started(self):
