@@ -21,22 +21,24 @@ from core import State
 
 
 class DefaultInitState(State):
-    def on_entry(self, dt):
-        self._context.initialize()
+    pass
 
 
 class DefaultStoppedState(State):
     def on_entry(self, dt):
+        # Reset the stop commanded flag once we enter the stopped state
         self._context.stop_commanded = False
 
 
 class DefaultStartedState(State):
     def on_entry(self, dt):
+        # Reset the start commanded flag once we enter the started state
         self._context.start_commanded = False
 
 
 class DefaultHeatState(State):
     def in_state(self, dt):
+        # Approach target temperature at set temperature rate
         self._context.temperature += self._context.temperature_rate * (dt / 60.0)
         if self._context.temperature > self._context.temperature_limit:
             self._context.temperature = self._context.temperature_limit
@@ -48,12 +50,14 @@ class DefaultHoldState(State):
 
 class DefaultCoolState(State):
     def in_state(self, dt):
+        # TODO: Does manual control work like this? Or is it perhaps a separate state?
         if self._context.pump_manual_mode:
             self._context.pump_speed = self._context.manual_target_speed
         else:
             # TODO: Figure out real correlation
             self._context.pump_speed = 30 * (self._context.temperature_rate / 50.0)
 
+        # Handle "cooling too fast" error
         if self._context.pump_speed > 30:
             self._context.pump_speed = 30
             self._context.pump_overspeed = True
@@ -61,11 +65,13 @@ class DefaultCoolState(State):
             self._context.pump_speed = int(self._context.pump_speed)
             self._context.pump_overspeed = False
 
+        # Approach target temperature at set temperature rate
         # TODO: Should be based on pump speed somehow
         self._context.temperature -= self._context.temperature_rate * (dt / 60.0)
         if self._context.temperature < self._context.temperature_limit:
             self._context.temperature = self._context.temperature_limit
 
     def on_exit(self, dt):
+        # If we exit the cooling state, the cooling pump should no longer run
         self._context.pump_overspeed = False
         self._context.pump_speed = 0
