@@ -17,12 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+from __future__ import print_function
 from collections import OrderedDict
 
 from core import StateMachine, CanProcessComposite, Context
 from core.utils import dict_strict_update
 
-from defaults import *
+from .defaults import *
 
 
 class LinkamT95Context(Context):
@@ -35,6 +36,7 @@ class LinkamT95Context(Context):
     The device context is available as _context in the device class, and
     all associated device State and Transition classes.
     """
+
     def initialize(self):
         """
         This method is called once on construction. After that, it may be
@@ -54,11 +56,11 @@ class LinkamT95Context(Context):
         self.hold_commanded = False
 
         # TODO: Actual rate and limit defaults?
-        self.temperature_rate = 0.01    # Rate of change of temperature in C/min
-        self.temperature_limit = 0.0    # Target temperature in C
+        self.temperature_rate = 0.01  # Rate of change of temperature in C/min
+        self.temperature_limit = 0.0  # Target temperature in C
 
-        self.pump_speed = 0         # Pump speed in arbitrary unit, ranging 0 to 30
-        self.temperature = 24.0     # Current temperature in C
+        self.pump_speed = 0  # Pump speed in arbitrary unit, ranging 0 to 30
+        self.temperature = 24.0  # Current temperature in C
 
         self.pump_manual_mode = False
         self.manual_target_speed = 0
@@ -96,16 +98,20 @@ class SimulatedLinkamT95(CanProcessComposite, object):
             (('started', 'hold'), lambda: self._context.temperature == self._context.temperature_limit),
             (('started', 'cool'), lambda: self._context.temperature > self._context.temperature_limit),
 
-            (('heat', 'hold'), lambda: self._context.temperature == self._context.temperature_limit or self._context.hold_commanded),
+            (('heat', 'hold'),
+             lambda: self._context.temperature == self._context.temperature_limit or self._context.hold_commanded),
             (('heat', 'cool'), lambda: self._context.temperature > self._context.temperature_limit),
             (('heat', 'stopped'), lambda: self._context.stop_commanded),
 
-            (('hold', 'heat'), lambda: self._context.temperature < self._context.temperature_limit and not self._context.hold_commanded),
-            (('hold', 'cool'), lambda: self._context.temperature > self._context.temperature_limit and not self._context.hold_commanded),
+            (('hold', 'heat'),
+             lambda: self._context.temperature < self._context.temperature_limit and not self._context.hold_commanded),
+            (('hold', 'cool'),
+             lambda: self._context.temperature > self._context.temperature_limit and not self._context.hold_commanded),
             (('hold', 'stopped'), lambda: self._context.stop_commanded),
 
             (('cool', 'heat'), lambda: self._context.temperature < self._context.temperature_limit),
-            (('cool', 'hold'), lambda: self._context.temperature == self._context.temperature_limit or self._context.hold_commanded),
+            (('cool', 'hold'),
+             lambda: self._context.temperature == self._context.temperature_limit or self._context.hold_commanded),
             (('cool', 'stopped'), lambda: self._context.stop_commanded),
         ])
 
@@ -157,8 +163,8 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         # Temperature
         Tarray[6:10] = [ord(x) for x in "%04x" % (int(self._context.temperature * 10) & 0xFFFF)]
 
-        print self._csm.state
-        print str(Tarray)
+        print(self._csm.state)
+        print(str(Tarray))
 
         return ''.join(chr(c) for c in Tarray)
 
@@ -176,7 +182,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         rate = int(param)
         if 1 <= rate <= 9999:
             self._context.temperature_rate = rate / 100.0
-        print "New rate: %.2f C/min" % (self._context.temperature_rate,)
+        print("New rate: %.2f C/min" % (self._context.temperature_rate,))
         return ""
 
     def setLimit(self, param):
@@ -193,7 +199,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         limit = int(param)
         if -1960 <= limit <= 15000:
             self._context.temperature_limit = limit / 10.0
-        print "New limit: %.1f C" % (self._context.temperature_limit,)
+        print("New limit: %.1f C" % (self._context.temperature_limit,))
         return ""
 
     def start(self):
@@ -205,7 +211,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         :return: Empty string.
         """
         self._context.start_commanded = True
-        print "Start commanded"
+        print("Start commanded")
         return ""
 
     def stop(self):
@@ -217,7 +223,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         :return: Empty string.
         """
         self._context.stop_commanded = True
-        print "Stop commanded"
+        print("Stop commanded")
         return ""
 
     def hold(self):

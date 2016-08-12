@@ -17,6 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+from __future__ import print_function
+from six import iteritems
+
 from datetime import datetime
 from argparse import ArgumentParser
 
@@ -56,7 +59,7 @@ class PropertyExposingDriver(CanProcess, Driver):
 
     def doProcess(self, dt):
         # Updates bound parameters as needed
-        for pv, parameters in self._pv_dict.iteritems():
+        for pv, parameters in iteritems(self._pv_dict):
             self._timers[pv] += dt
             if self._timers[pv] >= parameters.get('poll_interval', self._default_poll_interval):
                 try:
@@ -100,6 +103,6 @@ class EpicsAdapter(Adapter):
             count += 1
             timer += delta
             if timer >= 1.0:
-                print "Running at %d cycles per second (%.3f ms per cycle)" % (count, 1000.0 / count)
+                print("Running at %d cycles per second (%.3f ms per cycle)" % (count, 1000.0 / count))
                 count = 0
                 timer = 0.0

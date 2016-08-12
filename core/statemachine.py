@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+from six import iteritems
 from core.processor import CanProcess
 
 
@@ -72,6 +73,7 @@ class HasContext(object):
     receive a context from its StateMachine upon initialization (assuming the
     StateMachine was provided with a context itself).
     """
+
     def __init__(self):
         super(HasContext, self).__init__()
         self._context = None
@@ -91,6 +93,7 @@ class State(HasContext):
     To use this class, create a derived class and override any events that need
     custom behaviour. Device context is provided via HasContext mixin.
     """
+
     def __init__(self):
         super(State, self).__init__()
 
@@ -133,6 +136,7 @@ class Transition(HasContext):
 
     To use this class, create a derived class and override the __call__ attribute.
     """
+
     def __init__(self):
         super(Transition, self).__init__()
 
@@ -202,7 +206,7 @@ class StateMachine(CanProcess):
         self._set_handlers(self._initial)
 
         # Allow user to explicitly specify state handlers
-        for state_name, handlers in cfg.get('states', {}).iteritems():
+        for state_name, handlers in iteritems(cfg.get('states', {})):
             if isinstance(handlers, HasContext):
                 handlers.setContext(context)
 
@@ -219,7 +223,7 @@ class StateMachine(CanProcess):
                 raise StateMachineException(
                     "Failed to parse state handlers for state '%s'. Must be dict or iterable." % state_name)
 
-        for states, check_func in cfg.get('transitions', {}).iteritems():
+        for states, check_func in iteritems(cfg.get('transitions', {})):
             from_state, to_state = states
 
             # Set up default handlers if this state hasn't been mentioned before
@@ -275,8 +279,8 @@ class StateMachine(CanProcess):
         prefix = dict(list(self._prefix.items()) + list(prefix.items()))
 
         # Bind handlers
-        for state, handlers in self._handler.iteritems():
-            for event, handler in handlers.iteritems():
+        for state, handlers in iteritems(self._handler):
+            for event, handler in iteritems(handlers):
                 if handler is None or override:
                     named_handler = getattr(instance, prefix[event] + state, None)
                     if callable(named_handler):

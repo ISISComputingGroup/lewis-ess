@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+from __future__ import print_function
+from six import iteritems
 
 import asyncore
 import asynchat
@@ -43,7 +45,7 @@ class StreamHandler(asynchat.async_chat):
         reply = None
         self.buffer = []
 
-        for command, funcname in self.bindings['commands'].iteritems():
+        for command, funcname in iteritems(self.bindings['commands']):
             if request.startswith(command):
                 func = getattr(self.target, funcname)
                 args = request[len(command):]
@@ -72,7 +74,7 @@ class StreamServer(asyncore.dispatcher):
         pair = self.accept()
         if pair is not None:
             sock, addr = pair
-            print "Client connect from %s" % repr(addr)
+            print("Client connect from %s" % repr(addr))
             StreamHandler(sock, self.target, self.bindings)
 
 
@@ -103,6 +105,6 @@ class StreamAdapter(Adapter):
             count += 1
             timer += delta
             if timer >= 1.0:
-                print "Running at %d cycles per second (%.3f ms per cycle)" % (count, 1000.0 / count)
+                print("Running at %d cycles per second (%.3f ms per cycle)" % (count, 1000.0 / count))
                 count = 0
                 timer = 0.0

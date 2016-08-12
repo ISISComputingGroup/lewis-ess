@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-import importlib
 import imp
 import os.path as osp
 from os import listdir
@@ -94,7 +93,7 @@ def dict_strict_update(base_dict, update_dict):
     :param base_dict: The dict that is to be updated. This dict is modified.
     :param update_dict: The dict containing the new values.
     """
-    additional_keys = update_dict.viewkeys() - base_dict.viewkeys()
+    additional_keys = set(update_dict.keys()) - set(base_dict.keys())
     if len(additional_keys) > 0:
         raise RuntimeError(
             'The update dictionary contains keys that are not part of the base dictionary: {}'.format(

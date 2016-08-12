@@ -68,6 +68,8 @@ def import_bindings(device_type, bindings_type):
     :param bindings_type: Name of the variable to import as bindings
     :return: Variable that specifies the binding.
     """
-    module = importlib.import_module('.bindings', 'setups.{}'.format(device_type))
+    package_name = 'setups.{}'.format(device_type)
+    importlib.import_module(package_name)
+    module = importlib.import_module('.bindings', package_name)
 
     return getattr(module, bindings_type)
