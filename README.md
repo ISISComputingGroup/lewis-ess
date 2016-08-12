@@ -43,8 +43,10 @@ $ export EPICS_CA_ADDR_LIST=localhost
 Run the basic chopper simulation:
 
 ```
-$ python simulation.py --device chopper --setup default --protocol epics --parameters pv_prefix=SIM:
+$ python simulation.py --device chopper --setup default --protocol epics -- --prefix SIM:
 ```
+
+The `--` separates arguments of the protocol adapter from the simulation's arguments.
 
 ## Installation and startup II: Docker
 
@@ -53,7 +55,7 @@ please refer to the instructions on the Docker website). Once Docker is installe
 running the simulation is done via docker, with the same parameters passed to the simulation as in the Python case:
 
 ```
-$ docker run -it dmscid/plankton --device chopper --setup default --protocol epics --parameters pv_prefix=SIM:
+$ docker run -it dmscid/plankton --device chopper --setup default --protocol epics --  --prefix=SIM:
 ```
 
 Please note that this currently only works on a Linux host, but a solution using `docker-machine` that runs on other systems
