@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+from six import iteritems
 import unittest
 
 from core.utils import dict_strict_update
@@ -77,21 +78,21 @@ class TestWithPackageStructure(unittest.TestCase):
         cls._tmp_package_name = os.path.basename(cls._tmp_package)
         cls._tmp_dir = tempfile.gettempdir()
 
-        cls._files = {k: os.path.join(cls._tmp_package, v) for k, v in dict(
+        cls._files = {k: os.path.join(cls._tmp_package, v) for k, v in iteritems(dict(
             valid='some_file.py',
             invalid_ext='some_other_file.pyc',
             invalid_name='_some_invalid_file.py',
-        ).iteritems()}
+        ))}
 
         for abs_file_name in cls._files.values():
             with open(abs_file_name, mode='w'):
                 pass
 
-        cls._dirs = {k: os.path.join(cls._tmp_package, v) for k, v in dict(
+        cls._dirs = {k: os.path.join(cls._tmp_package, v) for k, v in iteritems(dict(
             valid='some_dir',
             empty='empty_dir',
             invalid='_invalid',
-        ).iteritems()}
+        ))}
 
         for abs_dir_name in cls._dirs.values():
             os.mkdir(abs_dir_name)
