@@ -22,8 +22,8 @@ from collections import OrderedDict
 from core import StateMachine, CanProcessComposite, CanProcess, Context
 from core.utils import dict_strict_update
 
-from bearings import MagneticBearings
-from defaults import *
+from .bearings import MagneticBearings
+from .defaults import *
 
 
 class SimulatedBearings(CanProcess, MagneticBearings):

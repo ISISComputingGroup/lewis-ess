@@ -3,8 +3,8 @@
 
 # Plankton
 
-Plankton is a library that assists in building simulated hardware devices. Currently this repository contains
-a simulated neutron chopper as it will be present at [ESS](http://europeanspallationsource.se).
+Plankton is a Python library that assists in building simulated hardware devices. It is compatible with both Python 2 and 3.
+Currently this repository contains a simulated neutron chopper as it will be present at [ESS](http://europeanspallationsource.se).
 Choppers at ESS are abstracted in such a way that all of them are exposed via the same interface,
 regardless of manufacturer. The behavior of this abstraction layer can be modelled as a finite state machine.
 
