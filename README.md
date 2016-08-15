@@ -3,7 +3,100 @@
 
 # Plankton
 
-Plankton is a Python library that assists in building simulated hardware devices. It is compatible with both Python 2 and 3.
+Plankton is a Python framework for simulating hardware devices. It is compatible with both Python 2 and 3.
+
+Plankton can be run directly using Python 2.7 or 3.x, or using a prepackaged Docker image that includes all dependencies. See relevant usage sections for details.
+
+Resources:
+- [GitHub](https://github.com/DMSC-Instrument-Data/plankton)
+- [DockerHub](https://hub.docker.com/r/dmscid/plankton/)
+- [Dockerfile](https://github.com/DMSC-Instrument-Data/plankton/blob/master/Dockerfile)
+
+
+## Purpose and Use Cases
+
+Plankton is being developed in the context of instrument control at the [ESS](http://europeanspallationsource.se), but it is general enough to be used in many other contexts that require detailed, stateful software simulations of hardware devices.
+
+We consider a detailed device simulation to be one that can communicate using the same protocol as the real device, and that can very closely approximate real device behaviour in terms of what is seen through this protocol. This includes gradual processes, side-effects and error conditions.
+
+The purpose of Plankton is to provide a common framework to facilitate the development of such simulators. By providing a common set of tools and abstracting away device protocols, we can minimize code replication and allow the developer of a simulated device to focus on capturing device behaviour.
+
+Potential use cases for detailed device simulators include:
+
+- Developing and testing software that interfaces with the device when it is unavailable
+- Testing failure conditions without risking damage to the physical device
+- Automated system and unit tests of software that communicates with the device
+- Perform "dry runs" to test scripts that are to be run against the device
+
+Using a simulation for the above has the added benefit that, unlike most real devices, a simulation may be speed up / fast-forwarded past any lengthy delays or processes that occur in the device.
+
+
+## Framework Details
+
+The Plankton framework is built around a cycle-based statemachine that drives the device simulation, and shared protocol adapters that separate the communication layer from the simulated device.
+
+By cycle-based we mean that all processing in the framework occurs during "heartbeat" simulation ticks that propagate calls to `process` methods throughout the simulation, along with a Delta T parameter that contains the time that has passed since the last tick. The device simulation is then responsible for updating its state based on how much time has passed and what input has been received during that time.
+
+The benefits of this approach include:
+
+- This closely models real device behaviour, since processing in electronic devices naturally occurs on a cycle basis.
+- As a side-effect of the above, certain quirks of real devices are often captured by the simulated device naturally, without additional effort.
+- The simulation becomes deterministic: The same amount of process cycles, with the same Delta T parameters along the way, and the same input via the device protocol, will always result in exactly the same device state.
+- Simulation speed can be controlled by increasing (fast-forward) or decreasing (slow-motion) the Delta T parameter by a given factor.
+- Simulation fidelity can be controlled independently from speed by increasing or decreasing the number of cycles per second while adjusting the Delta T parameter to compensate.
+
+The above traits are very desirable both for running automated tests against the simulation, and for debugging any issues that are identified.
+
+The statemachine...
+
+The protocols...
+
+
+## Usage with Docker
+
+Docker Engine must be installed in order to run the Plankton Docker image. Detailed installation instructions for various OSes may be found [here](https://docs.docker.com/engine/installation/).
+
+On OSX and Windows, we recommend simply installing the [Docker Toolbox](https://www.docker.com/products/docker-toolbox). It contains everything you need and is (currently) more stable than the "Docker for Windows/Mac" beta versions.
+
+On Linux, to avoid manually copy-pasting your way through the rather detailed instructions linked to above, you can let the Docker installation script take care of everything for you:
+
+```
+$ curl -fsSL https://get.docker.com/ | sh
+```
+
+Once Docker is installed, Plankton can be run as follows to, for example, simulate a Linkam T95 **d**evice and expose it via the TCP Stream **p**rotocol:
+
+```
+$ docker run -it dmscid/plankton -d linkam_t95 -p stream
+```
+
+Details about parameters for the various protocols, and differences between OSes are covered in the "Protocol Specifics" sections.
+
+
+## Usage with Python
+
+To use Plankton directly via Python you must first install dependencies:
+
+...
+
+
+## EPICS Protocol Specifics
+
+Describe command-line arguments used by the EPICS adapter, communicating with containers via EPICS on Windows and OSX (gateway).
+
+
+## Stream Protocol Specifics
+
+Describe command-line arguments used by the Stream adapter, communicating with containers via Stream on Windows and OSX (port forwarding).
+
+Mention line endings?
+
+
+
+
+
+# --- Most of this belongs in a chopper.md or something ---
+
 Currently this repository contains a simulated neutron chopper as it will be present at [ESS](http://europeanspallationsource.se).
 Choppers at ESS are abstracted in such a way that all of them are exposed via the same interface,
 regardless of manufacturer. The behavior of this abstraction layer can be modelled as a finite state machine.
