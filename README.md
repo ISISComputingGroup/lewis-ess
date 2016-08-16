@@ -28,12 +28,14 @@ Potential use cases for detailed device simulators include:
 - Automated system and unit tests of software that communicates with the device
 - Perform "dry runs" to test scripts that are to be run against the device
 
-Using a simulation for the above has the added benefit that, unlike most real devices, a simulation may be speed up / fast-forwarded past any lengthy delays or processes that occur in the device.
+Using a simulation for the above has the added benefit that, unlike most real devices, a simulation may be sped up / fast-forwarded past any lengthy delays or processes that occur in the device.
 
 
 ## Framework Details
 
 The Plankton framework is built around a cycle-based statemachine that drives the device simulation, and shared protocol adapters that separate the communication layer from the simulated device.
+
+#### Cycle-based
 
 By cycle-based we mean that all processing in the framework occurs during "heartbeat" simulation ticks that propagate calls to `process` methods throughout the simulation, along with a Delta T parameter that contains the time that has passed since the last tick. The device simulation is then responsible for updating its state based on how much time has passed and what input has been received during that time.
 
@@ -47,9 +49,27 @@ The benefits of this approach include:
 
 The above traits are very desirable both for running automated tests against the simulation, and for debugging any issues that are identified.
 
-The statemachine...
+#### Statemachine
 
-The protocols...
+A statemachine class that was written with a cycle-based approach in mind is provided to allow modeling complex device behaviour in an event-driven fashion.
+
+A device may initialize a statemachine on construction, telling it what states the device can be in and what conditions should cause it to transition between them. The statemachine will automatically check eligible (exiting current state) transition conditions every cycle and perform transitions as necessary, triggering callbacks for any event that occurs. The following events are available for every state:
+
+- `on_exit` is triggered once just before exiting a state
+- `on_entry` is triggered once when entering a state
+- `in_state` is triggered every cycle that is spent within a state
+
+Every cycle will trigger exactly one `in_state` event. This will always be the last event of the cycle. When no transition occurs, this is the only event. On the very first cycle of a simulation run, `on_entry` is raised against the initial state before raising an `in_state` against it. Any other cycles that involve a transition first raise `on_exit` against the current state, and then raise `on_entry` and `in_state` against the new state. Only one transition may occur per cycle.
+
+There are three ways to specify event handlers when initializing the statemacine:
+
+- Object-Oriented: Implement one class per state, derived from `State`, which contains one of each event handler
+- Function-Driven: Bind individual functions to individual events
+- Implicit: Implement handlers in the device class, with standard names like `on_entry_init` for a state called "init", and call `bindHandlersByName()`
+
+#### Adapters
+
+The adapters... WIP?
 
 
 ## Usage with Docker
@@ -70,22 +90,81 @@ Once Docker is installed, Plankton can be run as follows to, for example, simula
 $ docker run -it dmscid/plankton -d linkam_t95 -p stream
 ```
 
-Details about parameters for the various protocols, and differences between OSes are covered in the "Protocol Specifics" sections.
+Details about parameters for the various adapters, and differences between OSes are covered in the "Adapter Specifics" sections.
 
 
 ## Usage with Python
 
-To use Plankton directly via Python you must first install dependencies:
+To use Plankton directly via Python you must install its dependencies:
 
-...
+- Python 2.7+ or 3.4+
+- EPICS Base R3.14.12.5
+- PIP 8.1+
+
+Clone the repository in a location of your choice:
+
+```
+$ git clone https://github.com/DMSC-Instrument-Data/plankton.git
+```
+
+If you do not have [git](https://git-scm.com/) available, you can also download this repository as an archive and unpack it somewhere. A few additional dependencies must be installed. This can be done through pip via the requirements.txt file:
+
+```
+$ pip install -r requirements.txt
+```
+
+If you also want to run Plankton's unit tests, you may also install the development dependencies:
+
+```
+$ pip install -r requirements-dev.txt
+```
+
+If you want to use the EPICS adapter, you will also need to configure EPICS environment variables correctly. If you only want to communicate using EPICS locally via the loopback device, you can configure it like this:
+
+```
+$ export EPICS_CA_AUTO_ADDR_LIST=NO
+$ export EPICS_CA_ADDR_LIST=localhost
+$ export EPICS_CAS_INTF_ADDR_LIST=localhost
+```
+
+You can then run Plankton as follows (from within the plankton directory):
+
+```
+$ python simulation.py -d chopper -p epics
+```
+
+Details about parameters for the various adapters, and differences between OSes are covered in the "Adapter Specifics" sections.
 
 
-## EPICS Protocol Specifics
+## EPICS Adapter Specifics
 
-Describe command-line arguments used by the EPICS adapter, communicating with containers via EPICS on Windows and OSX (gateway).
+The EPICS adapter takes only one optional argument:
+
+- `-p` / `--prefix`: This string is prefixed to all PV names. Defaults to empty / no prefix.
+
+Arguments meant for the adapter should be separated from general Plankton arguments by a free-standing `--`. For example:
+
+```
+$ docker run -itd dmscid/plankton -d chopper -p epics -- -p SIM1:
+$ python simulation.py -d chopper -p epics -- --prefix SIM2:
+```
+
+When using the EPICS adapter within a docker container, the PV will be served on the docker0 network (172.17.0.0/16).
+
+On Linux, this means that `EPICS_CA_ADDR_LIST` must include this networks broadcast address:
+
+```
+$ export EPICS_CA_AUTO_ADDR_LIST=NO
+$ export EPICS_CA_ADDR_LIST=172.17.255.255
+$ export EPICS_CAS_INTF_ADDR_LIST=localhost
+``` 
+
+On Windows and OSX, the docker0 network is inside of a virtual machine. If we want to communicate with it, we need to use an EPICS Gateway to forward EPICS requests and responses for us. We provide an [EPICS Gateway Docker image](https://hub.docker.com/r/dmscid/epics-gateway/) that can be used to do this relatively easily (detailed instructions on the linked page). 
 
 
-## Stream Protocol Specifics
+## Stream Adapter Specifics
+
+
 
 Describe command-line arguments used by the Stream adapter, communicating with containers via Stream on Windows and OSX (port forwarding).
 
@@ -107,7 +186,7 @@ the state machine. While this is still work in progress, it gives an idea of how
 # Chopper simulation
 
 There are two ways of installing and running the chopper simulation. The first option is to run it directly using Python,
-the second is to run it in a [Docker containter](https://www.docker.com/).
+the second is to run it in a [Docker container](https://www.docker.com/).
 
 ## Installation and startup I: Python
 
