@@ -23,7 +23,7 @@ The purpose of Plankton is to provide a common framework to facilitate the devel
 
 Potential use cases for detailed device simulators include:
 
-- Developing and testing software that interfaces with the device when it is unavailable
+- Replacing the physical device when developing and testing software that interfaces with the device
 - Testing failure conditions without risking damage to the physical device
 - Automated system and unit tests of software that communicates with the device
 - Perform "dry runs" against test scripts that are to be run on the real device
@@ -37,15 +37,15 @@ The Plankton framework is built around a cycle-based statemachine that drives th
 
 #### Cycle-based
 
-By cycle-based we mean that all processing in the framework occurs during "heartbeat" simulation ticks that propagate calls to `process` methods throughout the simulation, along with a Delta T parameter that contains the time that has passed since the last tick. The device simulation is then responsible for updating its state based on how much time has passed and what input has been received during that time.
+By cycle-based we mean that all processing in the framework occurs during "heartbeat" simulation ticks that propagate calls to `process` methods throughout the simulation, along with a Δt (delta t) parameter that contains the time that has passed since the last tick. The device simulation is then responsible for updating its state based on how much time has passed and what input has been received during that time.
 
 The benefits of this approach include:
 
 - This closely models real device behaviour, since processing in electronic devices naturally occurs on a cycle basis.
 - As a side-effect of the above, certain quirks of real devices are often captured by the simulated device naturally, without additional effort.
-- The simulation becomes deterministic: The same amount of process cycles, with the same Delta T parameters along the way, and the same input via the device protocol, will always result in exactly the same device state.
-- Simulation speed can be controlled by increasing (fast-forward) or decreasing (slow-motion) the Delta T parameter by a given factor.
-- Simulation fidelity can be controlled independently from speed by increasing or decreasing the number of cycles per second while adjusting the Delta T parameter to compensate.
+- The simulation becomes deterministic: The same amount of process cycles, with the same Δt parameters along the way, and the same input via the device protocol, will always result in exactly the same device state.
+- Simulation speed can be controlled by increasing (fast-forward) or decreasing (slow-motion) the Δt parameter by a given factor.
+- Simulation fidelity can be controlled independently from speed by increasing or decreasing the number of cycles per second while adjusting the Δt parameter to compensate.
 
 The above traits are very desirable both for running automated tests against the simulation, and for debugging any issues that are identified.
 
@@ -167,7 +167,7 @@ $ export EPICS_CA_ADDR_LIST=172.17.255.255
 $ export EPICS_CAS_INTF_ADDR_LIST=localhost
 ``` 
 
-On Windows and OSX, the docker0 network is inside of a virtual machine. If we want to communicate with it, we need to use an EPICS Gateway to forward EPICS requests and responses for us. We provide an [EPICS Gateway Docker image](https://hub.docker.com/r/dmscid/epics-gateway/) that can be used to do this relatively easily (detailed instructions on the linked page). 
+On Windows and OSX, the docker0 network is inside of a virtual machine. To communicate with it, an EPICS Gateway to forward EPICS requests and responses is required. We provide an [EPICS Gateway Docker image](https://hub.docker.com/r/dmscid/epics-gateway/) that can be used to do this relatively easily. Detailed instructions can be found on the linked page.
 
 
 ## Stream Adapter Specifics
