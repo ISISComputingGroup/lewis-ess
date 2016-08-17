@@ -26,7 +26,7 @@ Potential use cases for detailed device simulators include:
 - Developing and testing software that interfaces with the device when it is unavailable
 - Testing failure conditions without risking damage to the physical device
 - Automated system and unit tests of software that communicates with the device
-- Perform "dry runs" to test scripts that are to be run against the device
+- Perform "dry runs" against test scripts that are to be run on the real device
 
 Using a simulation for the above has the added benefit that, unlike most real devices, a simulation may be sped up / fast-forwarded past any lengthy delays or processes that occur in the device.
 
