@@ -19,7 +19,7 @@ Plankton is being developed in the context of instrument control at the [ESS](ht
 
 We consider a detailed device simulation to be one that can communicate using the same protocol as the real device, and that can very closely approximate real device behaviour in terms of what is seen through this protocol. This includes gradual processes, side-effects and error conditions.
 
-The purpose of Plankton is to provide a common framework to facilitate the development of such simulators. By providing a common set of tools and abstracting away device protocols, we can minimize code replication and allow the developer of a simulated device to focus on capturing device behaviour.
+The purpose of Plankton is to provide a common framework to facilitate the development of such simulators. The framework provides a common set of tools and abstracts away protocol adapters, which helps minimize code replication and allows the developer of a simulated device to focus on capturing device behaviour.
 
 Potential use cases for detailed device simulators include:
 
@@ -51,25 +51,21 @@ The above traits are very desirable both for running automated tests against the
 
 #### Statemachine
 
-A statemachine class that was written with a cycle-based approach in mind is provided to allow modeling complex device behaviour in an event-driven fashion.
+A statemachine class designed for a cycle-based approach is provided to allow modeling complex device behaviour in an event-driven fashion.
 
 A device may initialize a statemachine on construction, telling it what states the device can be in and what conditions should cause it to transition between them. The statemachine will automatically check eligible (exiting current state) transition conditions every cycle and perform transitions as necessary, triggering callbacks for any event that occurs. The following events are available for every state:
 
-- `on_exit` is triggered once just before exiting a state
-- `on_entry` is triggered once when entering a state
-- `in_state` is triggered every cycle that is spent within a state
+- `on_exit` is triggered once just before exiting the state
+- `on_entry` is triggered once when entering the state
+- `in_state` is triggered every cycle that ends in the state
 
 Every cycle will trigger exactly one `in_state` event. This will always be the last event of the cycle. When no transition occurs, this is the only event. On the very first cycle of a simulation run, `on_entry` is raised against the initial state before raising an `in_state` against it. Any other cycles that involve a transition first raise `on_exit` against the current state, and then raise `on_entry` and `in_state` against the new state. Only one transition may occur per cycle.
 
 There are three ways to specify event handlers when initializing the statemacine:
 
-- Object-Oriented: Implement one class per state, derived from `State`, which contains one of each event handler
-- Function-Driven: Bind individual functions to individual events
+- Object-Oriented: Implement one class per state, derived from `State`, which optioinally contains up to one of each event handler
+- Function-Driven: Bind individual functions to individual events that need handling
 - Implicit: Implement handlers in the device class, with standard names like `on_entry_init` for a state called "init", and call `bindHandlersByName()`
-
-#### Adapters
-
-The adapters... WIP?
 
 
 ## Usage with Docker
@@ -84,7 +80,13 @@ On Linux, to avoid manually copy-pasting your way through the rather detailed in
 $ curl -fsSL https://get.docker.com/ | sh
 ```
 
-Once Docker is installed, Plankton can be run as follows to, for example, simulate a Linkam T95 **d**evice and expose it via the TCP Stream **p**rotocol:
+Once Docker is installed, Plankton can be run using the following general format:
+
+```
+$ docker run -it [docker args] dmscid/plankton [plankton args] [-- [adapter args]]
+```
+
+For example, to simulate a Linkam T95 **d**evice and expose it via the TCP Stream **p**rotocol:
 
 ```
 $ docker run -it dmscid/plankton -d linkam_t95 -p stream
@@ -127,6 +129,12 @@ $ export EPICS_CA_ADDR_LIST=localhost
 $ export EPICS_CAS_INTF_ADDR_LIST=localhost
 ```
 
+Once all dependencies and requirements are satisfied, Plankon can be run using the following general format (from inside the Plaknton dirrectory:
+
+```
+$ python simulation.py [plankton args] [-- [adapter args]]
+```
+
 You can then run Plankton as follows (from within the plankton directory):
 
 ```
@@ -164,159 +172,24 @@ On Windows and OSX, the docker0 network is inside of a virtual machine. If we wa
 
 ## Stream Adapter Specifics
 
+The TCP Stream adapter has the following optional arguments:
 
+- `-b` / `--bind-address`: Address of network adapter to listen on. Defaults to "0.0.0.0" (all network adapters).
+- `-p` / `--port`: Port to listen for connections on. Defaults to 9999.
 
-Describe command-line arguments used by the Stream adapter, communicating with containers via Stream on Windows and OSX (port forwarding).
-
-Mention line endings?
-
-
-
-
-
-# --- Most of this belongs in a chopper.md or something ---
-
-Currently this repository contains a simulated neutron chopper as it will be present at [ESS](http://europeanspallationsource.se).
-Choppers at ESS are abstracted in such a way that all of them are exposed via the same interface,
-regardless of manufacturer. The behavior of this abstraction layer can be modelled as a finite state machine.
-
-The docs-directory contains an `fsm`-file (created using the program [qfsm](http://qfsm.sourceforge.net/)) which describes
-the state machine. While this is still work in progress, it gives an idea of how the choppers are going to operate internally.
-
-# Chopper simulation
-
-There are two ways of installing and running the chopper simulation. The first option is to run it directly using Python,
-the second is to run it in a [Docker container](https://www.docker.com/).
-
-## Installation and startup I: Python
-
-Clone the repository in a location of your choice:
+Arguments meant for the adapter should be separated from general Plankton arguments by a free-standing `--`. For example:
 
 ```
-$ git clone https://github.com/DMSC-Instrument-Data/plankton.git
+$ docker run -itd dmscid/plankton -d linkam_t95 -p stream -- -p 1234
+$ python simulation.py -d linkam_t95 -p stream -- --bind-address localhost
 ```
 
-If you do not have [git](https://git-scm.com/) available, you can also download this repository as an archive and unpack it somewhere. Plankton has a few dependencies that can be installed through pip via the requirements.txt file:
+When using Plakton via Docker on Windows and OSX, the container will be running inside a virtual machine, and so the port it is listening on will be on a network inside the VM. To connect to it from outside of the VM, an additional argument must be passed to Docker to forward the port:
 
 ```
-$ pip install -r requirements.txt
+$ docker run -it -p 1234:4321 dmscid/plankton -d linkam_t95 -p stream -- -p 4321
+$ telnet 192.168.99.100 1234
 ```
 
-Furthermore, [EPICS base](http://www.aps.anl.gov/epics/base/) has to be installed on the machine. Usually some environment
-variables have to be configured so everything is found on the network. For exposing the simulated chopper only on your
-`localhost`, the following exports can be used:
+This `-p` argument links port 4321 on the container to port 1234 on the VM network adapter. It must appear after `docker run` and before `dmscid/plankton`. This allows us to connect to the container from outside of the VM, in this case using Telnet. The `192.168.99.100` IP is the IP of the VM on the bridge network between the host and the VM. VirtualBox will typically use this IP when available, but it may be different on your system.
 
-```
-$ export EPICS_CAS_INTF_ADDR_LIST=localhost
-$ export EPICS_CA_AUTO_ADDR_LIST=NO
-$ export EPICS_CA_ADDR_LIST=localhost
-```
-
-Run the basic chopper simulation:
-
-```
-$ python simulation.py --device chopper --setup default --protocol epics -- --prefix SIM:
-```
-
-The `--` separates arguments of the protocol adapter from the simulation's arguments.
-
-## Installation and startup II: Docker
-
-Another option to install and run plankton is via Docker (installation of Docker is outside the scope of this document,
-please refer to the instructions on the Docker website). Once Docker is installed on the machine,
-running the simulation is done via docker, with the same parameters passed to the simulation as in the Python case:
-
-```
-$ docker run -it dmscid/plankton --device chopper --setup default --protocol epics --  --prefix=SIM:
-```
-
-Please note that this currently only works on a Linux host, but a solution using `docker-machine` that runs on other systems
-is under development.
-
-When this method is used, the EPICS configuration on the host needs to be a bit different, because the docker container has its own IP address on the internal network that the containers and the host are part of.
-
-```
-$ export EPICS_CA_ADDR_LIST=172.17.255.255
-```
-
-If the Docker network is configured differently, this IP needs to be changed accordingly.
-
-## Interacting with the simulated chopper
-
-The simulated chopper is exposed via a set of EPICS PVs. For a detailed description of those, see the table of available PVs below.
-
-Observe some available EPICS PVs in an automatically updating screen:
-
-```
-$ watch -n 1 caget SIM:State SIM:CmdL SIM:Spd-RB SIM:Spd SIM:Phs-RB SIM:Phs SIM:ParkAng-RB SIM:ParkAng
-```
-
-The following series of `caput`-commands, executed from a different terminal, will move the chopper to the specified
-speed and phase:
-
-```
-$ caput SIM:CmdS init
-$ caput SIM:Spd 100.0
-$ caput SIM:Phs 23.0
-$ caput SIM:CmdS start
-```
-
-It may take a while until the simulation reaches the `phase_locked` state.
-
-
-## EPICS interface
-
-The simulator is exposed to channel access, using the [pcaspy](https://pypi.python.org/pypi/pcaspy)-module.
-Depending on the level of simulation there may be different PVs available to control the simulated chopper.
-At a minimum, the following PVs will be exposed:
-
-| PV  | Description  | Unit | Access |
-|---|---|---|---|---|
-| Spd-RB  |  Current rotation speed of the chopper disc. | Hz  | Read |
-| ActSpd  |  Current rotation speed of the chopper disc. | Hz  | Read |
-| Spd  | Speed setpoint.  | Hz | Read/Write |
-| Phs-RB  |  Current phase of the chopper disc. | Degree | Read |
-| ActPhs  |  Current phase of the chopper disc. | Degree | Read |
-| Phs  |  Phase setpoint. | Degree | Read/Write |
-| ParkAng-RB  |  Current position of chopper disc if in parked state. | Degree | Read |
-| ParkAng  |  Position to which the disc should rotate in parked state. | Degree | Read/Write |
-| AutoPark | Enum `false`/`true` (or 0/1). If enabled, the chopper will move to the parking state when the stop state is reached. | - | Read/Write |
-| State  |  Enum for chopper state. | - | Read |
-| TDCE*  |  Vector of TDC (top dead center) events in last accelerator pulse. | to be determined | Read |
-| Dir-RB*  |  Enum for rotation direction (clockwise, counter clockwise). | - | Read |
-| Dir*  |  Desired rotation direction. (clockwise, counter clockwise). | - | Read/Write |
-| CmdS  |  String field to accept commands. | - | Read/Write |
-| CmdL  |  String field with last command. | - | Read |
-
-Starred PVs are not implemented yet, but will become part of the interface.
-
-**Possible values for STATE**
-- Resting*: The chopper disc is resting, the magnetic bearings are off.
-- Levitating*: The chopper disc is in the process of being lifted up into stable levitation.
-- Delevitating*: The chopper disc is in the process of being let down into the resting state.
-- Accelerating: The chopper disc is accelerated to the speed setpoint.
-- Phase locking: The chopper is trying to acquire a phase lock.
-- Phase locked: Speed and phase are at the setpoints.
-- Idle: The motor is off, the disc is rotating only via inertia.
-- Parking: The chopper disc is in the process of rotating to the park position.
-- Parked: The chopper disc is parked in the specified position.
-- Stopping: The chopper disc is actively decelerated to speed 0.
-- Stopped: The chopper disc is at speed 0.
-- Error*: An error has occured (to be specified in more detail).
-
-The states marked with a * are not implemented yet and are not present in choppers which work with mechanical bearings.
-
-**Possible values for COMMAND**
-- start: Speed and phase are adjusted to match the corresponding setpoints
-- set_phase: Phase is adjusted to match the corresponding setpoint
-- unlock: Switch off motor, but do not actively decelerate disc
-- stop: Go to velocity 0, disc remains levitated
-- park: Go to velocity 0, disc remains levitated, is rotated to PARKEDANGLE:SP
-- levitate*: Levitate disc if it's not levitated
-- delevitate*: Delevitate disc if possible
-
-The commands marked with a * are not implemented yet. There are however two additional commands, INIT and DEINIT. INIT takes the chopper from the initial `init` state to the `stopped` state, DEINIT does the opposite.
-
-## Additional tools
-
-In a separate [repository](https://github.com/DMSC-Instrument-Data/plankton-misc) there is an OPI-file for use with CS-Studio and two files that expose the simulated chopper as a setup in NICOS (see readme there).
