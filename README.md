@@ -129,7 +129,7 @@ $ export EPICS_CA_ADDR_LIST=localhost
 $ export EPICS_CAS_INTF_ADDR_LIST=localhost
 ```
 
-Once all dependencies and requirements are satisfied, Plankon can be run using the following general format (from inside the Plaknton dirrectory:
+Once all dependencies and requirements are satisfied, Plankon can be run using the following general format (from inside the Plankton directory):
 
 ```
 $ python simulation.py [plankton args] [-- [adapter args]]
@@ -184,7 +184,7 @@ $ docker run -itd dmscid/plankton -d linkam_t95 -p stream -- -p 1234
 $ python simulation.py -d linkam_t95 -p stream -- --bind-address localhost
 ```
 
-When using Plakton via Docker on Windows and OSX, the container will be running inside a virtual machine, and so the port it is listening on will be on a network inside the VM. To connect to it from outside of the VM, an additional argument must be passed to Docker to forward the port:
+When using Plankton via Docker on Windows and OSX, the container will be running inside a virtual machine, and so the port it is listening on will be on a network inside the VM. To connect to it from outside of the VM, an additional argument must be passed to Docker to forward the port:
 
 ```
 $ docker run -it -p 1234:4321 dmscid/plankton -d linkam_t95 -p stream -- -p 4321
