@@ -180,7 +180,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         # TODO: Is not having leading zeroes / 4 digits an error?
         # TODO: What is the upper limit in the real device?
         rate = int(param)
-        if 1 <= rate <= 1500:
+        if 1 <= rate <= 15000:
             self._context.temperature_rate = rate / 100.0
         print("New rate: %.2f C/min" % (self._context.temperature_rate,))
         return ""
