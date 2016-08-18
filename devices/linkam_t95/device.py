@@ -55,8 +55,8 @@ class LinkamT95Context(Context):
         self.stop_commanded = False
         self.hold_commanded = False
 
-        # TODO: Actual rate and limit defaults?
-        self.temperature_rate = 0.01  # Rate of change of temperature in C/min
+        # Real device remembers values from last run, we use arbitrary defaults
+        self.temperature_rate = 5.0  # Rate of change of temperature in C/min
         self.temperature_limit = 0.0  # Target temperature in C
 
         self.pump_speed = 0  # Pump speed in arbitrary unit, ranging 0 to 30
@@ -180,7 +180,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         # TODO: Is not having leading zeroes / 4 digits an error?
         # TODO: What is the upper limit in the real device?
         rate = int(param)
-        if 1 <= rate <= 9999:
+        if 1 <= rate <= 1500:
             self._context.temperature_rate = rate / 100.0
         print("New rate: %.2f C/min" % (self._context.temperature_rate,))
         return ""
@@ -197,7 +197,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         # TODO: Is not having leading zeroes / 4 digits an error?
         # TODO: What are the upper and lower limits in the real device?
         limit = int(param)
-        if -1960 <= limit <= 15000:
+        if -2000 <= limit <= 6000:
             self._context.temperature_limit = limit / 10.0
         print("New limit: %.1f C" % (self._context.temperature_limit,))
         return ""
