@@ -44,22 +44,80 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         linkam = SimulatedLinkamT95()
         status_bytes = linkam.getStatus()
 
-        self.assertEqual(len(status_bytes), 10)
-        self.assertFalse('\x00' in status_bytes)
-        self.assertEqual(status_bytes[0], '\x01')
-        self.assertEqual(status_bytes[1], '\x80')
-        self.assertEqual(status_bytes[2], '\x80')
+        self.assertEqual(len(status_bytes), 10)     # Byte array should always be 10 bytes
+        self.assertFalse('\x00' in status_bytes)    # Byte array may not contain zeroes
+        self.assertEqual(status_bytes[0], '\x01')   # Status byte should be 1 on startup
+        self.assertEqual(status_bytes[1], '\x80')   # No error flags should be set on startup
+        self.assertEqual(status_bytes[2], '\x80')   # The pump should not be active on startup
+        self.assertEqual(status_bytes[6:10], '00f0')  # Starting temperature 24C
 
     def test_simple_heat(self):
-        pass
+        linkam = SimulatedLinkamT95()
+        linkam.process(0)  # Initialize
+
+        # Issue T command to get into stopped state
+        linkam.getStatus()
+        linkam.process(0)
+
+        # Set up to heat from 24.0 C to 44.0 C at 20.00 C/min
+        linkam.setRate('2000')
+        linkam.setLimit('440')
+        linkam.start()
+        linkam.process(0)
+
+        # Heat for almost a minute but not quite
+        linkam.process(59.5)
+        status_bytes = linkam.getStatus()
+        self.assertNotEqual(status_bytes[6:10], '01b8')  # Temp != 44.0 C
+
+        # Finish off heating
+        linkam.process(0.5)
+        status_bytes = linkam.getStatus()
+        self.assertEqual(status_bytes[6:10], '01b8')  # Temp == 44.0 C
+
+        # Should hold now, so temperature should not change
+        linkam.process(10)
+        status_bytes = linkam.getStatus()
+        self.assertEqual(status_bytes[0], '\x30')  # Auto-holding at limit
+        self.assertEqual(status_bytes[6:10], '01b8')  # Temp == 44.0 C
 
     def test_simple_cool(self):
-        pass
+        linkam = SimulatedLinkamT95()
+        linkam.process(0)  # Initialize
+
+        # Issue T command to get into stopped state
+        linkam.getStatus()
+        linkam.process(0)
+
+        # Set up to cool from 24.0 C to 4.0 C at 20.00 C/min
+        linkam.setRate('2000')
+        linkam.setLimit('40')
+        linkam.start()
+        linkam.process(0)
+
+        # Heat for almost a minute but not quite
+        linkam.process(59.5)
+        status_bytes = linkam.getStatus()
+        self.assertNotEqual(status_bytes[6:10], '0028')  # Temp != 4.0 C
+
+        # Finish off heating
+        linkam.process(0.5)
+        status_bytes = linkam.getStatus()
+        self.assertEqual(status_bytes[6:10], '0028')  # Temp == 4.0 C
+
+        # Should hold now, so temperature should not change
+        linkam.process(10)
+        status_bytes = linkam.getStatus()
+        self.assertEqual(status_bytes[0], '\x30')  # Auto-holding at limit
+        self.assertEqual(status_bytes[6:10], '0028')  # Temp == 4.0 C
 
     def test_stop_command(self):
         pass
 
     def test_hold_and_resume(self):
+        pass
+
+    def test_hold_while_at_limit(self):
         pass
 
     def test_pump_command(self):
