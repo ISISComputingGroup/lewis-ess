@@ -150,7 +150,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
             'hold': 0x30,
         }.get(self._csm.state, 0x01)
         if Tarray[0] == 0x30 and self._context.hold_commanded:
-            Tarray[0] = 0x40 if self._context.temperature == self._context.temperature_limit else 0x50
+            Tarray[0] = 0x50
 
         # Error status byte (EB1)
         if self._context.pump_overspeed:
