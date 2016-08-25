@@ -186,9 +186,22 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         self.assertEqual(status_bytes[0], '\x50')           # Manually holding
         self.assertNotEqual(status_bytes[6:10], '0028')     # Temp != 4.0 C
 
-        # Finish cooling
+        # Cool some more
         linkam.cool()
+        linkam.process(15)
+        status_bytes = linkam.getStatus()
+        self.assertNotEqual(status_bytes[6:10], '0028')  # Temp != 4.0 C
+
+        # Hold again
+        linkam.hold()
         linkam.process(30)
+        status_bytes = linkam.getStatus()
+        self.assertEqual(status_bytes[0], '\x50')  # Manually holding
+        self.assertNotEqual(status_bytes[6:10], '0028')  # Temp != 4.0 C
+
+        # Finish cooling via heat command (should also work)
+        linkam.heat()
+        linkam.process(15)
         status_bytes = linkam.getStatus()
         self.assertEqual(status_bytes[6:10], '0028')  # Temp == 4.0 C
 
