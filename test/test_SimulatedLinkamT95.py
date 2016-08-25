@@ -205,6 +205,12 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         linkam.getStatus()
         linkam.process(0)
 
+        # Set up to cool from 24.0 C to 4.0 C at 20.00 C/min
+        linkam.setRate('2000')
+        linkam.setLimit('40')
+        linkam.start()
+        linkam.process(0)
+
         # Since the pump feature is not fully implemented, we can only make sure all valid input is accepted
         linkam.pumpCommand('m0')    # Manual
         linkam.process(0)
