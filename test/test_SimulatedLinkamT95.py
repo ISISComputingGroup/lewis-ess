@@ -71,8 +71,8 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         self.assertEqual(status_bytes[0], '\x10')           # Heating status set
         self.assertNotEqual(status_bytes[6:10], '01b8')     # Temp != 44.0 C
 
-        # Finish off heating
-        linkam.process(0.5)
+        # Finish off heating (and overshoot a bit)
+        linkam.process(5)
         status_bytes = linkam.getStatus()
         self.assertEqual(status_bytes[6:10], '01b8')    # Temp == 44.0 C
 
@@ -102,8 +102,8 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         self.assertEqual(status_bytes[0], '\x20')           # Cooling status set
         self.assertNotEqual(status_bytes[6:10], '0028')     # Temp != 4.0 C
 
-        # Finish off cooling
-        linkam.process(0.5)
+        # Finish off cooling (and overshoot a bit)
+        linkam.process(5)
         status_bytes = linkam.getStatus()
         self.assertEqual(status_bytes[6:10], '0028')    # Temp == 4.0 C
 
