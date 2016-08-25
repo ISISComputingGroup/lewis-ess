@@ -178,7 +178,6 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         :return: Empty string.
         """
         # TODO: Is not having leading zeroes / 4 digits an error?
-        # TODO: What is the upper limit in the real device?
         rate = int(param)
         if 1 <= rate <= 15000:
             self._context.temperature_rate = rate / 100.0
@@ -195,7 +194,6 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         :return: Empty string.
         """
         # TODO: Is not having leading zeroes / 4 digits an error?
-        # TODO: What are the upper and lower limits in the real device?
         limit = int(param)
         if -2000 <= limit <= 6000:
             self._context.temperature_limit = limit / 10.0
