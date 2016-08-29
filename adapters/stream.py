@@ -41,7 +41,7 @@ class StreamHandler(asynchat.async_chat):
         self.buffer.append(data)
 
     def found_terminator(self):
-        request = ''.join(self.buffer)
+        request = ''.join(self.buffer).strip()
         reply = None
         self.buffer = []
 
