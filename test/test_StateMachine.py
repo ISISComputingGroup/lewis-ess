@@ -367,3 +367,34 @@ class TestStateMachine(unittest.TestCase):
         self.assertEqual(sm.state, 'bar')
         sm.reset()
         self.assertIsNone(sm.state)
+
+    def test_can(self):
+        sm = StateMachine({
+            'initial': 'init',
+            'transitions': {
+                ('init', 'foo'): lambda: True,
+                ('foo', 'bar'): lambda: True,
+                ('bar', 'foo'): lambda: True,
+                ('bar', 'init'): lambda: True
+            }
+        })
+
+        self.assertEqual(sm.state, None)
+        self.assertEqual(sm.can('init'), True)
+        self.assertEqual(sm.can('foo'), False)
+        self.assertEqual(sm.can('bar'), False)
+
+        sm.process(0)
+        self.assertEqual(sm.state, 'init')
+        self.assertEqual(sm.can('foo'), True)
+        self.assertEqual(sm.can('bar'), False)
+
+        sm.process(0)
+        self.assertEqual(sm.state, 'foo')
+        self.assertEqual(sm.can('bar'), True)
+        self.assertEqual(sm.can('init'), False)
+
+        sm.process(0)
+        self.assertEqual(sm.state, 'bar')
+        self.assertEqual(sm.can('foo'), True)
+        self.assertEqual(sm.can('init'), True)
