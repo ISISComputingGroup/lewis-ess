@@ -177,15 +177,18 @@ class SimulatedChopper(CanProcessComposite, object):
         return self._context.initialized
 
     def initialize(self):
-        self._context.initialized = True
-        self._bearings.engage()
+        if self._csm.can('bearings') and not self.initialized:
+            self._context.initialized = True
+            self._bearings.engage()
 
     def deinitialize(self):
-        self._context.shutdown_commanded = True
-        self._bearings.disengage()
+        if self._csm.can('bearings') and self.initialized:
+            self._context.shutdown_commanded = True
+            self._bearings.disengage()
 
     def park(self):
-        self._context.park_commanded = True
+        if self._csm.can('parking'):
+            self._context.park_commanded = True
 
     @property
     def parked(self):
@@ -201,7 +204,8 @@ class SimulatedChopper(CanProcessComposite, object):
 
     # Stopping stuff
     def stop(self):
-        self._context.stop_commanded = True
+        if self._csm.can('stopping'):
+            self._context.stop_commanded = True
 
     @property
     def stopped(self):
@@ -209,7 +213,7 @@ class SimulatedChopper(CanProcessComposite, object):
 
     # Accelerating stuff
     def start(self):
-        if self._context.target_speed > 0.0:
+        if self._csm.can('accelerating') and self._context.target_speed > 0.0:
             self._context.start_commanded = True
         else:
             self.stop()
@@ -220,7 +224,8 @@ class SimulatedChopper(CanProcessComposite, object):
 
     # Idle stuff
     def unlock(self):
-        self._context.idle_commanded = True
+        if self._csm.can('idle'):
+            self._context.idle_commanded = True
 
     @property
     def idle(self):
@@ -228,7 +233,8 @@ class SimulatedChopper(CanProcessComposite, object):
 
     # Phase locking stuff
     def lockPhase(self):
-        self._context.phase_commanded = True
+        if self._csm.can('phase_locking'):
+            self._context.phase_commanded = True
 
     @property
     def phaseLocked(self):

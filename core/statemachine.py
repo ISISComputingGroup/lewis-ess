@@ -245,6 +245,18 @@ class StateMachine(CanProcess):
         """
         return self._state
 
+    def can(self, state):
+        """
+        Returns true if the transition to 'state' is allowed from the current state.
+
+        :param state: State to check transition to
+        :return: True if state is reachable from current
+        """
+        if self._state is None:
+            return state == self._initial
+
+        return state in (transition[0] for transition in self._transition[self._state])
+
     def bind_handlers_by_name(self, instance, override=False, prefix=None):
         """
         Auto-bind state handlers based on naming convention.
