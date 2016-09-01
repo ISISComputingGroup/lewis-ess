@@ -19,26 +19,18 @@
 
 import unittest
 from devices.linkam_t95 import SimulatedLinkamT95, DefaultStartedState
+from . import assertRaisesNothing
 
 
 class TestSimulatedLinkamT95(unittest.TestCase):
     def test_default_construction(self):
-        try:
-            linkam = SimulatedLinkamT95()
-        except:
-            self.fail("Default construction of SimulatedLinkamT95 threw an exception.")
+        assertRaisesNothing(self, SimulatedLinkamT95)
 
     def test_state_override_construction(self):
-        try:
-            linkam = SimulatedLinkamT95(override_states={'started': DefaultStartedState()})
-        except:
-            self.fail("Failed to override a state on construction.")
+        assertRaisesNothing(self, SimulatedLinkamT95, override_states={'started': DefaultStartedState()})
 
     def test_transition_override_construction(self):
-        try:
-            linkam = SimulatedLinkamT95(override_transitions={('init', 'stopped'): lambda: True})
-        except:
-            self.fail("Failed to override a transition on construction.")
+        assertRaisesNothing(self, SimulatedLinkamT95, override_transitions={('init', 'stopped'): lambda: True})
 
     def test_default_status(self):
         linkam = SimulatedLinkamT95()
@@ -225,12 +217,14 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         linkam.process(0)
 
         # Since the pump feature is not fully implemented, we can only make sure all valid input is accepted
-        linkam.pumpCommand('m0')    # Manual
+        assertRaisesNothing(self, linkam.pumpCommand, 'm0')    # Manual
         linkam.process(0)
 
-        for c in "0123456789:;<=>?@ABCDEFGHIJKLMN":
-            linkam.pumpCommand(c)   # Various speeds (characters mean speeds 0 - 30)
+        for int_value, char_value in enumerate("0123456789:;<=>?@ABCDEFGHIJKLMN"):
+            assertRaisesNothing(self, linkam.pumpCommand, char_value)   # Various speeds (characters mean speeds 0 - 30)
             linkam.process(0)
+            status_bytes = linkam.getStatus()
+            self.assertEqual(status_bytes[2], chr(0x80 | int_value))    # Verify Pump Status Byte reflects speed
 
-        linkam.pumpCommand('a0')    # Auto
+        assertRaisesNothing(self, linkam.pumpCommand, 'a0')    # Auto
         linkam.process(0)
