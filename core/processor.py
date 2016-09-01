@@ -36,10 +36,10 @@ class CanProcess(object):
     def __init__(self):
         super(CanProcess, self).__init__()
 
-    def __call__(self, dt):
+    def __call__(self, dt=0):
         self.process(dt)
 
-    def process(self, dt):
+    def process(self, dt=0):
         if hasattr(self, 'doProcess'):
             if hasattr(self, 'doBeforeProcess'):
                 self.doBeforeProcess(dt)
