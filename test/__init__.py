@@ -16,3 +16,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
+
+
+# Adopted from Mantid:
+# 
+def assertRaisesNothing(testobj, func, *args, **kwargs):
+    """
+    unittest does not have an assertRaisesNothing. This function adopted from Mantid
+    (https://github.com/mantidproject/mantid/blob/master/Framework/PythonInterface/test/testhelpers/__init__.py)
+    provides that functionality.
+    
+    :param testobj: A unittest object
+    :param func: A callable object
+    :param *args: Positional arguments passed to the callable as they are
+    :param **kwargs: Keyword arguments, passed on as they are
+    """
+    try:
+        return func(*args, **kwargs)
+    except Exception as exc:
+        testobj.fail("Assertion error. An exception was caught where none was expected in %s. Message: %s" % (func.__name__, str(exc)))
