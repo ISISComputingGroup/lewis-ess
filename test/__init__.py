@@ -19,16 +19,17 @@
 
 
 # Adopted from Mantid:
-# https://github.com/mantidproject/mantid/blob/master/Framework/PythonInterface/test/testhelpers/__init__.py
+# 
 def assertRaisesNothing(testobj, func, *args, **kwargs):
     """
-        unittest does not have an assertRaisesNothing. This
-        provides that functionality
-        Parameters:
-            testobj  - A unittest object
-            callable - A callable object
-            *args    - Positional arguments passed to the callable as they are
-            **kwargs - Keyword arguments, passed on as they are
+    unittest does not have an assertRaisesNothing. This function adopted from Mantid
+    (https://github.com/mantidproject/mantid/blob/master/Framework/PythonInterface/test/testhelpers/__init__.py)
+    provides that functionality.
+    
+    :param testobj: A unittest object
+    :param func: A callable object
+    :param *args: Positional arguments passed to the callable as they are
+    :param **kwargs: Keyword arguments, passed on as they are
     """
     try:
         return func(*args, **kwargs)
