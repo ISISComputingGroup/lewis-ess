@@ -386,19 +386,19 @@ class TestStateMachine(unittest.TestCase):
         self.assertIs(sm.can('bar'), False)
         self.assertIs(sm.can(None), False)
 
-        sm.process(0)
+        sm.process()
         self.assertEqual(sm.state, 'init')
         self.assertIs(sm.can('foo'), True)
         self.assertIs(sm.can('bar'), False)
         self.assertIs(sm.can('init'), False)
 
-        sm.process(0)
+        sm.process()
         self.assertEqual(sm.state, 'foo')
         self.assertIs(sm.can('bar'), True)
         self.assertIs(sm.can('init'), False)
         self.assertIs(sm.can('foo'), False)
 
-        sm.process(0)
+        sm.process()
         self.assertEqual(sm.state, 'bar')
         self.assertIs(sm.can('foo'), True)
         self.assertIs(sm.can('init'), True)
