@@ -106,3 +106,6 @@ s.doItNow(23)
 print(s.b)
 print(s.a)
 print(type(s))
+print(s.g)
+print(s.c)
+s.c = 56

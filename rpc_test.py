@@ -3,6 +3,8 @@ class Stuff(object):
         self._a = 0
         self._b = (0, 0)
 
+        self.g = 'test'
+
     @property
     def a(self):
         return self._a
@@ -22,6 +24,10 @@ class Stuff(object):
     def b(self, one):
         self._b = one
 
+    @property
+    def c(self):
+        return self._a + self._b[0]
+
     def doIt(self):
         self._a = 42
 
@@ -33,12 +39,12 @@ class Stuff(object):
 class RPCObjectWrapper(object):
     def __init__(self, object, methods=()):
         self._object = object
-        self._object_type_dict = type(self._object).__dict__
+        self._object_members = dir(self._object)
 
         self._method_map = {}
 
         if not methods:
-            methods = [prop for prop in self._object_type_dict.keys() if not prop.startswith('_')]
+            methods = [prop for prop in self._object_members if not prop.startswith('_')]
 
         for method in methods:
             func_specs = self._create_method_wrappers(method)
@@ -49,24 +55,21 @@ class RPCObjectWrapper(object):
         self._method_map['.api'] = self.get_api
 
     def _create_method_wrappers(self, method):
-        method_object = self._object_type_dict.get(method)
+        method_object = getattr(self._object, method)
 
         func_specs = []
 
-        if isinstance(method_object, property):
-            if method_object.fget:
-                def getter():
-                    return getattr(self._object, method)
+        if not callable(method_object):
+            def getter():
+                return getattr(self._object, method)
 
-                func_specs.append(('{}.get'.format(method), getter,))
+            func_specs.append(('{}.get'.format(method), getter,))
 
-            if method_object.fset:
-                def setter(arg):
-                    return setattr(self._object, method, arg)
+            def setter(arg):
+                return setattr(self._object, method, arg)
 
-                func_specs.append(('{}.set'.format(method), setter,))
-
-        elif callable(method_object):
+            func_specs.append(('{}.set'.format(method), setter,))
+        else:
             def method_wrapper(*args, **kwargs):
                 return getattr(self._object, method)(*args, **kwargs)
 
@@ -98,9 +101,11 @@ class RPCObjectWrapper(object):
     def __iter__(self):
         return iter(self._method_map)
 
+
 import zmq
 from jsonrpc import JSONRPCResponseManager
 from time import sleep
+
 
 class ZMQJSONRPCServer(object):
     def __init__(self, wrapper, host='127.0.0.1', port='10000'):
@@ -124,11 +129,11 @@ class ZMQJSONRPCServer(object):
             pass
 
 
-class Bla(Stuff):
-    pass
 
-s = Bla()
+s = Stuff()
 e = RPCObjectWrapper(s)
+
+print(dir(s))
 
 server = ZMQJSONRPCServer(e)
 
