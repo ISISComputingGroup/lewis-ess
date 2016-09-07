@@ -37,6 +37,10 @@ class ZMQJSONRPCObjectProxy(object):
     _remote_setters = set()
 
     def __init__(self, socket, prefix='', methods=[]):
+        self._remote_getters = set()
+        self._remote_setters = set()
+        self._properties = set()
+
         self.socket = socket
         self._morph_into(methods)
         self.prefix = prefix
@@ -60,6 +64,7 @@ class ZMQJSONRPCObjectProxy(object):
                 self._remote_setters.add(method)
             elif ':get' in method:
                 self._remote_getters.add(method)
+                self._properties.add(method.split(':')[-2].split('.')[-1])
             elif not method.startswith('.'):
                 setattr(self, method, types.MethodType(self._create_wrapper_method(method), self))
 
@@ -85,10 +90,10 @@ class ZMQJSONRPCObjectProxy(object):
 
 
 class RemoteObjectCollection(object):
-    def __init__(self, server='127.0.0.1', port='10000'):
+    def __init__(self, host='127.0.0.1', port='10000'):
         context = zmq.Context()
         socket = context.socket(zmq.REQ)
-        socket.connect('tcp://{0}:{1}'.format(server, port))
+        socket.connect('tcp://{0}:{1}'.format(host, port))
 
         objects, id = json_rpc_call(socket, ':objects')
 

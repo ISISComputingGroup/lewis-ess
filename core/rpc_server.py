@@ -100,7 +100,11 @@ class ZMQJSONRPCServer(object):
         super(ZMQJSONRPCServer, self).__init__()
         self.host = host
         self.port = port
-        self.rpc_object = rpc_object
+
+        if isinstance(rpc_object, RPCObjectCollection):
+            self.rpc_object = rpc_object
+        else:
+            self.rpc_object = RPCObjectCollection.create(rpc_object)
 
         context = zmq.Context()
         self.socket = context.socket(zmq.REP)
