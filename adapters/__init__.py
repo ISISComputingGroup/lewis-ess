@@ -22,7 +22,7 @@ import argparse
 
 
 class Adapter(object):
-    def run(self, target, bindings, arguments):
+    def run(self, target, bindings, arguments, rpc_server=None):
         pass
 
 

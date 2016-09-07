@@ -20,14 +20,15 @@
 
 import argparse
 from core.utils import get_available_submodules
+from core.rpc_server import ZMQJSONRPCServer
 from adapters import import_adapter
 from setups import import_device, import_bindings
-
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
 parser.add_argument('-d', '--device', help='Name of the device to simulate.', default='chopper',
                     choices=get_available_submodules('setups'))
+parser.add_argument('-r', '--rpc-host', help='HOST:PORT format string for exposing the device via JSON-RPC over ZMQ.')
 parser.add_argument('-s', '--setup', help='Name of the setup to load.', default='default')
 parser.add_argument('-b', '--bindings', help='Bindings to import from setups.device.bindings. '
                                              'If not specified, this defaults to the value of --protocol.')
@@ -46,4 +47,9 @@ bindings = import_bindings(arguments.device, arguments.protocol if arguments.bin
 device = import_device(arguments.device, arguments.setup)
 
 adapter = CommunicationAdapter()
-adapter.run(device, bindings, arguments.adapter_args)
+
+rpc_server = None
+if arguments.rpc_host:
+    server = ZMQJSONRPCServer([(device, 'device',), ], *arguments.rpc_host.split(':'))
+
+adapter.run(device, bindings, arguments.adapter_args, server)

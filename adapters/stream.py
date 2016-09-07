@@ -86,7 +86,7 @@ class StreamAdapter(Adapter):
         parser.add_argument('-p', '--port', help='Port to listen for connections on', type=int, default=9999)
         return parser.parse_args(arguments)
 
-    def run(self, target, bindings, arguments):
+    def run(self, target, bindings, arguments, rpc_server=None):
         options = self._parseArguments(arguments)
 
         StreamServer(options.bind_address, options.port, target, bindings)
@@ -99,6 +99,10 @@ class StreamAdapter(Adapter):
             start = datetime.now()
 
             asyncore.loop(0.1, count=1)
+
+            if rpc_server:
+                rpc_server.process()
+
             target.process(delta)
 
             delta = (datetime.now() - start).total_seconds()

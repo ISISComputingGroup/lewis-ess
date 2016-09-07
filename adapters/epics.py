@@ -77,7 +77,7 @@ class EpicsAdapter(Adapter):
         parser.add_argument('-p', '--prefix', help='Prefix to use for all PVs', default='')
         return parser.parse_args(arguments)
 
-    def run(self, target, bindings, arguments):
+    def run(self, target, bindings, arguments, rpc_server=None):
         options = self._parseArguments(arguments)
 
         server = SimpleServer()
@@ -96,6 +96,10 @@ class EpicsAdapter(Adapter):
             # Additionally, if you don't call it every ~0.05s or less, PVs stop working. Annoying.
             # Set it to 0.0 for maximum cycle speed.
             server.process(0.1)
+
+            if rpc_server:
+                rpc_server.process()
+
             target.process(delta)
             driver.process(delta)
 
@@ -103,6 +107,6 @@ class EpicsAdapter(Adapter):
             count += 1
             timer += delta
             if timer >= 1.0:
-                print("Running at %d cycles per second (%.3f ms per cycle)" % (count, 1000.0 / count))
+                #print("Running at %d cycles per second (%.3f ms per cycle)" % (count, 1000.0 / count))
                 count = 0
                 timer = 0.0
