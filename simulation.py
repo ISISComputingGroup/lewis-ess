@@ -20,7 +20,7 @@
 
 import argparse
 from core.utils import get_available_submodules
-from core.rpc_server import ZMQJSONRPCServer
+from core.rpc_server import ZMQJSONRPCServer, RPCObject
 from adapters import import_adapter
 from setups import import_device, import_bindings
 
@@ -50,6 +50,6 @@ adapter = CommunicationAdapter()
 
 rpc_server = None
 if arguments.rpc_host:
-    server = ZMQJSONRPCServer([(device, 'device',), ], *arguments.rpc_host.split(':'))
+    server = ZMQJSONRPCServer({'device': device}, *arguments.rpc_host.split(':'))
 
 adapter.run(device, bindings, arguments.adapter_args, server)
