@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 from core.rpc_client import RemoteObjectCollection
 
