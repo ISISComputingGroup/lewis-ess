@@ -27,8 +27,6 @@ class RPCObject(object):
         to expose and only those are actually exposed. This can be used to explicitly expose
         members of an object that start with an underscore.
 
-
-
         :param object: The object to expose.
         :param methods: If supplied, only this list of methods will be exposed.
         """
@@ -83,11 +81,26 @@ class RPCObject(object):
 
 
 class RPCObjectCollection(object):
-    def __init__(self, objects):
+    def __init__(self, named_objects):
+        """
+        This class helps expose a number of objects (plain or RPCObject) by exposing the methods of each object as
+
+            name.method
+
+        Furthermore it exposes each object's API as a method with the following name:
+
+            name:api
+
+        A list of exposed objects can be obtained by calling the following method from the client:
+
+            :objects
+
+        :param named_objects: Dictionary of of name: object pairs.
+        """
         self._object_map = {}
         self._method_map = {}
 
-        for name, obj in objects.items():
+        for name, obj in named_objects.items():
             self.add_object(obj, name)
 
         self._method_map[':objects'] = self.get_objects
@@ -117,6 +130,21 @@ class RPCObjectCollection(object):
 
 class ZMQJSONRPCServer(object):
     def __init__(self, object_map={}, host='127.0.0.1', port='10000'):
+        """
+        This server opens a ZMQ REP-socket at the given host and port. It constructs an RPCObjectCollection
+        from the supplied name: object-dictionary and uses that as a handler for JSON-RPC requests.
+
+        Each time process is called, the server tries to get request data and responds to that. If there is
+        no data, the method does nothing.
+
+        Please note that this RPC-service comes without any security, authentication, etc. Only use it
+        to expose objects on a trusted network and be aware that anyone on that network can access
+        the exposed objects without any restrictions.
+
+        :param object_map: Dictionary with name: object-pairs to construct an RPCObjectCollection.
+        :param host: Host on which the RPC service listens. Default is 127.0.0.1.
+        :param port: Port on which the RPC service listes.
+        """
         super(ZMQJSONRPCServer, self).__init__()
         self.host = host
         self.port = port
@@ -137,6 +165,7 @@ class ZMQJSONRPCServer(object):
                                    "type": type(exception).__name__}}}
 
     def process(self):
+
         try:
             request = self.socket.recv_unicode(flags=zmq.NOBLOCK)
 
