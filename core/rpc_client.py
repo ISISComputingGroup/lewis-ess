@@ -1,10 +1,20 @@
 import zmq
 import uuid
 import types
+import exceptions
 
 
 class ZMQJSONRPCServerSideException(Exception):
     def __init__(self, type, message):
+        """
+        This exception type replaces exceptions that are raised on the server,
+        but unknown (i.e. not in the exceptions-module) on the client side.
+        To retain as much information as possible, the exception type on the server and
+        the message are stored.
+
+        :param type: Type of the exception on the server side.
+        :param message: Exception message.
+        """
         self.type = type
         self.message = message
 
@@ -14,6 +24,12 @@ class ZMQJSONRPCServerSideException(Exception):
 
 class ZMQJSONRPCProtocolException(Exception):
     def __init__(self, message):
+        """
+        An exception type for exceptions related to the transport protocol, i.e.
+        malformed requests etc.
+
+        :param message: A message describing the exception.
+        """
         self.message = message
 
     def __str__(self):
@@ -21,6 +37,18 @@ class ZMQJSONRPCProtocolException(Exception):
 
 
 def json_rpc_call(socket, method, args=[]):
+    """
+    This function takes a ZMQ REQ-socket and submits a JSON-object containing
+    the RPC (JSON-RPC 2.0 format) to the supplied method with the supplied arguments.
+    Then it waits for a reply from the server and blocks until it has received
+    a JSON-response. The function returns the response and the id it used to tag
+    the original request, which is a random UUID (uuid.uuid4).
+
+    :param socket: ZMQ REQ-socket.
+    :param method: Method to call on remote.
+    :param args: Arguments to method call.
+    :return: JSON result and request id.
+    """
     id = str(uuid.uuid4())
     socket.send_json(
         {'method': method,
@@ -33,81 +61,141 @@ def json_rpc_call(socket, method, args=[]):
 
 
 class ZMQJSONRPCObjectProxy(object):
-    _remote_getters = set()
-    _remote_setters = set()
+    def __init__(self, socket, members, prefix=''):
+        """
+        This class serves as a base class for dynamically created classes on the
+        client side that represent server-side objects. Upon initialization,
+        this class takes the supplied methods and installs appropriate proxy methods
+        or properties into the object and class respectively. Because of that
+        class manipulation, this class must never be used directly.
+        Instead, it should be used as a base-class for dynamically created types
+        that mirror types on the server, like this:
 
-    def __init__(self, socket, prefix='', methods=[]):
-        self._remote_getters = set()
-        self._remote_setters = set()
+            proxy = type('SomeClassName', (ZMQJSONRPCObjectProxy, ), {})(socket, methods, prefix)
+
+        There is however, the class RemoteObjectCollection, which automates all that
+        and provides objects that are ready to use.
+
+        Exceptions on the server are propagated to the client. If the exception is not part
+        of the exceptions-module, a ZMQJSONRPCServerSideException is raised instead, which
+        contains information about the server side exception.
+
+        All RPC method names are prefixed with the supplied prefix, which is usually the
+        object name on the server plus a dot.
+
+        :param socket: ZMQ REQ-socket for remote calls.
+        :param members: List of strings to generate methods and properties.
+        :param prefix: Usually object name on the server plus dot.
+        """
         self._properties = set()
 
-        self.socket = socket
-        self._morph_into(methods)
-        self.prefix = prefix
+        self._socket = socket
+        self._add_member_proxies(members)
+        self._prefix = prefix
 
     def _make_request(self, method, args=[]):
-        response, id = json_rpc_call(self.socket, self.prefix + method, args)
+        """
+        This method performs a JSON-RPC request via the object's ZMQ socket. If successful,
+        the result is returned, otherwise exceptions are raised. Server side exceptions are
+        raised using the same type as on the server if they are part of the exceptions-module.
+        Otherwise, a ZMQJSONRPCServerSideException is raised.
+
+        :param method: Method of the object to call on the remote.
+        :param args: Positional arguments to the method call.
+        :return: Result of the remote call if successful.
+        """
+        response, id = json_rpc_call(self._socket, self._prefix + method, args)
 
         if 'result' in response:
             return response['result']
 
         if 'error' in response:
             if 'data' in response['error']:
-                raise ZMQJSONRPCServerSideException(response['error']['data']['type'],
-                                                    response['error']['data']['message'])
+                exception_type = response['error']['data']['type']
+                exception_message = response['error']['data']['message']
+
+                try:
+                    exception = getattr(exceptions, exception_type)
+                    raise exception(exception_message)
+                except AttributeError:
+                    raise ZMQJSONRPCServerSideException(exception_type, exception_message)
             else:
                 raise ZMQJSONRPCProtocolException(response['error']['message'])
 
-    def _morph_into(self, methods):
-        for method in [str(m) for m in methods]:
-            if ':set' in method:
-                self._remote_setters.add(method)
-            elif ':get' in method:
-                self._remote_getters.add(method)
-                self._properties.add(method.split(':')[-2].split('.')[-1])
-            elif not method.startswith('.'):
-                setattr(self, method, types.MethodType(self._create_wrapper_method(method), self))
+    def _add_member_proxies(self, members):
+        for member in [str(m) for m in members]:
+            if ':set' in member or ':get' in member:
+                self._properties.add(member.split(':')[-2].split('.')[-1])
+            else:
+                setattr(self, member, types.MethodType(self._create_method_proxy(member), self))
 
-    def _create_wrapper_method(self, method_name):
+        for prop in self._properties:
+            setattr(type(self), prop, property(self._create_getter_proxy(prop),
+                                               self._create_setter_proxy(prop)))
+
+    def _create_getter_proxy(self, property_name):
+        def getter(obj):
+            return obj._make_request(property_name + ':get')
+
+        return getter
+
+    def _create_setter_proxy(self, property_name):
+        def setter(obj, value):
+            return obj._make_request(property_name + ':set', [value])
+
+        return setter
+
+    def _create_method_proxy(self, method_name):
         def method_wrapper(obj, *args):
             return obj._make_request(method_name, args)
 
         return method_wrapper
 
-    def __getattribute__(self, item):
-        try:
-            return super(ZMQJSONRPCObjectProxy, self).__getattribute__(item)
-        except AttributeError:
-            if '{}:get'.format(item) in self._remote_getters:
-                return self._make_request('{}:get'.format(item))
-            raise
-
-    def __setattr__(self, key, value):
-        if '{}:set'.format(key) in self._remote_setters:
-            return self._make_request('{}:set'.format(key), [value, ])
-
-        return super(ZMQJSONRPCObjectProxy, self).__setattr__(key, value)
-
 
 class RemoteObjectCollection(object):
     def __init__(self, host='127.0.0.1', port='10000'):
+        """
+        This class' responsibility is to create client side proxies for the objects
+        that are exposed by an RPC-server. A connection is established to the supplied
+        host and port and the server is queried for its objects. The API of each object is queried,
+        which includes the type name and the object members.
+
+        Each type that occurs is created as a subclass of ZMQJSONRPCObjectProxy, which
+        means that objects sharing type on the server side will also share type
+        on the client side. Finally, each object is created and stored in a dictionary.
+
+        Object access would typically be done via the dict-like interface of the collection:
+
+            remote_objects = RemoteObjectCollection(some_host, some_port)
+            obj = remote_objects['device']
+
+        Now obj can be used like it could be on the server side, at least the parts that are
+        exposed and all actions performed on obj are forwarded to the server.
+
+        :param host: Host to connect to for RPC.
+        :param port: Port the service is listening on.
+        """
         context = zmq.Context()
         socket = context.socket(zmq.REQ)
         socket.connect('tcp://{0}:{1}'.format(host, port))
 
-        objects, id = json_rpc_call(socket, ':objects')
+        objects, request_id = json_rpc_call(socket, ':objects')
 
         self.objects = {}
 
-        if 'result' in objects and objects['id'] == id:
+        if 'result' in objects and objects['id'] == request_id:
             for obj in objects['result']:
-                api, id = json_rpc_call(socket, obj + ':api')
+                api, request_id = json_rpc_call(socket, obj + ':api')
 
-                if 'result' in api and api['id'] == id:
+                classes = {}
+
+                if 'result' in api and api['id'] == request_id:
                     name = str(api['result']['class'])
+                    object_type = classes.setdefault(name, type(name, (ZMQJSONRPCObjectProxy,), {}))
+
                     methods = api['result']['methods']
 
-                    self.objects[obj] = type(name, (ZMQJSONRPCObjectProxy,), {})(socket, obj + '.', methods)
+                    self.objects[obj] = object_type(socket, methods, obj + '.')
 
     def keys(self):
         return list(self.objects.keys())
