@@ -165,7 +165,15 @@ class ZMQJSONRPCServer(object):
                                    "type": type(exception).__name__}}}
 
     def process(self):
+        """
+        Each time this method is called, the socket tries to retrieve data and passes
+        it to the JSONRPCResponseManager, which in turn passes the RPC to the RPCObjectCollection.
 
+        In case no data are available, the method does nothing. This behavior is required for
+        Plankton where everything is running in one thread. The central loop can call process
+        at some point to process remote calls, so the RPC-server does not introduce its own
+        infinite processing loop.
+        """
         try:
             request = self.socket.recv_unicode(flags=zmq.NOBLOCK)
 
