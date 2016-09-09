@@ -1,7 +1,10 @@
 import zmq
 import uuid
 import types
-import exceptions
+try:
+    import exceptions
+except ImportError:
+    exceptions = __builtins__
 
 
 class ZMQJSONRPCServerSideException(Exception):
@@ -66,7 +69,7 @@ class ZMQJSONRPCConnection(object):
         return self._socket.recv_json(), id
 
 
-class ZMQJSONRPCObjectProxy(object):
+class JSONRPCObjectProxy(object):
     def __init__(self, connection, members, prefix=''):
         """
         This class serves as a base class for dynamically created classes on the
@@ -96,8 +99,8 @@ class ZMQJSONRPCObjectProxy(object):
         self._properties = set()
 
         self._connection = connection
-        self._add_member_proxies(members)
         self._prefix = prefix
+        self._add_member_proxies(members)
 
     def _make_request(self, method, args=[]):
         """
@@ -164,52 +167,40 @@ def get_remote_object(connection, object_name=''):
     if not 'result' in api or api['id'] != request_id:
         raise ZMQJSONRPCProtocolException('Failed to retrieve API of remote object.')
 
-    object_type = type(str(api['result']['class']), (ZMQJSONRPCObjectProxy,), {})
+    object_type = type(str(api['result']['class']), (JSONRPCObjectProxy,), {})
     methods = api['result']['methods']
 
     glue = '.' if object_name else ''
     return object_type(connection, methods, object_name + glue)
 
 
-class RemoteObjectCollection(object):
-    def __init__(self, connection):
-        """
-        The responsibility of this class is to create client side proxies for the objects
-        that are exposed by an RPC-server that exposes an ExposedObjectCollection.
-        A connection is established to the supplied host and port and the server
-        is queried for its objects. The API of each object is queried,
-        which includes the type name and the object members.
+def get_remote_object_collection(connection, object_name=''):
+    """
+    The responsibility of this function is to create client side proxies for the objects
+    that are exposed by an RPC-server that exposes an ExposedObjectCollection. Usually object_name is empty,
+    but if the object holding the collection does not live on the top level, this is required.
+    A connection is established to the supplied host and port and the server
+    is queried for its objects. The API of each object is queried,
+    which includes the type name and the object members.
 
-        Each type that occurs is created as a subclass of ZMQJSONRPCObjectProxy, which
-        means that objects sharing type on the server side will also share type
-        on the client side. Finally, each object is created and stored in a dictionary.
+    Each type that occurs is created as a subclass of ZMQJSONRPCObjectProxy, which
+    means that objects sharing type on the server side will also share type
+    on the client side. Finally, each object is created and returned in a dictionary.:
 
-        Object access would typically be done via the dict-like interface of the collection:
+        remote_objects = get_remote_object_collection(connection)
+        obj = remote_objects['device']
 
-            remote_objects = RemoteObjectCollection(some_host, some_port)
-            obj = remote_objects['device']
+    Now obj can be used like it could be on the server side, at least the parts that are
+    exposed and all actions performed on obj are forwarded to the server.
 
-        Now obj can be used like it could be on the server side, at least the parts that are
-        exposed and all actions performed on obj are forwarded to the server.
+    :param connection: A ZMQJSONRPCConnection which is used to obtain the objects that are exposed on the server side.
+    :param object_name: Object name on the server. This is required if the object collection is not the top level object.
+    """
+    glue = '.' if object_name else ''
+    objects, request_id = connection.json_rpc(object_name + glue + 'get_objects')
 
-        :param connection: A ZMQJSONRPCConnection which is used to obtain the objects that are exposed on the server side.
-        """
-        objects, request_id = connection.json_rpc('get_objects')
+    if not 'result' in objects or objects['id'] != request_id:
+        raise ZMQJSONRPCProtocolException(
+            'The server does not expose a get_objects-method that is required to retrieve objects from the server side.')
 
-        self.objects = {}
-
-        if 'result' in objects and objects['id'] == request_id:
-            for obj in objects['result']:
-                self.objects[obj] = get_remote_object(connection, obj)
-        else:
-            raise ZMQJSONRPCProtocolException(
-                'The server does not expose a get_objects-method that is required to retrieve objects from the server side.')
-
-    def keys(self):
-        return list(self.objects.keys())
-
-    def __iter__(self):
-        return iter(self.objects)
-
-    def __getitem__(self, item):
-        return self.objects[item]
+    return {get_remote_object(connection, obj) for obj in objects['result']}
