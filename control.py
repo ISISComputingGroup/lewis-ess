@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-from core.rpc_client import RemoteObjectCollection
+from core.rpc_client import RemoteObjectCollection, ZMQJSONRPCConnection
 
 
 def list_objects(remote):
@@ -76,7 +76,7 @@ parser.add_argument('argument', nargs='*',
 
 args = parser.parse_args()
 
-remote = RemoteObjectCollection(host=args.ip, port=args.port)
+remote = RemoteObjectCollection(ZMQJSONRPCConnection(host=args.ip, port=args.port))
 
 if args.list_objects:
     list_objects(remote)

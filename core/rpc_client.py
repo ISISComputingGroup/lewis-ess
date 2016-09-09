@@ -36,32 +36,38 @@ class ZMQJSONRPCProtocolException(Exception):
         return self.message
 
 
-def json_rpc_call(socket, method, args=[]):
-    """
-    This function takes a ZMQ REQ-socket and submits a JSON-object containing
-    the RPC (JSON-RPC 2.0 format) to the supplied method with the supplied arguments.
-    Then it waits for a reply from the server and blocks until it has received
-    a JSON-response. The function returns the response and the id it used to tag
-    the original request, which is a random UUID (uuid.uuid4).
+class ZMQJSONRPCConnection(object):
+    def __init__(self, host='127.0.0.1', port='10000'):
+        context = zmq.Context()
+        self._socket = context.socket(zmq.REQ)
+        self._socket.connect('tcp://{0}:{1}'.format(host, port))
 
-    :param socket: ZMQ REQ-socket.
-    :param method: Method to call on remote.
-    :param args: Arguments to method call.
-    :return: JSON result and request id.
-    """
-    id = str(uuid.uuid4())
-    socket.send_json(
-        {'method': method,
-         'params': args,
-         'jsonrpc': '2.0',
-         'id': id
-         })
+    def json_rpc(self, method, args=[]):
+        """
+        This method takes a ZMQ REQ-socket and submits a JSON-object containing
+        the RPC (JSON-RPC 2.0 format) to the supplied method with the supplied arguments.
+        Then it waits for a reply from the server and blocks until it has received
+        a JSON-response. The method returns the response and the id it used to tag
+        the original request, which is a random UUID (uuid.uuid4).
 
-    return socket.recv_json(), id
+        :param socket: ZMQ REQ-socket.
+        :param method: Method to call on remote.
+        :param args: Arguments to method call.
+        :return: JSON result and request id.
+        """
+        id = str(uuid.uuid4())
+        self._socket.send_json(
+            {'method': method,
+             'params': args,
+             'jsonrpc': '2.0',
+             'id': id
+             })
+
+        return self._socket.recv_json(), id
 
 
 class ZMQJSONRPCObjectProxy(object):
-    def __init__(self, socket, members, prefix=''):
+    def __init__(self, connection, members, prefix=''):
         """
         This class serves as a base class for dynamically created classes on the
         client side that represent server-side objects. Upon initialization,
@@ -83,13 +89,13 @@ class ZMQJSONRPCObjectProxy(object):
         All RPC method names are prefixed with the supplied prefix, which is usually the
         object name on the server plus a dot.
 
-        :param socket: ZMQ REQ-socket for remote calls.
+        :param connection: ZMQREQConnection-object for remote calls.
         :param members: List of strings to generate methods and properties.
         :param prefix: Usually object name on the server plus dot.
         """
         self._properties = set()
 
-        self._socket = socket
+        self._connection = connection
         self._add_member_proxies(members)
         self._prefix = prefix
 
@@ -104,7 +110,7 @@ class ZMQJSONRPCObjectProxy(object):
         :param args: Positional arguments to the method call.
         :return: Result of the remote call if successful.
         """
-        response, id = json_rpc_call(self._socket, self._prefix + method, args)
+        response, id = self._connection.json_rpc(self._prefix + method, args)
 
         if 'result' in response:
             return response['result']
@@ -152,12 +158,26 @@ class ZMQJSONRPCObjectProxy(object):
         return method_wrapper
 
 
+def get_remote_object(connection, object_name=''):
+    api, request_id = connection.json_rpc(object_name + ':api')
+
+    if not 'result' in api or api['id'] != request_id:
+        raise ZMQJSONRPCProtocolException('Failed to retrieve API of remote object.')
+
+    object_type = type(str(api['result']['class']), (ZMQJSONRPCObjectProxy,), {})
+    methods = api['result']['methods']
+
+    glue = '.' if object_name else ''
+    return object_type(connection, methods, object_name + glue)
+
+
 class RemoteObjectCollection(object):
-    def __init__(self, host='127.0.0.1', port='10000'):
+    def __init__(self, connection):
         """
-        This class' responsibility is to create client side proxies for the objects
-        that are exposed by an RPC-server. A connection is established to the supplied
-        host and port and the server is queried for its objects. The API of each object is queried,
+        The responsibility of this class is to create client side proxies for the objects
+        that are exposed by an RPC-server that exposes an ExposedObjectCollection.
+        A connection is established to the supplied host and port and the server
+        is queried for its objects. The API of each object is queried,
         which includes the type name and the object members.
 
         Each type that occurs is created as a subclass of ZMQJSONRPCObjectProxy, which
@@ -172,30 +192,18 @@ class RemoteObjectCollection(object):
         Now obj can be used like it could be on the server side, at least the parts that are
         exposed and all actions performed on obj are forwarded to the server.
 
-        :param host: Host to connect to for RPC.
-        :param port: Port the service is listening on.
+        :param connection: A ZMQJSONRPCConnection which is used to obtain the objects that are exposed on the server side.
         """
-        context = zmq.Context()
-        socket = context.socket(zmq.REQ)
-        socket.connect('tcp://{0}:{1}'.format(host, port))
-
-        objects, request_id = json_rpc_call(socket, ':objects')
+        objects, request_id = connection.json_rpc('get_objects')
 
         self.objects = {}
 
         if 'result' in objects and objects['id'] == request_id:
             for obj in objects['result']:
-                api, request_id = json_rpc_call(socket, obj + ':api')
-
-                classes = {}
-
-                if 'result' in api and api['id'] == request_id:
-                    name = str(api['result']['class'])
-                    object_type = classes.setdefault(name, type(name, (ZMQJSONRPCObjectProxy,), {}))
-
-                    methods = api['result']['methods']
-
-                    self.objects[obj] = object_type(socket, methods, obj + '.')
+                self.objects[obj] = get_remote_object(connection, obj)
+        else:
+            raise ZMQJSONRPCProtocolException(
+                'The server does not expose a get_objects-method that is required to retrieve objects from the server side.')
 
     def keys(self):
         return list(self.objects.keys())

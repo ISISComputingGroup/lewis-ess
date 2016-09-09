@@ -3,8 +3,8 @@ import json
 from jsonrpc import JSONRPCResponseManager
 
 
-class RPCObject(object):
-    def __init__(self, object, methods=()):
+class ExposedObject(object):
+    def __init__(self, object, members=()):
         """
         RPCObject is a class that makes it easy to expose an object via the JSONRPCResponseManager
         from the json-rpc package, where it can serve as a dispatcher. For this purpose it exposes
@@ -28,17 +28,21 @@ class RPCObject(object):
         members of an object that start with an underscore.
 
         :param object: The object to expose.
-        :param methods: If supplied, only this list of methods will be exposed.
+        :param members: If supplied, only this list of methods will be exposed.
         """
+        super(ExposedObject, self).__init__()
+
         self._object = object
-        self._method_map = {}
+        self._function_map = {}
 
-        exposed_method = methods if methods else [prop for prop in dir(self._object) if not prop.startswith('_')]
+        self._add_function(':api', self.get_api)
 
-        for method in exposed_method:
-            self._add_method_wrappers(method)
+        exposed_members = members if members else [prop for prop in dir(self._object) if not prop.startswith('_')]
 
-    def _add_method_wrappers(self, member):
+        for method in exposed_members:
+            self._add_member_wrappers(method)
+
+    def _add_member_wrappers(self, member):
         """
         This method probes the supplied member of the wrapped object and inserts an appropriate
         entry into the internal method map. Getters and setters for properties get a suffix
@@ -49,38 +53,44 @@ class RPCObject(object):
         method_object = getattr(self._object, member)
 
         if callable(method_object):
-            self._method_map[member] = method_object
+            self._add_function(member, method_object)
         else:
-            def getter():
-                return getattr(self._object, member)
-
-            self._method_map['{}:get'.format(member)] = getter
+            self._add_function('{}:get'.format(member), lambda: getattr(self._object, member))
 
             def setter(arg):
                 return setattr(self._object, member, arg)
 
-            self._method_map['{}:set'.format(member)] = setter
+            self._add_function('{}:set'.format(member), setter)
 
     def get_api(self):
         """
         This method returns the class name and a list of exposed methods. It is exposed to RPC-clients by an
-        instance of RPCObjectCollection.
+        instance of ExposedObjectCollection.
 
         :return: A dictionary describing the exposed API (consisting of a class name and methods).
         """
-        return {'class': type(self._object).__name__, 'methods': list(self._method_map.keys())}
+        return {'class': type(self._object).__name__, 'methods': list(self._function_map.keys())}
 
     def __getitem__(self, item):
-        return self._method_map[item]
+        return self._function_map[item]
 
     def __len__(self):
-        return len(self._method_map)
+        return len(self._function_map)
 
     def __iter__(self):
-        return iter(self._method_map)
+        return iter(self._function_map)
+
+    def __contains__(self, item):
+        return item in self._function_map
+
+    def _add_function(self, name, function):
+        if not callable(function):
+            raise TypeError('Only callable objects can be exposed.')
+
+        self._function_map[name] = function
 
 
-class RPCObjectCollection(object):
+class ExposedObjectCollection(ExposedObject):
     def __init__(self, named_objects):
         """
         This class helps expose a number of objects (plain or RPCObject) by exposing the methods of each object as
@@ -97,42 +107,34 @@ class RPCObjectCollection(object):
 
         :param named_objects: Dictionary of of name: object pairs.
         """
+        super(ExposedObjectCollection, self).__init__(self, ('get_objects',))
         self._object_map = {}
-        self._method_map = {}
 
         for name, obj in named_objects.items():
             self.add_object(obj, name)
 
-        self._method_map[':objects'] = self.get_objects
+        self._add_function('get_objects', self.get_objects)
 
     def add_object(self, obj, name):
         if name in self._object_map:
             raise RuntimeError('An object is already registered under that name.')
 
-        exposed_object = self._object_map[name] = obj if isinstance(obj, RPCObject) else RPCObject(obj)
+        exposed_object = self._object_map[name] = obj if isinstance(obj, ExposedObject) else ExposedObject(obj)
 
         for method_name in exposed_object:
-            self._method_map[name + '.' + method_name] = exposed_object[method_name]
-            self._method_map[name + ':api'] = exposed_object.get_api
+            glue = '.' if not method_name.startswith(':') else ''
+            self._add_function(name + glue + method_name, exposed_object[method_name])
 
     def get_objects(self):
         return list(self._object_map.keys())
-
-    def __getitem__(self, item):
-        return self._method_map[item]
-
-    def __len__(self):
-        return len(self._method_map)
-
-    def __iter__(self):
-        return iter(self._method_map)
 
 
 class ZMQJSONRPCServer(object):
     def __init__(self, object_map={}, host='127.0.0.1', port='10000'):
         """
-        This server opens a ZMQ REP-socket at the given host and port. It constructs an RPCObjectCollection
-        from the supplied name: object-dictionary and uses that as a handler for JSON-RPC requests.
+        This server opens a ZMQ REP-socket at the given host and port. It constructs an ExposedObjectCollection
+        from the supplied name: object-dictionary and uses that as a handler for JSON-RPC requests. If it is an
+        instance of ExposedObject, that is used directly.
 
         Each time process is called, the server tries to get request data and responds to that. If there is
         no data, the method does nothing.
@@ -141,7 +143,7 @@ class ZMQJSONRPCServer(object):
         to expose objects on a trusted network and be aware that anyone on that network can access
         the exposed objects without any restrictions.
 
-        :param object_map: Dictionary with name: object-pairs to construct an RPCObjectCollection.
+        :param object_map: Dictionary with name: object-pairs to construct an ExposedObjectCollection or ExposedObject
         :param host: Host on which the RPC service listens. Default is 127.0.0.1.
         :param port: Port on which the RPC service listes.
         """
@@ -149,7 +151,10 @@ class ZMQJSONRPCServer(object):
         self.host = host
         self.port = port
 
-        self._rpc_object_collection = RPCObjectCollection(object_map)
+        if isinstance(object_map, ExposedObject):
+            self._rpc_object_collection = object_map
+        else:
+            self._rpc_object_collection = ExposedObjectCollection(object_map)
 
         context = zmq.Context()
         self.socket = context.socket(zmq.REP)
@@ -167,7 +172,7 @@ class ZMQJSONRPCServer(object):
     def process(self):
         """
         Each time this method is called, the socket tries to retrieve data and passes
-        it to the JSONRPCResponseManager, which in turn passes the RPC to the RPCObjectCollection.
+        it to the JSONRPCResponseManager, which in turn passes the RPC to the ExposedObjectCollection.
 
         In case no data are available, the method does nothing. This behavior is required for
         Plankton where everything is running in one thread. The central loop can call process
