@@ -66,7 +66,7 @@ class ZMQJSONRPCConnection(object):
         self._socket = context.socket(zmq.REQ)
         self._socket.connect('tcp://{0}:{1}'.format(host, port))
 
-    def json_rpc(self, method, args=[]):
+    def json_rpc(self, method, *args):
         """
         This method takes a ZMQ REQ-socket and submits a JSON-object containing
         the RPC (JSON-RPC 2.0 format) to the supplied method with the supplied arguments.
@@ -123,7 +123,7 @@ class JSONRPCObjectProxy(object):
         self._prefix = prefix
         self._add_member_proxies(members)
 
-    def _make_request(self, method, args=[]):
+    def _make_request(self, method, *args):
         """
         This method performs a JSON-RPC request via the object's ZMQ socket. If successful,
         the result is returned, otherwise exceptions are raised. Server side exceptions are

@@ -24,7 +24,7 @@ from jsonrpc import JSONRPCResponseManager
 
 
 class ExposedObject(object):
-    def __init__(self, object, members=()):
+    def __init__(self, object, members=None):
         """
         RPCObject is a class that makes it easy to expose an object via the JSONRPCResponseManager
         from the json-rpc package, where it can serve as a dispatcher. For this purpose it exposes
@@ -130,8 +130,9 @@ class ExposedObjectCollection(ExposedObject):
         super(ExposedObjectCollection, self).__init__(self, ('get_objects',))
         self._object_map = {}
 
-        for name, obj in named_objects.items():
-            self.add_object(obj, name)
+        if named_objects:
+            for name, obj in named_objects.items():
+                self.add_object(obj, name)
 
         self._add_function('get_objects', self.get_objects)
 
@@ -150,7 +151,7 @@ class ExposedObjectCollection(ExposedObject):
 
 
 class ZMQJSONRPCServer(object):
-    def __init__(self, object_map={}, host='127.0.0.1', port='10000'):
+    def __init__(self, object_map=None, host='127.0.0.1', port='10000'):
         """
         This server opens a ZMQ REP-socket at the given host and port. It constructs an ExposedObjectCollection
         from the supplied name: object-dictionary and uses that as a handler for JSON-RPC requests. If it is an
