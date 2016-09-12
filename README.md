@@ -238,7 +238,7 @@ Only numeric types and strings can be used as arguments via the `control.py`-scr
 
 ```
 from time import sleep
-from plankton.core.rpc_client import ZMQJSONRPCConnection, get_remote_object_collection
+from core.rpc_client import ZMQJSONRPCConnection, get_remote_object_collection
 
 connection = ZMQJSONRPCConnection(host='127.0.0.1', port='10000')
 chopper = get_remote_object_collection(connection)['chopper']
