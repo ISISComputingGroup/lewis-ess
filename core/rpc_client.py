@@ -134,7 +134,7 @@ class JSONRPCObjectProxy(object):
         :param args: Positional arguments to the method call.
         :return: Result of the remote call if successful.
         """
-        response, id = self._connection.json_rpc(self._prefix + method, args)
+        response, id = self._connection.json_rpc(self._prefix + method, *args)
 
         if 'result' in response:
             return response['result']
