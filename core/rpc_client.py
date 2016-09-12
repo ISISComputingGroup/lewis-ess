@@ -1,13 +1,14 @@
 import zmq
 import uuid
 import types
+
 try:
     import exceptions
 except ImportError:
     exceptions = __builtins__
 
 
-class ZMQJSONRPCServerSideException(Exception):
+class JSONRPCServerSideException(Exception):
     def __init__(self, type, message):
         """
         This exception type replaces exceptions that are raised on the server,
@@ -25,7 +26,7 @@ class ZMQJSONRPCServerSideException(Exception):
         return 'Exception on server side of type \'{}\': \'{}\''.format(self.type, self.message)
 
 
-class ZMQJSONRPCProtocolException(Exception):
+class JSONRPCProtocolException(Exception):
     def __init__(self, message):
         """
         An exception type for exceptions related to the transport protocol, i.e.
@@ -127,16 +128,16 @@ class JSONRPCObjectProxy(object):
                     exception = getattr(exceptions, exception_type)
                     raise exception(exception_message)
                 except AttributeError:
-                    raise ZMQJSONRPCServerSideException(exception_type, exception_message)
+                    raise JSONRPCServerSideException(exception_type, exception_message)
             else:
-                raise ZMQJSONRPCProtocolException(response['error']['message'])
+                raise JSONRPCProtocolException(response['error']['message'])
 
     def _add_member_proxies(self, members):
         for member in [str(m) for m in members]:
             if ':set' in member or ':get' in member:
                 self._properties.add(member.split(':')[-2].split('.')[-1])
             else:
-                setattr(self, member, types.MethodType(self._create_method_proxy(member), self))
+                setattr(self, member, self._create_method_proxy(member))
 
         for prop in self._properties:
             setattr(type(self), prop, property(self._create_getter_proxy(prop),
@@ -158,14 +159,14 @@ class JSONRPCObjectProxy(object):
         def method_wrapper(obj, *args):
             return obj._make_request(method_name, args)
 
-        return method_wrapper
+        return types.MethodType(method_wrapper, self)
 
 
 def get_remote_object(connection, object_name=''):
     api, request_id = connection.json_rpc(object_name + ':api')
 
     if not 'result' in api or api['id'] != request_id:
-        raise ZMQJSONRPCProtocolException('Failed to retrieve API of remote object.')
+        raise JSONRPCProtocolException('Failed to retrieve API of remote object.')
 
     object_type = type(str(api['result']['class']), (JSONRPCObjectProxy,), {})
     methods = api['result']['methods']
@@ -200,7 +201,7 @@ def get_remote_object_collection(connection, object_name=''):
     objects, request_id = connection.json_rpc(object_name + glue + 'get_objects')
 
     if not 'result' in objects or objects['id'] != request_id:
-        raise ZMQJSONRPCProtocolException(
+        raise JSONRPCProtocolException(
             'The server does not expose a get_objects-method that is required to retrieve objects from the server side.')
 
-    return {get_remote_object(connection, obj) for obj in objects['result']}
+    return {obj: get_remote_object(connection, obj) for obj in objects['result']}
