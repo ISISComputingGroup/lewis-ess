@@ -47,17 +47,11 @@ class JSONRPCServerSideException(Exception):
 
 
 class JSONRPCProtocolException(Exception):
-    def __init__(self, message):
-        """
-        An exception type for exceptions related to the transport protocol, i.e.
-        malformed requests etc.
-
-        :param message: A message describing the exception.
-        """
-        self.message = message
-
-    def __str__(self):
-        return self.message
+    """
+    An exception type for exceptions related to the transport protocol, i.e.
+    malformed requests etc.
+    """
+    pass
 
 
 class ZMQJSONRPCConnection(object):
