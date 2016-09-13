@@ -71,7 +71,6 @@ class ZMQJSONRPCConnection(object):
         a JSON-response. The method returns the response and the id it used to tag
         the original request, which is a random UUID (uuid.uuid4).
 
-        :param socket: ZMQ REQ-socket.
         :param method: Method to call on remote.
         :param args: Arguments to method call.
         :return: JSON result and request id.
