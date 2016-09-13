@@ -25,7 +25,7 @@ import types
 try:
     import exceptions
 except ImportError:
-    exceptions = __builtins__
+    import builtins as exceptions
 
 
 class JSONRPCServerSideException(Exception):
