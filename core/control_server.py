@@ -149,7 +149,7 @@ class ExposedObjectCollection(ExposedObject):
         return list(self._object_map.keys())
 
 
-class ZMQJSONRPCServer(object):
+class ControlServer(object):
     def __init__(self, object_map=None, host='127.0.0.1', port='10000'):
         """
         This server opens a ZMQ REP-socket at the given host and port. It constructs an ExposedObjectCollection
@@ -167,7 +167,7 @@ class ZMQJSONRPCServer(object):
         :param host: Host on which the RPC service listens. Default is 127.0.0.1.
         :param port: Port on which the RPC service listes.
         """
-        super(ZMQJSONRPCServer, self).__init__()
+        super(ControlServer, self).__init__()
         self.host = host
         self.port = port
 

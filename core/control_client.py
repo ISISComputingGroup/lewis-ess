@@ -27,7 +27,7 @@ except ImportError:
     import builtins as exceptions
 
 
-class JSONRPCServerSideException(Exception):
+class ServerSideException(Exception):
     def __init__(self, type, message):
         """
         This exception type replaces exceptions that are raised on the server,
@@ -38,14 +38,14 @@ class JSONRPCServerSideException(Exception):
         :param type: Type of the exception on the server side.
         :param message: Exception message on the server side.
         """
-        super(JSONRPCServerSideException, self).__init__(
+        super(ServerSideException, self).__init__(
             'Exception on server side of type \'{}\': \'{}\''.format(type, message))
 
         self.server_side_type = type
         self.server_side_message = message
 
 
-class JSONRPCProtocolException(Exception):
+class ProtocolException(Exception):
     """
     An exception type for exceptions related to the transport protocol, i.e.
     malformed requests etc.
@@ -53,7 +53,7 @@ class JSONRPCProtocolException(Exception):
     pass
 
 
-class ZMQJSONRPCConnection(object):
+class ControlClient(object):
     def __init__(self, host='127.0.0.1', port='10000'):
         self._socket = self._get_zmq_req_socket()
         self._socket.connect('tcp://{0}:{1}'.format(host, port))
@@ -62,7 +62,7 @@ class ZMQJSONRPCConnection(object):
         context = zmq.Context()
         return context.socket(zmq.REQ)
 
-    def json_rpc(self, method, *args):
+    def _json_rpc(self, method, *args):
         """
         This method takes a ZMQ REQ-socket and submits a JSON-object containing
         the RPC (JSON-RPC 2.0 format) to the supplied method with the supplied arguments.
@@ -85,7 +85,7 @@ class ZMQJSONRPCConnection(object):
         return self._socket.recv_json(), id
 
 
-class JSONRPCObjectProxy(object):
+class ObjectProxy(object):
     def __init__(self, connection, members, prefix=''):
         """
         This class serves as a base class for dynamically created classes on the
@@ -129,7 +129,7 @@ class JSONRPCObjectProxy(object):
         :param args: Positional arguments to the method call.
         :return: Result of the remote call if successful.
         """
-        response, id = self._connection.json_rpc(self._prefix + method, *args)
+        response, id = self._connection._json_rpc(self._prefix + method, *args)
 
         if 'result' in response:
             return response['result']
@@ -140,12 +140,12 @@ class JSONRPCObjectProxy(object):
                 exception_message = response['error']['data']['message']
 
                 if not hasattr(exceptions, exception_type):
-                    raise JSONRPCServerSideException(exception_type, exception_message)
+                    raise ServerSideException(exception_type, exception_message)
                 else:
                     exception = getattr(exceptions, exception_type)
                     raise exception(exception_message)
             else:
-                raise JSONRPCProtocolException(response['error']['message'])
+                raise ProtocolException(response['error']['message'])
 
     def _add_member_proxies(self, members):
         for member in [str(m) for m in members]:
@@ -178,12 +178,12 @@ class JSONRPCObjectProxy(object):
 
 
 def get_remote_object(connection, object_name=''):
-    api, request_id = connection.json_rpc(object_name + ':api')
+    api, request_id = connection._json_rpc(object_name + ':api')
 
     if not 'result' in api or api['id'] != request_id:
-        raise JSONRPCProtocolException('Failed to retrieve API of remote object.')
+        raise ProtocolException('Failed to retrieve API of remote object.')
 
-    object_type = type(str(api['result']['class']), (JSONRPCObjectProxy,), {})
+    object_type = type(str(api['result']['class']), (ObjectProxy,), {})
     methods = api['result']['methods']
 
     glue = '.' if object_name else ''
@@ -213,10 +213,10 @@ def get_remote_object_collection(connection, object_name=''):
     :param object_name: Object name on the server. This is required if the object collection is not the top level object.
     """
     glue = '.' if object_name else ''
-    objects, request_id = connection.json_rpc(object_name + glue + 'get_objects')
+    objects, request_id = connection._json_rpc(object_name + glue + 'get_objects')
 
     if not 'result' in objects or objects['id'] != request_id:
-        raise JSONRPCProtocolException(
+        raise ProtocolException(
             'The server does not expose a get_objects-method that is required to retrieve objects from the server side.')
 
     return {obj: get_remote_object(connection, obj) for obj in objects['result']}
