@@ -37,13 +37,13 @@ class JSONRPCServerSideException(Exception):
         the message are stored.
 
         :param type: Type of the exception on the server side.
-        :param message: Exception message.
+        :param message: Exception message on the server side.
         """
-        self.type = type
-        self.message = message
+        super(JSONRPCServerSideException, self).__init__(
+            'Exception on server side of type \'{}\': \'{}\''.format(type, message))
 
-    def __str__(self):
-        return 'Exception on server side of type \'{}\': \'{}\''.format(self.type, self.message)
+        self.server_side_type = type
+        self.server_side_message = message
 
 
 class JSONRPCProtocolException(Exception):
