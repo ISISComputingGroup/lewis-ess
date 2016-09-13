@@ -174,13 +174,13 @@ class JSONRPCObjectProxy(object):
 
     def _create_setter_proxy(self, property_name):
         def setter(obj, value):
-            return obj._make_request(property_name + ':set', [value])
+            return obj._make_request(property_name + ':set', value)
 
         return setter
 
     def _create_method_proxy(self, method_name):
         def method_wrapper(obj, *args):
-            return obj._make_request(method_name, args)
+            return obj._make_request(method_name, *args)
 
         return types.MethodType(method_wrapper, self)
 

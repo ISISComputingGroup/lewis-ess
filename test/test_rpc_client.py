@@ -63,7 +63,7 @@ class TestJSONRPCObjectProxy(unittest.TestCase):
             obj.a = 4
             obj.setTest()
 
-        request_mock.assert_has_calls([call('a:get'), call('a:set', [4]), call('setTest', ())])
+        request_mock.assert_has_calls([call('a:get'), call('a:set', 4), call('setTest')])
 
     def test_make_request_with_result(self):
         mock_connection = Mock(ZMQJSONRPCConnection)
@@ -73,7 +73,7 @@ class TestJSONRPCObjectProxy(unittest.TestCase):
         result = obj.setTest()
 
         self.assertEqual(result, 'test')
-        mock_connection.json_rpc.assert_has_calls([call('setTest', ())])
+        mock_connection.json_rpc.assert_has_calls([call('setTest')])
 
     def test_make_request_with_known_exception(self):
         mock_connection = Mock(ZMQJSONRPCConnection)
@@ -84,7 +84,7 @@ class TestJSONRPCObjectProxy(unittest.TestCase):
         obj = type('TestType', (JSONRPCObjectProxy,), {})(mock_connection, ['setTest'])
 
         self.assertRaises(AttributeError, obj.setTest)
-        mock_connection.json_rpc.assert_has_calls([call('setTest', ())])
+        mock_connection.json_rpc.assert_has_calls([call('setTest')])
 
     def test_make_request_with_unknown_exception(self):
         mock_connection = Mock(ZMQJSONRPCConnection)
@@ -95,7 +95,7 @@ class TestJSONRPCObjectProxy(unittest.TestCase):
         obj = type('TestType', (JSONRPCObjectProxy,), {})(mock_connection, ['setTest'])
 
         self.assertRaises(JSONRPCServerSideException, obj.setTest)
-        mock_connection.json_rpc.assert_has_calls([call('setTest', ())])
+        mock_connection.json_rpc.assert_has_calls([call('setTest')])
 
     def test_make_request_with_missing_error_data(self):
         mock_connection = Mock(ZMQJSONRPCConnection)
@@ -105,7 +105,7 @@ class TestJSONRPCObjectProxy(unittest.TestCase):
         obj = type('TestType', (JSONRPCObjectProxy,), {})(mock_connection, ['setTest'])
 
         self.assertRaises(JSONRPCProtocolException, obj.setTest)
-        mock_connection.json_rpc.assert_has_calls([call('setTest', ())])
+        mock_connection.json_rpc.assert_has_calls([call('setTest')])
 
 
 class TestRemoteObjectFunctions(unittest.TestCase):
