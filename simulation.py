@@ -20,7 +20,9 @@
 
 import argparse
 from core.utils import get_available_submodules
-from core.control_server import ControlServer
+from core.control_server import ControlServer, ExposedObject
+from core.environment import SimulationEnvironment
+
 from adapters import import_adapter
 from setups import import_device, import_bindings
 
@@ -46,10 +48,13 @@ CommunicationAdapter = import_adapter(arguments.protocol, arguments.adapter)
 bindings = import_bindings(arguments.device, arguments.protocol if arguments.bindings is None else arguments.bindings)
 device = import_device(arguments.device, arguments.setup)
 
-adapter = CommunicationAdapter()
+rpc_server = ControlServer({'device': device}, *arguments.rpc_host.split(':')) if arguments.rpc_host else None
 
-rpc_server = None
-if arguments.rpc_host:
-    rpc_server = ControlServer({'device': device}, *arguments.rpc_host.split(':'))
+environment = SimulationEnvironment(
+    adapter=CommunicationAdapter(device, bindings, arguments.adapter_args),
+    rpc_server=rpc_server)
 
-adapter.run(device, bindings, arguments.adapter_args, rpc_server)
+rpc_server._rpc_object_collection.add_object(
+    obj=ExposedObject(environment, ('cycle_time', 'cycles_per_second')), name='environment')
+
+environment.run()

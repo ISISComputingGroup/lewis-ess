@@ -20,7 +20,6 @@
 from __future__ import print_function
 from six import iteritems
 
-from datetime import datetime
 from argparse import ArgumentParser
 
 from pcaspy import Driver, SimpleServer
@@ -72,41 +71,27 @@ class PropertyExposingDriver(CanProcess, Driver):
 
 
 class EpicsAdapter(Adapter):
+    def __init__(self, target, bindings, arguments):
+        super(EpicsAdapter, self).__init__(target, bindings, arguments)
+        self._options = self._parseArguments(arguments)
+
+        self._target = target
+        self._server = SimpleServer()
+        self._server.createPV(prefix=self._options.prefix, pvdb=bindings)
+        self._driver = PropertyExposingDriver(target=self._target, pv_dict=bindings)
+
     def _parseArguments(self, arguments):
         parser = ArgumentParser(description="Adapter to expose a device via EPICS")
         parser.add_argument('-p', '--prefix', help='Prefix to use for all PVs', default='')
         return parser.parse_args(arguments)
 
-    def run(self, target, bindings, arguments, rpc_server=None):
-        options = self._parseArguments(arguments)
+    def process(self, delta, cycle_time=0.1):
+        # pcaspy's process() is weird. Docs claim argument is "processing time" in seconds.
+        # But this is not at all consistent with the calculated delta.
+        # Having "watch caget" running has a huge effect too (runs faster when watching!)
+        # Additionally, if you don't call it every ~0.05s or less, PVs stop working. Annoying.
+        # Set it to 0.0 for maximum cycle speed.
+        self._server.process(cycle_time)
 
-        server = SimpleServer()
-        server.createPV(prefix=options.prefix, pvdb=bindings)
-        driver = PropertyExposingDriver(target=target, pv_dict=bindings)
-
-        delta = 0.0  # Delta between cycles
-        count = 0  # Cycles per second counter
-        timer = 0.0  # Second counter
-        while True:
-            start = datetime.now()
-
-            # pcaspy's process() is weird. Docs claim argument is "processing time" in seconds.
-            # But this is not at all consistent with the calculated delta.
-            # Having "watch caget" running has a huge effect too (runs faster when watching!)
-            # Additionally, if you don't call it every ~0.05s or less, PVs stop working. Annoying.
-            # Set it to 0.0 for maximum cycle speed.
-            server.process(0.1)
-
-            if rpc_server:
-                rpc_server.process()
-
-            target.process(delta)
-            driver.process(delta)
-
-            delta = (datetime.now() - start).total_seconds()
-            count += 1
-            timer += delta
-            if timer >= 1.0:
-                print("Running at %d cycles per second (%.3f ms per cycle)" % (count, 1000.0 / count))
-                count = 0
-                timer = 0.0
+        self._target.process(delta)
+        self._driver.process(delta)
