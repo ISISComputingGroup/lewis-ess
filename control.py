@@ -63,7 +63,7 @@ def call_method(remote, object_name, method, arguments):
 
 parser = argparse.ArgumentParser(
     description='A client to manipulate the simulated device remotely through a separate channel. The simulation must be started with the --rpc-host option.')
-parser.add_argument('-i', '--ip', default='127.0.0.1', help='IP-adress of the host plankton is running on.')
+parser.add_argument('-i', '--ip', default='127.0.0.1', help='IP-address of the host plankton is running on.')
 parser.add_argument('-p', '--port', default=10000, help='Port on which the RPC-server is listening.')
 parser.add_argument('-l', '--list-objects', action='store_true',
                     help='List all objects exposed by the server and exit.')
