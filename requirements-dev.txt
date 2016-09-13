@@ -1,4 +1,1 @@
 mock>=1.0.1
-six
-zmq
-json-rpc
