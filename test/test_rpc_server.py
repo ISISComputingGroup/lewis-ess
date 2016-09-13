@@ -23,11 +23,13 @@ import unittest
 from . import assertRaisesNothing
 
 try:
-    from unittest.mock import Mock, patch
+    from unittest.mock import Mock, patch, call
 except ImportError:
-    from mock import Mock, patch
+    from mock import Mock, patch, call
 
-from core.rpc_server import ExposedObject, ExposedObjectCollection
+from core.rpc_server import ExposedObject, ExposedObjectCollection, ZMQJSONRPCServer
+from zmq import Again as zmq_again_exception
+from zmq import NOBLOCK as zmq_no_block_flag
 
 
 class TestObject(object):
@@ -149,3 +151,23 @@ class TestExposedObjectCollection(unittest.TestCase):
 
         exposed_objects['container.test.getTest'](454, 43)
         obj.getTest.assert_called_once_with(454, 43)
+
+
+class TestZMQJSONRPCServer(unittest.TestCase):
+    @patch('core.rpc_server.ZMQJSONRPCServer._get_zmq_rep_socket')
+    def test_connection(self, mock_socket_method):
+        ZMQJSONRPCServer(host='127.0.0.1', port='10001')
+
+        mock_socket_method.assert_has_calls([call(), call().bind('tcp://127.0.0.1:10001')])
+
+    @patch('core.rpc_server.ZMQJSONRPCServer._get_zmq_rep_socket')
+    def test_process_does_not_block(self, mock_socket_method):
+        mock_socket = Mock()
+        mock_socket.recv_unicode.side_effect = zmq_again_exception()
+
+        mock_socket_method.return_value = mock_socket
+
+        server = ZMQJSONRPCServer()
+        assertRaisesNothing(self, server.process)
+
+        mock_socket.recv_unicode.assert_has_calls([call(flags=zmq_no_block_flag)])

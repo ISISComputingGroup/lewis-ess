@@ -177,10 +177,12 @@ class ZMQJSONRPCServer(object):
         else:
             self._rpc_object_collection = ExposedObjectCollection(object_map)
 
+        self._socket = self._get_zmq_rep_socket()
+        self._socket.bind('tcp://{0}:{1}'.format(self.host, self.port))
+
+    def _get_zmq_rep_socket(self):
         context = zmq.Context()
-        self.socket = context.socket(zmq.REP)
-        uri = 'tcp://{0}:{1}'.format(self.host, self.port)
-        self.socket.bind(uri)
+        return context.socket(zmq.REP)
 
     def _unhandled_exception_response(self, id, exception):
         return {"jsonrpc": "2.0", "id": id,
@@ -201,12 +203,12 @@ class ZMQJSONRPCServer(object):
         infinite processing loop.
         """
         try:
-            request = self.socket.recv_unicode(flags=zmq.NOBLOCK)
+            request = self._socket.recv_unicode(flags=zmq.NOBLOCK)
 
             try:
                 response = JSONRPCResponseManager.handle(request, self._rpc_object_collection)
-                self.socket.send_unicode(response.json)
+                self._socket.send_unicode(response.json)
             except TypeError as e:
-                self.socket.send_json(self._unhandled_exception_response(json.loads(request)['id'], e))
+                self._socket.send_json(self._unhandled_exception_response(json.loads(request)['id'], e))
         except zmq.Again:
             pass
