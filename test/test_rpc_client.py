@@ -25,8 +25,25 @@ try:
 except ImportError:
     from mock import Mock, patch, call
 
-from core.rpc_client import JSONRPCObjectProxy, ZMQJSONRPCConnection, JSONRPCProtocolException
+from core.rpc_client import JSONRPCObjectProxy, ZMQJSONRPCConnection, JSONRPCProtocolException, \
+    JSONRPCServerSideException
 from core.rpc_client import get_remote_object, get_remote_object_collection
+
+
+class TestZMQJSONRPCConnection(unittest.TestCase):
+    @patch('uuid.uuid4')
+    @patch('core.rpc_client.ZMQJSONRPCConnection._get_zmq_req_socket')
+    def test_json_rpc(self, mock_socket, mock_uuid):
+        mock_uuid.return_value = '2'
+
+        connection = ZMQJSONRPCConnection(host='127.0.0.1', port='10001')
+        connection.json_rpc('foo')
+
+        mock_socket.assert_has_calls(
+            [call(),
+             call().connect('tcp://127.0.0.1:10001'),
+             call().send_json({'method': 'foo', 'params': (), 'jsonrpc': '2.0', 'id': '2'}),
+             call().recv_json()])
 
 
 class TestJSONRPCObjectProxy(unittest.TestCase):
@@ -47,6 +64,48 @@ class TestJSONRPCObjectProxy(unittest.TestCase):
             obj.setTest()
 
         request_mock.assert_has_calls([call('a:get'), call('a:set', [4]), call('setTest', ())])
+
+    def test_make_request_with_result(self):
+        mock_connection = Mock(ZMQJSONRPCConnection)
+        mock_connection.json_rpc.return_value = ({'result': 'test'}, 2)
+        obj = type('TestType', (JSONRPCObjectProxy,), {})(mock_connection, ['setTest'])
+
+        result = obj.setTest()
+
+        self.assertEqual(result, 'test')
+        mock_connection.json_rpc.assert_has_calls([call('setTest', ())])
+
+    def test_make_request_with_known_exception(self):
+        mock_connection = Mock(ZMQJSONRPCConnection)
+        mock_connection.json_rpc.return_value = ({'error': {
+            'data': {'type': 'AttributeError',
+                     'message': 'Some message'}}}, 2)
+
+        obj = type('TestType', (JSONRPCObjectProxy,), {})(mock_connection, ['setTest'])
+
+        self.assertRaises(AttributeError, obj.setTest)
+        mock_connection.json_rpc.assert_has_calls([call('setTest', ())])
+
+    def test_make_request_with_unknown_exception(self):
+        mock_connection = Mock(ZMQJSONRPCConnection)
+        mock_connection.json_rpc.return_value = ({'error': {
+            'data': {'type': 'NonExistingException',
+                     'message': 'Some message'}}}, 2)
+
+        obj = type('TestType', (JSONRPCObjectProxy,), {})(mock_connection, ['setTest'])
+
+        self.assertRaises(JSONRPCServerSideException, obj.setTest)
+        mock_connection.json_rpc.assert_has_calls([call('setTest', ())])
+
+    def test_make_request_with_missing_error_data(self):
+        mock_connection = Mock(ZMQJSONRPCConnection)
+        mock_connection.json_rpc.return_value = ({'error': {
+            'message': 'Some message'}}, 2)
+
+        obj = type('TestType', (JSONRPCObjectProxy,), {})(mock_connection, ['setTest'])
+
+        self.assertRaises(JSONRPCProtocolException, obj.setTest)
+        mock_connection.json_rpc.assert_has_calls([call('setTest', ())])
 
 
 class TestRemoteObjectFunctions(unittest.TestCase):

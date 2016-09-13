@@ -62,9 +62,12 @@ class JSONRPCProtocolException(Exception):
 
 class ZMQJSONRPCConnection(object):
     def __init__(self, host='127.0.0.1', port='10000'):
-        context = zmq.Context()
-        self._socket = context.socket(zmq.REQ)
+        self._socket = self._get_zmq_req_socket()
         self._socket.connect('tcp://{0}:{1}'.format(host, port))
+
+    def _get_zmq_req_socket(self):
+        context = zmq.Context()
+        return context.socket(zmq.REQ)
 
     def json_rpc(self, method, *args):
         """
@@ -144,11 +147,11 @@ class JSONRPCObjectProxy(object):
                 exception_type = response['error']['data']['type']
                 exception_message = response['error']['data']['message']
 
-                try:
+                if not hasattr(exceptions, exception_type):
+                    raise JSONRPCServerSideException(exception_type, exception_message)
+                else:
                     exception = getattr(exceptions, exception_type)
                     raise exception(exception_message)
-                except AttributeError:
-                    raise JSONRPCServerSideException(exception_type, exception_message)
             else:
                 raise JSONRPCProtocolException(response['error']['message'])
 
