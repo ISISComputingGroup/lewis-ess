@@ -107,6 +107,6 @@ class EpicsAdapter(Adapter):
             count += 1
             timer += delta
             if timer >= 1.0:
-                #print("Running at %d cycles per second (%.3f ms per cycle)" % (count, 1000.0 / count))
+                print("Running at %d cycles per second (%.3f ms per cycle)" % (count, 1000.0 / count))
                 count = 0
                 timer = 0.0
