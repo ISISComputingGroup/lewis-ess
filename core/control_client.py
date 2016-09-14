@@ -27,7 +27,7 @@ except ImportError:
     import builtins as exceptions
 
 
-class ServerSideException(Exception):
+class RemoteException(Exception):
     def __init__(self, type, message):
         """
         This exception type replaces exceptions that are raised on the server,
@@ -38,7 +38,7 @@ class ServerSideException(Exception):
         :param type: Type of the exception on the server side.
         :param message: Exception message on the server side.
         """
-        super(ServerSideException, self).__init__(
+        super(RemoteException, self).__init__(
             'Exception on server side of type \'{}\': \'{}\''.format(type, message))
 
         self.server_side_type = type
@@ -138,7 +138,7 @@ class ObjectProxy(object):
         and provides objects that are ready to use.
 
         Exceptions on the server are propagated to the client. If the exception is not part
-        of the exceptions-module (builtins for Python 3), a ServerSideException is raised instead
+        of the exceptions-module (builtins for Python 3), a RemoteException is raised instead
         which contains information about the server side exception.
 
         All RPC method names are prefixed with the supplied prefix, which is usually the
@@ -159,7 +159,7 @@ class ObjectProxy(object):
         This method performs a JSON-RPC request via the object's ZMQ socket. If successful,
         the result is returned, otherwise exceptions are raised. Server side exceptions are
         raised using the same type as on the server if they are part of the exceptions-module.
-        Otherwise, a ServerSideException is raised.
+        Otherwise, a RemoteException is raised.
 
         :param method: Method of the object to call on the remote.
         :param args: Positional arguments to the method call.
@@ -176,7 +176,7 @@ class ObjectProxy(object):
                 exception_message = response['error']['data']['message']
 
                 if not hasattr(exceptions, exception_type):
-                    raise ServerSideException(exception_type, exception_message)
+                    raise RemoteException(exception_type, exception_message)
                 else:
                     exception = getattr(exceptions, exception_type)
                     raise exception(exception_message)

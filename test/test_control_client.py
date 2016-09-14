@@ -24,7 +24,7 @@ try:
 except ImportError:
     from mock import Mock, patch, call
 
-from core.control_client import ObjectProxy, ControlClient, ProtocolException, ServerSideException
+from core.control_client import ObjectProxy, ControlClient, ProtocolException, RemoteException
 
 
 class TestControlClient(unittest.TestCase):
@@ -140,7 +140,7 @@ class TestObjectProxy(unittest.TestCase):
 
         obj = type('TestType', (ObjectProxy,), {})(mock_connection, ['setTest'])
 
-        self.assertRaises(ServerSideException, obj.setTest)
+        self.assertRaises(RemoteException, obj.setTest)
         mock_connection.json_rpc.assert_has_calls([call('setTest')])
 
     def test_make_request_with_missing_error_data(self):
