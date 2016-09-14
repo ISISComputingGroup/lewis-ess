@@ -25,7 +25,6 @@ except ImportError:
     from mock import Mock, patch, call
 
 from core.control_client import ObjectProxy, ControlClient, ProtocolException, ServerSideException
-from core.control_client import remote_objects
 
 
 class TestControlClient(unittest.TestCase):
@@ -71,24 +70,26 @@ class TestControlClient(unittest.TestCase):
 
             json_rpc_mock.assert_has_calls([call(':api')])
 
-    def test_get_remote_object_collection(self):
+    @patch('core.control_client.ControlClient._get_zmq_req_socket')
+    def test_get_remote_object_collection(self, mock_socket):
+        client = ControlClient(host='127.0.0.1', port='10001')
+
         returned_object = Mock()
         returned_object.get_objects = Mock(return_value=['obj1', 'obj2'])
 
-        mock_connection = Mock(ControlClient)
-        mock_connection.get_object.return_value = returned_object
+        with patch.object(client, 'get_object') as get_object_mock:
+            get_object_mock.side_effect = [returned_object, 'obj1_object', 'obj2_object']
 
-        objects = remote_objects(mock_connection)
+            objects = client.get_object_collection()
 
-        self.assertTrue('obj1' in objects)
-        self.assertTrue('obj2' in objects)
+            self.assertTrue('obj1' in objects)
+            self.assertTrue('obj2' in objects)
 
-        returned_object.get_objects.assert_has_calls([call()])
-        mock_connection.assert_has_calls(
-            [call.get_object(''),
-             call.get_object().get_objects(),
-             call.get_object('obj1'),
-             call.get_object('obj2')])
+            returned_object.get_objects.assert_has_calls([call()])
+            get_object_mock.assert_has_calls(
+                [call(''),
+                 call('obj1'),
+                 call('obj2')])
 
 
 class TestObjectProxy(unittest.TestCase):

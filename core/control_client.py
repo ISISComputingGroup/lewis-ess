@@ -54,6 +54,16 @@ class ProtocolException(Exception):
 
 class ControlClient(object):
     def __init__(self, host='127.0.0.1', port='10000'):
+        """
+        This class provides an interface to a ControlServer instance on
+        the server side. Proxies to exposed objects can be obtained either
+        directly via get_object or, in case the server exposes a collection
+        of objects at the top level, a dictionary of named objects can be
+        obtained via get_object_collection.
+
+        :param host: Host the control server is running on
+        :param port: Port on which the control server is listening
+        """
         self._socket = self._get_zmq_req_socket()
         self._socket.connect('tcp://{0}:{1}'.format(host, port))
 
@@ -95,22 +105,20 @@ class ControlClient(object):
         glue = '.' if object_name else ''
         return object_type(self, methods, object_name + glue)
 
+    def get_object_collection(self, object_name=''):
+        """
+        If the remote end exposes a collection of objects under the supplied object name (empty
+        for top level), this method returns a dictionary of these objects stored under their
+        names on the server.
 
-def remote_objects(source, object_name=''):
-    """
-    This function constructs a dictionary with objects that are exposed by a ControlServer, which
-    are retrieved by using the supplied source. Source must be a ControlClient which is connected
-    to the targeted ControlServer.
+        This function performs n + 1 calls to the server, where n is the number of objects.
 
-    :param source: A source of remote objects, must be of type ControlClient.
-    :param object_name: Object name on the server. This is required if the object collection is not the top level object.
-    """
-    if not isinstance(source, ControlClient):
-        raise RuntimeError('A ControlClient instance is required to retrieve remote objects from the server side.')
+        :param object_name: Object name on the server. This is required if the object collection is not the top level object.
+        """
 
-    object_names = source.get_object(object_name).get_objects()
+        object_names = self.get_object(object_name).get_objects()
 
-    return {obj: source.get_object(obj) for obj in object_names}
+        return {obj: self.get_object(obj) for obj in object_names}
 
 
 class ObjectProxy(object):

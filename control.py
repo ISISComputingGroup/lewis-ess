@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-from core.control_client import ControlClient, remote_objects
+from core.control_client import ControlClient
 
 
 def list_objects(remote):
@@ -76,7 +76,7 @@ parser.add_argument('arguments', nargs='*',
 
 args = parser.parse_args()
 
-remote = remote_objects(ControlClient(*args.rpc_host.split(':')))
+remote = ControlClient(*args.rpc_host.split(':')).get_object_collection()
 
 if args.list_objects:
     list_objects(remote)
