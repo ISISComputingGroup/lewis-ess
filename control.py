@@ -83,4 +83,4 @@ if args.list_objects:
 elif args.show_api:
     show_api(remote, args.object)
 else:
-    print(call_method(remote, args.object, args.member, args.argument))
+    print(call_method(remote, args.object, args.member, args.arguments))
