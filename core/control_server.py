@@ -25,7 +25,7 @@ from jsonrpc import JSONRPCResponseManager
 class ExposedObject(object):
     def __init__(self, object, members=None):
         """
-        RPCObject is a class that makes it easy to expose an object via the JSONRPCResponseManager
+        ExposedObject is a class that makes it easy to expose an object via the JSONRPCResponseManager
         from the json-rpc package, where it can serve as a dispatcher. For this purpose it exposes
         a read-only dict-like interface.
 

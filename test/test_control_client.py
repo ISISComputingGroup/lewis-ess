@@ -26,7 +26,7 @@ except ImportError:
     from mock import Mock, patch, call
 
 from core.control_client import ObjectProxy, ControlClient, ProtocolException, ServerSideException
-from core.control_client import get_remote_object, get_remote_object_collection
+from core.control_client import remote_objects
 
 
 class TestControlClient(unittest.TestCase):
@@ -36,7 +36,7 @@ class TestControlClient(unittest.TestCase):
         mock_uuid.return_value = '2'
 
         connection = ControlClient(host='127.0.0.1', port='10001')
-        connection._json_rpc('foo')
+        connection.json_rpc('foo')
 
         mock_socket.assert_has_calls(
             [call(),
@@ -44,43 +44,52 @@ class TestControlClient(unittest.TestCase):
              call().send_json({'method': 'foo', 'params': (), 'jsonrpc': '2.0', 'id': '2'}),
              call().recv_json()])
 
-    def test_get_remote_object_works(self):
+    @patch('core.control_client.ControlClient._get_zmq_req_socket')
+    def test_get_remote_object_works(self, mock_socket):
+        client = ControlClient(host='127.0.0.1', port='10001')
+
+        with patch.object(client, '_json_rpc') as json_rpc_mock:
+            json_rpc_mock.return_value = ({'id': 2,
+                                           'result': {'class': 'Test',
+                                                      'methods': ['a:set', 'a:get', 'setTest']}}
+                                          , 2)
+
+            obj = client.get_object()
+
+            self.assertTrue(hasattr(type(obj), 'a'))
+            self.assertTrue(hasattr(obj, 'setTest'))
+
+            json_rpc_mock.assert_has_calls([call(':api')])
+
+    @patch('core.control_client.ControlClient._get_zmq_req_socket')
+    def test_get_remote_object_works(self, mock_socket):
+        client = ControlClient(host='127.0.0.1', port='10001')
+
+        with patch.object(client, '_json_rpc') as json_rpc_mock:
+            json_rpc_mock.return_value = ({'id': 2}, 2)
+
+            self.assertRaises(ProtocolException, client.get_object)
+
+            json_rpc_mock.assert_has_calls([call(':api')])
+
+    def test_get_remote_object_collection(self):
+        returned_object = Mock()
+        returned_object.get_objects = Mock(return_value=['obj1', 'obj2'])
+
         mock_connection = Mock(ControlClient)
-        mock_connection._json_rpc = Mock(return_value=({'id': 2,
-                                                       'result': {'class': 'Test',
-                                                                  'methods': ['a:set', 'a:get', 'setTest']}}
-                                                      , 2))
+        mock_connection.get_object.return_value = returned_object
 
-        obj = get_remote_object(mock_connection)
-
-        self.assertTrue(hasattr(type(obj), 'a'))
-        self.assertTrue(hasattr(obj, 'setTest'))
-
-        mock_connection._json_rpc.assert_has_calls([call(':api')])
-
-    def test_get_remote_object_no_result_raises(self):
-        mock_connection = Mock(ControlClient)
-        mock_connection._json_rpc = Mock(return_value=({'id': 2}, 2))
-
-        self.assertRaises(ProtocolException, get_remote_object, mock_connection)
-
-        mock_connection._json_rpc.assert_has_calls([call(':api')])
-
-    @patch('core.control_client.get_remote_object')
-    def test_get_remote_object_collection(self, mock_get_remote_object):
-        mock_get_remote_object.return_value = 'test'
-
-        mock_connection = Mock(ControlClient)
-        mock_connection._json_rpc = Mock(return_value=({'id': 2,
-                                                       'result': ['obj1', 'obj2']}, 2))
-
-        objects = get_remote_object_collection(mock_connection)
+        objects = remote_objects(mock_connection)
 
         self.assertTrue('obj1' in objects)
         self.assertTrue('obj2' in objects)
 
-        mock_get_remote_object.assert_has_calls([call(mock_connection, 'obj1'),
-                                                 call(mock_connection, 'obj2')])
+        returned_object.get_objects.assert_has_calls([call()])
+        mock_connection.assert_has_calls(
+            [call.get_object(''),
+             call.get_object().get_objects(),
+             call.get_object('obj1'),
+             call.get_object('obj2')])
 
 
 class TestObjectProxy(unittest.TestCase):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-from core.control_client import ControlClient, get_remote_object_collection
+from core.control_client import ControlClient, remote_objects
 
 
 def list_objects(remote):
@@ -71,12 +71,12 @@ parser.add_argument('-a', '--show-api', action='store_true',
                     help='List all properties and methods of the controlled object.')
 parser.add_argument('object', nargs='?', default='device', help='Object to control.')
 parser.add_argument('member', nargs='?', help='Object-member to access.')
-parser.add_argument('argument', nargs='*',
+parser.add_argument('arguments', nargs='*',
                     help='Arguments to method call. For setting a property, supply the property value. ')
 
 args = parser.parse_args()
 
-remote = get_remote_object_collection(ControlClient(host=args.ip, port=args.port))
+remote = remote_objects(ControlClient(host=args.ip, port=args.port))
 
 if args.list_objects:
     list_objects(remote)
