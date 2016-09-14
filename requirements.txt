@@ -1,2 +1,4 @@
 pcaspy
 six
+pyzmq
+json-rpc
