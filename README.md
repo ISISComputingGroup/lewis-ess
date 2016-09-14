@@ -206,10 +206,10 @@ $ python simulation.py -r 127.0.0.1:10000 -d chopper -- -p SIM:
 Now the device can be controlled via the `control.py`-script in a different terminal window. The service can be queried to show the available objects using the `-l` or `--list-objects` flag:
 
 ```
-$ python control.py --ip 127.0.0.1 --port 10000 --list-objects
+$ python control.py -r 127.0.0.1:10000 --list-objects
 ```
 
-The `ip` and `port` parameters default to the values shown here, so they will be omitted in the following examples. To get information on the API of an object, the `-a` or `--show-api` option can be used in conjunction with a device name obtained from the previous command:
+The `-r` (or `--rpc-host`) option defaults to the value shown here, so it will be omitted in the following examples. To get information on the API of an object, the `-a` or `--show-api` option can be used in conjunction with a device name obtained from the previous command:
 
 ```
 $ python control.py -a device
@@ -234,14 +234,14 @@ $ python control.py device targetSpeed 100
 $ python control.py device start
 ```
 
-Only numeric types and strings can be used as arguments via the `control.py`-script. The script always tries to convert parameters to `int` first, then to `float` and leaves it as `str` if both fail. For other types and more control over types, it's advised to write a Python script instead using the tools provided in `core.rpc_client` which makes it possible to use the remote objects more or less transparently. An example to control the chopper:
+Only numeric types and strings can be used as arguments via the `control.py`-script. The script always tries to convert parameters to `int` first, then to `float` and leaves it as `str` if both fail. For other types and more control over types, it's advised to write a Python script instead using the tools provided in `core.control_client` which makes it possible to use the remote objects more or less transparently. An example to control the chopper:
 
 ```
 from time import sleep
-from core.rpc_client import ZMQJSONRPCConnection, get_remote_object_collection
+from core.control_client import ControlClient
 
-connection = ZMQJSONRPCConnection(host='127.0.0.1', port='10000')
-chopper = get_remote_object_collection(connection)['chopper']
+client = ControlClient(host='127.0.0.1', port='10000')
+chopper = client.get_object('chopper')
 
 chopper.targetSpeed = 100
 chopper.initialize()
