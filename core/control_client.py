@@ -50,7 +50,6 @@ class ProtocolException(Exception):
     An exception type for exceptions related to the transport protocol, i.e.
     malformed requests etc.
     """
-    pass
 
 
 class ControlClient(object):
