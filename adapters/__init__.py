@@ -25,7 +25,7 @@ class Adapter(object):
     def __init__(self, target, bindings, arguments):
         pass
 
-    def process(self, delta, cycle_time=0.1):
+    def process(self, delta, processing_time=0.1):
         pass
 
 
