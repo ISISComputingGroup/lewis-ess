@@ -23,12 +23,18 @@ from datetime import datetime
 class SimulationEnvironment(object):
     def __init__(self, adapter, rpc_server=None):
         self._adapter = adapter
-        self._cycle_time = 0.1
+        self._processing_time = 0.1
         self._cycles_per_second = 0
         self._rpc_server = rpc_server
 
+        self._time_warp_factor = 1.0
+
+        self._total_cycles = 0
+        self._total_runtime_real = 0.0
+        self._total_runtime_simulation = 0.0
+
     def run(self):
-        delta = 0.0  # Delta between cycles
+        delta_simulation = 0.0
         count = 0  # Cycles per second counter
         timer = 0.0  # Second counter
 
@@ -38,27 +44,53 @@ class SimulationEnvironment(object):
             if self._rpc_server:
                 self._rpc_server.process()
 
-            self._adapter.process(delta, self._cycle_time)
+            self._adapter.process(delta_simulation, self._processing_time)
 
-            delta = (datetime.now() - start).total_seconds()
+            delta_real = (datetime.now() - start).total_seconds()
+            delta_simulation = delta_real * self._time_warp_factor
+
+            self._total_runtime_real += delta_real
+            self._total_runtime_simulation += delta_simulation
+            self._total_cycles += 1
+
             count += 1
-            timer += delta
+            timer += delta_real
             if timer >= 1.0:
                 self._cycles_per_second = count
                 count = 0
                 timer = 0.0
 
     @property
-    def cycle_time(self):
-        return self._cycle_time
+    def processing_time(self):
+        return self._processing_time
 
-    @cycle_time.setter
-    def cycle_time(self, new_duration):
+    @processing_time.setter
+    def processing_time(self, new_duration):
         if new_duration <= 0:
             raise ValueError('Cycle time must be larger than 0.')
 
-        self._cycle_time = new_duration
+        self._processing_time = new_duration
 
     @property
     def cycles_per_second(self):
-        return self._cycles_per_second
+        return self._cycles_per_seconds
+
+    @property
+    def time_warp(self):
+        return self._time_warp_factor
+
+    @time_warp.setter
+    def time_warp(self, new_factor):
+        self._time_warp_factor = new_factor
+
+    @property
+    def runtime(self):
+        return self._total_runtime_real
+
+    @property
+    def simulation_runtime(self):
+        return self._total_runtime_simulation
+
+    @property
+    def simulation_cycles(self):
+        return self._total_cycles
