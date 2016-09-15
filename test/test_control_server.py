@@ -59,6 +59,24 @@ class TestRPCObject(unittest.TestCase):
         for method in expected_methods:
             self.assertTrue(method in rpc_object)
 
+    def test_excluded_methods_not_exposed(self):
+        rpc_object = ExposedObject(TestObject(), exclude=('a', 'setTest'))
+
+        expected_methods = [':api', 'b:get', 'b:set', 'getTest']
+        self.assertEqual(len(rpc_object), len(expected_methods))
+
+        for method in expected_methods:
+            self.assertTrue(method in rpc_object)
+
+    def test_selected_and_excluded_methods(self):
+        rpc_object = ExposedObject(TestObject(), members=('a', 'getTest'), exclude=('a'))
+
+        expected_methods = [':api', 'getTest']
+        self.assertEqual(len(rpc_object), len(expected_methods))
+
+        for method in expected_methods:
+            self.assertTrue(method in rpc_object)
+
     def test_invalid_method_raises(self):
         self.assertRaises(AttributeError, ExposedObject, TestObject(), ('nonExisting',))
 
