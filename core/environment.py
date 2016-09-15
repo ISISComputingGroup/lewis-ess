@@ -18,47 +18,57 @@
 # *********************************************************************
 
 from datetime import datetime
+from time import sleep
 
 
 class SimulationEnvironment(object):
     def __init__(self, adapter, rpc_server=None):
         self._adapter = adapter
-        self._processing_time = 0.1
-        self._cycles_per_second = 0
         self._rpc_server = rpc_server
 
+        self._processing_time = 0.1
         self._time_warp_factor = 1.0
 
+        self._cycles_per_second = 0
         self._total_cycles = 0
         self._total_runtime_real = 0.0
         self._total_runtime_simulation = 0.0
 
-    def run(self):
+        self._running = False
+        self._stop = False
+
+    def start(self):
+        self._running = True
+
         delta_simulation = 0.0
         count = 0  # Cycles per second counter
         timer = 0.0  # Second counter
 
-        while True:
+        while not self._stop:
             start = datetime.now()
 
-            if self._rpc_server:
-                self._rpc_server.process()
+            if self._running:
+                self._total_runtime_simulation += delta_simulation
 
-            self._adapter.process(delta_simulation, self._processing_time)
+                self._adapter.process(delta_simulation, self._processing_time)
+                self._total_cycles += 1
+                count += 1
+            else:
+                sleep(self._processing_time)
 
             delta_real = (datetime.now() - start).total_seconds()
             delta_simulation = delta_real * self._time_warp_factor
 
             self._total_runtime_real += delta_real
-            self._total_runtime_simulation += delta_simulation
-            self._total_cycles += 1
 
-            count += 1
             timer += delta_real
             if timer >= 1.0:
                 self._cycles_per_second = count
                 count = 0
                 timer = 0.0
+
+            if self._rpc_server:
+                self._rpc_server.process()
 
     @property
     def processing_time(self):
@@ -73,7 +83,7 @@ class SimulationEnvironment(object):
 
     @property
     def cycles_per_second(self):
-        return self._cycles_per_seconds
+        return self._cycles_per_second
 
     @property
     def time_warp(self):
@@ -94,3 +104,20 @@ class SimulationEnvironment(object):
     @property
     def simulation_cycles(self):
         return self._total_cycles
+
+    def pause(self):
+        self._running = False
+
+    def resume(self):
+        self._running = True
+
+    def stop(self):
+        self._stop = True
+
+    @property
+    def is_running(self):
+        return self._running
+
+    @property
+    def is_paused(self):
+        return not self._running

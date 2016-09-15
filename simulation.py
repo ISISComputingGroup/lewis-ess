@@ -55,6 +55,6 @@ environment = SimulationEnvironment(
     rpc_server=rpc_server)
 
 rpc_server._rpc_object_collection.add_object(
-    obj=ExposedObject(environment, ('cycle_time', 'cycles_per_second')), name='environment')
+    obj=ExposedObject(environment, exclude=('start',)), name='environment')
 
-environment.run()
+environment.start()
