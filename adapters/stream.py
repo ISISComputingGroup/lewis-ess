@@ -92,6 +92,6 @@ class StreamAdapter(Adapter):
         parser.add_argument('-p', '--port', help='Port to listen for connections on', type=int, default=9999)
         return parser.parse_args(arguments)
 
-    def process(self, delta, processing_time=0.1):
-        asyncore.loop(processing_time, count=1)
+    def process(self, delta, cycle_delay=0.1):
+        asyncore.loop(cycle_delay, count=1)
         self._target.process(delta)
