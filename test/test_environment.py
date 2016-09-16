@@ -125,14 +125,14 @@ class TestSimulationEnvironment(unittest.TestCase):
         self.assertEqual(env.simulation_cycles, 1)
         self.assertEqual(env.simulation_runtime, 1.0)
 
-    def test_process_calls_rpc_server(self):
-        rpc_mock = Mock()
-        env = SimulationEnvironment(Mock(), rpc_mock)
+    def test_process_calls_control_server(self):
+        control_mock = Mock()
+        env = SimulationEnvironment(Mock(), control_mock)
 
         set_simulation_running(env)
         env._process_cycle(0.5)
 
-        rpc_mock.assert_has_calls([call.process()])
+        control_mock.assert_has_calls([call.process()])
 
     def test_time_warp_factor_range(self):
         env = SimulationEnvironment(Mock())

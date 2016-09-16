@@ -26,9 +26,9 @@ def seconds_since(start):
 
 
 class SimulationEnvironment(object):
-    def __init__(self, adapter, rpc_server=None):
+    def __init__(self, adapter, control_server=None):
         self._adapter = adapter
-        self._rpc_server = rpc_server
+        self._control_server = control_server
 
         self._processing_time = 0.1
 
@@ -62,8 +62,8 @@ class SimulationEnvironment(object):
 
         self._process_simulation_cycle(delta)
 
-        if self._rpc_server:
-            self._rpc_server.process()
+        if self._control_server:
+            self._control_server.process()
 
         delta = seconds_since(start)
 

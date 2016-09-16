@@ -48,13 +48,13 @@ CommunicationAdapter = import_adapter(arguments.protocol, arguments.adapter)
 bindings = import_bindings(arguments.device, arguments.protocol if arguments.bindings is None else arguments.bindings)
 device = import_device(arguments.device, arguments.setup)
 
-rpc_server = ControlServer({'device': device}, *arguments.rpc_host.split(':')) if arguments.rpc_host else None
+control_server = ControlServer({'device': device}, *arguments.rpc_host.split(':')) if arguments.rpc_host else None
 
 environment = SimulationEnvironment(
     adapter=CommunicationAdapter(device, bindings, arguments.adapter_args),
-    rpc_server=rpc_server)
+    control_server=control_server)
 
-rpc_server._rpc_object_collection.add_object(
+control_server._rpc_object_collection.add_object(
     obj=ExposedObject(environment, exclude=('start',)), name='environment')
 
 environment.start()
