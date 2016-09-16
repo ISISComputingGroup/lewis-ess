@@ -32,8 +32,7 @@ class SimulationEnvironment(object):
 
         self._cycle_delay = 0.1
 
-        self._real_cycles = 0
-        self._simulation_cycles = 0
+        self._cycles = 0
 
         self._real_runtime = 0.0
         self._time_warp_factor = 1.0
@@ -67,7 +66,6 @@ class SimulationEnvironment(object):
 
         delta = seconds_since(start)
 
-        self._real_cycles += 1
         self._real_runtime += delta
 
         return delta
@@ -77,7 +75,7 @@ class SimulationEnvironment(object):
 
         if self._running:
             self._adapter.process(delta_simulation, self._cycle_delay)
-            self._simulation_cycles += 1
+            self._cycles += 1
             self._simulation_runtime += delta_simulation
         else:
             sleep(self._cycle_delay)
@@ -95,11 +93,7 @@ class SimulationEnvironment(object):
 
     @property
     def cycles(self):
-        return self._real_cycles
-
-    @property
-    def simulation_cycles(self):
-        return self._simulation_cycles
+        return self._cycles
 
     @property
     def runtime(self):

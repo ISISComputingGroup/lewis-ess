@@ -53,13 +53,11 @@ class TestSimulationEnvironment(unittest.TestCase):
 
         with patch.object(env, '_process_simulation_cycle'):
             self.assertEqual(env.runtime, 0.0)
-            self.assertEqual(env.cycles, 0)
 
             elapsed_seconds_mock.return_value = 0.5
             env._process_cycle(0.0)
 
             self.assertEqual(env.runtime, 0.5)
-            self.assertEqual(env.cycles, 1)
 
     def test_pause_resume(self):
         env = SimulationEnvironment(Mock())
@@ -108,7 +106,7 @@ class TestSimulationEnvironment(unittest.TestCase):
         adapter_mock.assert_has_calls(
             [call.process(0.5, env.cycle_delay)])
 
-        self.assertEqual(env.simulation_cycles, 1)
+        self.assertEqual(env.cycles, 1)
         self.assertEqual(env.simulation_runtime, 0.5)
 
     def test_process_simulation_cycle_applies_time_warp(self):
@@ -122,7 +120,7 @@ class TestSimulationEnvironment(unittest.TestCase):
         adapter_mock.assert_has_calls(
             [call.process(1.0, env.cycle_delay)])
 
-        self.assertEqual(env.simulation_cycles, 1)
+        self.assertEqual(env.cycles, 1)
         self.assertEqual(env.simulation_runtime, 1.0)
 
     def test_process_calls_control_server(self):
