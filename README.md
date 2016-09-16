@@ -132,13 +132,13 @@ $ export EPICS_CAS_INTF_ADDR_LIST=localhost
 Once all dependencies and requirements are satisfied, Plankon can be run using the following general format (from inside the Plankton directory):
 
 ```
-$ python simulation.py [plankton args] [-- [adapter args]]
+$ python plankton.py [plankton args] [-- [adapter args]]
 ```
 
 You can then run Plankton as follows (from within the plankton directory):
 
 ```
-$ python simulation.py -d chopper -p epics
+$ python plankton.py -d chopper -p epics
 ```
 
 Details about parameters for the various adapters, and differences between OSes are covered in the "Adapter Specifics" sections.
@@ -154,7 +154,7 @@ Arguments meant for the adapter should be separated from general Plankton argume
 
 ```
 $ docker run -itd dmscid/plankton -d chopper -p epics -- -p SIM1:
-$ python simulation.py -d chopper -p epics -- --prefix SIM2:
+$ python plankton.py -d chopper -p epics -- --prefix SIM2:
 ```
 
 When using the EPICS adapter within a docker container, the PV will be served on the docker0 network (172.17.0.0/16).
@@ -181,7 +181,7 @@ Arguments meant for the adapter should be separated from general Plankton argume
 
 ```
 $ docker run -itd dmscid/plankton -d linkam_t95 -p stream -- -p 1234
-$ python simulation.py -d linkam_t95 -p stream -- --bind-address localhost
+$ python plankton.py -d linkam_t95 -p stream -- --bind-address localhost
 ```
 
 When using Plankton via Docker on Windows and OSX, the container will be running inside a virtual machine, and so the port it is listening on will be on a network inside the VM. To connect to it from outside of the VM, an additional argument must be passed to Docker to forward the port:
@@ -200,7 +200,7 @@ This `-p` argument links port 4321 on the container to port 1234 on the VM netwo
 Besides the device specific protocols, the device can be made accessible from the outside via JSON-RPC over ZMQ. This can be achieved by passing the `-r` option with a `host:port` string to the simulation:
 
 ```
-$ python simulation.py -r 127.0.0.1:10000 -d chopper -- -p SIM:
+$ python plankton.py -r 127.0.0.1:10000 -d chopper -- -p SIM:
 ```
 
 Now the device can be controlled via the `control.py`-script in a different terminal window. The service can be queried to show the available objects using the `-l` or `--list-objects` flag:

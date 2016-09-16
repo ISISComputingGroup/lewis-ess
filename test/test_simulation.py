@@ -20,7 +20,7 @@
 import unittest
 from . import assertRaisesNothing
 
-from core.environment import SimulationEnvironment
+from core.simulation import Simulation
 
 try:
     from unittest.mock import Mock, patch, call, ANY
@@ -33,10 +33,10 @@ def set_simulation_running(environment):
     environment._started = True
 
 
-class TestSimulationEnvironment(unittest.TestCase):
-    @patch('core.environment.seconds_since')
+class TestSimulation(unittest.TestCase):
+    @patch('core.simulation.seconds_since')
     def test_process_cycle_returns_elapsed_time(self, elapsed_seconds_mock):
-        env = SimulationEnvironment(Mock())
+        env = Simulation(Mock())
 
         # It doesn't matter what happens in the simulation cycle, here we
         # only care how long it took.
@@ -47,9 +47,9 @@ class TestSimulationEnvironment(unittest.TestCase):
             elapsed_seconds_mock.assert_called_once_with(ANY)
             self.assertEqual(delta, 0.5)
 
-    @patch('core.environment.seconds_since')
+    @patch('core.simulation.seconds_since')
     def test_process_cycle_changes_runtime_status(self, elapsed_seconds_mock):
-        env = SimulationEnvironment(Mock())
+        env = Simulation(Mock())
 
         with patch.object(env, '_process_simulation_cycle'):
             self.assertEqual(env.uptime, 0.0)
@@ -62,7 +62,7 @@ class TestSimulationEnvironment(unittest.TestCase):
             self.assertEqual(env.uptime, 0.5)
 
     def test_pause_resume(self):
-        env = SimulationEnvironment(Mock())
+        env = Simulation(Mock())
 
         self.assertFalse(env.is_started)
         self.assertFalse(env.is_paused)
@@ -86,9 +86,9 @@ class TestSimulationEnvironment(unittest.TestCase):
         # now it's running, so it can't be resumed again
         self.assertRaises(RuntimeError, env.resume)
 
-    @patch('core.environment.sleep')
+    @patch('core.simulation.sleep')
     def test_process_cycle_calls_sleep_if_paused(self, sleep_mock):
-        env = SimulationEnvironment(Mock())
+        env = Simulation(Mock())
         set_simulation_running(env)
 
         # simulation is running, should not call sleep_mock
@@ -101,7 +101,7 @@ class TestSimulationEnvironment(unittest.TestCase):
 
     def test_process_cycle_calls_process_simulation(self):
         adapter_mock = Mock()
-        env = SimulationEnvironment(adapter_mock)
+        env = Simulation(adapter_mock)
         set_simulation_running(env)
 
         env._process_cycle(0.5)
@@ -113,7 +113,7 @@ class TestSimulationEnvironment(unittest.TestCase):
 
     def test_process_simulation_cycle_applies_time_warp(self):
         adapter_mock = Mock()
-        env = SimulationEnvironment(adapter_mock)
+        env = Simulation(adapter_mock)
         set_simulation_running(env)
 
         env.speed = 2.0
@@ -127,7 +127,7 @@ class TestSimulationEnvironment(unittest.TestCase):
 
     def test_process_calls_control_server(self):
         control_mock = Mock()
-        env = SimulationEnvironment(Mock(), control_mock)
+        env = Simulation(Mock(), control_mock)
 
         set_simulation_running(env)
         env._process_cycle(0.5)
@@ -135,7 +135,7 @@ class TestSimulationEnvironment(unittest.TestCase):
         control_mock.assert_has_calls([call.process()])
 
     def test_time_warp_factor_range(self):
-        env = SimulationEnvironment(Mock())
+        env = Simulation(Mock())
 
         assertRaisesNothing(self, setattr, env, 'speed', 3.0)
         self.assertEqual(env.speed, 3.0)
@@ -147,7 +147,7 @@ class TestSimulationEnvironment(unittest.TestCase):
         self.assertRaises(ValueError, setattr, env, 'speed', 0.0)
 
     def test_processing_time_range(self):
-        env = SimulationEnvironment(Mock())
+        env = Simulation(Mock())
 
         assertRaisesNothing(self, setattr, env, 'cycle_delay', 0.2)
         self.assertEqual(env.cycle_delay, 0.2)
@@ -162,7 +162,7 @@ class TestSimulationEnvironment(unittest.TestCase):
 
 
     def test_start_stop(self):
-        env = SimulationEnvironment(Mock())
+        env = Simulation(Mock())
 
         with patch.object(env, '_process_cycle', side_effect=lambda x: env.stop()) as mock_cycle:
             env.start()
@@ -170,7 +170,7 @@ class TestSimulationEnvironment(unittest.TestCase):
             mock_cycle.assert_has_calls([call(0.0)])
 
     def test_control_server_setter(self):
-        env = SimulationEnvironment(Mock())
+        env = Simulation(Mock())
 
         control_mock = Mock()
         assertRaisesNothing(self, setattr, env, 'control_server', control_mock)

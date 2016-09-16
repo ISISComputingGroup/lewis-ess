@@ -22,7 +22,7 @@ from time import sleep
 from core.utils import seconds_since
 
 
-class SimulationEnvironment(object):
+class Simulation(object):
     def __init__(self, adapter, control_server=None):
         self._adapter = adapter
         self._control_server = control_server
