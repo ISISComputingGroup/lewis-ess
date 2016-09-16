@@ -165,3 +165,20 @@ class TestSimulationEnvironment(unittest.TestCase):
             env.start()
 
             mock_cycle.assert_has_calls([call(0.0)])
+
+    def test_control_server_setter(self):
+        env = SimulationEnvironment(Mock())
+
+        control_mock = Mock()
+        assertRaisesNothing(self, setattr, env, 'control_server', control_mock)
+        self.assertEqual(env.control_server, control_mock)
+        
+        assertRaisesNothing(self, setattr, env, 'control_server', None)
+
+        set_simulation_running(env)
+
+        # Can set new control server even when simulation is running
+        assertRaisesNothing(self, setattr, env, 'control_server', Mock())
+
+        # Can not replace control server when simulation is running
+        self.assertRaises(RuntimeError, setattr, env, 'control_server', Mock())
