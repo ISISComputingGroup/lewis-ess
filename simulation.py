@@ -57,7 +57,7 @@ device = import_device(arguments.device, arguments.setup)
 environment = SimulationEnvironment(
     adapter=CommunicationAdapter(device, bindings, arguments.adapter_args))
 
-environment.processing_time = arguments.processing_time
+environment.cycle_delay = arguments.cycle_delay
 environment.time_warp = arguments.time_warp
 
 if arguments.rpc_host:

@@ -97,7 +97,7 @@ class TestSimulationEnvironment(unittest.TestCase):
 
         env.pause()
         env._process_cycle(0.5)
-        sleep_mock.assert_called_once_with(env.processing_time)
+        sleep_mock.assert_called_once_with(env.cycle_delay)
 
     def test_process_cycle_calls_process_simulation(self):
         adapter_mock = Mock()
@@ -106,7 +106,7 @@ class TestSimulationEnvironment(unittest.TestCase):
 
         env._process_cycle(0.5)
         adapter_mock.assert_has_calls(
-            [call.process(0.5, env.processing_time)])
+            [call.process(0.5, env.cycle_delay)])
 
         self.assertEqual(env.simulation_cycles, 1)
         self.assertEqual(env.simulation_runtime, 0.5)
@@ -120,7 +120,7 @@ class TestSimulationEnvironment(unittest.TestCase):
         env._process_cycle(0.5)
 
         adapter_mock.assert_has_calls(
-            [call.process(1.0, env.processing_time)])
+            [call.process(1.0, env.cycle_delay)])
 
         self.assertEqual(env.simulation_cycles, 1)
         self.assertEqual(env.simulation_runtime, 1.0)
@@ -149,14 +149,17 @@ class TestSimulationEnvironment(unittest.TestCase):
     def test_processing_time_range(self):
         env = SimulationEnvironment(Mock())
 
-        assertRaisesNothing(self, setattr, env, 'processing_time', 0.2)
-        self.assertEqual(env.processing_time, 0.2)
+        assertRaisesNothing(self, setattr, env, 'cycle_delay', 0.2)
+        self.assertEqual(env.cycle_delay, 0.2)
 
-        assertRaisesNothing(self, setattr, env, 'processing_time', 0.15)
-        self.assertEqual(env.processing_time, 0.15)
+        assertRaisesNothing(self, setattr, env, 'cycle_delay', 2.0)
+        self.assertEqual(env.cycle_delay, 2.0)
 
-        self.assertRaises(ValueError, setattr, env, 'processing_time', -0.5)
-        self.assertRaises(ValueError, setattr, env, 'processing_time', 0.0)
+        assertRaisesNothing(self, setattr, env, 'cycle_delay', 0.0)
+        self.assertEqual(env.cycle_delay, 0.0)
+
+        self.assertRaises(ValueError, setattr, env, 'cycle_delay', -4)
+
 
     def test_start_stop(self):
         env = SimulationEnvironment(Mock())
@@ -172,7 +175,7 @@ class TestSimulationEnvironment(unittest.TestCase):
         control_mock = Mock()
         assertRaisesNothing(self, setattr, env, 'control_server', control_mock)
         self.assertEqual(env.control_server, control_mock)
-        
+
         assertRaisesNothing(self, setattr, env, 'control_server', None)
 
         set_simulation_running(env)

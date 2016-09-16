@@ -30,7 +30,7 @@ class SimulationEnvironment(object):
         self._adapter = adapter
         self._control_server = control_server
 
-        self._processing_time = 0.1
+        self._cycle_delay = 0.1
 
         self._real_cycles = 0
         self._simulation_cycles = 0
@@ -76,22 +76,22 @@ class SimulationEnvironment(object):
         delta_simulation = delta * self._time_warp_factor
 
         if self._running:
-            self._adapter.process(delta_simulation, self._processing_time)
+            self._adapter.process(delta_simulation, self._cycle_delay)
             self._simulation_cycles += 1
             self._simulation_runtime += delta_simulation
         else:
-            sleep(self._processing_time)
+            sleep(self._cycle_delay)
 
     @property
-    def processing_time(self):
-        return self._processing_time
+    def cycle_delay(self):
+        return self._cycle_delay
 
-    @processing_time.setter
-    def processing_time(self, new_duration):
-        if new_duration <= 0:
-            raise ValueError('Cycle time must be greater than 0.')
+    @cycle_delay.setter
+    def cycle_delay(self, delay):
+        if delay < 0.0:
+            raise ValueError('Cycle rate must be greater than 0.')
 
-        self._processing_time = new_duration
+        self._cycle_delay = delay
 
     @property
     def cycles(self):
