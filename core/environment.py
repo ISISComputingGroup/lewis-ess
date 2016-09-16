@@ -19,10 +19,7 @@
 
 from datetime import datetime
 from time import sleep
-
-
-def seconds_since(start):
-    return (datetime.now() - start).total_seconds()
+from core.utils import seconds_since
 
 
 class SimulationEnvironment(object):
