@@ -51,10 +51,10 @@ device = import_device(arguments.device, arguments.setup)
 environment = SimulationEnvironment(
     adapter=CommunicationAdapter(device, bindings, arguments.adapter_args))
 
-control_server = ControlServer(
-    {'device': device,
-     'simulation': ExposedObject(environment, exclude=('start', 'control_server'))},
-    *arguments.rpc_host.split(':')) if arguments.rpc_host else None
+if arguments.rpc_host:
+    environment.control_server = ControlServer(
+        {'device': device,
+         'simulation': ExposedObject(environment, exclude=('start', 'control_server'))},
+        *arguments.rpc_host.split(':'))
 
-environment.control_server = control_server
 environment.start()
