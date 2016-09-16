@@ -39,12 +39,12 @@ parser.add_argument('-p', '--protocol', help='Communication protocol to expose d
 parser.add_argument('-a', '--adapter',
                     help='Name of adapter class. If not specified, the loader will choose '
                          'the first adapter it discovers.')
-parser.add_argument('-t', '--processing-time',
+parser.add_argument('-c', '--cycle-delay',
                     help='Approximate time to spend in each cycle of the simulation. Must be greater than 0.',
                     type=float, default=0.1)
-parser.add_argument('-w', '--time-warp', type=float, default=1.0,
-                    help='Time warp factor for the simulation. The actually elapsed time '
-                         'between two cycles is multiplied with this factor to determine the simulated time.')
+parser.add_argument('-e', '--speed', type=float, default=1.0,
+                    help='Simulation speed. The actually elapsed time '
+                         'between two cycles is multiplied with this speed to determine the simulated time.')
 parser.add_argument('adapter_args', nargs='*', help='Arguments for the adapter.')
 
 arguments = parser.parse_args()
@@ -58,7 +58,7 @@ environment = SimulationEnvironment(
     adapter=CommunicationAdapter(device, bindings, arguments.adapter_args))
 
 environment.cycle_delay = arguments.cycle_delay
-environment.time_warp = arguments.time_warp
+environment.speed = arguments.speed
 
 if arguments.rpc_host:
     environment.control_server = ControlServer(
