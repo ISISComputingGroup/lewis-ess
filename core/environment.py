@@ -21,54 +21,66 @@ from datetime import datetime
 from time import sleep
 
 
+def seconds_since(start):
+    return (datetime.now() - start).total_seconds()
+
+
 class SimulationEnvironment(object):
     def __init__(self, adapter, rpc_server=None):
         self._adapter = adapter
         self._rpc_server = rpc_server
 
         self._processing_time = 0.1
-        self._time_warp_factor = 1.0
 
-        self._cycles_per_second = 0
-        self._total_cycles = 0
-        self._total_runtime_real = 0.0
-        self._total_runtime_simulation = 0.0
+        self._real_cycles = 0
+        self._simulation_cycles = 0
+
+        self._real_runtime = 0.0
+        self._time_warp_factor = 1.0
+        self._simulation_runtime = 0.0
 
         self._running = False
-        self._stop = False
+        self._started = False
+        self._stop_commanded = False
 
     def start(self):
         self._running = True
+        self._started = True
+        self._stop_commanded = False
 
-        delta_simulation = 0.0
-        count = 0  # Cycles per second counter
-        timer = 0.0  # Second counter
+        delta = 0.0
 
-        while not self._stop:
-            start = datetime.now()
+        while not self._stop_commanded:  # Could the loop even move out of this class?
+            delta = self._process_cycle(delta)
 
-            if self._running:
-                self._total_runtime_simulation += delta_simulation
+        self._running = False
+        self._started = False
+        # Should self._stop_commanded be reset here? Not sure...
 
-                self._adapter.process(delta_simulation, self._processing_time)
-                self._total_cycles += 1
-                count += 1
-            else:
-                sleep(self._processing_time)
+    def _process_cycle(self, delta):
+        start = datetime.now()
 
-            delta_real = (datetime.now() - start).total_seconds()
-            delta_simulation = delta_real * self._time_warp_factor
+        self._process_simulation_cycle(delta)
 
-            self._total_runtime_real += delta_real
+        if self._rpc_server:
+            self._rpc_server.process()
 
-            timer += delta_real
-            if timer >= 1.0:
-                self._cycles_per_second = count
-                count = 0
-                timer = 0.0
+        delta = seconds_since(start)
 
-            if self._rpc_server:
-                self._rpc_server.process()
+        self._real_cycles += 1
+        self._real_runtime += delta
+
+        return delta
+
+    def _process_simulation_cycle(self, delta):
+        delta_simulation = delta * self._time_warp_factor
+
+        if self._running:
+            self._adapter.process(delta_simulation, self._processing_time)
+            self._simulation_cycles += 1
+            self._simulation_runtime += delta_simulation
+        else:
+            sleep(self._processing_time)
 
     @property
     def processing_time(self):
@@ -77,13 +89,21 @@ class SimulationEnvironment(object):
     @processing_time.setter
     def processing_time(self, new_duration):
         if new_duration <= 0:
-            raise ValueError('Cycle time must be larger than 0.')
+            raise ValueError('Cycle time must be greater than 0.')
 
         self._processing_time = new_duration
 
     @property
-    def cycles_per_second(self):
-        return self._cycles_per_second
+    def cycles(self):
+        return self._real_cycles
+
+    @property
+    def simulation_cycles(self):
+        return self._simulation_cycles
+
+    @property
+    def runtime(self):
+        return self._real_runtime
 
     @property
     def time_warp(self):
@@ -91,33 +111,34 @@ class SimulationEnvironment(object):
 
     @time_warp.setter
     def time_warp(self, new_factor):
+        if new_factor <= 0:
+            raise ValueError('Time warp factor must be greater than 0.')
+
         self._time_warp_factor = new_factor
 
     @property
-    def runtime(self):
-        return self._total_runtime_real
-
-    @property
     def simulation_runtime(self):
-        return self._total_runtime_simulation
-
-    @property
-    def simulation_cycles(self):
-        return self._total_cycles
+        return self._simulation_runtime
 
     def pause(self):
+        if not self._running:
+            raise RuntimeError('Can only pause a running simulation.')
+
         self._running = False
 
     def resume(self):
+        if not self._started or self._running:
+            raise RuntimeError('Can only resume a paused simulation.')
+
         self._running = True
 
     def stop(self):
-        self._stop = True
+        self._stop_commanded = True
 
     @property
-    def is_running(self):
-        return self._running
+    def is_started(self):
+        return self._started
 
     @property
     def is_paused(self):
-        return not self._running
+        return self._started and not self._running
