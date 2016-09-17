@@ -134,7 +134,7 @@ class TestSimulation(unittest.TestCase):
 
         control_mock.assert_has_calls([call.process()])
 
-    def test_time_warp_factor_range(self):
+    def test_speed_range(self):
         env = Simulation(Mock())
 
         assertRaisesNothing(self, setattr, env, 'speed', 3.0)
@@ -143,10 +143,12 @@ class TestSimulation(unittest.TestCase):
         assertRaisesNothing(self, setattr, env, 'speed', 0.1)
         self.assertEqual(env.speed, 0.1)
 
-        self.assertRaises(ValueError, setattr, env, 'speed', -0.5)
-        self.assertRaises(ValueError, setattr, env, 'speed', 0.0)
+        assertRaisesNothing(self, setattr, env, 'speed', 0.0)
+        self.assertEqual(env.speed, 0.0)
 
-    def test_processing_time_range(self):
+        self.assertRaises(ValueError, setattr, env, 'speed', -0.5)
+
+    def test_cycle_delay_range(self):
         env = Simulation(Mock())
 
         assertRaisesNothing(self, setattr, env, 'cycle_delay', 0.2)
@@ -159,7 +161,6 @@ class TestSimulation(unittest.TestCase):
         self.assertEqual(env.cycle_delay, 0.0)
 
         self.assertRaises(ValueError, setattr, env, 'cycle_delay', -4)
-
 
     def test_start_stop(self):
         env = Simulation(Mock())
