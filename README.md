@@ -241,7 +241,7 @@ from time import sleep
 from core.control_client import ControlClient
 
 client = ControlClient(host='127.0.0.1', port='10000')
-chopper = client.get_object('chopper')
+chopper = client.get_object('device')
 
 chopper.targetSpeed = 100
 chopper.initialize()
