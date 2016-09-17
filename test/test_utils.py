@@ -20,6 +20,11 @@
 from six import iteritems
 import unittest
 
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
+
 from core.utils import dict_strict_update
 
 
@@ -154,3 +159,27 @@ class TestGetAvailableSubModules(TestWithPackageStructure):
     def test_correct_modules_are_returned(self):
         self.assertEqual(sorted(get_available_submodules(self._tmp_package_name, [self._tmp_dir])),
                          sorted(self._expected_modules))
+
+
+from core.utils import seconds_since
+from datetime import datetime
+
+
+class TestSecondsSince(unittest.TestCase):
+    @patch('core.utils.datetime')
+    def test_seconds_since_past(self, datetime_mock):
+        datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
+
+        self.assertEqual(seconds_since(datetime(2016, 9, 1, 1, 0)), 3600.0)
+
+    @patch('core.utils.datetime')
+    def test_seconds_since_future(self, datetime_mock):
+        datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
+
+        self.assertEqual(seconds_since(datetime(2016, 9, 1, 3, 0)), -3600.0)
+
+    @patch('core.utils.datetime')
+    def test_seconds_since_none(self, datetime_mock):
+        datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
+
+        self.assertRaises(TypeError, seconds_since, None)

@@ -104,4 +104,11 @@ def dict_strict_update(base_dict, update_dict):
 
 
 def seconds_since(start):
+    """
+    This is a small helper function that returns the elapsed seconds
+    since start using datetime.datetime.now().
+
+    :param start: Start time.
+    :return: Elapsed seconds since start time.
+    """
     return (datetime.now() - start).total_seconds()
