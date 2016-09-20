@@ -19,6 +19,7 @@
 
 import imp
 import os.path as osp
+from datetime import datetime
 from os import listdir
 
 
@@ -100,3 +101,14 @@ def dict_strict_update(base_dict, update_dict):
                 str(additional_keys)))
 
     base_dict.update(update_dict)
+
+
+def seconds_since(start):
+    """
+    This is a small helper function that returns the elapsed seconds
+    since start using datetime.datetime.now().
+
+    :param start: Start time.
+    :return: Elapsed seconds since start time.
+    """
+    return (datetime.now() - start).total_seconds()

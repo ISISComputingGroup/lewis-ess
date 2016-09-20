@@ -11,4 +11,3 @@ RUN pip install -r plankton/requirements.txt && \
 COPY . /plankton
 
 ENTRYPOINT ["/init.sh", "/plankton/simulation.py"]
-

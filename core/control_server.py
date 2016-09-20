@@ -23,7 +23,7 @@ from jsonrpc import JSONRPCResponseManager
 
 
 class ExposedObject(object):
-    def __init__(self, object, members=None):
+    def __init__(self, object, members=None, exclude=None):
         """
         ExposedObject is a class that makes it easy to expose an object via the JSONRPCResponseManager
         from the json-rpc package, where it can serve as a dispatcher. For this purpose it exposes
@@ -44,10 +44,14 @@ class ExposedObject(object):
 
         If the second argument is not empty, it is interpreted to be the list of members
         to expose and only those are actually exposed. This can be used to explicitly expose
-        members of an object that start with an underscore.
+        members of an object that start with an underscore. If all but one or two members
+        should be exposed, it's also possible to use the exclude-argument to explicitly
+        exclude a few members. Both parameters can be used in combination, the exclude-list
+        takes precedence.
 
         :param object: The object to expose.
         :param members: If supplied, only this list of methods will be exposed.
+        :param exclude: Members in this list will not be exposed.
         """
         super(ExposedObject, self).__init__()
 
@@ -59,7 +63,8 @@ class ExposedObject(object):
         exposed_members = members if members else [prop for prop in dir(self._object) if not prop.startswith('_')]
 
         for method in exposed_members:
-            self._add_member_wrappers(method)
+            if not exclude or not method in exclude:
+                self._add_member_wrappers(method)
 
     def _add_member_wrappers(self, member):
         """

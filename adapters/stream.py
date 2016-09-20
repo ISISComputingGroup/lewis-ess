@@ -26,7 +26,6 @@ import socket
 
 from adapters import Adapter
 from argparse import ArgumentParser
-from datetime import datetime
 
 
 class StreamHandler(asynchat.async_chat):
@@ -79,6 +78,13 @@ class StreamServer(asyncore.dispatcher):
 
 
 class StreamAdapter(Adapter):
+    def __init__(self, target, bindings, arguments):
+        super(StreamAdapter, self).__init__(target, bindings, arguments)
+        self._options = self._parseArguments(arguments)
+
+        self._target = target
+        self._server = StreamServer(self._options.bind_address, self.options.port, self._target, self._bindings)
+
     def _parseArguments(self, arguments):
         parser = ArgumentParser(description='Adapter to expose a device via TCP Stream')
         parser.add_argument('-b', '--bind-address', help='IP Address to bind and listen for connections on',
@@ -86,29 +92,6 @@ class StreamAdapter(Adapter):
         parser.add_argument('-p', '--port', help='Port to listen for connections on', type=int, default=9999)
         return parser.parse_args(arguments)
 
-    def run(self, target, bindings, arguments, rpc_server=None):
-        options = self._parseArguments(arguments)
-
-        StreamServer(options.bind_address, options.port, target, bindings)
-
-        delta = 0.0  # Delta between cycles
-        count = 0  # Cycles per second counter
-        timer = 0.0  # Second counter
-
-        while True:
-            start = datetime.now()
-
-            asyncore.loop(0.1, count=1)
-
-            if rpc_server:
-                rpc_server.process()
-
-            target.process(delta)
-
-            delta = (datetime.now() - start).total_seconds()
-            count += 1
-            timer += delta
-            if timer >= 1.0:
-                print("Running at %d cycles per second (%.3f ms per cycle)" % (count, 1000.0 / count))
-                count = 0
-                timer = 0.0
+    def process(self, delta, cycle_delay=0.1):
+        asyncore.loop(cycle_delay, count=1)
+        self._target.process(delta)

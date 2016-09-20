@@ -20,7 +20,9 @@
 
 import argparse
 from core.utils import get_available_submodules
-from core.control_server import ControlServer
+from core.control_server import ControlServer, ExposedObject
+from core.simulation import Simulation
+
 from adapters import import_adapter
 from setups import import_device, import_bindings
 
@@ -37,6 +39,12 @@ parser.add_argument('-p', '--protocol', help='Communication protocol to expose d
 parser.add_argument('-a', '--adapter',
                     help='Name of adapter class. If not specified, the loader will choose '
                          'the first adapter it discovers.')
+parser.add_argument('-c', '--cycle-delay',
+                    help='Approximate time to spend in each cycle of the simulation. Must be greater than 0.',
+                    type=float, default=0.1)
+parser.add_argument('-e', '--speed', type=float, default=1.0,
+                    help='Simulation speed. The actually elapsed time '
+                         'between two cycles is multiplied with this speed to determine the simulated time.')
 parser.add_argument('adapter_args', nargs='*', help='Arguments for the adapter.')
 
 arguments = parser.parse_args()
@@ -46,10 +54,16 @@ CommunicationAdapter = import_adapter(arguments.protocol, arguments.adapter)
 bindings = import_bindings(arguments.device, arguments.protocol if arguments.bindings is None else arguments.bindings)
 device = import_device(arguments.device, arguments.setup)
 
-adapter = CommunicationAdapter()
+simulation = Simulation(
+    adapter=CommunicationAdapter(device, bindings, arguments.adapter_args))
 
-rpc_server = None
+simulation.cycle_delay = arguments.cycle_delay
+simulation.speed = arguments.speed
+
 if arguments.rpc_host:
-    rpc_server = ControlServer({'device': device}, *arguments.rpc_host.split(':'))
+    simulation.control_server = ControlServer(
+        {'device': device,
+         'simulation': ExposedObject(simulation, exclude=('start', 'control_server'))},
+        *arguments.rpc_host.split(':'))
 
-adapter.run(device, bindings, arguments.adapter_args, rpc_server)
+simulation.start()

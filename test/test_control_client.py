@@ -60,7 +60,7 @@ class TestControlClient(unittest.TestCase):
             json_rpc_mock.assert_has_calls([call(':api')])
 
     @patch('core.control_client.ControlClient._get_zmq_req_socket')
-    def test_get_remote_object_works(self, mock_socket):
+    def test_get_remote_object_raises_exception(self, mock_socket):
         client = ControlClient(host='127.0.0.1', port='10001')
 
         with patch.object(client, 'json_rpc') as json_rpc_mock:
