@@ -98,7 +98,7 @@ To change the rate at which simulation cycles are calculated, increase or decrea
 $ docker run -it dmscid/plankton -d linkam_t95 -p stream -c 0.05
 ```
 
-For long running devices it might be useful to speed up the simulation using the `-e` or `--speed` paramter, which is a factor by which actual time is multiplied to determine the simulated time in each simulation cycle. To run a simulation 10 times faster:
+For long running devices it might be useful to speed up the simulation using the `-e` or `--speed` parameter, which is a factor by which actual time is multiplied to determine the simulated time in each simulation cycle. To run a simulation 10 times faster:
 
 ```
 $ docker run -it dmscid/plankton -d linkam_t95 -p stream -e 10
