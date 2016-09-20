@@ -26,6 +26,8 @@ from pcaspy import Driver, SimpleServer
 
 from adapters import Adapter
 from core import CanProcess
+from core.utils import seconds_since
+from datetime import datetime
 
 
 class PropertyExposingDriver(CanProcess, Driver):
@@ -75,23 +77,23 @@ class EpicsAdapter(Adapter):
         super(EpicsAdapter, self).__init__(target, bindings, arguments)
         self._options = self._parseArguments(arguments)
 
-        self._target = target
         self._server = SimpleServer()
         self._server.createPV(prefix=self._options.prefix, pvdb=bindings)
-        self._driver = PropertyExposingDriver(target=self._target, pv_dict=bindings)
+        self._driver = PropertyExposingDriver(target=target, pv_dict=bindings)
+
+        self._last_update = datetime.now()
 
     def _parseArguments(self, arguments):
         parser = ArgumentParser(description="Adapter to expose a device via EPICS")
         parser.add_argument('-p', '--prefix', help='Prefix to use for all PVs', default='')
         return parser.parse_args(arguments)
 
-    def process(self, delta, cycle_delay=0.1):
+    def process(self, cycle_delay=0.1):
         # pcaspy's process() is weird. Docs claim argument is "processing time" in seconds.
         # But this is not at all consistent with the calculated delta.
         # Having "watch caget" running has a huge effect too (runs faster when watching!)
         # Additionally, if you don't call it every ~0.05s or less, PVs stop working. Annoying.
         # Set it to 0.0 for maximum cycle speed.
         self._server.process(cycle_delay)
-
-        self._target.process(delta)
-        self._driver.process(delta)
+        self._driver.process(seconds_since(self._last_update))
+        self._last_update = datetime.now()

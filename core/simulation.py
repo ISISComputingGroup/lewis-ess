@@ -23,7 +23,7 @@ from core.utils import seconds_since
 
 
 class Simulation(object):
-    def __init__(self, adapter, control_server=None):
+    def __init__(self, device, adapter, control_server=None):
         """
         The Simulation class controls certain aspects of a device simulation,
         the most important one being time.
@@ -62,9 +62,11 @@ class Simulation(object):
         computers via a ControlServer-instance. This can either be passed to __init__
         or set as a property before the simulation has been started.
 
+        :param device: The simulated device.
         :param adapter: Adapter which contains the simulated device.
         :param control_server: ControlServer instance to expose the simulation remotely.
         """
+        self._device = device
         self._adapter = adapter
         self._control_server = control_server
 
@@ -77,6 +79,7 @@ class Simulation(object):
 
         self._running = False
         self._started = False
+        self._device_connected = True
         self._stop_commanded = False
 
     def start(self):
@@ -127,14 +130,17 @@ class Simulation(object):
 
         :param delta: Time delta passed to simulation.
         """
-        delta_simulation = delta * self._speed
-
-        if self._running:
-            self._adapter.process(delta_simulation, self._cycle_delay)
-            self._cycles += 1
-            self._runtime += delta_simulation
+        if self._device_connected:
+            self._adapter.process(self._cycle_delay)
         else:
             sleep(self._cycle_delay)
+
+        if self._running:
+            delta_simulation = delta * self._speed
+            self._device.process(delta_simulation)
+
+            self._cycles += 1
+            self._runtime += delta_simulation
 
     @property
     def cycle_delay(self):
@@ -191,6 +197,36 @@ class Simulation(object):
         progresses at a different rate than uptime.
         """
         return self._runtime
+
+    @property
+    def device_connected(self):
+        """
+        Indicates whether the adapter is processing, i.e. the device is connected.
+        The device simulation can still be running, but if the adapter is not being
+        processed, the device appears disconnected.
+        """
+        return self._device_connected
+
+    def disconnect_device(self):
+        """
+        Simulate disconnecting the device. The simulation continues running, but
+        the outside communication of the device is suspended, so that it appears
+        disconnected.
+        """
+        if not self._device_connected:
+            raise RuntimeError('Device is already disconnected.')
+
+        self._device_connected = False
+
+    def connect_device(self):
+        """
+        Simulate (re-)connecting the device. This is only possible after the device
+        has been virtually disconnected using disconnect_device.
+        """
+        if self._device_connected:
+            raise RuntimeError('Device is already connected.')
+
+        self._device_connected = True
 
     def pause(self):
         """

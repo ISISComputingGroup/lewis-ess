@@ -36,7 +36,7 @@ def set_simulation_running(environment):
 class TestSimulation(unittest.TestCase):
     @patch('core.simulation.seconds_since')
     def test_process_cycle_returns_elapsed_time(self, elapsed_seconds_mock):
-        env = Simulation(Mock())
+        env = Simulation(device=Mock(), adapter=Mock())
 
         # It doesn't matter what happens in the simulation cycle, here we
         # only care how long it took.
@@ -49,7 +49,7 @@ class TestSimulation(unittest.TestCase):
 
     @patch('core.simulation.seconds_since')
     def test_process_cycle_changes_runtime_status(self, elapsed_seconds_mock):
-        env = Simulation(Mock())
+        env = Simulation(device=Mock(), adapter=Mock())
 
         with patch.object(env, '_process_simulation_cycle'):
             self.assertEqual(env.uptime, 0.0)
@@ -62,7 +62,7 @@ class TestSimulation(unittest.TestCase):
             self.assertEqual(env.uptime, 0.5)
 
     def test_pause_resume(self):
-        env = Simulation(Mock())
+        env = Simulation(device=Mock(), adapter=Mock())
 
         self.assertFalse(env.is_started)
         self.assertFalse(env.is_paused)
@@ -86,48 +86,59 @@ class TestSimulation(unittest.TestCase):
         # now it's running, so it can't be resumed again
         self.assertRaises(RuntimeError, env.resume)
 
-    @patch('core.simulation.sleep')
-    def test_process_cycle_calls_sleep_if_paused(self, sleep_mock):
-        env = Simulation(Mock())
+    def test_process_cycle_calls_sleep_if_paused(self):
+        device_mock = Mock()
+        env = Simulation(device=device_mock, adapter=Mock())
         set_simulation_running(env)
-
-        # simulation is running, should not call sleep_mock
-        env._process_cycle(0.5)
-        sleep_mock.assert_not_called()
-
         env.pause()
+
+        # simulation paused, device should not be called
         env._process_cycle(0.5)
-        sleep_mock.assert_called_once_with(env.cycle_delay)
+        device_mock.assert_not_called()
+
+        env.resume()
+        # simulation is running now, device should be called
+        env._process_cycle(0.5)
+
+        device_mock.assert_has_calls([call.process(0.5)])
 
     def test_process_cycle_calls_process_simulation(self):
         adapter_mock = Mock()
-        env = Simulation(adapter_mock)
+        device_mock = Mock()
+        env = Simulation(device=device_mock, adapter=adapter_mock)
         set_simulation_running(env)
 
         env._process_cycle(0.5)
         adapter_mock.assert_has_calls(
-            [call.process(0.5, env.cycle_delay)])
+            [call.process(env.cycle_delay)])
+        device_mock.assert_has_calls(
+            [call.process(0.5)]
+        )
 
         self.assertEqual(env.cycles, 1)
         self.assertEqual(env.runtime, 0.5)
 
-    def test_process_simulation_cycle_applies_time_warp(self):
+    def test_process_simulation_cycle_applies_speed(self):
         adapter_mock = Mock()
-        env = Simulation(adapter_mock)
+        device_mock = Mock()
+
+        env = Simulation(device=device_mock, adapter=adapter_mock)
         set_simulation_running(env)
 
         env.speed = 2.0
         env._process_cycle(0.5)
 
         adapter_mock.assert_has_calls(
-            [call.process(1.0, env.cycle_delay)])
+            [call.process(env.cycle_delay)])
+        device_mock.assert_has_calls(
+            [call.process(1.0)])
 
         self.assertEqual(env.cycles, 1)
         self.assertEqual(env.runtime, 1.0)
 
     def test_process_calls_control_server(self):
         control_mock = Mock()
-        env = Simulation(Mock(), control_mock)
+        env = Simulation(device=Mock(), adapter=Mock(), control_server=control_mock)
 
         set_simulation_running(env)
         env._process_cycle(0.5)
@@ -135,7 +146,7 @@ class TestSimulation(unittest.TestCase):
         control_mock.assert_has_calls([call.process()])
 
     def test_speed_range(self):
-        env = Simulation(Mock())
+        env = Simulation(device=Mock(), adapter=Mock())
 
         assertRaisesNothing(self, setattr, env, 'speed', 3.0)
         self.assertEqual(env.speed, 3.0)
@@ -149,7 +160,7 @@ class TestSimulation(unittest.TestCase):
         self.assertRaises(ValueError, setattr, env, 'speed', -0.5)
 
     def test_cycle_delay_range(self):
-        env = Simulation(Mock())
+        env = Simulation(device=Mock(), adapter=Mock())
 
         assertRaisesNothing(self, setattr, env, 'cycle_delay', 0.2)
         self.assertEqual(env.cycle_delay, 0.2)
@@ -163,7 +174,7 @@ class TestSimulation(unittest.TestCase):
         self.assertRaises(ValueError, setattr, env, 'cycle_delay', -4)
 
     def test_start_stop(self):
-        env = Simulation(Mock())
+        env = Simulation(device=Mock(), adapter=Mock())
 
         with patch.object(env, '_process_cycle', side_effect=lambda x: env.stop()) as mock_cycle:
             env.start()
@@ -171,7 +182,7 @@ class TestSimulation(unittest.TestCase):
             mock_cycle.assert_has_calls([call(0.0)])
 
     def test_control_server_setter(self):
-        env = Simulation(Mock())
+        env = Simulation(device=Mock(), adapter=Mock())
 
         control_mock = Mock()
         assertRaisesNothing(self, setattr, env, 'control_server', control_mock)
@@ -186,3 +197,45 @@ class TestSimulation(unittest.TestCase):
 
         # Can not replace control server when simulation is running
         self.assertRaises(RuntimeError, setattr, env, 'control_server', Mock())
+
+    def test_connect_disconnect_exceptions(self):
+        env = Simulation(device=Mock(), adapter=Mock())
+
+        self.assertTrue(env.device_connected)
+
+        assertRaisesNothing(self, env.disconnect_device)
+        self.assertFalse(env.device_connected)
+        self.assertRaises(RuntimeError, env.disconnect_device)
+
+        assertRaisesNothing(self, env.connect_device)
+        self.assertTrue(env.device_connected)
+        self.assertRaises(RuntimeError, env.connect_device)
+
+    @patch('core.simulation.sleep')
+    def test_disconnect_device(self, sleep_mock):
+        adapter_mock = Mock()
+        env = Simulation(device=Mock(), adapter=adapter_mock)
+
+        # connected device calls adapter_mock
+        env._process_cycle(0.5)
+        adapter_mock.assert_has_calls([call.process(env.cycle_delay)])
+        sleep_mock.assert_not_called()
+
+        adapter_mock.reset_mock()
+        sleep_mock.reset_mock()
+
+        # disconnected device calls sleep_mock
+        env.disconnect_device()
+        env._process_cycle(0.5)
+
+        sleep_mock.assert_has_calls([call.process(env.cycle_delay)])
+        adapter_mock.assert_not_called()
+
+        adapter_mock.reset_mock()
+        sleep_mock.reset_mock()
+
+        # re-connecting returns to previous behavior
+        env.connect_device()
+        env._process_cycle(0.5)
+        adapter_mock.assert_has_calls([call.process(env.cycle_delay)])
+        sleep_mock.assert_not_called()

@@ -55,6 +55,7 @@ bindings = import_bindings(arguments.device, arguments.protocol if arguments.bin
 device = import_device(arguments.device, arguments.setup)
 
 simulation = Simulation(
+    device=device,
     adapter=CommunicationAdapter(device, bindings, arguments.adapter_args))
 
 simulation.cycle_delay = arguments.cycle_delay

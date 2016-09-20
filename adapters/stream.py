@@ -82,8 +82,7 @@ class StreamAdapter(Adapter):
         super(StreamAdapter, self).__init__(target, bindings, arguments)
         self._options = self._parseArguments(arguments)
 
-        self._target = target
-        self._server = StreamServer(self._options.bind_address, self.options.port, self._target, self._bindings)
+        self._server = StreamServer(self._options.bind_address, self._options.port, target, bindings)
 
     def _parseArguments(self, arguments):
         parser = ArgumentParser(description='Adapter to expose a device via TCP Stream')
@@ -92,6 +91,5 @@ class StreamAdapter(Adapter):
         parser.add_argument('-p', '--port', help='Port to listen for connections on', type=int, default=9999)
         return parser.parse_args(arguments)
 
-    def process(self, delta, cycle_delay=0.1):
+    def process(self, cycle_delay=0.1):
         asyncore.loop(cycle_delay, count=1)
-        self._target.process(delta)
