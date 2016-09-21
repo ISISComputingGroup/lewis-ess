@@ -1,4 +1,4 @@
-FROM dmscid/epics-pcaspy:latest
+FROM dmscid/plankton-depends:latest
 
 # Copying these separately from the rest of plankton allows the
 # pip install step to be cached until the requirements change.
@@ -10,4 +10,5 @@ RUN pip install -r plankton/requirements.txt && \
 
 COPY . /plankton
 
-ENTRYPOINT ["/init.sh", "/plankton/simulation.py"]
+ENTRYPOINT ["/init.sh", "/plankton/plankton.py"]
+
