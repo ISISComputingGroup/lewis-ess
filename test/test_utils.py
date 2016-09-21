@@ -19,11 +19,7 @@
 
 from six import iteritems
 import unittest
-
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
+from .mock import patch
 
 from core.utils import dict_strict_update
 

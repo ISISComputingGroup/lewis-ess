@@ -18,11 +18,7 @@
 # *********************************************************************
 
 import unittest
-
-try:
-    from unittest.mock import Mock, patch, call
-except ImportError:
-    from mock import Mock, patch, call
+from .mock import Mock, patch, call
 
 from core.control_client import ObjectProxy, ControlClient, ProtocolException, RemoteException
 

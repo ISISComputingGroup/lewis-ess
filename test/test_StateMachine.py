@@ -18,11 +18,7 @@
 # *********************************************************************
 
 import unittest
-
-try:
-    from unittest.mock import Mock, patch
-except ImportError:
-    from mock import Mock, patch
+from .mock import Mock, patch
 
 from core.statemachine import StateMachine, State, Transition, Context
 from core.statemachine import StateMachineException

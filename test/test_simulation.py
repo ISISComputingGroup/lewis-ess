@@ -19,13 +19,9 @@
 
 import unittest
 from . import assertRaisesNothing
+from .mock import Mock, patch, call, ANY
 
 from core.simulation import Simulation
-
-try:
-    from unittest.mock import Mock, patch, call, ANY
-except ImportError:
-    from mock import Mock, patch, call, ANY
 
 
 def set_simulation_running(environment):

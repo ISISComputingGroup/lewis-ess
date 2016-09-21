@@ -20,11 +20,8 @@
 import unittest
 
 from . import assertRaisesNothing
+from .mock import Mock, patch, call
 
-try:
-    from unittest.mock import Mock, patch, call
-except ImportError:
-    from mock import Mock, patch, call
 
 from core.control_server import ExposedObject, ExposedObjectCollection, ControlServer
 from zmq import Again as zmq_again_exception
