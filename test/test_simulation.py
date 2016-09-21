@@ -19,7 +19,7 @@
 
 import unittest
 from . import assertRaisesNothing
-from .mock import Mock, patch, call, ANY
+from mock import Mock, patch, call, ANY
 
 from core.simulation import Simulation
 

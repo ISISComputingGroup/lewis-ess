@@ -19,7 +19,7 @@
 
 from six import iteritems
 import unittest
-from .mock import patch
+from mock import patch
 
 from core.utils import dict_strict_update
 

@@ -18,7 +18,7 @@
 # *********************************************************************
 
 import unittest
-from .mock import call, patch
+from mock import call, patch
 
 from core.processor import CanProcess, CanProcessComposite
 

@@ -20,7 +20,7 @@
 import unittest
 
 from . import assertRaisesNothing
-from .mock import Mock, patch, call
+from mock import Mock, patch, call
 
 
 from core.control_server import ExposedObject, ExposedObjectCollection, ControlServer
