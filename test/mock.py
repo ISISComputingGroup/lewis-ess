@@ -24,6 +24,9 @@ from the mock-package in a way that is compatible with Python 2 and 3.
 Instead of the usual `from mock import Mock`, tests just need to specify
 `from .mock import Mock` and the "import resolution" is handled there.
 """
+
+from __future__ import absolute_import
+
 try:
     from unittest.mock import *
 except ImportError:
