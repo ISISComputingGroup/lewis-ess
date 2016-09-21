@@ -5,7 +5,7 @@
 
 Plankton is a Python framework for simulating hardware devices. It is compatible with both Python 2 and 3.
 
-Plankton can be run directly using Python 2.7 or 3.x, or using a prepackaged Docker image that includes all dependencies. See relevant usage sections for details.
+Plankton can be run directly using Python 2.7 or >= 3.4, or using a prepackaged Docker image that includes all dependencies. See relevant usage sections for details.
 
 Resources:
 - [GitHub](https://github.com/DMSC-Instrument-Data/plankton)
