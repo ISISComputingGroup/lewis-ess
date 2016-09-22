@@ -63,7 +63,7 @@ Every cycle will trigger exactly one `in_state` event. This will always be the l
 
 There are three ways to specify event handlers when initializing the statemacine:
 
-- Object-Oriented: Implement one class per state, derived from `State`, which optioinally contains up to one of each event handler
+- Object-Oriented: Implement one class per state, derived from `State`, which optionally contains up to one of each event handler
 - Function-Driven: Bind individual functions to individual events that need handling
 - Implicit: Implement handlers in the device class, with standard names like `on_entry_init` for a state called "init", and call `bindHandlersByName()`
 
