@@ -56,13 +56,13 @@ The following PVs are available. Note that if a prefix was specified on startup,
 
 | PV  | Description  | Unit | Access |
 |---|---|---|---|---|
-| Spd-RB  |  Current rotation speed of the chopper disc. | Hz  | Read |
+| Spd-RB  |  Readback of the speed setpoint. | Hz  | Read |
 | ActSpd  |  Current rotation speed of the chopper disc. | Hz  | Read |
 | Spd  | Speed setpoint.  | Hz | Read/Write |
-| Phs-RB  |  Current phase of the chopper disc. | Degree | Read |
+| Phs-RB  |  Readback of the phase setpoint | Degree | Read |
 | ActPhs  |  Current phase of the chopper disc. | Degree | Read |
 | Phs  |  Phase setpoint. | Degree | Read/Write |
-| ParkAng-RB  |  Current position of chopper disc if in parked state. | Degree | Read |
+| ParkAng-RB  |  Readback of the park position setpoint | Degree | Read |
 | ParkAng  |  Position to which the disc should rotate in parked state. | Degree | Read/Write |
 | AutoPark | Enum `false`/`true` (or 0/1). If enabled, the chopper will move to the parking state when the stop state is reached. | - | Read/Write |
 | State  |  Enum for chopper state. | - | Read |
