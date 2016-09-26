@@ -19,15 +19,15 @@
 
 
 epics = {
-    'Spd-RB': {'property': 'speed'},
+    'Spd-RB': {'property': 'targetSpeed'},
     'ActSpd': {'property': 'speed'},
     'Spd': {'property': 'targetSpeed'},
 
-    'Phs-RB': {'property': 'phase'},
+    'Phs-RB': {'property': 'targetPhase'},
     'ActPhs': {'property': 'phase'},
     'Phs': {'property': 'targetPhase'},
 
-    'ParkAng-RB': {'property': 'parkingPosition'},
+    'ParkAng-RB': {'property': 'targetParkingPosition'},
     'ParkAng': {'property': 'targetParkingPosition'},
     'AutoPark': {'type': 'enum',
                  'enums': ['false', 'true'],
