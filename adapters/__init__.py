@@ -18,12 +18,12 @@
 # *********************************************************************
 
 import importlib
-import argparse
-
 
 class Adapter(object):
-    def __init__(self, target, bindings, arguments):
-        pass
+    protocol = None
+
+    def __init__(self, target, arguments, bindings=None):
+        self._target = target
 
     def process(self, cycle_delay=0.1):
         pass

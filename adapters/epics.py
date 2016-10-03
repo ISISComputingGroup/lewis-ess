@@ -30,56 +30,90 @@ from core.utils import seconds_since
 from datetime import datetime
 
 
+class pv(object):
+    def __init__(self, name, target_property=None, poll_interval=1.0, **kwargs):
+        self.name = name
+        self.property = target_property
+        self.poll_interval = poll_interval
+        self.config = kwargs
+
+    def apply(self, target, value):
+        try:
+            setattr(target, self.property, value)
+            return (self.name, value),
+        except AttributeError:
+            return None
+
+
+class cmd_pv(pv):
+    def __init__(self, name, commands, buffer_pv, poll_interval=1.0, **kwargs):
+        super(cmd_pv, self).__init__(name, poll_interval=poll_interval, **kwargs)
+
+        self.commands = commands
+        self.buffer = buffer_pv
+
+    def apply(self, target, value):
+        try:
+            getattr(target, self.commands[value])()
+
+            return (self.name, ''), (self.buffer, value)
+        except (KeyError, AttributeError):
+            return None
+
+
 class PropertyExposingDriver(CanProcess, Driver):
-    def __init__(self, target, pv_dict, default_poll_interval=1.0):
+    def __init__(self, target, pv_dict):
         super(PropertyExposingDriver, self).__init__()
 
         self._target = target
         self._pv_dict = pv_dict
-        self._timers = {k: 0.0 for k in pv_dict.keys()}
-
-        self._default_poll_interval = default_poll_interval
+        self._timers = {k: 0.0 for k in self._pv_dict.keys()}
 
     def write(self, pv, value):
-        commands = self._pv_dict[pv].get('commands', {})
-        command = commands.get(value, None)
+        pv_object = self._pv_dict.get(pv)
 
-        if command is not None:
-            getattr(self._target, command)()
-            self.setParam(pv, '')
-            self.setParam(self._pv_dict[pv]['buffer'], value)
-            return True
-
-        try:
-            setattr(self._target, self._pv_dict[pv]['property'], value)
-        except (AttributeError, KeyError):
+        if not pv_object:
             return False
 
-        self.setParam(pv, value)
+        pv_updates = pv_object.apply(self._target, value)
+
+        if not pv_updates:
+            return False
+
+        for update_pv, update_value in pv_updates:
+            self.setParam(update_pv, update_value)
+
         return True
 
     def doProcess(self, dt):
         # Updates bound parameters as needed
-        for pv, parameters in iteritems(self._pv_dict):
+        for pv, pv_object in iteritems(self._pv_dict):
             self._timers[pv] += dt
-            if self._timers[pv] >= parameters.get('poll_interval', self._default_poll_interval):
+            if self._timers[pv] >= pv_object.poll_interval:
                 try:
-                    self.setParam(pv, getattr(self._target, parameters['property']))
+                    self.setParam(pv, getattr(self._target, pv_object.property))
                     self._timers[pv] = 0.0
-                except KeyError:
+                except (AttributeError, TypeError):
                     pass
 
         self.updatePVs()
 
 
 class EpicsAdapter(Adapter):
-    def __init__(self, target, bindings, arguments):
-        super(EpicsAdapter, self).__init__(target, bindings, arguments)
+    protocol = 'epics'
+    pvs = None
+
+    def __init__(self, target, arguments):
+        super(EpicsAdapter, self).__init__(target, arguments)
+
         self._options = self._parseArguments(arguments)
 
+        pv_dict = {pv.name: pv for pv in self.pvs}
+
         self._server = SimpleServer()
-        self._server.createPV(prefix=self._options.prefix, pvdb=bindings)
-        self._driver = PropertyExposingDriver(target=target, pv_dict=bindings)
+        self._server.createPV(prefix=self._options.prefix, pvdb={k: v.config for k, v in pv_dict.items()})
+
+        self._driver = PropertyExposingDriver(target=self._target, pv_dict=pv_dict)
 
         self._last_update = datetime.now()
 

@@ -49,14 +49,15 @@ parser.add_argument('adapter_args', nargs='*', help='Arguments for the adapter.'
 
 arguments = parser.parse_args()
 
-CommunicationAdapter = import_adapter(arguments.protocol, arguments.adapter)
+from devices.chopper.adapter import ChopperEpicsAdapter as CommunicationAdapter
+#CommunicationAdapter = import_adapter(arguments.protocol, arguments.adapter)
 
 bindings = import_bindings(arguments.device, arguments.protocol if arguments.bindings is None else arguments.bindings)
 device = import_device(arguments.device, arguments.setup)
 
 simulation = Simulation(
     device=device,
-    adapter=CommunicationAdapter(device, bindings, arguments.adapter_args))
+    adapter=CommunicationAdapter(device, arguments.adapter_args))
 
 simulation.cycle_delay = arguments.cycle_delay
 simulation.speed = arguments.speed
