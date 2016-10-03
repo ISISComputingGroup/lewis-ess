@@ -95,9 +95,6 @@ class ChopperContext(Context):
 
 
 class SimulatedChopper(CanProcessComposite, object):
-    def print_status(self):
-        pass
-
     def __init__(self, override_states=None, override_transitions=None):
         super(SimulatedChopper, self).__init__()
 
