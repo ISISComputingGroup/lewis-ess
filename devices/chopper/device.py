@@ -195,11 +195,11 @@ class SimulatedChopper(CanProcessComposite, object):
         return self._csm.state == 'parked'
 
     @property
-    def autoPark(self):
+    def auto_park(self):
         return self._context.automatic_park_enabled
 
-    @autoPark.setter
-    def autoPark(self, enable):
+    @auto_park.setter
+    def auto_park(self, enable):
         self._context.automatic_park_enabled = bool(enable)
 
     # Stopping stuff
@@ -232,12 +232,12 @@ class SimulatedChopper(CanProcessComposite, object):
         return self._csm.state == 'idle'
 
     # Phase locking stuff
-    def lockPhase(self):
+    def lock_phase(self):
         if self._csm.can('phase_locking'):
             self._context.phase_commanded = True
 
     @property
-    def phaseLocked(self):
+    def phase_locked(self):
         return self._csm.state == 'phase_locked'
 
     # Setpoints etc.
@@ -246,11 +246,11 @@ class SimulatedChopper(CanProcessComposite, object):
         return self._context.speed
 
     @property
-    def targetSpeed(self):
+    def target_speed(self):
         return self._context.target_speed
 
-    @targetSpeed.setter
-    def targetSpeed(self, new_target_speed):
+    @target_speed.setter
+    def target_speed(self, new_target_speed):
         self._context.target_speed = new_target_speed
 
     @property
@@ -258,21 +258,21 @@ class SimulatedChopper(CanProcessComposite, object):
         return self._context.phase
 
     @property
-    def targetPhase(self):
+    def target_phase(self):
         return self._context.target_phase
 
-    @targetPhase.setter
-    def targetPhase(self, new_target_phase):
+    @target_phase.setter
+    def target_phase(self, new_target_phase):
         self._context.target_phase = new_target_phase
 
     @property
-    def parkingPosition(self):
+    def parking_position(self):
         return self._context.parking_position
 
     @property
-    def targetParkingPosition(self):
+    def target_parking_position(self):
         return self._context.target_parking_position
 
-    @targetParkingPosition.setter
-    def targetParkingPosition(self, new_target_parking_position):
+    @target_parking_position.setter
+    def target_parking_position(self, new_target_parking_position):
         self._context.target_parking_position = new_target_parking_position

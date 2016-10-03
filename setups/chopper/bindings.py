@@ -19,19 +19,19 @@
 
 
 epics = {
-    'Spd-RB': {'property': 'targetSpeed'},
+    'Spd-RB': {'property': 'target_speed'},
     'ActSpd': {'property': 'speed'},
-    'Spd': {'property': 'targetSpeed'},
+    'Spd': {'property': 'target_speed'},
 
-    'Phs-RB': {'property': 'targetPhase'},
+    'Phs-RB': {'property': 'target_phase'},
     'ActPhs': {'property': 'phase'},
-    'Phs': {'property': 'targetPhase'},
+    'Phs': {'property': 'target_phase'},
 
-    'ParkAng-RB': {'property': 'targetParkingPosition'},
-    'ParkAng': {'property': 'targetParkingPosition'},
+    'ParkAng-RB': {'property': 'target_parking_position'},
+    'ParkAng': {'property': 'target_parking_position'},
     'AutoPark': {'type': 'enum',
                  'enums': ['false', 'true'],
-                 'property': 'autoPark'},
+                 'property': 'auto_park'},
 
     'State': {'type': 'string', 'property': 'state'},
 
@@ -39,7 +39,7 @@ epics = {
              'commands': {
                  'start': 'start',
                  'stop': 'stop',
-                 'set_phase': 'lockPhase',
+                 'set_phase': 'lock_phase',
                  'unlock': 'unlock',
                  'park': 'park',
                  'init': 'initialize',
