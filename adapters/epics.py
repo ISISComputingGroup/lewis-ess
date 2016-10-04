@@ -31,34 +31,12 @@ from datetime import datetime
 
 
 class pv(object):
-    def __init__(self, name, target_property=None, poll_interval=1.0, **kwargs):
+    def __init__(self, name, target_property, poll_interval=1.0, read_only=False, **kwargs):
         self.name = name
+        self.read_only = read_only
         self.property = target_property
         self.poll_interval = poll_interval
         self.config = kwargs
-
-    def apply(self, target, value):
-        try:
-            setattr(target, self.property, value)
-            return (self.name, value),
-        except AttributeError:
-            return None
-
-
-class cmd_pv(pv):
-    def __init__(self, name, commands, buffer_pv, poll_interval=1.0, **kwargs):
-        super(cmd_pv, self).__init__(name, poll_interval=poll_interval, **kwargs)
-
-        self.commands = commands
-        self.buffer = buffer_pv
-
-    def apply(self, target, value):
-        try:
-            getattr(target, self.commands[value])()
-
-            return (self.name, ''), (self.buffer, value)
-        except (KeyError, AttributeError):
-            return None
 
 
 class PropertyExposingDriver(CanProcess, Driver):
@@ -72,16 +50,12 @@ class PropertyExposingDriver(CanProcess, Driver):
     def write(self, pv, value):
         pv_object = self._pv_dict.get(pv)
 
-        if not pv_object:
+        if not pv_object or pv_object.read_only:
             return False
 
-        pv_updates = pv_object.apply(self._target, value)
+        setattr(self._target, pv_object.property, value)
 
-        if not pv_updates:
-            return False
-
-        for update_pv, update_value in pv_updates:
-            self.setParam(update_pv, update_value)
+        self.setParam(pv, getattr(self._target, pv_object.property))
 
         return True
 
@@ -99,6 +73,18 @@ class PropertyExposingDriver(CanProcess, Driver):
         self.updatePVs()
 
 
+class ForwardProperty(object):
+    def __init__(self, target, prop):
+        self._target = target
+        self._prop = prop
+
+    def __get__(self, obj, type=None):
+        return getattr(self._target, self._prop)
+
+    def __set__(self, instance, value):
+        setattr(self._target, self._prop, value)
+
+
 class EpicsAdapter(Adapter):
     protocol = 'epics'
     pvs = None
@@ -110,12 +96,23 @@ class EpicsAdapter(Adapter):
 
         pv_dict = {pv.name: pv for pv in self.pvs}
 
+        self._create_properties(pv_dict.values())
+
         self._server = SimpleServer()
         self._server.createPV(prefix=self._options.prefix, pvdb={k: v.config for k, v in pv_dict.items()})
 
-        self._driver = PropertyExposingDriver(target=self._target, pv_dict=pv_dict)
+        self._driver = PropertyExposingDriver(target=self, pv_dict=pv_dict)
 
         self._last_update = datetime.now()
+
+    def _create_properties(self, pvs):
+        for pv in pvs:
+            prop = pv.property
+
+            if not prop in dir(self):
+                if not prop in dir(self._target):
+                    raise AttributeError('Can not find property \'' + prop + '\' in device or adapter.')
+                setattr(type(self), prop, ForwardProperty(self._target, prop))
 
     def _parseArguments(self, arguments):
         parser = ArgumentParser(description="Adapter to expose a device via EPICS")
