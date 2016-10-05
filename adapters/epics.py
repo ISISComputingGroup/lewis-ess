@@ -31,10 +31,9 @@ from datetime import datetime
 
 
 class pv(object):
-    def __init__(self, name, target_property, poll_interval=1.0, read_only=False, **kwargs):
-        self.name = name
-        self.read_only = read_only
+    def __init__(self, target_property, poll_interval=1.0, read_only=False, **kwargs):
         self.property = target_property
+        self.read_only = read_only
         self.poll_interval = poll_interval
         self.config = kwargs
 
@@ -74,34 +73,68 @@ class PropertyExposingDriver(CanProcess, Driver):
 
 
 class ForwardProperty(object):
-    def __init__(self, target, prop):
-        self._target = target
-        self._prop = prop
+    def __init__(self, target_member, property_name):
+        """
+        This is a small helper class that can be used to act as
+        a forwarding property to relay property setting/getting
+        to a member of the class it's installed on.
 
-    def __get__(self, obj, type=None):
-        return getattr(self._target, self._prop)
+        Typical use would be:
+
+            a = Foo()
+            a._b = Bar() # Bar has property baz
+
+            type(a).forward = ForwardProperty('_b', 'baz')
+
+            a.forward = 10 # equivalent to a._b.baz = 10
+
+        Note that this modifies the type Baz. Usage must thus be
+        limited to cases where this type modification is
+        acceptable.
+
+        :param target_member: Target member to forward to.
+        :param prop: Property of target to access.
+        """
+        self._target_member = target_member
+        self._prop = property_name
+
+    def __get__(self, instance, type=None):
+        """
+        This method forwards property read access on instance
+        to the member of instance that was selected in __init__.
+
+        :param instance: Instance of type.
+        :param type: Type.
+        :return: Attribute value of member property.
+        """
+        return getattr(getattr(instance, self._target_member), self._prop)
 
     def __set__(self, instance, value):
-        setattr(self._target, self._prop, value)
+        """
+        This method forwards property write access on instance
+        to the member of instance that was selected in __init__.
+
+        :param instance: Instance of type.
+        :param value: Type.
+        """
+        setattr(getattr(instance, self._target_member), self._prop, value)
 
 
 class EpicsAdapter(Adapter):
     protocol = 'epics'
     pvs = None
 
-    def __init__(self, target, arguments):
-        super(EpicsAdapter, self).__init__(target, arguments)
+    def __init__(self, device, arguments):
+        super(EpicsAdapter, self).__init__(device, arguments)
 
         self._options = self._parseArguments(arguments)
 
-        pv_dict = {pv.name: pv for pv in self.pvs}
-
-        self._create_properties(pv_dict.values())
+        self._create_properties(self.pvs.values())
 
         self._server = SimpleServer()
-        self._server.createPV(prefix=self._options.prefix, pvdb={k: v.config for k, v in pv_dict.items()})
-
-        self._driver = PropertyExposingDriver(target=self, pv_dict=pv_dict)
+        self._server.createPV(prefix=self._options.prefix,
+                              pvdb={k: v.config for k, v in self.pvs.items()})
+        self._driver = PropertyExposingDriver(target=self, pv_dict=self.pvs)
 
         self._last_update = datetime.now()
 
@@ -110,9 +143,9 @@ class EpicsAdapter(Adapter):
             prop = pv.property
 
             if not prop in dir(self):
-                if not prop in dir(self._target):
+                if not prop in dir(self._device):
                     raise AttributeError('Can not find property \'' + prop + '\' in device or adapter.')
-                setattr(type(self), prop, ForwardProperty(self._target, prop))
+                setattr(type(self), prop, ForwardProperty('_device', prop))
 
     def _parseArguments(self, arguments):
         parser = ArgumentParser(description="Adapter to expose a device via EPICS")

@@ -21,7 +21,8 @@ from core import State
 
 
 class DefaultInitState(State):
-    pass
+    def on_entry(self, dt):
+      self._context._initialize_data()
 
 
 class DefaultParkingState(State):

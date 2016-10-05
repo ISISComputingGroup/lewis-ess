@@ -80,11 +80,11 @@ class StreamServer(asyncore.dispatcher):
 class StreamAdapter(Adapter):
     protocol = 'stream'
 
-    def __init__(self, target, arguments, bindings):
-        super(StreamAdapter, self).__init__(target, arguments, bindings)
+    def __init__(self, device, arguments, bindings):
+        super(StreamAdapter, self).__init__(device, arguments, bindings)
         self._options = self._parseArguments(arguments)
 
-        self._server = StreamServer(self._options.bind_address, self._options.port, target, bindings)
+        self._server = StreamServer(self._options.bind_address, self._options.port, device, bindings)
 
     def _parseArguments(self, arguments):
         parser = ArgumentParser(description='Adapter to expose a device via TCP Stream')

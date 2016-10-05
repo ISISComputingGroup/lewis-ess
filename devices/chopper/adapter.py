@@ -21,31 +21,31 @@ from adapters.epics import EpicsAdapter, pv
 
 
 class ChopperEpicsAdapter(EpicsAdapter):
-    pvs = [
-        pv('Spd-RB', 'target_speed', read_only=True),
-        pv('Spd', 'target_speed'),
-        pv('ActSpd', 'speed', read_only=True),
+    pvs = {
+        'Spd-RB': pv('target_speed', read_only=True),
+        'Spd': pv('target_speed'),
+        'ActSpd': pv('speed', read_only=True),
 
-        pv('Phs-RB', 'target_phase', read_only=True),
-        pv('Phs', 'target_phase'),
-        pv('ActPhs', 'phase', read_only=True),
+        'Phs-RB': pv('target_phase', read_only=True),
+        'Phs': pv('target_phase'),
+        'ActPhs': pv('phase', read_only=True),
 
-        pv('ParkAng-RB', 'target_parking_position', read_only=True),
-        pv('ParkAng', 'target_parking_position'),
-        pv('AutoPark', 'auto_park', type='enum', enums=['false', 'true']),
-        pv('State', 'state', read_only=True, type='string'),
+        'ParkAng-RB': pv('target_parking_position', read_only=True),
+        'ParkAng': pv('target_parking_position'),
+        'AutoPark': pv('auto_park', type='enum', enums=['false', 'true']),
+        'State': pv('state', read_only=True, type='string'),
 
-        pv('CmdS', 'execute_command', type='string'),
-        pv('CmdL', 'last_command', type='string', read_only=True),
-    ]
+        'CmdS': pv('execute_command', type='string'),
+        'CmdL': pv('last_command', type='string', read_only=True),
+    }
 
-    commands = {'start': 'start',
-                'stop': 'stop',
-                'set_phase': 'lock_phase',
-                'unlock': 'unlock',
-                'park': 'park',
-                'init': 'initialize',
-                'deinit': 'deinitialize'}
+    _commands = {'start': 'start',
+                 'stop': 'stop',
+                 'set_phase': 'lock_phase',
+                 'unlock': 'unlock',
+                 'park': 'park',
+                 'init': 'initialize',
+                 'deinit': 'deinitialize'}
 
     _last_command = ''
 
@@ -55,9 +55,9 @@ class ChopperEpicsAdapter(EpicsAdapter):
 
     @execute_command.setter
     def execute_command(self, value):
-        command = self.commands.get(value)
+        command = self._commands.get(value)
 
-        getattr(self._target, command)()
+        getattr(self._device, command)()
         self._last_command = command
 
     @property

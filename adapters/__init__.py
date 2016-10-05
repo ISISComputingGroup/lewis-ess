@@ -19,11 +19,12 @@
 
 import importlib
 
+
 class Adapter(object):
     protocol = None
 
-    def __init__(self, target, arguments, bindings=None):
-        self._target = target
+    def __init__(self, device, arguments, bindings=None):
+        self._device = device
 
     def process(self, cycle_delay=0.1):
         pass

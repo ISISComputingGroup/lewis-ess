@@ -74,27 +74,31 @@ class SimulatedBearings(CanProcess, MagneticBearings):
 
 
 class SimulatedChopper(CanProcessComposite, object):
-    speed = 0.0
-    target_speed = 0.0
 
-    phase = 0.0
-    target_phase = 0.0
+    def _initialize_data(self):
+      self.speed = 0.0
+      self.target_speed = 0.0
 
-    parking_position = 0.0
-    target_parking_position = 0.0
-    auto_park = False
+      self.phase = 0.0
+      self.target_phase = 0.0
+
+      self.parking_position = 0.0
+      self.target_parking_position = 0.0
+      self.auto_park = False
+
+      self._park_commanded = False
+      self._stop_commanded = False
+      self._start_commanded = False
+      self._idle_commanded = False
+      self._phase_commanded = False
+      self._shutdown_commanded = False
+      self._initialized = False
 
     def __init__(self, override_states=None, override_transitions=None):
         super(SimulatedChopper, self).__init__()
 
         # Initialise internal state
-        self._park_commanded = False
-        self._stop_commanded = False
-        self._start_commanded = False
-        self._idle_commanded = False
-        self._phase_commanded = False
-        self._shutdown_commanded = False
-        self._initialized = False
+        self._initialize_data()
 
         self._bearings = SimulatedBearings()
 
