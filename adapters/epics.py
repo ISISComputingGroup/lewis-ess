@@ -25,7 +25,6 @@ from argparse import ArgumentParser
 from pcaspy import Driver, SimpleServer
 
 from adapters import Adapter
-from core import CanProcess
 from core.utils import seconds_since
 from datetime import datetime
 
@@ -38,7 +37,7 @@ class pv(object):
         self.config = kwargs
 
 
-class PropertyExposingDriver(CanProcess, Driver):
+class PropertyExposingDriver(Driver):
     def __init__(self, target, pv_dict):
         super(PropertyExposingDriver, self).__init__()
 
@@ -58,7 +57,7 @@ class PropertyExposingDriver(CanProcess, Driver):
 
         return True
 
-    def doProcess(self, dt):
+    def process_pv_updates(self, dt):
         # Updates bound parameters as needed
         for pv, pv_object in iteritems(self._pv_dict):
             self._timers[pv] += dt
@@ -159,5 +158,5 @@ class EpicsAdapter(Adapter):
         # Additionally, if you don't call it every ~0.05s or less, PVs stop working. Annoying.
         # Set it to 0.0 for maximum cycle speed.
         self._server.process(cycle_delay)
-        self._driver.process(seconds_since(self._last_update))
+        self._driver.process_pv_updates(seconds_since(self._last_update))
         self._last_update = datetime.now()
