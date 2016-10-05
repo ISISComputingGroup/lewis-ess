@@ -17,4 +17,4 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from .setups.default import device
+from .epics_adapter import ChopperEpicsAdapter

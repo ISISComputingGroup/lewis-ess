@@ -23,44 +23,50 @@ import importlib
 class Adapter(object):
     protocol = None
 
-    def __init__(self, device, arguments, bindings=None):
+    def __init__(self, device, arguments):
         self._device = device
 
     def process(self, cycle_delay=0.1):
         pass
 
 
-def import_adapter(module_name, class_name=None):
+def get_available_adapters(device_name, adapter_module, device_package):
     """
-    This function imports an Adapter class from a module in the adapters package.
-    It is equivalent to the following statement:
 
-        from adapter.module_name import class_name
-
-    But instead of importing class_name into the current namespace, the class
-    is returned so that it can be used to instantiate objects. The usage would be:
-
-        CommunicationAdapter = import_adapter('epics', 'EpicsAdapter')
-        adapter = CommunicationAdapter()
-
-    If class_name is omitted, the module will return the first subclass of Adapter
-    it can find in the module. If no suitable class is found, an exception is raised.
-
-
-    :param module_name: Submodule of 'adapters' from which to import the Adapter.
-    :param class_name: Class name of the Adapter.
-    :return: Adapter class.
+    :param device_name:
+    :param adapter_module:
+    :param device_package:
+    :return:
     """
-    module = importlib.import_module('.{}'.format(module_name), 'adapters')
+    adapter_module = importlib.import_module(adapter_module, '{}.{}'.format(device_package, device_name))
+    module_members = {member: getattr(adapter_module, member) for member in dir(adapter_module)}
 
-    for module_member in dir(module):
-        module_object = getattr(module, module_member)
-
+    adapters = dict()
+    for name, member in module_members.items():
         try:
-            if issubclass(module_object, Adapter) and module_object != Adapter:
-                if class_name is None or module_member == class_name:
-                    return module_object
+            if issubclass(member, Adapter):
+                adapters[name] = member
         except TypeError:
             pass
 
-    raise RuntimeError('No suitable Adapter found in module \'{}\''.format(module_name))
+    return adapters
+
+
+def import_adapter(device_name, protocol_name, adapter_module='.adapters', device_package='devices'):
+    """
+
+
+    :param device_name: Submodule of 'adapters' from which to import the Adapter.
+    :param protocol_name: Class name of the Adapter.
+    :param adapter_module:
+    :param device_package:
+    :return: Adapter class.
+    """
+    available_adapters = get_available_adapters(device_name, adapter_module, device_package='devices')
+
+    for adapter in available_adapters.values():
+        if adapter.protocol == protocol_name:
+            return adapter
+
+    raise RuntimeError(
+        'No suitable adapter found for device \'{}\' and protocol \'{}\'.'.format(device_name, protocol_name))

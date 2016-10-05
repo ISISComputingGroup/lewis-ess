@@ -37,16 +37,18 @@ def import_device(device_type, setup):
     :param setup: Setup module from which to import the device object.
     :return: Device object as specified by device_type and setup
     """
-    module_name = '.{}'.format(setup)
-    setup_package = 'setups.{}'.format(device_type)
+    devices = importlib.import_module('devices')
+    device_module = importlib.import_module('.{}'.format(device_type), 'devices')
 
-    module = importlib.import_module(module_name, setup_package)
+    device_package = 'devices.{}'.format(device_type)
+    setup_module = '.setups.{}'.format(setup)
 
-    for module_member in dir(module):
-        module_object = getattr(module, module_member)
+    module = importlib.import_module(setup_module, device_package)
 
-        if isinstance(module_object, CanProcess):
-            return module_object
+    device_object = getattr(module, 'device')
+
+    if isinstance(device_object, CanProcess):
+        return device_object
 
     raise RuntimeError(
         'Did not find anything that implements CanProcess in module \'{}\'.'.format(setup_package + module_name))

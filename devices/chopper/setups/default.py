@@ -17,6 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from devices import SimulatedChopper
+from ..device import SimulatedChopper
 
-chopper = SimulatedChopper()
+device = SimulatedChopper()

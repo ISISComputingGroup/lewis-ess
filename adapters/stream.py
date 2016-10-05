@@ -81,7 +81,7 @@ class StreamAdapter(Adapter):
     protocol = 'stream'
 
     def __init__(self, device, arguments, bindings):
-        super(StreamAdapter, self).__init__(device, arguments, bindings)
+        super(StreamAdapter, self).__init__(device, arguments)
         self._options = self._parseArguments(arguments)
 
         self._server = StreamServer(self._options.bind_address, self._options.port, device, bindings)
