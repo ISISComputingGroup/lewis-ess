@@ -23,8 +23,8 @@ import argparse
 from core.control_server import ControlServer, ExposedObject
 from core.simulation import Simulation
 from core.utils import get_available_submodules
-from setups import import_device
-from adapters import import_adapter
+from devices import import_device
+from adapters import import_adapter, get_available_adapters
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
@@ -45,19 +45,28 @@ parser.add_argument('adapter_args', nargs='*', help='Arguments for the adapter.'
 arguments = parser.parse_args()
 
 device = import_device(arguments.device, arguments.setup)
-adapter_type = import_adapter(arguments.device, arguments.protocol)
 
-simulation = Simulation(
-    device=device,
-    adapter=adapter_type(device, arguments.adapter_args))
+if arguments.list_protocols:
+    adapters = get_available_adapters(arguments.device, 'adapters', 'devices')
 
-simulation.cycle_delay = arguments.cycle_delay
-simulation.speed = arguments.speed
+    protocols = {adapter.protocol for adapter in adapters.values()}
 
-if arguments.rpc_host:
-    simulation.control_server = ControlServer(
-        {'device': device,
-         'simulation': ExposedObject(simulation, exclude=('start', 'control_server'))},
-        *arguments.rpc_host.split(':'))
+    for p in protocols:
+        print(p)
+else:
+    adapter_type = import_adapter(arguments.device, arguments.protocol)
 
-simulation.start()
+    simulation = Simulation(
+        device=device,
+        adapter=adapter_type(device, arguments.adapter_args))
+
+    simulation.cycle_delay = arguments.cycle_delay
+    simulation.speed = arguments.speed
+
+    if arguments.rpc_host:
+        simulation.control_server = ControlServer(
+            {'device': device,
+             'simulation': ExposedObject(simulation, exclude=('start', 'control_server'))},
+            *arguments.rpc_host.split(':'))
+
+    simulation.start()

@@ -17,4 +17,34 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from .linkam_t95 import SimulatedLinkamT95
+import importlib
+
+from core import CanProcess
+
+
+def import_device(device_type, setup):
+    """
+    This function is a helper that imports the first object which is an instance of devices.core.CanProcess
+    from the setups package:
+
+        from setups.device_type.setup import can_process_object.
+
+    The object is returned by the function, so to import the default setup for chopper:
+
+        chopper = import_device('chopper', 'default')
+
+    :param device_type: Sub-package from which to import the setup.
+    :param setup: Setup module from which to import the device object.
+    :return: Device object as specified by device_type and setup
+    """
+
+    setup_module = 'devices.{}.setups.{}'.format(device_type, setup)
+
+    module = importlib.import_module(setup_module)
+
+    device_object = getattr(module, 'device')
+
+    if isinstance(device_object, CanProcess):
+        return device_object
+
+    raise RuntimeError('Device \'{}\'could not be found.'.format(device_type))

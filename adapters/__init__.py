@@ -32,13 +32,12 @@ class Adapter(object):
 
 def get_available_adapters(device_name, adapter_module, device_package):
     """
-
     :param device_name:
     :param adapter_module:
     :param device_package:
     :return:
     """
-    adapter_module = importlib.import_module(adapter_module, '{}.{}'.format(device_package, device_name))
+    adapter_module = importlib.import_module('{}.{}.{}'.format(device_package, device_name, adapter_module))
     module_members = {member: getattr(adapter_module, member) for member in dir(adapter_module)}
 
     adapters = dict()
@@ -52,17 +51,16 @@ def get_available_adapters(device_name, adapter_module, device_package):
     return adapters
 
 
-def import_adapter(device_name, protocol_name, adapter_module='.adapters', device_package='devices'):
+def import_adapter(device_name, protocol_name):
     """
-
-
     :param device_name: Submodule of 'adapters' from which to import the Adapter.
     :param protocol_name: Class name of the Adapter.
-    :param adapter_module:
-    :param device_package:
     :return: Adapter class.
     """
-    available_adapters = get_available_adapters(device_name, adapter_module, device_package='devices')
+    available_adapters = get_available_adapters(device_name, 'adapters', 'devices')
+
+    if not protocol_name:
+        return available_adapters.values()[0]
 
     for adapter in available_adapters.values():
         if adapter.protocol == protocol_name:
