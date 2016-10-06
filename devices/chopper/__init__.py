@@ -17,4 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from .setups.default import device
+from .device import SimulatedChopper
+
+setups = dict(
+    default=dict(
+        device_type=SimulatedChopper,
+    )
+)
