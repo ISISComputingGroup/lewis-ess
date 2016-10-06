@@ -131,7 +131,7 @@ class Simulation(object):
         :param delta: Time delta passed to simulation.
         """
         if self._device_connected:
-            self._adapter.process(self._cycle_delay)
+            self._adapter.handle(self._cycle_delay)
         else:
             sleep(self._cycle_delay)
 

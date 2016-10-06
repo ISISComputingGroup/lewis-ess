@@ -151,7 +151,7 @@ class EpicsAdapter(Adapter):
         parser.add_argument('-p', '--prefix', help='Prefix to use for all PVs', default='')
         return parser.parse_args(arguments)
 
-    def process(self, cycle_delay=0.1):
+    def handle(self, cycle_delay=0.1):
         # pcaspy's process() is weird. Docs claim argument is "processing time" in seconds.
         # But this is not at all consistent with the calculated delta.
         # Having "watch caget" running has a huge effect too (runs faster when watching!)

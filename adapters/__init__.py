@@ -26,18 +26,17 @@ class Adapter(object):
     def __init__(self, device, arguments):
         self._device = device
 
-    def process(self, cycle_delay=0.1):
+    def handle(self, cycle_delay=0.1):
         pass
 
 
-def get_available_adapters(device_name, adapter_module, device_package):
+def get_available_adapters(device_name, device_package):
     """
     :param device_name:
-    :param adapter_module:
     :param device_package:
     :return:
     """
-    adapter_module = importlib.import_module('{}.{}.{}'.format(device_package, device_name, adapter_module))
+    adapter_module = importlib.import_module('{}.{}.{}'.format(device_package, device_name, 'adapters'))
     module_members = {member: getattr(adapter_module, member) for member in dir(adapter_module)}
 
     adapters = dict()
