@@ -18,7 +18,8 @@
 # *********************************************************************
 
 import unittest
-from devices.linkam_t95 import SimulatedLinkamT95, DefaultStartedState
+from devices.linkam_t95 import SimulatedLinkamT95
+from devices.linkam_t95.states import DefaultStartedState
 from . import assertRaisesNothing
 
 

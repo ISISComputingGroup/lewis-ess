@@ -23,7 +23,7 @@ from collections import OrderedDict
 from core import StateMachine, CanProcessComposite, Context
 from core.utils import dict_strict_update
 
-from .defaults import *
+from .states import *
 
 
 class LinkamT95Context(Context):
@@ -73,7 +73,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         # Create instance of device context. This is shared with all the states of this device.
         self._context = LinkamT95Context()
 
-        # Define all existing states of the device; the handlers live in defaults.py
+        # Define all existing states of the device; the handlers live in states.py
         state_handlers = {
             'init': DefaultInitState(),
             'stopped': DefaultStoppedState(),
