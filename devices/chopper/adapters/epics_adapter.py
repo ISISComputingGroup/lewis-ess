@@ -17,26 +17,26 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from adapters.epics import EpicsAdapter, pv
+from adapters.epics import EpicsAdapter, PV
 
 
 class ChopperEpicsAdapter(EpicsAdapter):
     pvs = {
-        'Spd-RB': pv('target_speed', read_only=True),
-        'Spd': pv('target_speed'),
-        'ActSpd': pv('speed', read_only=True),
+        'Spd-RB': PV('target_speed', read_only=True),
+        'Spd': PV('target_speed'),
+        'ActSpd': PV('speed', read_only=True),
 
-        'Phs-RB': pv('target_phase', read_only=True),
-        'Phs': pv('target_phase'),
-        'ActPhs': pv('phase', read_only=True),
+        'Phs-RB': PV('target_phase', read_only=True),
+        'Phs': PV('target_phase'),
+        'ActPhs': PV('phase', read_only=True),
 
-        'ParkAng-RB': pv('target_parking_position', read_only=True),
-        'ParkAng': pv('target_parking_position'),
-        'AutoPark': pv('auto_park', type='enum', enums=['false', 'true']),
-        'State': pv('state', read_only=True, type='string'),
+        'ParkAng-RB': PV('target_parking_position', read_only=True),
+        'ParkAng': PV('target_parking_position'),
+        'AutoPark': PV('auto_park', type='enum', enums=['false', 'true']),
+        'State': PV('state', read_only=True, type='string'),
 
-        'CmdS': pv('execute_command', type='string'),
-        'CmdL': pv('last_command', type='string', read_only=True),
+        'CmdS': PV('execute_command', type='string'),
+        'CmdL': PV('last_command', type='string', read_only=True),
     }
 
     _commands = {'start': 'start',
