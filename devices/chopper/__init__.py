@@ -18,9 +18,3 @@
 # *********************************************************************
 
 from .device import SimulatedChopper
-
-setups = dict(
-    default=dict(
-        device_type=SimulatedChopper,
-    )
-)

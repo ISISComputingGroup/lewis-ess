@@ -32,9 +32,13 @@ class Adapter(object):
 
 def get_available_adapters(device_name, device_package):
     """
-    :param device_name:
-    :param device_package:
-    :return:
+    This helper function returns a dictionary with name/type pairs. It imports the module
+    device_package.device_name.adapters and puts those members of the module that inherit
+    from Adapter into the dictionary.
+
+    :param device_name: Device name for which to get the adapters.
+    :param device_package: Name of the package where devices are defined.
+    :return: Dictionary of name/type pairs for available adapters for that device.
     """
     adapter_module = importlib.import_module('{}.{}.{}'.format(device_package, device_name, 'adapters'))
     module_members = {member: getattr(adapter_module, member) for member in dir(adapter_module)}
@@ -52,9 +56,15 @@ def get_available_adapters(device_name, device_package):
 
 def import_adapter(device_name, protocol_name, device_package='devices'):
     """
-    :param device_name: Submodule of 'adapters' from which to import the Adapter.
-    :param protocol_name: Class name of the Adapter.
-    :return: Adapter class.
+    This function tries to import an adapter for the given device that implements
+    the requested protocol. If no adapter for that protocol exists, an exception
+    is raised. If protocol name is None, the function returns an
+    unspecified adapter. If no adapters are found at all, an error is raised.
+
+    :param device_name: Name of device for which an adapter is requested.
+    :param protocol_name: Requested protocol implemented by adapter.
+    :param device_package: Name of the package where devices are defined.
+    :return: Adapter class that implements requested protocol for the specified device.
     """
     available_adapters = get_available_adapters(device_name, device_package)
 

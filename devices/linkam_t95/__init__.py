@@ -18,9 +18,3 @@
 # *********************************************************************
 
 from .device import SimulatedLinkamT95
-
-setups = dict(
-    default=dict(
-        device_type=SimulatedLinkamT95,
-    )
-)
