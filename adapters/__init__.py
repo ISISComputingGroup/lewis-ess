@@ -50,16 +50,16 @@ def get_available_adapters(device_name, device_package):
     return adapters
 
 
-def import_adapter(device_name, protocol_name):
+def import_adapter(device_name, protocol_name, device_package='devices'):
     """
     :param device_name: Submodule of 'adapters' from which to import the Adapter.
     :param protocol_name: Class name of the Adapter.
     :return: Adapter class.
     """
-    available_adapters = get_available_adapters(device_name, 'adapters', 'devices')
+    available_adapters = get_available_adapters(device_name, device_package)
 
     if not protocol_name:
-        return available_adapters.values()[0]
+        return list(available_adapters.values())[0]
 
     for adapter in available_adapters.values():
         if adapter.protocol == protocol_name:
