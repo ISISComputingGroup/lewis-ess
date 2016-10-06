@@ -83,7 +83,7 @@ def import_device(device, setup=None, device_package='devices'):
 
                 return device_type, parameters
             except (AttributeError, KeyError):
-                if setup is None:
+                if setup_name == 'default':
                     for member_name in dir(device_module):
                         try:
                             member_object = getattr(device_module, member_name)
