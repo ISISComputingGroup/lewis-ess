@@ -23,7 +23,7 @@ from core import StateMachine, CanProcessComposite, CanProcess, Context
 from core.utils import dict_strict_update
 
 from .bearings import MagneticBearings
-from .defaults import *
+from .states import *
 
 
 class SimulatedBearings(CanProcess, MagneticBearings):
