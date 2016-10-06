@@ -24,14 +24,14 @@ from core.control_server import ControlServer, ExposedObject
 from core.simulation import Simulation
 from core.utils import get_available_submodules
 from devices import import_device
-from adapters import import_adapter, get_available_adapters
+from adapters import import_adapter, get_available_adapters, Adapter
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
 parser.add_argument('-d', '--device', help='Name of the device to simulate.', default='chopper',
                     choices=get_available_submodules('devices'))
 parser.add_argument('-r', '--rpc-host', help='HOST:PORT format string for exposing the device via JSON-RPC over ZMQ.')
-parser.add_argument('-s', '--setup', help='Name of the setup to load.', default='default')
+parser.add_argument('-s', '--setup', help='Name of the setup to load.', default=None)
 parser.add_argument('-l', '--list-protocols', help='List available protocols for selected device.', action='store_true')
 parser.add_argument('-p', '--protocol', help='Communication protocol to expose devices.', default=None)
 parser.add_argument('-c', '--cycle-delay',
@@ -44,29 +44,44 @@ parser.add_argument('adapter_args', nargs='*', help='Arguments for the adapter.'
 
 arguments = parser.parse_args()
 
-device = import_device(arguments.device, arguments.setup)
+# Import the device type and required initialisation parameters.
+device_type, parameters = import_device(arguments.device, arguments.setup, device_package='devices')
+
+# This is for cases where adapter and device are in one class.
+# It's not necessary to check for further adapters, but the adapter arguments must
+# be added to the initialisation parameters of the device.
+is_simple_device = issubclass(device_type, Adapter)
+
+if is_simple_device:
+    parameters['arguments'] = arguments.adapter_args
 
 if arguments.list_protocols:
-    adapters = get_available_adapters(arguments.device, 'adapters', 'devices')
+    if is_simple_device:
+        print(device_type.protocol)
+    else:
+        adapters = get_available_adapters(arguments.device, device_package='devices')
 
-    protocols = {adapter.protocol for adapter in adapters.values()}
+        protocols = {adapter.protocol for adapter in adapters.values()}
 
-    for p in protocols:
-        print(p)
-else:
-    adapter_type = import_adapter(arguments.device, arguments.protocol)
+        for p in protocols:
+            print(p)
+    exit()
 
-    simulation = Simulation(
-        device=device,
-        adapter=adapter_type(device, arguments.adapter_args))
+device = device_type(**parameters)
+adapter = device if is_simple_device else import_adapter(arguments.device, arguments.protocol)(device,
+                                                                                               arguments.adapter_args)
 
-    simulation.cycle_delay = arguments.cycle_delay
-    simulation.speed = arguments.speed
+simulation = Simulation(
+    device=device,
+    adapter=adapter)
 
-    if arguments.rpc_host:
-        simulation.control_server = ControlServer(
-            {'device': device,
-             'simulation': ExposedObject(simulation, exclude=('start', 'control_server'))},
-            *arguments.rpc_host.split(':'))
+simulation.cycle_delay = arguments.cycle_delay
+simulation.speed = arguments.speed
 
-    simulation.start()
+if arguments.rpc_host:
+    simulation.control_server = ControlServer(
+        {'device': device,
+         'simulation': ExposedObject(simulation, exclude=('start', 'control_server'))},
+        *arguments.rpc_host.split(':'))
+
+simulation.start()
