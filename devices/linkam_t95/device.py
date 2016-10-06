@@ -26,18 +26,8 @@ from core.utils import dict_strict_update
 from .states import *
 
 
-class LinkamT95Context(Context):
-    """
-    The Context models device memory state.
-
-    All the variables that the device tracks should be defined here, and
-    initialized to default values.
-
-    The device context is available as _context in the device class, and
-    all associated device State and Transition classes.
-    """
-
-    def initialize(self):
+class SimulatedLinkamT95(CanProcessComposite, object):
+    def _initialize_data(self):
         """
         This method is called once on construction. After that, it may be
         manually called again to reset the device to its default state.
@@ -65,14 +55,11 @@ class LinkamT95Context(Context):
         self.pump_manual_mode = False
         self.manual_target_speed = 0
 
-
-class SimulatedLinkamT95(CanProcessComposite, object):
     def __init__(self, override_states=None, override_transitions=None):
         super(SimulatedLinkamT95, self).__init__()
 
         # Create instance of device context. This is shared with all the states of this device.
-        self._context = LinkamT95Context()
-
+        self._initialize_data()
         # Define all existing states of the device; the handlers live in states.py
         state_handlers = {
             'init': DefaultInitState(),
@@ -89,30 +76,30 @@ class SimulatedLinkamT95(CanProcessComposite, object):
 
         # Define all transitions and the conditions under which they are executed.
         transition_handlers = OrderedDict([
-            (('init', 'stopped'), lambda: self._context.serial_command_mode),
+            (('init', 'stopped'), lambda: self.serial_command_mode),
 
-            (('stopped', 'started'), lambda: self._context.start_commanded),
+            (('stopped', 'started'), lambda: self.start_commanded),
 
-            (('started', 'stopped'), lambda: self._context.stop_commanded),
-            (('started', 'heat'), lambda: self._context.temperature < self._context.temperature_limit),
-            (('started', 'hold'), lambda: self._context.temperature == self._context.temperature_limit),
-            (('started', 'cool'), lambda: self._context.temperature > self._context.temperature_limit),
+            (('started', 'stopped'), lambda: self.stop_commanded),
+            (('started', 'heat'), lambda: self.temperature < self.temperature_limit),
+            (('started', 'hold'), lambda: self.temperature == self.temperature_limit),
+            (('started', 'cool'), lambda: self.temperature > self.temperature_limit),
 
             (('heat', 'hold'),
-             lambda: self._context.temperature == self._context.temperature_limit or self._context.hold_commanded),
-            (('heat', 'cool'), lambda: self._context.temperature > self._context.temperature_limit),
-            (('heat', 'stopped'), lambda: self._context.stop_commanded),
+             lambda: self.temperature == self.temperature_limit or self.hold_commanded),
+            (('heat', 'cool'), lambda: self.temperature > self.temperature_limit),
+            (('heat', 'stopped'), lambda: self.stop_commanded),
 
             (('hold', 'heat'),
-             lambda: self._context.temperature < self._context.temperature_limit and not self._context.hold_commanded),
+             lambda: self.temperature < self.temperature_limit and not self.hold_commanded),
             (('hold', 'cool'),
-             lambda: self._context.temperature > self._context.temperature_limit and not self._context.hold_commanded),
-            (('hold', 'stopped'), lambda: self._context.stop_commanded),
+             lambda: self.temperature > self.temperature_limit and not self.hold_commanded),
+            (('hold', 'stopped'), lambda: self.stop_commanded),
 
-            (('cool', 'heat'), lambda: self._context.temperature < self._context.temperature_limit),
+            (('cool', 'heat'), lambda: self.temperature < self.temperature_limit),
             (('cool', 'hold'),
-             lambda: self._context.temperature == self._context.temperature_limit or self._context.hold_commanded),
-            (('cool', 'stopped'), lambda: self._context.stop_commanded),
+             lambda: self.temperature == self.temperature_limit or self.hold_commanded),
+            (('cool', 'stopped'), lambda: self.stop_commanded),
         ])
 
         # Allows setup to override transition behaviour by passing it to this constructor
@@ -123,7 +110,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
             'initial': 'init',
             'states': state_handlers,
             'transitions': transition_handlers,
-        }, context=self._context)
+        }, context=self)
 
         # Ensures the state machine object gets a 'process' heartbeat tick
         self.addProcessor(self._csm)
@@ -138,7 +125,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         """
 
         # "The first command sent must be a 'T' command" from T95 manual
-        self._context.serial_command_mode = True
+        self.serial_command_mode = True
 
         Tarray = [0x80] * 10
 
@@ -149,19 +136,19 @@ class SimulatedLinkamT95(CanProcessComposite, object):
             'cool': 0x20,
             'hold': 0x30,
         }.get(self._csm.state, 0x01)
-        if Tarray[0] == 0x30 and self._context.hold_commanded:
+        if Tarray[0] == 0x30 and self.hold_commanded:
             Tarray[0] = 0x50
 
         # Error status byte (EB1)
-        if self._context.pump_overspeed:
+        if self.pump_overspeed:
             Tarray[1] |= 0x01
         # TODO: Add support for other error conditions?
 
         # Pump status byte (PB1)
-        Tarray[2] = 0x80 + self._context.pump_speed
+        Tarray[2] = 0x80 + self.pump_speed
 
         # Temperature
-        Tarray[6:10] = [ord(x) for x in "%04x" % (int(self._context.temperature * 10) & 0xFFFF)]
+        Tarray[6:10] = [ord(x) for x in "%04x" % (int(self.temperature * 10) & 0xFFFF)]
 
         print(self._csm.state)
         print(str(Tarray))
@@ -180,8 +167,8 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         # TODO: Is not having leading zeroes / 4 digits an error?
         rate = int(param)
         if 1 <= rate <= 15000:
-            self._context.temperature_rate = rate / 100.0
-        print("New rate: %.2f C/min" % (self._context.temperature_rate,))
+            self.temperature_rate = rate / 100.0
+        print("New rate: %.2f C/min" % (self.temperature_rate,))
         return ""
 
     def setLimit(self, param):
@@ -196,8 +183,8 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         # TODO: Is not having leading zeroes / 4 digits an error?
         limit = int(param)
         if -2000 <= limit <= 6000:
-            self._context.temperature_limit = limit / 10.0
-        print("New limit: %.1f C" % (self._context.temperature_limit,))
+            self.temperature_limit = limit / 10.0
+        print("New limit: %.1f C" % (self.temperature_limit,))
         return ""
 
     def start(self):
@@ -208,7 +195,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
 
         :return: Empty string.
         """
-        self._context.start_commanded = True
+        self.start_commanded = True
         print("Start commanded")
         return ""
 
@@ -220,7 +207,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
 
         :return: Empty string.
         """
-        self._context.stop_commanded = True
+        self.stop_commanded = True
         print("Stop commanded")
         return ""
 
@@ -232,7 +219,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
 
         :return: Empty string.
         """
-        self._context.hold_commanded = True
+        self.hold_commanded = True
         return ""
 
     def heat(self):
@@ -242,7 +229,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         :return: Empty string.
         """
         # TODO: Is this really all it does?
-        self._context.hold_commanded = False
+        self.hold_commanded = False
         return ""
 
     def cool(self):
@@ -252,7 +239,7 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         :return: Empty string.
         """
         # TODO: Is this really all it does?
-        self._context.hold_commanded = False
+        self.hold_commanded = False
         return ""
 
     def pumpCommand(self, param):
@@ -267,10 +254,10 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         lookup = [c for c in "0123456789:;<=>?@ABCDEFGHIJKLMN"]
 
         if param == "a0":
-            self._context.pump_manual_mode = False
+            self.pump_manual_mode = False
         elif param == "m0":
-            self._context.pump_manual_mode = True
+            self.pump_manual_mode = True
         elif param in lookup:
-            self._context.manual_target_speed = lookup.index(param)
+            self.manual_target_speed = lookup.index(param)
 
         return ""
