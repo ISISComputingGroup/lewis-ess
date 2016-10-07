@@ -33,8 +33,9 @@ class CanProcess(object):
     The doBefore- and doAfterProcess methods are only called if a doProcess-method exists.
     """
 
-    def __init__(self):
-        super(CanProcess, self).__init__()
+    def __init__(self, **kwargs):
+        super(CanProcess, self).__init__(**kwargs)
+        pass
 
     def __call__(self, dt=0):
         self.process(dt)
@@ -66,8 +67,8 @@ class CanProcessComposite(CanProcess):
     and doAfterProcess methods.
     """
 
-    def __init__(self, iterable=()):
-        super(CanProcessComposite, self).__init__()
+    def __init__(self, iterable=(), **kwargs):
+        super(CanProcessComposite, self).__init__(**kwargs)
 
         self._processors = []
 

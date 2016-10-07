@@ -23,7 +23,8 @@ import importlib
 class Adapter(object):
     protocol = None
 
-    def __init__(self, device, arguments=None):
+    def __init__(self, device, arguments=None, **kwargs):
+        super(Adapter, self).__init__()
         self._device = device
 
     def start_server(self):

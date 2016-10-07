@@ -19,6 +19,8 @@
 
 from __future__ import print_function
 
+from six import b
+
 import asyncore
 import asynchat
 import socket
@@ -32,7 +34,7 @@ import re
 class StreamHandler(asynchat.async_chat):
     def __init__(self, sock, target):
         asynchat.async_chat.__init__(self, sock=sock)
-        self.set_terminator(target.in_terminator)
+        self.set_terminator(b(target.in_terminator))
         self.target = target
         self.buffer = []
 
@@ -40,7 +42,7 @@ class StreamHandler(asynchat.async_chat):
         self.buffer.append(data)
 
     def found_terminator(self):
-        request = ''.join(self.buffer)
+        request = b''.join(self.buffer)
         reply = None
         self.buffer = []
 
@@ -54,8 +56,11 @@ class StreamHandler(asynchat.async_chat):
                 except Exception as error:
                     reply = self.target.handle_error(request, error)
 
+                break
+
+
         if reply is not None:
-            self.push(str(reply) + self.target.out_terminator)
+            self.push(b(str(reply) + self.target.out_terminator))
 
 
 class StreamServer(asyncore.dispatcher):
@@ -81,7 +86,6 @@ class Cmd(object):
         self.pattern = regex
         self.re_args = re_args
 
-
 class StreamAdapter(Adapter):
     protocol = 'stream'
 
@@ -90,12 +94,14 @@ class StreamAdapter(Adapter):
 
     commands = None
 
-    def __init__(self, device, arguments=None):
-        super(StreamAdapter, self).__init__(device, arguments)
+    def __init__(self, device, arguments=None, **kwargs):
+        super(StreamAdapter, self).__init__(device, arguments, **kwargs)
         self._options = self._parseArguments(arguments)
 
-        self._create_bindings(self.commands)
         self._server = None
+        self._bindings = None
+
+        self._create_bindings(self.commands)
 
     def start_server(self):
         self._server = StreamServer(self._options.bind_address, self._options.port, self)
@@ -109,7 +115,7 @@ class StreamAdapter(Adapter):
 
     def _create_bindings(self, cmds):
         self._bindings = [
-            (re.compile(cmd.pattern, **cmd.re_args), cmd.method) for cmd in cmds]
+            (re.compile(b(cmd.pattern), **cmd.re_args), cmd.method) for cmd in cmds]
 
     def handle_error(self, request, error):
         pass
