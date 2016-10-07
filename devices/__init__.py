@@ -74,9 +74,8 @@ def import_device(device, setup=None, device_package='devices'):
         return device_type, parameters
     except (ImportError, AttributeError):
         try:
-            print(device_package, device)
             device_module = importlib.import_module('{}.{}'.format(device_package, device))
-            print(device_module)
+
             try:
                 setups = getattr(device_module, 'setups')
 
@@ -89,7 +88,6 @@ def import_device(device, setup=None, device_package='devices'):
                     for member_name in dir(device_module):
                         try:
                             member_object = getattr(device_module, member_name)
-                            print(member_object.__module__)
                             if issubclass(member_object,
                                           CanProcess) and not member_object.__module__ == 'core.processor':
                                 return member_object, dict()
