@@ -51,8 +51,8 @@ class StreamHandler(asynchat.async_chat):
                 func = getattr(self.target, funcname)
                 try:
                     reply = func(*groups)
-                except Exception:
-                    reply = self.target.handle_error(request)
+                except Exception as error:
+                    reply = self.target.handle_error(request, error)
 
         if reply is not None:
             self.push(str(reply) + self.target.out_terminator)
@@ -111,7 +111,7 @@ class StreamAdapter(Adapter):
         self._bindings = [
             (re.compile(cmd.pattern, **cmd.re_args), cmd.method) for cmd in cmds]
 
-    def handle_error(self, request):
+    def handle_error(self, request, error):
         pass
 
     def handle(self, cycle_delay=0.1):
