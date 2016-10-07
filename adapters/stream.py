@@ -46,20 +46,27 @@ class StreamHandler(asynchat.async_chat):
         reply = None
         self.buffer = []
 
-        for regex, funcname in self.target._bindings:
-            match = regex.match(request)
-            if match:
-                groups = match.groups()
-                func = getattr(self.target, funcname)
-                try:
-                    reply = func(*groups)
-                except Exception as error:
-                    reply = self.target.handle_error(request, error)
+        try:
+            match = None
+            for cmd in self.target.commands:
+                match = cmd.pattern.match(request)
+                if match:
+                    groups = match.groups()
+                    func = getattr(self.target, cmd.method)
 
-                break
+                    args = groups if not cmd.argument_mappings else [f(a) for f, a in
+                                                                     zip(cmd.argument_mappings, groups)]
+                    reply = cmd.return_mapping(func(*args))
+                    break
+
+            if match is None:
+                raise RuntimeError('None of the device\'s commands matched.')
+
+        except Exception as error:
+            reply = self.target.handle_error(request, error)
 
         if reply is not None:
-            self.push(b(str(reply) + self.target.out_terminator))
+            self.push(b(reply + self.target.out_terminator))
 
 
 class StreamServer(asyncore.dispatcher):
@@ -80,10 +87,39 @@ class StreamServer(asyncore.dispatcher):
 
 
 class Cmd(object):
-    def __init__(self, target_method, regex, **re_args):
+    def __init__(self, target_method, regex, regex_flags=0, argument_mappings=None,
+                 return_mapping=lambda x: None if x is None else str(x)):
+        """
+        This is a small helper class that makes it easy to define commands that are parsed
+        by StreamAdapter and forwarded to the correct methods on the Adapter.
+
+        Method arguments are indicated by groups in the regular expression. The number of
+        groups has to match the number of arguments of the method. The optional argument_mappings
+        can be an iterable of callables with one parameter of the same length as the
+        number of arguments of the method. The first parameter will be transformed using the
+        first function, the second using the second function and so on. This can be useful
+        to automatically transform strings provided by the adapter into a proper data type
+        such as int or float before they are passed to the method.
+
+        The return_mapping argument is similar, it should map the return value of the method
+        to a string. The default map function only does that when the supplied value
+        is not None.
+
+        :param target_method: Method to be called when regex matches.
+        :param regex: Regex to match for method call.
+        :param regex_flags: Flags to pass ot re.compile, default is 0.
+        :param argument_mappings: Iterable with mapping functions from string to some type.
+        :param return_mapping: Mapping function for return value of method.
+        """
         self.method = target_method
-        self.pattern = regex
-        self.re_args = re_args
+        self.pattern = re.compile(b(regex), regex_flags)
+
+        if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
+            raise RuntimeError(
+                'Expected {} argument mapping(s), got {}'.format(self.pattern.groups, len(argument_mappings)))
+
+        self.argument_mappings = argument_mappings
+        self.return_mapping = return_mapping
 
 
 class StreamAdapter(Adapter):
@@ -99,9 +135,8 @@ class StreamAdapter(Adapter):
         self._options = self._parseArguments(arguments)
 
         self._server = None
-        self._bindings = None
 
-        self._create_bindings(self.commands)
+        self._create_properties(self.commands)
 
     def start_server(self):
         self._server = StreamServer(self._options.bind_address, self._options.port, self)
@@ -113,9 +148,8 @@ class StreamAdapter(Adapter):
         parser.add_argument('-p', '--port', help='Port to listen for connections on', type=int, default=9999)
         return parser.parse_args(arguments)
 
-    def _create_bindings(self, cmds):
-        self._bindings = []
-
+    def _create_properties(self, cmds):
+        patterns = set()
         for cmd in cmds:
             method = cmd.method
 
@@ -125,8 +159,14 @@ class StreamAdapter(Adapter):
 
                 setattr(self, method, ForwardMethod(self._device, method))
 
-            self._bindings.append(
-                (re.compile(b(cmd.pattern), **cmd.re_args), cmd.method))
+            if cmd.pattern.pattern in patterns:
+                raise RuntimeError(
+                    'The regular expression \'{}\' is associated with multiple methods.'.format(cmd.pattern.pattern))
+
+            patterns.add(cmd.pattern.pattern)
+
+        if len(patterns) < len(cmds):
+            raise RuntimeError('Warning')
 
     def handle_error(self, request, error):
         pass
