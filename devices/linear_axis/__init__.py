@@ -23,9 +23,9 @@ class LinearAxisSimulation(CanProcessComposite, StreamAdapter):
     commands = {
         Cmd('get_status', '^S$'),
         Cmd('get_position', '^P$'),
-        Cmd('set_position', r'^P=([-+]?\d*\.\d+|\d+)'),
+        Cmd('set_position', r'^P=([-+]?[0-9]*\.?[0-9]+)'),
         Cmd('get_speed', '^V$'),
-        Cmd('set_speed', r'^V=([-+]?\d*\.\d+|\d+)'),
+        Cmd('set_speed', r'^V=([-+]?[0-9]*\.?[0-9]+.)'),
         Cmd('stop', '^H$')
     }
 
