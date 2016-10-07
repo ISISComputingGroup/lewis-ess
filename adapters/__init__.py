@@ -23,7 +23,7 @@ import importlib
 class Adapter(object):
     protocol = None
 
-    def __init__(self, device, arguments=None, **kwargs):
+    def __init__(self, device, arguments=None):
         super(Adapter, self).__init__()
         self._device = device
 
@@ -62,7 +62,6 @@ def get_available_adapters(device_name, device_package):
                 adapters[name] = member
     except ImportError:
         pass
-
 
     device_module = importlib.import_module('{}.{}'.format(device_package, device_name))
 

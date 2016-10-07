@@ -94,8 +94,8 @@ class StreamAdapter(Adapter):
 
     commands = None
 
-    def __init__(self, device, arguments=None, **kwargs):
-        super(StreamAdapter, self).__init__(device, arguments, **kwargs)
+    def __init__(self, device, arguments=None):
+        super(StreamAdapter, self).__init__(device, arguments)
         self._options = self._parseArguments(arguments)
 
         self._server = None

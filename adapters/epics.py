@@ -139,8 +139,8 @@ class EpicsAdapter(Adapter):
     protocol = 'epics'
     pvs = None
 
-    def __init__(self, device, arguments=None, **kwargs):
-        super(EpicsAdapter, self).__init__(device, arguments, **kwargs)
+    def __init__(self, device, arguments=None):
+        super(EpicsAdapter, self).__init__(device, arguments)
 
         self._options = self._parseArguments(arguments)
 
