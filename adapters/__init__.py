@@ -34,6 +34,13 @@ class Adapter(object):
         pass
 
 
+def is_adapter(obj):
+    try:
+        return issubclass(obj, Adapter) and not obj.__module__.startswith('adapters')
+    except TypeError:
+        return False
+
+
 def get_available_adapters(device_name, device_package):
     """
     This helper function returns a dictionary with name/type pairs. It imports the module
@@ -44,16 +51,26 @@ def get_available_adapters(device_name, device_package):
     :param device_package: Name of the package where devices are defined.
     :return: Dictionary of name/type pairs for available adapters for that device.
     """
-    adapter_module = importlib.import_module('{}.{}.{}'.format(device_package, device_name, 'adapters'))
-    module_members = {member: getattr(adapter_module, member) for member in dir(adapter_module)}
-
     adapters = dict()
-    for name, member in module_members.items():
-        try:
-            if issubclass(member, Adapter):
+
+    try:
+        adapter_module = importlib.import_module('{}.{}.{}'.format(device_package, device_name, 'adapters'))
+        module_members = {member: getattr(adapter_module, member) for member in dir(adapter_module)}
+
+        for name, member in module_members.items():
+            if is_adapter(member):
                 adapters[name] = member
-        except TypeError:
-            pass
+    except ImportError:
+        pass
+
+
+    device_module = importlib.import_module('{}.{}'.format(device_package, device_name))
+
+    for member in dir(device_module):
+        member_object = getattr(device_module, member)
+
+        if is_adapter(member_object):
+            adapters[member] = member_object
 
     return adapters
 
@@ -81,3 +98,60 @@ def import_adapter(device_name, protocol_name, device_package='devices'):
 
     raise RuntimeError(
         'No suitable adapter found for device \'{}\' and protocol \'{}\'.'.format(device_name, protocol_name))
+
+
+class ForwardProperty(object):
+    def __init__(self, target_member, property_name):
+        """
+        This is a small helper class that can be used to act as
+        a forwarding property to relay property setting/getting
+        to a member of the class it's installed on.
+
+        Typical use would be:
+
+            a = Foo()
+            a._b = Bar() # Bar has property baz
+
+            type(a).forward = ForwardProperty('_b', 'baz')
+
+            a.forward = 10 # equivalent to a._b.baz = 10
+
+        Note that this modifies the type Baz. Usage must thus be
+        limited to cases where this type modification is
+        acceptable.
+
+        :param target_member: Target member to forward to.
+        :param prop: Property of target to access.
+        """
+        self._target_member = target_member
+        self._prop = property_name
+
+    def __get__(self, instance, type=None):
+        """
+        This method forwards property read access on instance
+        to the member of instance that was selected in __init__.
+
+        :param instance: Instance of type.
+        :param type: Type.
+        :return: Attribute value of member property.
+        """
+        return getattr(getattr(instance, self._target_member), self._prop)
+
+    def __set__(self, instance, value):
+        """
+        This method forwards property write access on instance
+        to the member of instance that was selected in __init__.
+
+        :param instance: Instance of type.
+        :param value: Type.
+        """
+        setattr(getattr(instance, self._target_member), self._prop, value)
+
+
+class ForwardMethod(object):
+    def __init__(self, target, method):
+        self._target = target
+        self._method = method
+
+    def __call__(self, *args, **kwargs):
+        return getattr(self._target, self._method)(*args, **kwargs)

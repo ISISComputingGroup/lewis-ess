@@ -24,7 +24,7 @@ from argparse import ArgumentParser
 
 from pcaspy import Driver, SimpleServer
 
-from adapters import Adapter
+from adapters import Adapter, ForwardProperty
 from core.utils import seconds_since
 from datetime import datetime
 
@@ -83,54 +83,6 @@ class PropertyExposingDriver(Driver):
                     pass
 
         self.updatePVs()
-
-
-class ForwardProperty(object):
-    def __init__(self, target_member, property_name):
-        """
-        This is a small helper class that can be used to act as
-        a forwarding property to relay property setting/getting
-        to a member of the class it's installed on.
-
-        Typical use would be:
-
-            a = Foo()
-            a._b = Bar() # Bar has property baz
-
-            type(a).forward = ForwardProperty('_b', 'baz')
-
-            a.forward = 10 # equivalent to a._b.baz = 10
-
-        Note that this modifies the type Baz. Usage must thus be
-        limited to cases where this type modification is
-        acceptable.
-
-        :param target_member: Target member to forward to.
-        :param prop: Property of target to access.
-        """
-        self._target_member = target_member
-        self._prop = property_name
-
-    def __get__(self, instance, type=None):
-        """
-        This method forwards property read access on instance
-        to the member of instance that was selected in __init__.
-
-        :param instance: Instance of type.
-        :param type: Type.
-        :return: Attribute value of member property.
-        """
-        return getattr(getattr(instance, self._target_member), self._prop)
-
-    def __set__(self, instance, value):
-        """
-        This method forwards property write access on instance
-        to the member of instance that was selected in __init__.
-
-        :param instance: Instance of type.
-        :param value: Type.
-        """
-        setattr(getattr(instance, self._target_member), self._prop, value)
 
 
 class EpicsAdapter(Adapter):

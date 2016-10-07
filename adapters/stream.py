@@ -25,7 +25,7 @@ import asyncore
 import asynchat
 import socket
 
-from adapters import Adapter
+from adapters import Adapter, ForwardMethod
 from argparse import ArgumentParser
 
 import re
@@ -58,7 +58,6 @@ class StreamHandler(asynchat.async_chat):
 
                 break
 
-
         if reply is not None:
             self.push(b(str(reply) + self.target.out_terminator))
 
@@ -85,6 +84,7 @@ class Cmd(object):
         self.method = target_method
         self.pattern = regex
         self.re_args = re_args
+
 
 class StreamAdapter(Adapter):
     protocol = 'stream'
@@ -114,8 +114,19 @@ class StreamAdapter(Adapter):
         return parser.parse_args(arguments)
 
     def _create_bindings(self, cmds):
-        self._bindings = [
-            (re.compile(b(cmd.pattern), **cmd.re_args), cmd.method) for cmd in cmds]
+        self._bindings = []
+
+        for cmd in cmds:
+            method = cmd.method
+
+            if not method in dir(self):
+                if not method in dir(self._device):
+                    raise AttributeError('Can not find method \'' + method + '\' in device or adapter.')
+
+                setattr(self, method, ForwardMethod(self._device, method))
+
+            self._bindings.append(
+                (re.compile(b(cmd.pattern), **cmd.re_args), cmd.method))
 
     def handle_error(self, request, error):
         pass
