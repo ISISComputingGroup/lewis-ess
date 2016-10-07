@@ -27,13 +27,14 @@ import socket
 from adapters import Adapter
 from argparse import ArgumentParser
 
+import re
+
 
 class StreamHandler(asynchat.async_chat):
-    def __init__(self, sock, target, bindings):
+    def __init__(self, sock, target):
         asynchat.async_chat.__init__(self, sock=sock)
-        self.set_terminator(bindings['meta']['in_terminator'])
+        self.set_terminator(target.in_terminator)
         self.target = target
-        self.bindings = bindings
         self.buffer = []
 
     def collect_incoming_data(self, data):
@@ -44,26 +45,24 @@ class StreamHandler(asynchat.async_chat):
         reply = None
         self.buffer = []
 
-        for command, funcname in iteritems(self.bindings['commands']):
-            if request.startswith(command):
+        for regex, funcname in self.target._bindings:
+            match = regex.match(request)
+            if match:
+                groups = match.groups()
                 func = getattr(self.target, funcname)
-                args = request[len(command):]
                 try:
-                    reply = func(args) if args else func()
+                    reply = func(*groups)
                 except Exception:
-                    # We're ignoring this temporarily as per Linkam T95 spec
-                    # In the long term, we need to come up with a way for the device to decide how errors are handled.
-                    pass
+                    reply = self.target.handle_error(request)
 
         if reply is not None:
-            self.push(str(reply) + self.bindings['meta']['out_terminator'])
+            self.push(str(reply) + self.target.out_terminator)
 
 
 class StreamServer(asyncore.dispatcher):
-    def __init__(self, host, port, target, bindings):
+    def __init__(self, host, port, target):
         asyncore.dispatcher.__init__(self)
         self.target = target
-        self.bindings = bindings
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         self.bind((host, port))
@@ -74,17 +73,33 @@ class StreamServer(asyncore.dispatcher):
         if pair is not None:
             sock, addr = pair
             print("Client connect from %s" % repr(addr))
-            StreamHandler(sock, self.target, self.bindings)
+            StreamHandler(sock, self.target)
+
+
+class Cmd(object):
+    def __init__(self, target_method, regex, **re_args):
+        self.method = target_method
+        self.pattern = regex
+        self.re_args = re_args
 
 
 class StreamAdapter(Adapter):
     protocol = 'stream'
 
-    def __init__(self, device, arguments, bindings):
+    in_terminator = '\r'
+    out_terminator = '\r'
+
+    commands = None
+
+    def __init__(self, device, arguments):
         super(StreamAdapter, self).__init__(device, arguments)
         self._options = self._parseArguments(arguments)
 
-        self._server = StreamServer(self._options.bind_address, self._options.port, device, bindings)
+        self._create_bindings(self.commands)
+        self._server = None
+
+    def start_server(self):
+        self._server = StreamServer(self._options.bind_address, self._options.port, self)
 
     def _parseArguments(self, arguments):
         parser = ArgumentParser(description='Adapter to expose a device via TCP Stream')
@@ -92,6 +107,13 @@ class StreamAdapter(Adapter):
                             default='0.0.0.0')
         parser.add_argument('-p', '--port', help='Port to listen for connections on', type=int, default=9999)
         return parser.parse_args(arguments)
+
+    def _create_bindings(self, cmds):
+        self._bindings = [
+            (re.compile(cmd.pattern, **cmd.re_args), cmd.method) for cmd in cmds]
+
+    def handle_error(self, request):
+        pass
 
     def handle(self, cycle_delay=0.1):
         asyncore.loop(cycle_delay, count=1)
