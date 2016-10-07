@@ -47,29 +47,17 @@ arguments = parser.parse_args()
 # Import the device type and required initialisation parameters.
 device_type, parameters = import_device(arguments.device, arguments.setup, device_package='devices')
 
-# This is for cases where adapter and device are in one class.
-# It's not necessary to check for further adapters, but the adapter arguments must
-# be added to the initialisation parameters of the device.
-is_simple_device = issubclass(device_type, Adapter)
-
-if is_simple_device:
-    parameters['arguments'] = arguments.adapter_args
-
 if arguments.list_protocols:
-    if is_simple_device:
-        print(device_type.protocol)
-    else:
-        adapters = get_available_adapters(arguments.device, device_package='devices')
+    adapters = get_available_adapters(arguments.device, device_package='devices')
 
-        protocols = {adapter.protocol for adapter in adapters.values()}
+    protocols = {adapter.protocol for adapter in adapters.values()}
 
-        for p in protocols:
-            print(p)
+    for p in protocols:
+        print(p)
     exit()
 
 device = device_type(**parameters)
-adapter = device if is_simple_device else import_adapter(arguments.device, arguments.protocol)(device,
-                                                                                               arguments.adapter_args)
+adapter = import_adapter(arguments.device, arguments.protocol)(device, arguments.adapter_args)
 
 simulation = Simulation(
     device=device,
