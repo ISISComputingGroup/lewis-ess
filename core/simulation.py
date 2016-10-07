@@ -90,6 +90,8 @@ class Simulation(object):
         self._started = True
         self._stop_commanded = False
 
+        self._adapter.start_server()
+
         self._start_time = datetime.now()
 
         delta = 0.0

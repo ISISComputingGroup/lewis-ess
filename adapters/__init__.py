@@ -23,8 +23,11 @@ import importlib
 class Adapter(object):
     protocol = None
 
-    def __init__(self, device, arguments):
+    def __init__(self, device, arguments=None):
         self._device = device
+
+    def start_server(self):
+        pass
 
     def handle(self, cycle_delay=0.1):
         pass

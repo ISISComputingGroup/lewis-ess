@@ -187,13 +187,17 @@ class EpicsAdapter(Adapter):
     protocol = 'epics'
     pvs = None
 
-    def __init__(self, device, arguments):
+    def __init__(self, device, arguments=None):
         super(EpicsAdapter, self).__init__(device, arguments)
 
         self._options = self._parseArguments(arguments)
 
         self._create_properties(self.pvs.values())
 
+        self._server = None
+        self._driver = None
+
+    def start_server(self):
         self._server = SimpleServer()
         self._server.createPV(prefix=self._options.prefix,
                               pvdb={k: v.config for k, v in self.pvs.items()})

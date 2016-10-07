@@ -18,7 +18,6 @@
 # *********************************************************************
 
 from __future__ import print_function
-from six import iteritems
 
 import asyncore
 import asynchat
@@ -91,7 +90,7 @@ class StreamAdapter(Adapter):
 
     commands = None
 
-    def __init__(self, device, arguments):
+    def __init__(self, device, arguments=None):
         super(StreamAdapter, self).__init__(device, arguments)
         self._options = self._parseArguments(arguments)
 
