@@ -3,6 +3,20 @@ from collections import OrderedDict
 from adapters.stream import StreamAdapter, Cmd
 
 
+class LinearAxisSimulationStreamAdapter(StreamAdapter):
+    commands = {
+        Cmd('get_status', '^S$'),
+        Cmd('get_position', '^P$'),
+        Cmd('set_position', r'^P=([-+]?[0-9]*\.?[0-9]+)'),
+        Cmd('get_speed', '^V$'),
+        Cmd('set_speed', r'^V=([-+]?[0-9]*\.?[0-9]+.)'),
+        Cmd('stop', '^H$')
+    }
+
+    in_terminator = '\r\n'
+    out_terminator = '\r\n'
+
+
 class MovingState(State):
     def in_state(self, dt):
         sign = (self._context.target > self._context.position) - (self._context.target < self._context.position)
@@ -18,25 +32,9 @@ class MovingState(State):
         print(self._context.position)
 
 
-
-class LinearAxisSimulation(CanProcessComposite, StreamAdapter):
-    commands = {
-        Cmd('get_status', '^S$'),
-        Cmd('get_position', '^P$'),
-        Cmd('set_position', r'^P=([-+]?[0-9]*\.?[0-9]+)'),
-        Cmd('get_speed', '^V$'),
-        Cmd('set_speed', r'^V=([-+]?[0-9]*\.?[0-9]+.)'),
-        Cmd('stop', '^H$')
-    }
-
-    in_terminator = u'\r\n'
-    out_terminator = u'\r\n'
-
-    def __init__(self, arguments=None):
-        super(LinearAxisSimulation, self).__init__(device=self, arguments=arguments)
-
-        self._options = self._parseArguments(arguments)
-        self._device = self
+class LinearAxisSimulation(CanProcessComposite):
+    def __init__(self):
+        super(LinearAxisSimulation, self).__init__()
 
         self.position = 0.0
         self.target = 0.0
@@ -92,7 +90,8 @@ class LinearAxisSimulation(CanProcessComposite, StreamAdapter):
         new_speed = float(raw_speed)
 
         if not (self._speed_lolim <= new_speed <= self._speed_hilim):
-            raise ValueError('New position is not within limits ({}, {})'.format(self._speed_lolim, self._speed_hilim))
+            raise ValueError(
+                'New position is not within limits ({}, {})'.format(self._speed_lolim, self._speed_hilim))
 
         self.speed = new_speed
 
