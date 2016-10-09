@@ -18,7 +18,8 @@
 # *********************************************************************
 
 import unittest
-from devices.chopper import SimulatedChopper, DefaultIdleState
+from devices.chopper import SimulatedChopper
+from devices.chopper.states import DefaultIdleState
 
 
 class TestSimulatedChopper(unittest.TestCase):
