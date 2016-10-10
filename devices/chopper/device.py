@@ -75,7 +75,7 @@ class SimulatedBearings(CanProcess, MagneticBearings):
 
 
 class SimulatedChopper(StateMachineDevice):
-    _bearings = SimulatedBearings()
+    _bearings = None
 
     def _initialize_data(self):
         self.speed = 0.0
@@ -95,6 +95,9 @@ class SimulatedChopper(StateMachineDevice):
         self._phase_commanded = False
         self._shutdown_commanded = False
         self._initialized = False
+
+        if self._bearings is None:
+            self._bearings = SimulatedBearings()
 
     def _get_state_handlers(self):
         return {
