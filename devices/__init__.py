@@ -83,9 +83,15 @@ class StateMachineDevice(CanProcessComposite):
         self._initialize_data()
         self._override_data(override_initial_data)
 
+        state_handlers = self._get_final_state_handlers(override_states)
+        initial = self._get_initial_state() if override_initial_state is None else override_initial_state
+
+        if not initial in state_handlers:
+            raise RuntimeError('Initial state \'{}\' is not a valid state.'.format(initial))
+
         self._csm = StateMachine({
-            'initial': self._get_initial_state() if override_initial_state is None else override_initial_state,
-            'states': self._get_final_state_handlers(override_states),
+            'initial': initial,
+            'states': state_handlers,
             'transitions': self._get_final_transition_handlers(override_transitions)
         }, context=self)
 
