@@ -1,4 +1,5 @@
-from core import CanProcessComposite, StateMachine, State
+from core import State
+from devices import StateMachineDevice
 from collections import OrderedDict
 from adapters.stream import StreamAdapter, Cmd
 
@@ -32,10 +33,8 @@ class MovingState(State):
         print(self._context.position)
 
 
-class LinearAxisSimulation(CanProcessComposite):
-    def __init__(self):
-        super(LinearAxisSimulation, self).__init__()
-
+class LinearAxisSimulation(StateMachineDevice):
+    def _initialize_data(self):
         self.position = 0.0
         self.target = 0.0
         self._pos_lolim = -100.0
@@ -45,23 +44,20 @@ class LinearAxisSimulation(CanProcessComposite):
         self._speed_lolim = 0.1
         self._speed_hilim = 10.0
 
-        state_handlers = {
+    def _get_state_handlers(self):
+        return {
             'idle': State(),
             'moving': MovingState()
         }
 
-        transition_handlers = OrderedDict([
+    def _get_initial_state(self):
+        return 'idle'
+
+    def _get_transition_handlers(self):
+        return OrderedDict([
             (('idle', 'moving'), lambda: self.position != self.target),
             (('moving', 'idle'), lambda: self.position == self.target)
         ])
-
-        self._csm = StateMachine({
-            'initial': 'idle',
-            'states': state_handlers,
-            'transitions': transition_handlers
-        }, context=self)
-
-        self.addProcessor(self._csm)
 
     def get_status(self):
         return self._csm.state

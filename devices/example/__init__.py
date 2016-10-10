@@ -1,8 +1,7 @@
 from adapters.stream import StreamAdapter, Cmd
-from core.processor import CanProcess
+from devices import Device
 
-
-class VerySimpleDevice(CanProcess):
+class VerySimpleDevice(Device):
     param = 10
 
 
