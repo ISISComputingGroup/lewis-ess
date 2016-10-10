@@ -19,8 +19,9 @@
 
 from collections import OrderedDict
 
-from core import StateMachine, CanProcessComposite, CanProcess, Context
-from core.utils import dict_strict_update
+from core import StateMachine, CanProcess
+
+from devices import StateMachineDevice
 
 from .bearings import MagneticBearings
 from .states import *
@@ -73,7 +74,9 @@ class SimulatedBearings(CanProcess, MagneticBearings):
         return self._csm.state == 'resting' and not self._levitate
 
 
-class SimulatedChopper(CanProcessComposite, object):
+class SimulatedChopper(StateMachineDevice):
+    _bearings = SimulatedBearings()
+
     def _initialize_data(self):
         self.speed = 0.0
         self.target_speed = 0.0
@@ -93,27 +96,25 @@ class SimulatedChopper(CanProcessComposite, object):
         self._shutdown_commanded = False
         self._initialized = False
 
-    def __init__(self, override_states=None, override_transitions=None):
-        super(SimulatedChopper, self).__init__()
+    def _get_state_handlers(self):
+        return {
+            'init': DefaultInitState(),
+            'bearings': {'in_state': self._bearings},
+            'stopped': DefaultStoppedState(),
+            'stopping': DefaultStoppingState(),
+            'accelerating': DefaultAcceleratingState(),
+            'phase_locking': DefaultPhaseLockingState(),
+            'phase_locked': DefaultPhaseLockedState(),
+            'idle': DefaultIdleState(),
+            'parking': DefaultParkingState(),
+            'parked': DefaultParkedState(),
+        }
 
-        # Initialise internal state
-        self._initialize_data()
+    def _get_initial_state(self):
+        return 'init'
 
-        self._bearings = SimulatedBearings()
-
-        state_handlers = self._get_state_handlers(override_states)
-        transition_handlers = self._get_transition_handlers(override_transitions)
-
-        self._csm = StateMachine({
-            'initial': 'init',
-            'states': state_handlers,
-            'transitions': transition_handlers,
-        }, context=self)
-
-        self.addProcessor(self._csm)
-
-    def _get_transition_handlers(self, override_transitions):
-        transition_handlers = OrderedDict([
+    def _get_transition_handlers(self):
+        return OrderedDict([
             (('init', 'bearings'), lambda: self.initialized),
             (('bearings', 'stopped'), lambda: self._bearings.ready),
             (('bearings', 'init'), lambda: self._bearings.idle),
@@ -148,30 +149,6 @@ class SimulatedChopper(CanProcessComposite, object):
             (('stopping', 'stopped'), lambda: self.speed == 0.0),
             (('stopping', 'idle'), lambda: self._idle_commanded),
         ])
-
-        if override_transitions is not None:
-            dict_strict_update(transition_handlers, override_transitions)
-
-        return transition_handlers
-
-    def _get_state_handlers(self, override_states):
-        state_handlers = {
-            'init': DefaultInitState(),
-            'bearings': {'in_state': self._bearings},
-            'stopped': DefaultStoppedState(),
-            'stopping': DefaultStoppingState(),
-            'accelerating': DefaultAcceleratingState(),
-            'phase_locking': DefaultPhaseLockingState(),
-            'phase_locked': DefaultPhaseLockedState(),
-            'idle': DefaultIdleState(),
-            'parking': DefaultParkingState(),
-            'parked': DefaultParkedState(),
-        }
-
-        if override_states is not None:
-            dict_strict_update(state_handlers, override_states)
-
-        return state_handlers
 
     @property
     def state(self):
