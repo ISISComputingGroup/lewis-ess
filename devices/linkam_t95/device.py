@@ -20,13 +20,12 @@
 from __future__ import print_function
 from collections import OrderedDict
 
-from core import StateMachine, CanProcessComposite, Context
-from core.utils import dict_strict_update
+from devices import StateMachineDevice
 
 from .states import *
 
 
-class SimulatedLinkamT95(CanProcessComposite, object):
+class SimulatedLinkamT95(StateMachineDevice):
     def _initialize_data(self):
         """
         This method is called once on construction. After that, it may be
@@ -55,13 +54,8 @@ class SimulatedLinkamT95(CanProcessComposite, object):
         self.pump_manual_mode = False
         self.manual_target_speed = 0
 
-    def __init__(self, override_states=None, override_transitions=None):
-        super(SimulatedLinkamT95, self).__init__()
-
-        # Create instance of device context. This is shared with all the states of this device.
-        self._initialize_data()
-        # Define all existing states of the device; the handlers live in states.py
-        state_handlers = {
+    def _get_state_handlers(self):
+        return {
             'init': DefaultInitState(),
             'stopped': DefaultStoppedState(),
             'started': DefaultStartedState(),
@@ -70,12 +64,11 @@ class SimulatedLinkamT95(CanProcessComposite, object):
             'cool': DefaultCoolState(),
         }
 
-        # Allows setup to override state behaviour by passing it to this constructor
-        if override_states is not None:
-            dict_strict_update(state_handlers, override_states)
+    def _get_initial_state(self):
+        return 'init'
 
-        # Define all transitions and the conditions under which they are executed.
-        transition_handlers = OrderedDict([
+    def _get_transition_handlers(self):
+        return OrderedDict([
             (('init', 'stopped'), lambda: self.serial_command_mode),
 
             (('stopped', 'started'), lambda: self.start_commanded),
@@ -101,16 +94,3 @@ class SimulatedLinkamT95(CanProcessComposite, object):
              lambda: self.temperature == self.temperature_limit or self.hold_commanded),
             (('cool', 'stopped'), lambda: self.stop_commanded),
         ])
-
-        # Allows setup to override transition behaviour by passing it to this constructor
-        if override_transitions is not None:
-            dict_strict_update(transition_handlers, override_transitions)
-
-        self._csm = StateMachine({
-            'initial': 'init',
-            'states': state_handlers,
-            'transitions': transition_handlers,
-        }, context=self)
-
-        # Ensures the state machine object gets a 'process' heartbeat tick
-        self.addProcessor(self._csm)
