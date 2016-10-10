@@ -19,7 +19,73 @@
 
 from __future__ import absolute_import
 import importlib
-from core import CanProcess
+from core import CanProcess, CanProcessComposite, StateMachine
+from core.utils import dict_strict_update
+
+
+class Device(CanProcess):
+    """
+    This class exists mainly for consistency. It is meant to implement very simple devices that
+    do not require a state machine for their simulation. For such devices, all that is required
+    is subclassing from `Device` and possibly implementing `doProcess`, but this is optional.
+
+    StateMachineDevice offers more functionality and is more likely to be useful for implementing
+    simulations of real devices.
+    """
+
+
+class StateMachineDevice(CanProcessComposite):
+    def __init__(self, override_states=None, override_transitions=None, override_initial_state=None,
+                 override_initial_data=None):
+        super(StateMachineDevice, self).__init__()
+
+        self._initialize_data()
+        self._override_data(override_initial_data)
+
+        self._csm = StateMachine({
+            'initial': self._get_initial_state() if override_initial_state is None else override_initial_state,
+            'states': self._get_final_state_handlers(override_states),
+            'transitions': self._get_final_transition_handlers(override_transitions)
+        }, context=self)
+
+        self.addProcessor(self._csm)
+
+    def _get_state_handlers(self):
+        raise NotImplementedError('_get_state_handlers must be implemented in a StateMachineDevice.')
+
+    def _get_initial_state(self):
+        raise NotImplementedError('_get_initial_state must be implemented in a StateMachineDevice.')
+
+    def _get_transition_handlers(self):
+        raise NotImplementedError('_get_transition_handlers must be implemented in a StateMachineDevice.')
+
+    def _initialize_data(self):
+        pass
+
+    def _get_final_state_handlers(self, overrides):
+        states = self._get_state_handlers()
+
+        if overrides is not None:
+            dict_strict_update(states, overrides)
+
+        return states
+
+    def _get_final_transition_handlers(self, overrides):
+        transitions = self._get_transition_handlers()
+
+        if overrides is not None:
+            dict_strict_update(transitions, overrides)
+
+        return transitions
+
+    def _override_data(self, overrides):
+        if overrides is not None:
+            for name, val in overrides.items():
+                if not name in dir(self):
+                    raise AttributeError('Can not override non-existing attribute \'{}\' of class \'{}\'.'.format(
+                        name, type(self).__name__))
+
+                setattr(self, name, val)
 
 
 def import_device(device, setup=None, device_package='devices'):
