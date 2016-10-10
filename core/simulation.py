@@ -90,6 +90,8 @@ class Simulation(object):
         self._started = True
         self._stop_commanded = False
 
+        self._adapter.start_server()
+
         self._start_time = datetime.now()
 
         delta = 0.0
@@ -131,7 +133,7 @@ class Simulation(object):
         :param delta: Time delta passed to simulation.
         """
         if self._device_connected:
-            self._adapter.process(self._cycle_delay)
+            self._adapter.handle(self._cycle_delay)
         else:
             sleep(self._cycle_delay)
 

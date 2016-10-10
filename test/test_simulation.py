@@ -106,7 +106,7 @@ class TestSimulation(unittest.TestCase):
 
         env._process_cycle(0.5)
         adapter_mock.assert_has_calls(
-            [call.process(env.cycle_delay)])
+            [call.handle(env.cycle_delay)])
         device_mock.assert_has_calls(
             [call.process(0.5)]
         )
@@ -125,7 +125,7 @@ class TestSimulation(unittest.TestCase):
         env._process_cycle(0.5)
 
         adapter_mock.assert_has_calls(
-            [call.process(env.cycle_delay)])
+            [call.handle(env.cycle_delay)])
         device_mock.assert_has_calls(
             [call.process(1.0)])
 
@@ -214,7 +214,7 @@ class TestSimulation(unittest.TestCase):
 
         # connected device calls adapter_mock
         env._process_cycle(0.5)
-        adapter_mock.assert_has_calls([call.process(env.cycle_delay)])
+        adapter_mock.assert_has_calls([call.handle(env.cycle_delay)])
         sleep_mock.assert_not_called()
 
         adapter_mock.reset_mock()
@@ -224,7 +224,7 @@ class TestSimulation(unittest.TestCase):
         env.disconnect_device()
         env._process_cycle(0.5)
 
-        sleep_mock.assert_has_calls([call.process(env.cycle_delay)])
+        sleep_mock.assert_has_calls([call.handle(env.cycle_delay)])
         adapter_mock.assert_not_called()
 
         adapter_mock.reset_mock()
@@ -233,5 +233,5 @@ class TestSimulation(unittest.TestCase):
         # re-connecting returns to previous behavior
         env.connect_device()
         env._process_cycle(0.5)
-        adapter_mock.assert_has_calls([call.process(env.cycle_delay)])
+        adapter_mock.assert_has_calls([call.handle(env.cycle_delay)])
         sleep_mock.assert_not_called()

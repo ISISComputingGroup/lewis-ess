@@ -22,7 +22,7 @@ from core import State
 
 class DefaultInitState(State):
     def on_entry(self, dt):
-        self._context.initialize()
+      self._context._initialize_data()
 
 
 class DefaultParkingState(State):
@@ -43,7 +43,7 @@ class DefaultParkingState(State):
             self._context.parking_position = self._context.target_parking_position
 
     def on_entry(self, dt):
-        self._context.park_commanded = False
+        self._context._park_commanded = False
 
 
 class DefaultParkedState(State):
@@ -62,13 +62,13 @@ class DefaultStoppingState(State):
             self._context.speed = 0.0
 
     def on_entry(self, dt):
-        self._context.stop_commanded = False
+        self._context._stop_commanded = False
 
 
 class DefaultStoppedState(State):
     def on_entry(self, dt):
-        if self._context.automatic_park_enabled:
-            self._context.park_commanded = True
+        if self._context.auto_park:
+            self._context._park_commanded = True
 
 
 class DefaultIdleState(State):
@@ -83,7 +83,7 @@ class DefaultIdleState(State):
             self._context.speed = 0.0
 
     def on_entry(self, dt):
-        self._context.idle_commanded = False
+        self._context._idle_commanded = False
 
 
 class DefaultAcceleratingState(State):
@@ -104,7 +104,7 @@ class DefaultAcceleratingState(State):
             self._context.speed = self._context.target_speed
 
     def on_entry(self, dt):
-        self._context.start_commanded = False
+        self._context._start_commanded = False
 
 
 class DefaultPhaseLockingState(State):
@@ -126,7 +126,7 @@ class DefaultPhaseLockingState(State):
             self._context.phase = self._context.target_phase
 
     def on_entry(self, dt):
-        self._context.phase_commanded = False
+        self._context._phase_commanded = False
 
 
 class DefaultPhaseLockedState(State):

@@ -35,6 +35,7 @@ class CanProcess(object):
 
     def __init__(self):
         super(CanProcess, self).__init__()
+        pass
 
     def __call__(self, dt=0):
         self.process(dt)

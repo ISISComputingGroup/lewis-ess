@@ -18,4 +18,3 @@
 # *********************************************************************
 
 from .device import SimulatedLinkamT95
-from .defaults import *

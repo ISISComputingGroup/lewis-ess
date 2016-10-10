@@ -19,11 +19,12 @@
 
 from collections import OrderedDict
 
-from core import StateMachine, CanProcessComposite, CanProcess, Context
-from core.utils import dict_strict_update
+from core import StateMachine, CanProcess
+
+from devices import StateMachineDevice
 
 from .bearings import MagneticBearings
-from .defaults import *
+from .states import *
 
 
 class SimulatedBearings(CanProcess, MagneticBearings):
@@ -73,8 +74,10 @@ class SimulatedBearings(CanProcess, MagneticBearings):
         return self._csm.state == 'resting' and not self._levitate
 
 
-class ChopperContext(Context):
-    def initialize(self):
+class SimulatedChopper(StateMachineDevice):
+    _bearings = None
+
+    def _initialize_data(self):
         self.speed = 0.0
         self.target_speed = 0.0
 
@@ -83,29 +86,21 @@ class ChopperContext(Context):
 
         self.parking_position = 0.0
         self.target_parking_position = 0.0
+        self.auto_park = False
 
-        self.automatic_park_enabled = False
-        self.park_commanded = False
-        self.stop_commanded = False
-        self.start_commanded = False
-        self.idle_commanded = False
-        self.phase_commanded = False
-        self.shutdown_commanded = False
-        self.initialized = False
+        self._park_commanded = False
+        self._stop_commanded = False
+        self._start_commanded = False
+        self._idle_commanded = False
+        self._phase_commanded = False
+        self._shutdown_commanded = False
+        self._initialized = False
 
+        if self._bearings is None:
+            self._bearings = SimulatedBearings()
 
-class SimulatedChopper(CanProcessComposite, object):
-    def print_status(self):
-        pass
-
-    def __init__(self, override_states=None, override_transitions=None):
-        super(SimulatedChopper, self).__init__()
-
-        self._bearings = SimulatedBearings()
-
-        self._context = ChopperContext()
-
-        state_handlers = {
+    def _get_state_handlers(self):
+        return {
             'init': DefaultInitState(),
             'bearings': {'in_state': self._bearings},
             'stopped': DefaultStoppedState(),
@@ -118,55 +113,45 @@ class SimulatedChopper(CanProcessComposite, object):
             'parked': DefaultParkedState(),
         }
 
-        if override_states is not None:
-            dict_strict_update(state_handlers, override_states)
+    def _get_initial_state(self):
+        return 'init'
 
-        transition_handlers = OrderedDict([
-            (('init', 'bearings'), lambda: self._context.initialized),
+    def _get_transition_handlers(self):
+        return OrderedDict([
+            (('init', 'bearings'), lambda: self.initialized),
             (('bearings', 'stopped'), lambda: self._bearings.ready),
             (('bearings', 'init'), lambda: self._bearings.idle),
 
-            (('parking', 'parked'), lambda: self._context.parking_position == self._context.target_parking_position),
-            (('parking', 'stopping'), lambda: self._context.stop_commanded),
+            (('parking', 'parked'), lambda: self.parking_position == self.target_parking_position),
+            (('parking', 'stopping'), lambda: self._stop_commanded),
 
-            (('parked', 'stopping'), lambda: self._context.stop_commanded),
-            (('parked', 'accelerating'), lambda: self._context.start_commanded),
+            (('parked', 'stopping'), lambda: self._stop_commanded),
+            (('parked', 'accelerating'), lambda: self._start_commanded),
 
-            (('stopped', 'accelerating'), lambda: self._context.start_commanded),
-            (('stopped', 'parking'), lambda: self._context.park_commanded),
-            (('stopped', 'bearings'), lambda: self._context.shutdown_commanded),
+            (('stopped', 'accelerating'), lambda: self._start_commanded),
+            (('stopped', 'parking'), lambda: self._park_commanded),
+            (('stopped', 'bearings'), lambda: self._shutdown_commanded),
 
-            (('accelerating', 'stopping'), lambda: self._context.stop_commanded),
-            (('accelerating', 'idle'), lambda: self._context.idle_commanded),
-            (('accelerating', 'phase_locking'), lambda: self._context.speed == self._context.target_speed),
+            (('accelerating', 'stopping'), lambda: self._stop_commanded),
+            (('accelerating', 'idle'), lambda: self._idle_commanded),
+            (('accelerating', 'phase_locking'), lambda: self.speed == self.target_speed),
 
-            (('idle', 'accelerating'), lambda: self._context.start_commanded),
-            (('idle', 'stopping'), lambda: self._context.stop_commanded),
+            (('idle', 'accelerating'), lambda: self._start_commanded),
+            (('idle', 'stopping'), lambda: self._stop_commanded),
 
-            (('phase_locking', 'stopping'), lambda: self._context.stop_commanded),
-            (('phase_locking', 'phase_locked'), lambda: self._context.phase == self._context.target_phase),
-            (('phase_locking', 'idle'), lambda: self._context.idle_commanded),
+            (('phase_locking', 'stopping'), lambda: self._stop_commanded),
+            (('phase_locking', 'phase_locked'), lambda: self.phase == self.target_phase),
+            (('phase_locking', 'idle'), lambda: self._idle_commanded),
 
-            (('phase_locked', 'accelerating'), lambda: self._context.start_commanded),
-            (('phase_locked', 'phase_locking'), lambda: self._context.phase_commanded),
-            (('phase_locked', 'stopping'), lambda: self._context.stop_commanded),
-            (('phase_locked', 'idle'), lambda: self._context.idle_commanded),
+            (('phase_locked', 'accelerating'), lambda: self._start_commanded),
+            (('phase_locked', 'phase_locking'), lambda: self._phase_commanded),
+            (('phase_locked', 'stopping'), lambda: self._stop_commanded),
+            (('phase_locked', 'idle'), lambda: self._idle_commanded),
 
-            (('stopping', 'accelerating'), lambda: self._context.start_commanded),
-            (('stopping', 'stopped'), lambda: self._context.speed == 0.0),
-            (('stopping', 'idle'), lambda: self._context.idle_commanded),
+            (('stopping', 'accelerating'), lambda: self._start_commanded),
+            (('stopping', 'stopped'), lambda: self.speed == 0.0),
+            (('stopping', 'idle'), lambda: self._idle_commanded),
         ])
-
-        if override_transitions is not None:
-            dict_strict_update(transition_handlers, override_transitions)
-
-        self._csm = StateMachine({
-            'initial': 'init',
-            'states': state_handlers,
-            'transitions': transition_handlers,
-        }, context=self._context)
-
-        self.addProcessor(self._csm)
 
     @property
     def state(self):
@@ -174,47 +159,37 @@ class SimulatedChopper(CanProcessComposite, object):
 
     @property
     def initialized(self):
-        return self._context.initialized
+        return self._initialized
 
     def initialize(self):
         if self._csm.can('bearings') and not self.initialized:
-            self._context.initialized = True
+            self._initialized = True
             self._bearings.engage()
 
     def deinitialize(self):
         if self._csm.can('bearings') and self.initialized:
-            self._context.shutdown_commanded = True
+            self._shutdown_commanded = True
             self._bearings.disengage()
 
     def park(self):
         if self._csm.can('parking'):
-            self._context.park_commanded = True
+            self._park_commanded = True
 
     @property
     def parked(self):
         return self._csm.state == 'parked'
 
-    @property
-    def autoPark(self):
-        return self._context.automatic_park_enabled
-
-    @autoPark.setter
-    def autoPark(self, enable):
-        self._context.automatic_park_enabled = bool(enable)
-
-    # Stopping stuff
     def stop(self):
         if self._csm.can('stopping'):
-            self._context.stop_commanded = True
+            self._stop_commanded = True
 
     @property
     def stopped(self):
         return self._csm.state == 'stopped'
 
-    # Accelerating stuff
     def start(self):
-        if self._csm.can('accelerating') and self._context.target_speed > 0.0:
-            self._context.start_commanded = True
+        if self._csm.can('accelerating') and self.target_speed > 0.0:
+            self._start_commanded = True
         else:
             self.stop()
 
@@ -222,57 +197,18 @@ class SimulatedChopper(CanProcessComposite, object):
     def started(self):
         return self._csm.state == 'accelerating'
 
-    # Idle stuff
     def unlock(self):
         if self._csm.can('idle'):
-            self._context.idle_commanded = True
+            self._idle_commanded = True
 
     @property
     def idle(self):
         return self._csm.state == 'idle'
 
-    # Phase locking stuff
-    def lockPhase(self):
+    def lock_phase(self):
         if self._csm.can('phase_locking'):
-            self._context.phase_commanded = True
+            self._phase_commanded = True
 
     @property
-    def phaseLocked(self):
+    def phase_locked(self):
         return self._csm.state == 'phase_locked'
-
-    # Setpoints etc.
-    @property
-    def speed(self):
-        return self._context.speed
-
-    @property
-    def targetSpeed(self):
-        return self._context.target_speed
-
-    @targetSpeed.setter
-    def targetSpeed(self, new_target_speed):
-        self._context.target_speed = new_target_speed
-
-    @property
-    def phase(self):
-        return self._context.phase
-
-    @property
-    def targetPhase(self):
-        return self._context.target_phase
-
-    @targetPhase.setter
-    def targetPhase(self, new_target_phase):
-        self._context.target_phase = new_target_phase
-
-    @property
-    def parkingPosition(self):
-        return self._context.parking_position
-
-    @property
-    def targetParkingPosition(self):
-        return self._context.target_parking_position
-
-    @targetParkingPosition.setter
-    def targetParkingPosition(self, new_target_parking_position):
-        self._context.target_parking_position = new_target_parking_position
