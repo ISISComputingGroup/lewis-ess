@@ -28,8 +28,7 @@ from adapters import import_adapter, get_available_adapters, Adapter
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
-parser.add_argument('-d', '--device', help='Name of the device to simulate.', default='chopper',
-                    choices=get_available_submodules('devices'))
+
 parser.add_argument('-r', '--rpc-host', help='HOST:PORT format string for exposing the device via JSON-RPC over ZMQ.')
 parser.add_argument('-s', '--setup', help='Name of the setup to load.', default=None)
 parser.add_argument('-l', '--list-protocols', help='List available protocols for selected device.', action='store_true')
@@ -40,6 +39,8 @@ parser.add_argument('-c', '--cycle-delay',
 parser.add_argument('-e', '--speed', type=float, default=1.0,
                     help='Simulation speed. The actually elapsed time '
                          'between two cycles is multiplied with this speed to determine the simulated time.')
+parser.add_argument('device', help='Name of the device to simulate.', default='chopper',
+                    choices=get_available_submodules('devices'))
 parser.add_argument('adapter_args', nargs='*', help='Arguments for the adapter.')
 
 arguments = parser.parse_args()
