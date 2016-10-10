@@ -37,6 +37,47 @@ class Device(CanProcess):
 class StateMachineDevice(CanProcessComposite):
     def __init__(self, override_states=None, override_transitions=None, override_initial_state=None,
                  override_initial_data=None):
+        """
+        This class is intended to be sub-classed to implement devices using a finite state machine
+        internally.
+
+        Implementing such a device is straightforward, there are three methods that *must* be overriden:
+
+            `_get_state_handlers`
+            `_get_initial_state`
+            `_get_transition_handlers`
+
+        The first method is supposed to return a dictionary with state handlers for each state
+        of the state machine, the second method must return the name of the initial state.
+        The third method must return a dict-like object (often an OrderedDict from collections)
+        that defines the conditions for transitions between the states of the state machine.
+
+        They are implemented as methods and not as plain class member variables, because often
+        they use the `self`-variable, which does not exist at the class level.
+
+        From these three methods, a `StateMachine`-instance is constructed, it's available as
+        the device's `_csm`-member. CSM is short for "cycle-based state machine".
+
+        Most device implementation will also want to override this method:
+
+            `_initialize_data`
+
+        This method should initialise device state variables (such as temperature, speed, etc.). Having
+        this in a separate method from `__init__` has the advantage that it can be used to reset those
+        variables at a later stage, without having to write the same code again.
+
+        Following this scheme, inheriting from `StateMachineDevice` also provides the possibility
+        for users of the class to override the states, the transitions, the initial state and
+        even the data. For states, transitions and data, dicts need to be passed to the constructor,
+        for the initial state that should be a string.
+
+        All these overrides can be used to define device setups to describe certain scenarios more easily.
+
+        :param override_states: Dict with one entry per state. Only states defined in the state machine are allowed.
+        :param override_transitions: Dict with (state, state) tuples as keys and callables as values.
+        :param override_initial_state: The initial state.
+        :param override_initial_data: A dict that contains data members that should be overwritten on construction.
+        """
         super(StateMachineDevice, self).__init__()
 
         self._initialize_data()
@@ -51,15 +92,37 @@ class StateMachineDevice(CanProcessComposite):
         self.addProcessor(self._csm)
 
     def _get_state_handlers(self):
+        """
+        Implement this method to return a dict-like object with state handlers (see core.statemachine.State) for each
+        state of the state machine. The default implementation raises a NotImplementedError.
+
+        :return: A dict-like object containing named state handlers.
+        """
         raise NotImplementedError('_get_state_handlers must be implemented in a StateMachineDevice.')
 
     def _get_initial_state(self):
+        """
+        Implement this method to return the initial state of the internal state machine. The default implementation
+        raises a NotImplementedError.
+
+        :return: The initial state of the state machine.
+        """
         raise NotImplementedError('_get_initial_state must be implemented in a StateMachineDevice.')
 
     def _get_transition_handlers(self):
+        """
+        Implement this method to return transition handlers for the internal state machine. The keys should be
+        (state, state)-tuples and the values functions that return true if the transition should be triggered.
+
+        :return: A dict-like object containing transition handlers.
+        """
         raise NotImplementedError('_get_transition_handlers must be implemented in a StateMachineDevice.')
 
     def _initialize_data(self):
+        """
+        Implement this method to initialize data members of the device, such as temperature, speed and others. It gets
+        called first in the __init__-method.
+        """
         pass
 
     def _get_final_state_handlers(self, overrides):
@@ -79,6 +142,11 @@ class StateMachineDevice(CanProcessComposite):
         return transitions
 
     def _override_data(self, overrides):
+        """
+        This method overrides data members of the class, but does not allow for adding new members.
+
+        :param overrides: Dict with data overrides.
+        """
         if overrides is not None:
             for name, val in overrides.items():
                 if not name in dir(self):
