@@ -21,6 +21,9 @@ class CyclingStreamAdapter(StreamAdapter):
 def positive_speed(speed):
     return max(speed, 0)
 
+def str2bool(v):
+  return v.lower() in ("yes", "true", "t", "1")
+
 class Stopped(State):
 
     def on_entry(self, dt):
@@ -107,11 +110,11 @@ class Cycling(StateMachineDevice):
     def _get_transition_handlers(self):
         return OrderedDict([
             (('stopped', 'pedalling'), lambda: self.pedalling),
-            (('pedalling', 'coasting'), lambda: True),
+            (('pedalling', 'coasting'), lambda: not self.pedalling),
             (('pedalling', 'up'), lambda : self.change_up),
             (('pedalling', 'down'), lambda : self.change_down),
             (('coasting', 'pedalling'), lambda: self.pedalling),
-            (('coasting', 'stopped'), lambda : self.speed == 0),
+            (('coasting', 'stopped'), lambda : self._speed == 0),
             (('up', 'pedalling'), lambda: True),
             (('down', 'pedalling'), lambda: True),
             (('pedalling', 'break'), lambda: self.breaking),
@@ -131,10 +134,10 @@ class Cycling(StateMachineDevice):
         return self._gear_ratio
 
     def set_pedalling(self, pedalling):
-        self.pedalling = pedalling
+        self.pedalling = str2bool(pedalling)
 
     def set_breaking(self, breaking):
-        self.breaking = breaking
+        self.breaking = str2bool(breaking)
 
 
     def set_up(self):
