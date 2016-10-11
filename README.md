@@ -89,19 +89,19 @@ $ docker run -it [docker args] dmscid/plankton [plankton args] [-- [adapter args
 For example, to simulate a Linkam T95 **d**evice and expose it via the TCP Stream **p**rotocol:
 
 ```
-$ docker run -it dmscid/plankton -d linkam_t95 -p stream
+$ docker run -it dmscid/plankton -p stream linkam_t95
 ```
 
 To change the rate at which simulation cycles are calculated, increase or decrease the cycle delay, via the `-c` or `--cycle-delay` option. Smaller values mean more cycles per second, 0 means greates possible speed.
 
 ```
-$ docker run -it dmscid/plankton -d linkam_t95 -p stream -c 0.05
+$ docker run -it dmscid/plankton -p stream -c 0.05 linkam_t95
 ```
 
 For long running devices it might be useful to speed up the simulation using the `-e` or `--speed` parameter, which is a factor by which actual time is multiplied to determine the simulated time in each simulation cycle. To run a simulation 10 times faster:
 
 ```
-$ docker run -it dmscid/plankton -d linkam_t95 -p stream -e 10
+$ docker run -it dmscid/plankton -p stream -e 10 linkam_t95
 ```
 
 Details about parameters for the various adapters, and differences between OSes are covered in the "Adapter Specifics" sections.
@@ -150,7 +150,7 @@ $ python plankton.py [plankton args] [-- [adapter args]]
 You can then run Plankton as follows (from within the plankton directory):
 
 ```
-$ python plankton.py -d chopper -p epics
+$ python plankton.py -p epics chopper
 ```
 
 Details about parameters for the various adapters, and differences between OSes are covered in the "Adapter Specifics" sections.
@@ -165,8 +165,8 @@ The EPICS adapter takes only one optional argument:
 Arguments meant for the adapter should be separated from general Plankton arguments by a free-standing `--`. For example:
 
 ```
-$ docker run -itd dmscid/plankton -d chopper -p epics -- -p SIM1:
-$ python plankton.py -d chopper -p epics -- --prefix SIM2:
+$ docker run -itd dmscid/plankton -p epics chopper -- -p SIM1:
+$ python plankton.py -p epics chopper -- --prefix SIM2:
 ```
 
 When using the EPICS adapter within a docker container, the PV will be served on the docker0 network (172.17.0.0/16).
@@ -192,14 +192,14 @@ The TCP Stream adapter has the following optional arguments:
 Arguments meant for the adapter should be separated from general Plankton arguments by a free-standing `--`. For example:
 
 ```
-$ docker run -itd dmscid/plankton -d linkam_t95 -p stream -- -p 1234
-$ python plankton.py -d linkam_t95 -p stream -- --bind-address localhost
+$ docker run -itd dmscid/plankton -p stream linkam_t95 -- -p 1234
+$ python plankton.py -p stream linkam_t95 -- --bind-address localhost
 ```
 
 When using Plankton via Docker on Windows and OSX, the container will be running inside a virtual machine, and so the port it is listening on will be on a network inside the VM. To connect to it from outside of the VM, an additional argument must be passed to Docker to forward the port:
 
 ```
-$ docker run -it -p 1234:4321 dmscid/plankton -d linkam_t95 -p stream -- -p 4321
+$ docker run -it -p 1234:4321 dmscid/plankton -p stream linkam_t95 -- -p 4321
 $ telnet 192.168.99.100 1234
 ```
 
@@ -212,7 +212,7 @@ This `-p` argument links port 4321 on the container to port 1234 on the VM netwo
 Besides the device specific protocols, the device can be made accessible from the outside via JSON-RPC over ZMQ. This can be achieved by passing the `-r` option with a `host:port` string to the simulation:
 
 ```
-$ python plankton.py -r 127.0.0.1:10000 -d chopper -- -p SIM:
+$ python plankton.py -r 127.0.0.1:10000 chopper -- -p SIM:
 ```
 
 Now the device can be controlled via the `control.py`-script in a different terminal window. The service can be queried to show the available objects by not supplying an object name:
