@@ -215,16 +215,16 @@ Besides the device specific protocols, the device can be made accessible from th
 $ python plankton.py -r 127.0.0.1:10000 chopper -- -p SIM:
 ```
 
-Now the device can be controlled via the `control.py`-script in a different terminal window. The service can be queried to show the available objects using the `-l` or `--list-objects` flag:
+Now the device can be controlled via the `control.py`-script in a different terminal window. The service can be queried to show the available objects by not supplying an object name:
 
 ```
-$ python control.py -r 127.0.0.1:10000 --list-objects
+$ python control.py -r 127.0.0.1:10000
 ```
 
-The `-r` (or `--rpc-host`) option defaults to the value shown here, so it will be omitted in the following examples. To get information on the API of an object, the `-a` or `--show-api` option can be used in conjunction with a device name obtained from the previous command:
+The `-r` (or `--rpc-host`) option defaults to the value shown here, so it will be omitted in the following examples. To get information on the API of an object, supplying an object name without a property or method will list the object's API:
 
 ```
-$ python control.py -a device
+$ python control.py device
 ```
 
 This will output a list of properties and methods which is available for remote access. This may not comprise the full interface of the object depending on the server side configuration. Obtaining the value of a property is done like this:
