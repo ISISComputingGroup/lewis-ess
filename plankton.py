@@ -39,7 +39,7 @@ parser.add_argument('-c', '--cycle-delay',
 parser.add_argument('-e', '--speed', type=float, default=1.0,
                     help='Simulation speed. The actually elapsed time '
                          'between two cycles is multiplied with this speed to determine the simulated time.')
-parser.add_argument('device', help='Name of the device to simulate.', default='chopper',
+parser.add_argument('device', help='Mandatory name of the device to simulate.', default='chopper',
                     choices=get_available_submodules('devices'))
 parser.add_argument('adapter_args', nargs='*', help='Arguments for the adapter.')
 
