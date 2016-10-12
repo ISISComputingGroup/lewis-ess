@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from core import State
+from core import State, approaches
 
 
 class DefaultInitState(State):
@@ -39,9 +39,8 @@ class DefaultStartedState(State):
 class DefaultHeatState(State):
     def in_state(self, dt):
         # Approach target temperature at set temperature rate
-        self._context.temperature += self._context.temperature_rate * (dt / 60.0)
-        if self._context.temperature > self._context.temperature_limit:
-            self._context.temperature = self._context.temperature_limit
+        self._context.temperature = approaches.linear(self._context.temperature, self._context.temperature_limit,
+                                                      self._context.temperature_rate / 60.0, dt)
 
 
 class DefaultHoldState(State):
@@ -67,9 +66,8 @@ class DefaultCoolState(State):
 
         # Approach target temperature at set temperature rate
         # TODO: Should be based on pump speed somehow
-        self._context.temperature -= self._context.temperature_rate * (dt / 60.0)
-        if self._context.temperature < self._context.temperature_limit:
-            self._context.temperature = self._context.temperature_limit
+        self._context.temperature = approaches.linear(self._context.temperature, self._context.temperature_limit,
+                                                      self._context.temperature_rate / 60.0, dt)
 
     def on_exit(self, dt):
         # If we exit the cooling state, the cooling pump should no longer run
