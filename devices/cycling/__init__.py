@@ -21,52 +21,50 @@ class CyclingStreamAdapter(StreamAdapter):
 def positive_speed(speed):
     return max(speed, 0)
 
-def str2bool(v):
-  return v.lower() in ("yes", "true", "t", "1")
-
-class Stopped(State):
-
-    def on_entry(self, dt):
-        print('stopped')
+def str2bool(value):
+    if isinstance(value, bool):
+        return value
+    else:
+        return value.lower() == "true"
 
 class Pedalling(State):
 
+    def __init__(self):
+        super(Pedalling, self).__init__()
+        self._acceleration = 0.5/1.0 # 0.5m/s/s
+
     def on_entry(self, dt):
-        print('pedalling')
         self._context.breaking = False
 
     def in_state(self, dt):
         # TODO this could get quite complex as the gear ratio, gradient etc all play a part.
-        new_speed = self._context._speed + (dt/1000 * self._context._gear_ratio)
+        new_speed = self._context._speed + (dt * self._acceleration * self._context._gear_ratio)
         self._context._speed = positive_speed(new_speed)
 
-    def on_exit(self, dt):
-        print('not pedalling')
 
 
 class Coasting(State):
-    def on_entry(self, dt):
-        print('coasting')
+
+    def __init__(self):
+        super(Coasting, self).__init__()
+        self._coasting_rate = -0.1/1 # 0.1m/s/s
 
     def in_state(self, dt):
 
-        new_speed = self._context._speed - (dt/1000)
+        new_speed = self._context._speed + (dt*self._coasting_rate)
         self._context._speed = positive_speed(new_speed)
 
 
 class ChangeUp(State):
     def on_entry(self, dt):
-        print('change up')
         self._context._gear_ratio += 0.1
 
     def on_exit(self, dt):
-
         self._context.change_up = False
 
 
 class ChangeDown(State):
     def on_entry(self, dt):
-        print('change down')
         self._context._gear_ratio -= 0.1
 
     def on_exit(self, dt):
@@ -75,13 +73,16 @@ class ChangeDown(State):
 
 class Break(State):
 
+    def __init__(self):
+        super(Break, self).__init__()
+        self._break_rate = -1/1.0 # 1m/s/s
+
     def on_entry(self, dt):
-        print('breaking')
         self._context.pedalling = False
 
     def in_state(self, dt):
         new_speed = self._context._speed
-        new_speed -= dt/100
+        new_speed += self._break_rate * dt
         self._context._speed = positive_speed(new_speed)
 
 
@@ -99,7 +100,7 @@ class Cycling(StateMachineDevice):
 
     def _get_state_handlers(self):
         return {
-            'stopped': Stopped(),
+            'stopped': State(),
             'pedalling': Pedalling(),
             'coasting': Coasting(),
             'up' : ChangeUp(),
