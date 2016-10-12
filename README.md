@@ -30,6 +30,18 @@ Potential use cases for detailed device simulators include:
 
 Using a simulation for the above has the added benefit that, unlike most real devices, a simulation may be sped up / fast-forwarded past any lengthy delays or processes that occur in the device.
 
+## Features
+
+### Brief Terminology 
+
+`Devices` and `Adapters` are two independent concepts in Plankton. The `Device` is model for the device behaviour and internal memory. A `Device` can be represented using a `StateMachine`, but it does not have to be. A `Device` does not include anything specific to the communication protocol with the `Device`. An `Adapter` provides a protocol binding to a `Device`. The `Device` and `Adapter` are created as part of a `Simulation` that provides a "heart beat" and other enviromental aspects.
+
+### What Does Plankton Let You Do?
+
+* Create new `Devices` to model the internal behaviour and memory of thing you want to model
+* Optionally make a `Device` work as a `StateMachine` via `StateMachineDevice` to easily and powerfully assemble a Device via a set of connected, transitioning `State`s
+* Create one or more `Adapters` over your `Device` to expose it as say an EPICS IOC, or a TCP listener. 
+
 
 ## Framework Details
 
