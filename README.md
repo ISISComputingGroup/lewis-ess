@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/DMSC-Instrument-Data/plankton.svg?branch=master)](https://travis-ci.org/DMSC-Instrument-Data/plankton) [![Coverage Status](https://coveralls.io/repos/github/DMSC-Instrument-Data/plankton/badge.svg?branch=master)](https://coveralls.io/github/DMSC-Instrument-Data/plankton?branch=master)
+[![Build Status](https://travis-ci.org/DMSC-Instrument-Data/plankton.svg?branch=master)](https://travis-ci.org/DMSC-Instrument-Data/plankton) [![Code Climate](https://codeclimate.com/github/DMSC-Instrument-Data/plankton/badges/gpa.svg)](https://codeclimate.com/github/DMSC-Instrument-Data/plankton) [![Coverage Status](https://coveralls.io/repos/github/DMSC-Instrument-Data/plankton/badge.svg?branch=master)](https://coveralls.io/github/DMSC-Instrument-Data/plankton?branch=master)
 
 
 # Plankton
