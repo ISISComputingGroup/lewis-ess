@@ -38,10 +38,13 @@ Using a simulation for the above has the added benefit that, unlike most real de
 
 ### What Does Plankton Let You Do?
 
-* Create new `Devices` to model the internal behaviour and memory of thing you want to model
-* Optionally make a `Device` work as a `StateMachine` via `StateMachineDevice` to easily and powerfully assemble a Device via a set of connected, transitioning `State`s
-* Create one or more `Adapters` over your `Device` to expose it as say an EPICS IOC, or a TCP listener. 
+* Create new `Devices` to closely imitate the internal behaviour and memory of something
+* Optionally make a `Device` work as a `StateMachine` via `StateMachineDevice` to to give rich behaviours
+* Create one or more `Adapters` over your `Device` to expose it an EPICS IOC, a TCP listener, or on any other bespoke protocol you like
+* Access and control the `Device` while it is running via a "back door"
+* Access and control the `Simulation` while it is running via a "back door"
 
+For details on working with Plankton as a developer, see the [contribution instructions](Contribution.md). Details of the framework are explained below.
 
 ## Framework Details
 
