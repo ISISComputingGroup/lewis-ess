@@ -87,7 +87,7 @@ class StreamServer(asyncore.dispatcher):
 
 
 class Cmd(object):
-    def __init__(self, target_method, regex, regex_flags=0, argument_mappings=None,
+    def __init__(self, target_method, regex, argument_mappings=None,
                  return_mapping=lambda x: None if x is None else str(x)):
         """
         This is a small helper class that makes it easy to define commands that are parsed
@@ -107,12 +107,11 @@ class Cmd(object):
 
         :param target_method: Method to be called when regex matches.
         :param regex: Regex to match for method call.
-        :param regex_flags: Flags to pass ot re.compile, default is 0.
         :param argument_mappings: Iterable with mapping functions from string to some type.
         :param return_mapping: Mapping function for return value of method.
         """
         self.method = target_method
-        self.pattern = re.compile(b(regex), regex_flags)
+        self.pattern = re.compile(b(regex))
 
         if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
             raise RuntimeError(
