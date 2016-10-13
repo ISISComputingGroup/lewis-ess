@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import ast
 import argparse
 from core.control_client import ControlClient
 
@@ -37,12 +37,9 @@ def show_api(remote, object_name):
 
 def convert_type(value):
     try:
-        return int(value)
+        return ast.literal_eval(value)
     except ValueError:
-        try:
-            return float(value)
-        except ValueError:
-            return value
+        return value
 
 
 def call_method(remote, object_name, method, arguments):
