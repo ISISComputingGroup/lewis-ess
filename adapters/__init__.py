@@ -54,7 +54,7 @@ def get_available_adapters(device_name, device_package):
     adapters = dict()
 
     try:
-        adapter_module = importlib.import_module('{}.{}.{}'.format(device_package, device_name, 'adapters'))
+        adapter_module = importlib.import_module('{}.{}.{}'.format(device_package, device_name, 'interfaces'))
         module_members = {member: getattr(adapter_module, member) for member in dir(adapter_module)}
 
         for name, member in module_members.items():

@@ -20,7 +20,7 @@
 import unittest
 from devices.linkam_t95 import SimulatedLinkamT95
 from devices.linkam_t95.states import DefaultStartedState
-from devices.linkam_t95.adapters.stream_adapter import LinkamT95StreamAdapter
+from devices.linkam_t95.interfaces.stream_interface import LinkamT95StreamInterface
 from . import assertRaisesNothing
 
 
@@ -36,7 +36,7 @@ class TestSimulatedLinkamT95(unittest.TestCase):
 
     def test_default_status(self):
         linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamAdapter(linkam_device, None)
+        linkam = LinkamT95StreamInterface(linkam_device, None)
         status_bytes = linkam.get_status()
 
         self.assertEqual(len(status_bytes), 10)     # Byte array should always be 10 bytes
@@ -48,7 +48,7 @@ class TestSimulatedLinkamT95(unittest.TestCase):
 
     def test_simple_heat(self):
         linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamAdapter(linkam_device, None)
+        linkam = LinkamT95StreamInterface(linkam_device, None)
         linkam_device.process()  # Initialize
 
         # Issue T command to get into stopped state
@@ -80,7 +80,7 @@ class TestSimulatedLinkamT95(unittest.TestCase):
 
     def test_simple_cool(self):
         linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamAdapter(linkam_device, None)
+        linkam = LinkamT95StreamInterface(linkam_device, None)
         linkam_device.process()  # Initialize
 
         # Issue T command to get into stopped state
@@ -112,7 +112,7 @@ class TestSimulatedLinkamT95(unittest.TestCase):
 
     def test_error_flag_overcool(self):
         linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamAdapter(linkam_device, None)
+        linkam = LinkamT95StreamInterface(linkam_device, None)
         linkam_device.process()  # Initialize
 
         # Issue T command to get into stopped state
@@ -136,7 +136,7 @@ class TestSimulatedLinkamT95(unittest.TestCase):
 
     def test_stop_command(self):
         linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamAdapter(linkam_device, None)
+        linkam = LinkamT95StreamInterface(linkam_device, None)
         linkam_device.process()  # Initialize
 
         # Issue T command to get into stopped state
@@ -160,7 +160,7 @@ class TestSimulatedLinkamT95(unittest.TestCase):
 
     def test_hold_and_resume(self):
         linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamAdapter(linkam_device, None)
+        linkam = LinkamT95StreamInterface(linkam_device, None)
         linkam_device.process()  # Initialize
 
         # Issue T command to get into stopped state
@@ -212,7 +212,7 @@ class TestSimulatedLinkamT95(unittest.TestCase):
 
     def test_pump_command(self):
         linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamAdapter(linkam_device, None)
+        linkam = LinkamT95StreamInterface(linkam_device, None)
         linkam_device.process()  # Initialize
 
         # Issue T command to get into stopped state

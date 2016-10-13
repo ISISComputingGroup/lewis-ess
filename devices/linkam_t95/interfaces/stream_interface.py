@@ -20,7 +20,7 @@
 from adapters.stream import StreamAdapter, Cmd
 
 
-class LinkamT95StreamAdapter(StreamAdapter):
+class LinkamT95StreamInterface(StreamAdapter):
     commands = {
         Cmd('get_status', '^T$'),
         Cmd('set_rate', '^R1([0-9]+)$'),

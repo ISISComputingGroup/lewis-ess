@@ -157,7 +157,7 @@ class StreamAdapter(Adapter):
 
             if not method in dir(self):
                 if not method in dir(self._device):
-                    raise AttributeError('Can not find method \'' + method + '\' in device or adapter.')
+                    raise AttributeError('Can not find method \'' + method + '\' in device or interface.')
 
                 setattr(self, method, ForwardMethod(self._device, method))
 

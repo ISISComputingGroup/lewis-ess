@@ -30,6 +30,21 @@ Potential use cases for detailed device simulators include:
 
 Using a simulation for the above has the added benefit that, unlike most real devices, a simulation may be sped up / fast-forwarded past any lengthy delays or processes that occur in the device.
 
+## Features
+
+### Brief Terminology 
+
+`Device`s and `Interface`s are two independent concepts in Plankton. The `Device` is model for the device behaviour and internal memory. A `Device` can be represented using a `StateMachine`, but it does not have to be. A `Device` does not include anything specific to the communication protocol with the `Device`. An `Interface` provides a protocol binding to a `Device`. The `Device` and `Interface` are created as part of a `Simulation` that provides a "heart beat" and other environmental aspects.
+
+### What Does Plankton Let You Do?
+
+* Create new `Device`s to closely imitate the internal behaviour and memory of something
+* Optionally make a `Device` work as a `StateMachine` via `StateMachineDevice` to to give rich behaviours
+* Create one or more `Interface`s over your `Device` to expose it as an EPICS IOC, a TCP listener, or on any other bespoke protocol you like
+* Access and control the `Device` while it is running via a "back door"
+* Access and control the `Simulation` while it is running via a "back door"
+
+For details on working with Plankton as a developer, see the contribution instructions. Details of the framework are explained below.
 
 ## Framework Details
 
