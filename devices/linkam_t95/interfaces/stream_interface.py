@@ -24,7 +24,7 @@ class LinkamT95StreamInterface(StreamAdapter):
     commands = {
         Cmd('get_status', '^T$'),
         Cmd('set_rate', '^R1([0-9]+)$'),
-        Cmd('set_limit', '^L([0-9]+)$'),
+        Cmd('set_limit', '^L1([0-9]+)$'),
         Cmd('start', '^S$'),
         Cmd('stop', '^E$'),
         Cmd('hold', '^O$'),
