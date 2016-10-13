@@ -44,7 +44,7 @@ Using a simulation for the above has the added benefit that, unlike most real de
 * Access and control the `Device` while it is running via a "back door"
 * Access and control the `Simulation` while it is running via a "back door"
 
-For details on working with Plankton as a developer, see the [contribution instructions](Contribution.md). Details of the framework are explained below.
+For details on working with Plankton as a developer, see the contribution instructions. Details of the framework are explained below.
 
 ## Framework Details
 
