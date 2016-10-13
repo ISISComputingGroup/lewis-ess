@@ -1,7 +1,7 @@
 # Contributing to Plankton
 
 ## How to contribute
-Contributions to Plankton are always welcome and there are different ways of contributing to the framework. Problems, bugs and questions should be opened as [issues](), this is a very good way of keeping track of how Plankton has developed over time and also for others to see if similar issues have been raised in the past.
+Contributions to Plankton are always welcome and there are different ways of contributing to the framework. Problems, bugs and questions should be opened as [issues](https://github.com/DMSC-Instrument-Data/plankton/issues), this is a very good way of keeping track of how Plankton has developed over time and also for others to see if similar issues have been raised in the past.
 
 Another way to contribute is by writing a new device simulator. The following section describes how to do that and what to consider.
 
