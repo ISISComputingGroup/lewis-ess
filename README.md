@@ -34,13 +34,13 @@ Using a simulation for the above has the added benefit that, unlike most real de
 
 ### Brief Terminology 
 
-`Devices` and `Adapters` are two independent concepts in Plankton. The `Device` is model for the device behaviour and internal memory. A `Device` can be represented using a `StateMachine`, but it does not have to be. A `Device` does not include anything specific to the communication protocol with the `Device`. An `Adapter` provides a protocol binding to a `Device`. The `Device` and `Adapter` are created as part of a `Simulation` that provides a "heart beat" and other enviromental aspects.
+`Device`s and `Interface`s are two independent concepts in Plankton. The `Device` is model for the device behaviour and internal memory. A `Device` can be represented using a `StateMachine`, but it does not have to be. A `Device` does not include anything specific to the communication protocol with the `Device`. An `Interface` provides a protocol binding to a `Device`. The `Device` and `Interface` are created as part of a `Simulation` that provides a "heart beat" and other environmental aspects.
 
 ### What Does Plankton Let You Do?
 
-* Create new `Devices` to closely imitate the internal behaviour and memory of something
+* Create new `Device`s to closely imitate the internal behaviour and memory of something
 * Optionally make a `Device` work as a `StateMachine` via `StateMachineDevice` to to give rich behaviours
-* Create one or more `Adapters` over your `Device` to expose it an EPICS IOC, a TCP listener, or on any other bespoke protocol you like
+* Create one or more `Interface`s over your `Device` to expose it as an EPICS IOC, a TCP listener, or on any other bespoke protocol you like
 * Access and control the `Device` while it is running via a "back door"
 * Access and control the `Simulation` while it is running via a "back door"
 

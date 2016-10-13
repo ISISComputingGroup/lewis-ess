@@ -17,4 +17,4 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from .stream_adapter import LinkamT95StreamAdapter
+from .epics_interface import ChopperEpicsInterface

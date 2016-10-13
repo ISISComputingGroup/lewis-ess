@@ -20,7 +20,7 @@
 from adapters.epics import EpicsAdapter, PV
 
 
-class ChopperEpicsAdapter(EpicsAdapter):
+class ChopperEpicsInterface(EpicsAdapter):
     pvs = {
         'Spd-RB': PV('target_speed', read_only=True),
         'Spd': PV('target_speed'),
