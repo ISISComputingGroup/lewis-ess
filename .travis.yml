@@ -12,13 +12,13 @@ install:
   - pip install -r requirements-dev.txt
   - pip install coveralls
 script:
-  - nosetests --with-coverage --cover-package=core,devices
+  - nosetests -w test --with-coverage --cover-package=core,devices
 
 after_success:
   - coveralls
   - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == false ]; then
     docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker build -t dmscid/plankton .;
+    docker build -t dmscid/plankton:edge .;
     docker push dmscid/plankton;
     fi
 

@@ -142,7 +142,8 @@ class EpicsAdapter(Adapter):
     def __init__(self, device, arguments=None):
         super(EpicsAdapter, self).__init__(device, arguments)
 
-        self._options = self._parseArguments(arguments)
+        if arguments is not None:
+            self._options = self._parseArguments(arguments)
 
         self._create_properties(self.pvs.values())
 

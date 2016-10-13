@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import ast
 import argparse
 from core.control_client import ControlClient
 
@@ -37,12 +37,9 @@ def show_api(remote, object_name):
 
 def convert_type(value):
     try:
-        return int(value)
+        return ast.literal_eval(value)
     except ValueError:
-        try:
-            return float(value)
-        except ValueError:
-            return value
+        return value
 
 
 def call_method(remote, object_name, method, arguments):
@@ -65,12 +62,11 @@ parser = argparse.ArgumentParser(
     description='A client to manipulate the simulated device remotely through a separate channel. The simulation must be started with the --rpc-host option.')
 parser.add_argument('-r', '--rpc-host', default='127.0.0.1:10000',
                     help='HOST:PORT string specifying control server to connect to.')
-parser.add_argument('-l', '--list-objects', action='store_true',
-                    help='List all objects exposed by the server and exit.')
-parser.add_argument('-a', '--show-api', action='store_true',
-                    help='List all properties and methods of the controlled object.')
-parser.add_argument('object', nargs='?', default='device', help='Object to control.')
-parser.add_argument('member', nargs='?', help='Object-member to access.')
+parser.add_argument('-n', '--print-none', action='store_true',
+                    help='Print None return value.')
+parser.add_argument('object', nargs='?', default=None, help='Object to control. If left out, all objects are listed.')
+parser.add_argument('member', nargs='?', default=None,
+                    help='Object-member to access. If omitted, API of the object is listed.')
 parser.add_argument('arguments', nargs='*',
                     help='Arguments to method call. For setting a property, supply the property value. ')
 
@@ -78,9 +74,13 @@ args = parser.parse_args()
 
 remote = ControlClient(*args.rpc_host.split(':')).get_object_collection()
 
-if args.list_objects:
+if not args.object:
     list_objects(remote)
-elif args.show_api:
-    show_api(remote, args.object)
 else:
-    print(call_method(remote, args.object, args.member, args.arguments))
+    if not args.member:
+        show_api(remote, args.object)
+    else:
+        response = call_method(remote, args.object, args.member, args.arguments)
+
+        if response is not None or args.print_none:
+            print(response)
