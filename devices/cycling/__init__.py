@@ -21,12 +21,6 @@ class CyclingStreamAdapter(StreamAdapter):
 def positive_speed(speed):
     return max(speed, 0)
 
-def str2bool(value):
-    if isinstance(value, bool):
-        return value
-    else:
-        return value.lower() == "true"
-
 class Pedalling(State):
 
     def __init__(self):
@@ -135,10 +129,10 @@ class Cycling(StateMachineDevice):
         return self._gear_ratio
 
     def set_pedalling(self, pedalling):
-        self.pedalling = str2bool(pedalling)
+        self.pedalling = pedalling
 
     def set_breaking(self, breaking):
-        self.breaking = str2bool(breaking)
+        self.breaking = breaking
 
 
     def set_up(self):
