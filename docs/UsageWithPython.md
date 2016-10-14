@@ -3,7 +3,7 @@
 To use Plankton directly via Python you must first install its dependencies:
 
 - Python 2.7+ or 3.4+
-- EPICS Base R3.14.12.5
+- EPICS Base R3.14.12.5 (optional, for EPICS based devices)
 - PIP 8.1+
 
 Clone the repository in a location of your choice:
@@ -17,6 +17,8 @@ If you do not have [git](https://git-scm.com/) available, you can also download 
 ```
 $ pip install -r requirements.txt
 ```
+
+**NOTE:** If you have not installed EPICS, you need to remove pcaspy from the requirements.txt file.
 
 If you also want to run Plankton's unit tests, you may also install the development dependencies:
 
