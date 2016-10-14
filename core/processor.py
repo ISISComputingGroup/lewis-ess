@@ -77,9 +77,9 @@ class CanProcessComposite(CanProcess):
 
     def add_processor(self, other):
         if isinstance(other, CanProcess):
-            self._appendProcessor(other)
+            self._append_processor(other)
 
-    def _appendProcessor(self, processor):
+    def _append_processor(self, processor):
         self._processors.append(processor)
 
     def doProcess(self, dt):
