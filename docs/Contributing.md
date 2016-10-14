@@ -44,7 +44,7 @@ The states and transitions described above form a finite state machine with two 
 
 ### Implementing the device simulation
 
-Each device resides in its own sub-package in the `devices`-package. The first step is to create a new directory in the devices-directory called `example_motor`, which should contain a single file, `__init__.py`. For simple devices like this it's acceptable to put everything into one file, but for more complex simulators it's recommended to follow the structure of the devices that are already part of the Plankton distribution.
+Each device resides in its own sub-package in the `devices`-package. The first step is to create a new directory in the [devices](../devices) directory called `example_motor`, which should contain a single file, `__init__.py`. For simple devices like this it's acceptable to put everything into one file, but for more complex simulators it's recommended to follow the structure of the devices that are already part of the Plankton distribution.
 
 Conceptually, in Plankton, devices are split in two Parts: a device model, which contains internal device state, as well as potentially a state machine, and an interface that exposes the device to the outside world via a communication protocol that is provided by an "adapter". The adapter specifies the communication protocol (for example [EPICS](http://www.aps.anl.gov/epics/) or TCP/IP), whereas the interface specifies the syntax and semantics of the actual command language of the device.
 
