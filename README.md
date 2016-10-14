@@ -55,7 +55,7 @@ Details on running Plankton, working with Plankton as a device developer, and fr
   * [Using Plankton with Python](docs/UsageWithPython.md): Plankton can be run directly via Python once dependencies are installed.
   * [Adapter Specific Parameters](docs/AdapterSpecifics.md): Usage details for specific protocol adapters.
 * Runtime Control
-  * [Remote Access to Device](docs/RemoteAccessDevices.md): A simulated device can be inspected and manipulated at runtime, outside of its normal protocol.
+  * [Remote Access to Device](docs/RemoteAccessDevices.md): A simulated device can be inspected and manipulated at runtime.
   * [Remote Access to Simulation](docs/RemoteAccessSimulation.md): Simulation parameters and statistics can be inspected and manipulated at runtime.
 * Framework Internals
   * [Detailed Overview of Framework](docs/FrameworkDetails.md): Description of framework internals and design decisions.
