@@ -19,13 +19,16 @@
 # *********************************************************************
 
 import argparse
+import os
+import sys
 
+from core.version import __version__
+
+from adapters import import_adapter, get_available_adapters
 from core.control_server import ControlServer, ExposedObject
 from core.simulation import Simulation
 from core.utils import get_available_submodules
 from devices import import_device
-from adapters import import_adapter, get_available_adapters
-import os, sys
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
@@ -41,13 +44,19 @@ parser.add_argument('-e', '--speed', type=float, default=1.0,
                     help='Simulation speed. The actually elapsed time '
                          'between two cycles is multiplied with this speed to determine the simulated time.')
 parser.add_argument('-k', '--device-package', help='Name of packages where devices are found.', default='devices')
-parser.add_argument('-a', '--add-path', help='Path where the device package exists.', default=None)
+parser.add_argument('-a', '--add-path', help='Path where the device package exists. Is added to the path.',
+                    default=None)
+parser.add_argument('-v', '--version', help='Prints the version and exits.', action='store_true')
 
 parser.add_argument('device', help='Name of the device to simulate, omitting prints list of available devices.',
                     nargs='?')
 parser.add_argument('adapter_args', nargs='*', help='Arguments for the adapter.')
 
 arguments = parser.parse_args()
+
+if arguments.version:
+    print(__version__)
+    exit()
 
 if arguments.add_path is not None:
     sys.path.append(os.path.abspath(arguments.add_path))
