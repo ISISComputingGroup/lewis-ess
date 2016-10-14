@@ -45,5 +45,18 @@ Using a simulation for the above has the added benefit that, unlike most real de
 * Access and control the `Device` while it is running via a "back door"
 * Access and control the `Simulation` while it is running via a "back door"
 
-For details on working with Plankton as a developer, see the contribution instructions. Details of the framework are explained below.
+
+## Additional Documentation
+
+Details on running Plankton, working with Plankton as a device developer, and framework internals are described in the following documents:
+
+* Installation and Usage
+  * [Using Plankton with Docker](docs/UsageWithDocker.md): Plankton provides a Docker image that encapsulates all dependencies for ease of use.
+  * [Using Plankton with Python](docs/UsageWithPython.md): Plankton can be run directly via Python once dependencies are installed.
+  * [Adapter Specific Parameters](docs/AdapterSpecifics.md): Usage details for specific protocol adapters.
+* Runtime Control
+  * [Remote Access to Device](docs/RemoteAccessDevice.md): A simulated device can be inspected and manipulated at runtime, outside of its normal protocol.
+  * [Remote Access to Simulation](docs/RemoteAccessSimulation.md): Simulation parameters and statistics can be inspected and manipulated at runtime.
+* Framework Internals
+  * [Detailed Overview of Framework](docs/FrameworkDetails.md): Description of framework internals and design decisions.
 
