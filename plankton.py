@@ -24,7 +24,8 @@ from core.control_server import ControlServer, ExposedObject
 from core.simulation import Simulation
 from core.utils import get_available_submodules
 from devices import import_device
-from adapters import import_adapter, get_available_adapters, Adapter
+from adapters import import_adapter, get_available_adapters
+import os, sys
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
@@ -34,22 +35,36 @@ parser.add_argument('-s', '--setup', help='Name of the setup to load.', default=
 parser.add_argument('-l', '--list-protocols', help='List available protocols for selected device.', action='store_true')
 parser.add_argument('-p', '--protocol', help='Communication protocol to expose devices.', default=None)
 parser.add_argument('-c', '--cycle-delay',
-                    help='Approximate time to spend in each cycle of the simulation. Must be greater than 0.',
+                    help='Approximate time to spend in each cycle of the simulation. 0 for maximum simulation rate.',
                     type=float, default=0.1)
 parser.add_argument('-e', '--speed', type=float, default=1.0,
                     help='Simulation speed. The actually elapsed time '
                          'between two cycles is multiplied with this speed to determine the simulated time.')
-parser.add_argument('device', help='Mandatory name of the device to simulate.', default='chopper',
-                    choices=get_available_submodules('devices'))
+parser.add_argument('-k', '--device-package', help='Name of packages where devices are found.', default='devices')
+parser.add_argument('-a', '--add-path', help='Path where the device package exists.', default=None)
+
+parser.add_argument('device', help='Name of the device to simulate, omitting prints list of available devices.',
+                    nargs='?')
 parser.add_argument('adapter_args', nargs='*', help='Arguments for the adapter.')
 
 arguments = parser.parse_args()
 
+if arguments.add_path is not None:
+    sys.path.append(os.path.abspath(arguments.add_path))
+
+if not arguments.device:
+    print('Please specify a device to simulate.')
+    print('The following devices are available:')
+
+    for dev in get_available_submodules(arguments.device_package):
+        print('\t' + dev)
+    exit()
+
 # Import the device type and required initialisation parameters.
-device_type, parameters = import_device(arguments.device, arguments.setup, device_package='devices')
+device_type, parameters = import_device(arguments.device, arguments.setup, device_package=arguments.device_package)
 
 if arguments.list_protocols:
-    adapters = get_available_adapters(arguments.device, device_package='devices')
+    adapters = get_available_adapters(arguments.device, device_package=arguments.device_package)
 
     protocols = {adapter.protocol for adapter in adapters.values()}
 
@@ -58,7 +73,8 @@ if arguments.list_protocols:
     exit()
 
 device = device_type(**parameters)
-adapter = import_adapter(arguments.device, arguments.protocol)(device, arguments.adapter_args)
+adapter = import_adapter(arguments.device, arguments.protocol,
+                         device_package=arguments.device_package)(device, arguments.adapter_args)
 
 simulation = Simulation(
     device=device,

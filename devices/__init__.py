@@ -33,6 +33,9 @@ class Device(CanProcess):
     simulations of real devices.
     """
 
+    def __init__(self):
+        super(Device, self).__init__()
+
 
 class StateMachineDevice(CanProcessComposite):
     def __init__(self, override_states=None, override_transitions=None, override_initial_state=None,
@@ -162,6 +165,12 @@ class StateMachineDevice(CanProcessComposite):
                 setattr(self, name, val)
 
 
+def is_device(obj):
+    return issubclass(obj, CanProcess) \
+           and not obj.__module__ == 'core.processor' \
+           and not obj.__module__ == 'devices'
+
+
 def import_device(device, setup=None, device_package='devices'):
     """
     This function tries to load a given device with a given setup from the package specified
@@ -228,8 +237,7 @@ def import_device(device, setup=None, device_package='devices'):
                     for member_name in dir(device_module):
                         try:
                             member_object = getattr(device_module, member_name)
-                            if issubclass(member_object,
-                                          CanProcess) and not member_object.__module__ == 'core.processor':
+                            if is_device(member_object):
                                 return member_object, dict()
                         except TypeError:
                             pass
