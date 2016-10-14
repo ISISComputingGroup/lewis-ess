@@ -17,5 +17,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from .statemachine import StateMachine, State, Transition, Context
+from .statemachine import StateMachine, State, Transition
 from .processor import CanProcess, CanProcessComposite
