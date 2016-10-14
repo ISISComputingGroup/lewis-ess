@@ -17,7 +17,7 @@ The process of writing a new device simulator is best explained using the exampl
 
 ### Device analysis
 
-The hypothetical device that is to be simulated is a simple controller that controls one motor and can be communicated with via a TCP connection. The user can connect to the device using telnet and submit commands followed by `\r\n` (automatically added by telnet). Responses are followed by `\r\n` as well. The following commands and responses are available:
+The hypothetical device that is to be simulated is a simple controller that controls one motor and can be communicated with via a [TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol) connection. The user can connect to the device using telnet and submit commands followed by `\r\n` (automatically added by [telnet](https://linux.die.net/man/1/telnet)). Responses are followed by `\r\n` as well. The following commands and responses are available:
 
  * `S?`: Returns the status of the motor connected to the controller. Can be either `idle` or `moving`, is initially `idle`.
  * `P?`: Returns the current position of the motor in mm. Is initially 0.
@@ -40,13 +40,13 @@ Between those three states, different transitions exist:
  * `idle` -> `moving`: The target position is different from the current position, the motor starts moving.
  * `moving` -> `idle`: The motor has reached the target position or the user has supplied a stop command, which sets the target position to the current position, causing the motor to stop.
 
-The states and transitions described above form a finite state machine with two states and two transitions. This state machine forms the heart of the simulated device, so it should be implemented using Plankton's cycle based finite state machine, which will be explained below.
+The states and transitions described above form a finite state machine with two states and two transitions. This state machine forms the heart of the simulated device, so it should be implemented using Plankton's cycle based [finite state machine](https://en.wikipedia.org/wiki/Finite-state_machine), which will be explained below.
 
 ### Implementing the device simulation
 
 Each device resides in its own sub-package in the `devices`-package. The first step is to create a new directory in the devices-directory called `example_motor`, which should contain a single file, `__init__.py`. For simple devices like this it's acceptable to put everything into one file, but for more complex simulators it's recommended to follow the structure of the devices that are already part of the Plankton distribution.
 
-Conceptually, in Plankton, devices are split in two Parts: a device model, which contains internal device state, as well as potentially a state machine, and an interface that exposes the device to the outside world via a communication protocol that is provided by an "adapter". The adapter specifies the communication protocol (for example EPICS or TCP/IP), whereas the interface specifies the syntax and semantics of the actual command language of the device.
+Conceptually, in Plankton, devices are split in two Parts: a device model, which contains internal device state, as well as potentially a state machine, and an interface that exposes the device to the outside world via a communication protocol that is provided by an "adapter". The adapter specifies the communication protocol (for example [EPICS](http://www.aps.anl.gov/epics/) or TCP/IP), whereas the interface specifies the syntax and semantics of the actual command language of the device.
 
 For the actual device simulation there are two classes to choose between for sub-classing. The class `Device` can be used for very simple devices that do not require a state machine to represent their operation. On each simulation cycle, the method `doProcess` is executed if it is implemented. This can be used to implement time-dependent behavior. For the majority of cases, such as in the example, it is more convenient to inherit from `StateMachineDevice`. It provides an internal state machine and options to override characteristics of the state machine on initialization.
 
