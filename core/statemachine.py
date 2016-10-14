@@ -28,41 +28,6 @@ class StateMachineException(Exception):
     pass
 
 
-# Derived from http://stackoverflow.com/a/3603824
-class Context(object):
-    """
-    Device context.
-
-    Represents the internal memory of the device. This is used to share device
-    state (as opposed to state machine state) between a device class, its
-    states' implementations and their transitions.
-
-    Use by inheriting this class and overriding `initialize` to set any variables
-    that should be part of the device context.
-
-    The freeze mechanism automatically prevents this class from being extended
-    outside of `initialize`. This is to prevent bugs cause by typos and the
-    like, raising an Exception instead to draw attention to any potentially
-    misspelled attributes.
-    """
-    __is_frozen = False
-
-    def __init__(self):
-        self.initialize()
-        self._freeze()
-
-    def initialize(self):
-        pass
-
-    def _freeze(self):
-        self.__is_frozen = True
-
-    def __setattr__(self, key, value):
-        if self.__is_frozen and not hasattr(self, key):
-            raise StateMachineException("Class {} does not have attribute: '{}'".format(self.__class__.__name__, key))
-        object.__setattr__(self, key, value)
-
-
 class HasContext(object):
     """
     Mixin to provide a Context.
@@ -78,7 +43,7 @@ class HasContext(object):
         super(HasContext, self).__init__()
         self._context = None
 
-    def setContext(self, new_context):
+    def set_context(self, new_context):
         self._context = new_context
 
 
@@ -208,7 +173,7 @@ class StateMachine(CanProcess):
         # Allow user to explicitly specify state handlers
         for state_name, handlers in iteritems(cfg.get('states', {})):
             if isinstance(handlers, HasContext):
-                handlers.setContext(context)
+                handlers.set_context(context)
 
             try:
                 if isinstance(handlers, State):
@@ -233,7 +198,7 @@ class StateMachine(CanProcess):
                 self._set_handlers(to_state)
 
             if isinstance(check_func, HasContext):
-                check_func.setContext(context)
+                check_func.set_context(context)
 
             # Set up the transition
             self._set_transition(from_state, to_state, check_func)

@@ -57,6 +57,7 @@ Details on running Plankton, working with Plankton as a device developer, and fr
 * Runtime Control
   * [Remote Access to Device](docs/RemoteAccessDevices.md): A simulated device can be inspected and manipulated at runtime.
   * [Remote Access to Simulation](docs/RemoteAccessSimulation.md): Simulation parameters and statistics can be inspected and manipulated at runtime.
+* Creating Device Simulators
+  * [Contribution Guidelines](docs/Contributing.md): New device simulators can be added to Plankton.
 * Framework Internals
   * [Detailed Overview of Framework](docs/FrameworkDetails.md): Description of framework internals and design decisions.
-

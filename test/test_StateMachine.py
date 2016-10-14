@@ -20,7 +20,7 @@
 import unittest
 from mock import Mock, patch
 
-from core.statemachine import StateMachine, State, Transition, Context
+from core.statemachine import StateMachine, State, Transition
 from core.statemachine import StateMachineException
 
 
@@ -93,7 +93,7 @@ class TestStateMachine(unittest.TestCase):
 
     def test_Transition_receives_Context(self):
         transition = Transition()
-        context = Context()
+        context = object()
         sm = StateMachine({
             'initial': 'foo',
             'transitions': {
@@ -214,7 +214,7 @@ class TestStateMachine(unittest.TestCase):
 
     def test_State_receives_Context(self):
         state = State()
-        context = Context()
+        context = object()
         sm = StateMachine({
             'initial': 'foo',
             'states': {
