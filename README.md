@@ -51,13 +51,13 @@ Using a simulation for the above has the added benefit that, unlike most real de
 Details on running Plankton, working with Plankton as a device developer, and framework internals are described in the following documents:
 
 * Installation and Usage
-  * [Using Plankton with Docker](docs/UsageWithDocker.md): Plankton provides a Docker image that encapsulates all dependencies for ease of use.
-  * [Using Plankton with Python](docs/UsageWithPython.md): Plankton can be run directly via Python once dependencies are installed.
-  * [Adapter Specific Parameters](docs/AdapterSpecifics.md): Usage details for specific protocol adapters.
+  * [Using Plankton with Docker](https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/UsageWithDocker.md): Plankton provides a Docker image that encapsulates all dependencies for ease of use.
+  * [Using Plankton with Python](https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/UsageWithPython.md): Plankton can be run directly via Python once dependencies are installed.
+  * [Adapter Specific Parameters](https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/AdapterSpecifics.md): Usage details for specific protocol adapters.
 * Runtime Control
-  * [Remote Access to Device](docs/RemoteAccessDevices.md): A simulated device can be inspected and manipulated at runtime.
-  * [Remote Access to Simulation](docs/RemoteAccessSimulation.md): Simulation parameters and statistics can be inspected and manipulated at runtime.
+  * [Remote Access to Device](https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/RemoteAccessDevices.md): A simulated device can be inspected and manipulated at runtime.
+  * [Remote Access to Simulation](https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/RemoteAccessSimulation.md): Simulation parameters and statistics can be inspected and manipulated at runtime.
 * Creating Device Simulators
-  * [Contribution Guidelines](docs/Contributing.md): New device simulators can be added to Plankton.
+  * [Contribution Guidelines](https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/Contributing.md): New device simulators can be added to Plankton.
 * Framework Internals
-  * [Detailed Overview of Framework](docs/FrameworkDetails.md): Description of framework internals and design decisions.
+  * [Detailed Overview of Framework](https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/FrameworkDetails.md): Description of framework internals and design decisions.
