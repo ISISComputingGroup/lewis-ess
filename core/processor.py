@@ -59,7 +59,7 @@ class CanProcessComposite(CanProcess):
     Items can be added to the composite like this:
 
         composite = CanProcessComposite()
-        composite.addProcessor(item_that_implements_CanProcess)
+        composite.add_processor(item_that_implements_CanProcess)
 
     The process-method calls the process-method of each contained
     item. Specific things that have to be done before or after the
@@ -73,9 +73,9 @@ class CanProcessComposite(CanProcess):
         self._processors = []
 
         for item in iterable:
-            self.addProcessor(item)
+            self.add_processor(item)
 
-    def addProcessor(self, other):
+    def add_processor(self, other):
         if isinstance(other, CanProcess):
             self._appendProcessor(other)
 

@@ -95,7 +95,7 @@ class StateMachineDevice(CanProcessComposite):
             'transitions': self._get_final_transition_handlers(override_transitions)
         }, context=self)
 
-        self.addProcessor(self._csm)
+        self.add_processor(self._csm)
 
     def _get_state_handlers(self):
         """

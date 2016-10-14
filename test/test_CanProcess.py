@@ -80,7 +80,7 @@ class TestCanProcessComposite(unittest.TestCase):
         composite = CanProcessComposite()
 
         with patch.object(composite, '_appendProcessor') as appendProcessorMock:
-            composite.addProcessor(CanProcess())
+            composite.add_processor(CanProcess())
 
         self.assertEquals(appendProcessorMock.call_count, 1)
 
@@ -88,7 +88,7 @@ class TestCanProcessComposite(unittest.TestCase):
         composite = CanProcessComposite()
 
         with patch.object(composite, '_appendProcessor') as appendProcessorMock:
-            composite.addProcessor(None)
+            composite.add_processor(None)
 
         appendProcessorMock.assert_not_called()
 
