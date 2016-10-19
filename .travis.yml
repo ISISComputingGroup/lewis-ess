@@ -8,10 +8,14 @@ services:
 python:
   - "2.7"
   - "3.5"
+
 install:
   - pip install -r requirements-dev.txt
   - pip install coveralls
+  - pip install flake8
+
 script:
+  - flake8 .
   - nosetests -w test --with-coverage --cover-package=core,devices
 
 after_success:
