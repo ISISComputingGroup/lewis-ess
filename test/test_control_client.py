@@ -20,7 +20,8 @@
 import unittest
 from mock import Mock, patch, call
 
-from core.control_client import ObjectProxy, ControlClient, ProtocolException, RemoteException
+from core.control_client import ObjectProxy, ControlClient, \
+    ProtocolException, RemoteException
 
 
 class TestControlClient(unittest.TestCase):
@@ -35,7 +36,8 @@ class TestControlClient(unittest.TestCase):
         mock_socket.assert_has_calls(
             [call(),
              call().connect('tcp://127.0.0.1:10001'),
-             call().send_json({'method': 'foo', 'params': (), 'jsonrpc': '2.0', 'id': '2'}),
+             call().send_json(
+                 {'method': 'foo', 'params': (), 'jsonrpc': '2.0', 'id': '2'}),
              call().recv_json()])
 
     @patch('core.control_client.ControlClient._get_zmq_req_socket')
@@ -43,10 +45,10 @@ class TestControlClient(unittest.TestCase):
         client = ControlClient(host='127.0.0.1', port='10001')
 
         with patch.object(client, 'json_rpc') as json_rpc_mock:
-            json_rpc_mock.return_value = ({'id': 2,
-                                           'result': {'class': 'Test',
-                                                      'methods': ['a:set', 'a:get', 'setTest']}}
-                                          , 2)
+            json_rpc_mock.return_value = \
+                ({'id': 2,
+                  'result': {'class': 'Test',
+                             'methods': ['a:set', 'a:get', 'setTest']}}, 2)
 
             obj = client.get_object()
 
@@ -74,7 +76,8 @@ class TestControlClient(unittest.TestCase):
         returned_object.get_objects = Mock(return_value=['obj1', 'obj2'])
 
         with patch.object(client, 'get_object') as get_object_mock:
-            get_object_mock.side_effect = [returned_object, 'obj1_object', 'obj2_object']
+            get_object_mock.side_effect = [returned_object, 'obj1_object',
+                                           'obj2_object']
 
             objects = client.get_object_collection()
 
@@ -91,26 +94,30 @@ class TestControlClient(unittest.TestCase):
 class TestObjectProxy(unittest.TestCase):
     def test_init_adds_members(self):
         mock_connection = Mock()
-        obj = type('TestType', (ObjectProxy,), {})(mock_connection, ['a:get', 'a:set', 'setTest'])
+        obj = type('TestType', (ObjectProxy,), {})(
+            mock_connection, ['a:get', 'a:set', 'setTest'])
         self.assertTrue(hasattr(type(obj), 'a'))
         self.assertTrue(hasattr(obj, 'setTest'))
 
         mock_connection.assert_not_called()
 
     def test_member_access_calls_make_request(self):
-        obj = type('TestType', (ObjectProxy,), {})(Mock(), ['a:get', 'a:set', 'setTest'])
+        obj = type('TestType', (ObjectProxy,), {})(
+            Mock(), ['a:get', 'a:set', 'setTest'])
 
         with patch.object(obj, '_make_request') as request_mock:
-            b = obj.a
+            obj.a  # Make sure that calling the getter works
             obj.a = 4
             obj.setTest()
 
-        request_mock.assert_has_calls([call('a:get'), call('a:set', 4), call('setTest')])
+        request_mock.assert_has_calls(
+            [call('a:get'), call('a:set', 4), call('setTest')])
 
     def test_make_request_with_result(self):
         mock_connection = Mock(ControlClient)
         mock_connection.json_rpc.return_value = ({'result': 'test'}, 2)
-        obj = type('TestType', (ObjectProxy,), {})(mock_connection, ['setTest'])
+        obj = type('TestType', (ObjectProxy,), {})(
+            mock_connection, ['setTest'])
 
         result = obj.setTest()
 
@@ -119,32 +126,38 @@ class TestObjectProxy(unittest.TestCase):
 
     def test_make_request_with_known_exception(self):
         mock_connection = Mock(ControlClient)
-        mock_connection.json_rpc.return_value = ({'error': {
-            'data': {'type': 'AttributeError',
-                     'message': 'Some message'}}}, 2)
+        mock_connection.json_rpc.return_value = \
+            ({'error': {
+                'data': {'type': 'AttributeError',
+                         'message': 'Some message'}}}, 2)
 
-        obj = type('TestType', (ObjectProxy,), {})(mock_connection, ['setTest'])
+        obj = type('TestType', (ObjectProxy,), {})(
+            mock_connection, ['setTest'])
 
         self.assertRaises(AttributeError, obj.setTest)
         mock_connection.json_rpc.assert_has_calls([call('setTest')])
 
     def test_make_request_with_unknown_exception(self):
         mock_connection = Mock(ControlClient)
-        mock_connection.json_rpc.return_value = ({'error': {
-            'data': {'type': 'NonExistingException',
-                     'message': 'Some message'}}}, 2)
+        mock_connection.json_rpc.return_value = \
+            ({'error': {
+                'data': {'type': 'NonExistingException',
+                         'message': 'Some message'}}}, 2)
 
-        obj = type('TestType', (ObjectProxy,), {})(mock_connection, ['setTest'])
+        obj = type('TestType', (ObjectProxy,), {})(
+            mock_connection, ['setTest'])
 
         self.assertRaises(RemoteException, obj.setTest)
         mock_connection.json_rpc.assert_has_calls([call('setTest')])
 
     def test_make_request_with_missing_error_data(self):
         mock_connection = Mock(ControlClient)
-        mock_connection.json_rpc.return_value = ({'error': {
-            'message': 'Some message'}}, 2)
+        mock_connection.json_rpc.return_value = \
+            ({'error': {
+                'message': 'Some message'}}, 2)
 
-        obj = type('TestType', (ObjectProxy,), {})(mock_connection, ['setTest'])
+        obj = type('TestType', (ObjectProxy,), {})(
+            mock_connection, ['setTest'])
 
         self.assertRaises(ProtocolException, obj.setTest)
         mock_connection.json_rpc.assert_has_calls([call('setTest')])

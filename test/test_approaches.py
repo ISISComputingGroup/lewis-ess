@@ -21,6 +21,7 @@ import unittest
 
 from core.approaches import linear
 
+
 class TestApproachLinear(unittest.TestCase):
     def test_target_equals_current_does_not_change(self):
         pos = 34.0

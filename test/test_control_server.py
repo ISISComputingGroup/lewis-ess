@@ -22,8 +22,8 @@ import unittest
 from . import assertRaisesNothing
 from mock import Mock, patch, call
 
-
-from core.control_server import ExposedObject, ExposedObjectCollection, ControlServer
+from core.control_server import ExposedObject, ExposedObjectCollection, \
+    ControlServer
 from zmq import Again as zmq_again_exception
 from zmq import NOBLOCK as zmq_no_block_flag
 
@@ -41,7 +41,8 @@ class TestRPCObject(unittest.TestCase):
     def test_all_methods_exposed(self):
         rpc_object = ExposedObject(TestObject())
 
-        expected_methods = [':api', 'a:get', 'a:set', 'b:get', 'b:set', 'getTest', 'setTest']
+        expected_methods = [':api', 'a:get', 'a:set', 'b:get', 'b:set',
+                            'getTest', 'setTest']
         self.assertEqual(len(rpc_object), len(expected_methods))
 
         for method in expected_methods:
@@ -66,7 +67,8 @@ class TestRPCObject(unittest.TestCase):
             self.assertTrue(method in rpc_object)
 
     def test_selected_and_excluded_methods(self):
-        rpc_object = ExposedObject(TestObject(), members=('a', 'getTest'), exclude=('a'))
+        rpc_object = ExposedObject(TestObject(), members=('a', 'getTest'),
+                                   exclude=('a'))
 
         expected_methods = [':api', 'getTest']
         self.assertEqual(len(rpc_object), len(expected_methods))
@@ -75,7 +77,8 @@ class TestRPCObject(unittest.TestCase):
             self.assertTrue(method in rpc_object)
 
     def test_invalid_method_raises(self):
-        self.assertRaises(AttributeError, ExposedObject, TestObject(), ('nonExisting',))
+        self.assertRaises(AttributeError, ExposedObject, TestObject(),
+                          ('nonExisting',))
 
     def test_attribute_wrapper_gets_value(self):
         obj = TestObject()
@@ -127,7 +130,8 @@ class TestExposedObjectCollection(unittest.TestCase):
         self.assertEqual(set(exposed_objects), {':api', 'get_objects'})
 
         self.assertEqual(len(exposed_objects.get_objects()), 0)
-        self.assertEqual(exposed_objects['get_objects'](), exposed_objects.get_objects())
+        self.assertEqual(exposed_objects['get_objects'](),
+                         exposed_objects.get_objects())
 
     def test_api(self):
         exposed_objects = ExposedObjectCollection(named_objects={})
@@ -142,10 +146,13 @@ class TestExposedObjectCollection(unittest.TestCase):
         exposed_objects = ExposedObjectCollection({})
         obj = TestObject()
 
-        assertRaisesNothing(self, exposed_objects.add_object, obj, 'testObject')
+        assertRaisesNothing(self, exposed_objects.add_object, obj,
+                            'testObject')
 
-        # There should be :api, get_objects, testObject:api, testObject.a:get, testObject.a:set,
-        # testObject.b:get, testObject.b:set, testObject.getTest, testObject.setTest
+        # There should be :api, get_objects, testObject:api,
+        # testObject.a:get, testObject.a:set,
+        # testObject.b:get, testObject.b:set,
+        # testObject.getTest, testObject.setTest
         self.assertEqual(len(exposed_objects), 9)
 
         exposed_objects['testObject.getTest'](34, 55)
@@ -155,13 +162,16 @@ class TestExposedObjectCollection(unittest.TestCase):
         exposed_objects = ExposedObjectCollection({})
         obj = TestObject()
 
-        assertRaisesNothing(self, exposed_objects.add_object, ExposedObject(obj, ('setTest', 'getTest')), 'testObject')
+        assertRaisesNothing(self, exposed_objects.add_object,
+                            ExposedObject(obj, ('setTest', 'getTest')),
+                            'testObject')
         exposed_objects['testObject.getTest'](41, 11)
         obj.getTest.assert_called_once_with(41, 11)
 
     def test_nested_collections(self):
         obj = TestObject()
-        exposed_objects = ExposedObjectCollection({'container': ExposedObjectCollection({'test': obj})})
+        exposed_objects = ExposedObjectCollection(
+            {'container': ExposedObjectCollection({'test': obj})})
 
         exposed_objects['container.test.getTest'](454, 43)
         obj.getTest.assert_called_once_with(454, 43)
@@ -172,7 +182,8 @@ class TestControlServer(unittest.TestCase):
     def test_connection(self, mock_socket_method):
         ControlServer(host='127.0.0.1', port='10001')
 
-        mock_socket_method.assert_has_calls([call(), call().bind('tcp://127.0.0.1:10001')])
+        mock_socket_method.assert_has_calls(
+            [call(), call().bind('tcp://127.0.0.1:10001')])
 
     @patch('core.control_server.ControlServer._get_zmq_rep_socket')
     def test_process_does_not_block(self, mock_socket_method):
@@ -184,4 +195,5 @@ class TestControlServer(unittest.TestCase):
         server = ControlServer()
         assertRaisesNothing(self, server.process)
 
-        mock_socket.recv_unicode.assert_has_calls([call(flags=zmq_no_block_flag)])
+        mock_socket.recv_unicode.assert_has_calls(
+            [call(flags=zmq_no_block_flag)])
