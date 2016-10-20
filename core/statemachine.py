@@ -188,8 +188,19 @@ class StateMachine(CanProcess):
         self._initial = cfg['initial']
         self._set_handlers(self._initial)
 
-        # Allow user to explicitly specify state handlers
-        for state_name, handlers in iteritems(cfg.get('states', {})):
+        self._setup_state_handlers(cfg.get('states', {}), context)
+        self._setup_transition_handlers(cfg.get('transitions', {}), context)
+
+    def _setup_state_handlers(self, state_handler_configuration, context):
+        """
+        This method constructs the state handlers from a user-provided dict.
+
+        :param state_handler_configuration: Dictionary with state handler
+        definitions.
+        :param context: Context is provided to state handlers that inherit
+        from HasContext.
+        """
+        for state_name, handlers in iteritems(state_handler_configuration):
             if isinstance(handlers, HasContext):
                 handlers.set_context(context)
 
@@ -208,7 +219,18 @@ class StateMachine(CanProcess):
                     "Failed to parse state handlers for state '%s'. "
                     "Must be dict or iterable." % state_name)
 
-        for states, check_func in iteritems(cfg.get('transitions', {})):
+    def _setup_transition_handlers(self, transition_handler_configuration,
+                                   context):
+        """
+        This method constructs the transition handlers from a user-provided
+        dict.
+
+        :param transition_handler_configuration: Dictionary with transition
+        handler definitions.
+        :param context: Context is provided to transition handlers that inherit
+        from HasContext.
+        """
+        for states, check_func in iteritems(transition_handler_configuration):
             from_state, to_state = states
 
             # Set up default handlers if this state hasn't occured so far
