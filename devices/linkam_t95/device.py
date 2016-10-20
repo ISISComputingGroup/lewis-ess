@@ -22,7 +22,7 @@ from collections import OrderedDict
 
 from devices import StateMachineDevice
 
-from .states import *
+import states
 
 
 class SimulatedLinkamT95(StateMachineDevice):
@@ -56,41 +56,50 @@ class SimulatedLinkamT95(StateMachineDevice):
 
     def _get_state_handlers(self):
         return {
-            'init': DefaultInitState(),
-            'stopped': DefaultStoppedState(),
-            'started': DefaultStartedState(),
-            'heat': DefaultHeatState(),
-            'hold': DefaultHoldState(),
-            'cool': DefaultCoolState(),
+            'init': states.DefaultInitState(),
+            'stopped': states.DefaultStoppedState(),
+            'started': states.DefaultStartedState(),
+            'heat': states.DefaultHeatState(),
+            'hold': states.DefaultHoldState(),
+            'cool': states.DefaultCoolState(),
         }
 
     def _get_initial_state(self):
         return 'init'
 
     def _get_transition_handlers(self):
+        def hold():
+            return self.temperature == self.temperature_limit \
+                   or self.hold_commanded
+
+        def t_is_below_limit():
+            return self.temperature < self.temperature_limit
+
+        def t_is_above_limit():
+            return self.temperature > self.temperature_limit
+
         return OrderedDict([
             (('init', 'stopped'), lambda: self.serial_command_mode),
 
             (('stopped', 'started'), lambda: self.start_commanded),
 
             (('started', 'stopped'), lambda: self.stop_commanded),
-            (('started', 'heat'), lambda: self.temperature < self.temperature_limit),
-            (('started', 'hold'), lambda: self.temperature == self.temperature_limit),
-            (('started', 'cool'), lambda: self.temperature > self.temperature_limit),
+            (('started', 'heat'), t_is_below_limit),
+            (('started', 'hold'),
+             lambda: self.temperature == self.temperature_limit),
+            (('started', 'cool'), t_is_above_limit),
 
-            (('heat', 'hold'),
-             lambda: self.temperature == self.temperature_limit or self.hold_commanded),
-            (('heat', 'cool'), lambda: self.temperature > self.temperature_limit),
+            (('heat', 'hold'), hold),
+            (('heat', 'cool'), t_is_above_limit),
             (('heat', 'stopped'), lambda: self.stop_commanded),
 
             (('hold', 'heat'),
-             lambda: self.temperature < self.temperature_limit and not self.hold_commanded),
+             lambda: t_is_below_limit() and not self.hold_commanded),
             (('hold', 'cool'),
-             lambda: self.temperature > self.temperature_limit and not self.hold_commanded),
+             lambda: t_is_above_limit() and not self.hold_commanded),
             (('hold', 'stopped'), lambda: self.stop_commanded),
 
-            (('cool', 'heat'), lambda: self.temperature < self.temperature_limit),
-            (('cool', 'hold'),
-             lambda: self.temperature == self.temperature_limit or self.hold_commanded),
+            (('cool', 'heat'), t_is_below_limit),
+            (('cool', 'hold'), hold),
             (('cool', 'stopped'), lambda: self.stop_commanded),
         ])

@@ -18,3 +18,5 @@
 # *********************************************************************
 
 from .stream_interface import LinkamT95StreamInterface
+
+__all__ = LinkamT95StreamInterface

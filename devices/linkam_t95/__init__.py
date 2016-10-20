@@ -18,3 +18,5 @@
 # *********************************************************************
 
 from .device import SimulatedLinkamT95
+
+__all__ = [SimulatedLinkamT95]

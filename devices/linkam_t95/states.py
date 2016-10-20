@@ -39,8 +39,10 @@ class DefaultStartedState(State):
 class DefaultHeatState(State):
     def in_state(self, dt):
         # Approach target temperature at set temperature rate
-        self._context.temperature = approaches.linear(self._context.temperature, self._context.temperature_limit,
-                                                      self._context.temperature_rate / 60.0, dt)
+        self._context.temperature = \
+            approaches.linear(self._context.temperature,
+                              self._context.temperature_limit,
+                              self._context.temperature_rate / 60.0, dt)
 
 
 class DefaultHoldState(State):
@@ -49,12 +51,13 @@ class DefaultHoldState(State):
 
 class DefaultCoolState(State):
     def in_state(self, dt):
-        # TODO: Does manual control work like this? Or is it perhaps a separate state?
+        # TODO: Does manual control work like this? Or is it a separate state?
         if self._context.pump_manual_mode:
             self._context.pump_speed = self._context.manual_target_speed
         else:
             # TODO: Figure out real correlation
-            self._context.pump_speed = 30 * (self._context.temperature_rate / 50.0)
+            self._context.pump_speed = \
+                30 * (self._context.temperature_rate / 50.0)
 
         # Handle "cooling too fast" error
         if self._context.pump_speed > 30:
@@ -66,8 +69,9 @@ class DefaultCoolState(State):
 
         # Approach target temperature at set temperature rate
         # TODO: Should be based on pump speed somehow
-        self._context.temperature = approaches.linear(self._context.temperature, self._context.temperature_limit,
-                                                      self._context.temperature_rate / 60.0, dt)
+        self._context.temperature = approaches.linear(
+            self._context.temperature, self._context.temperature_limit,
+            self._context.temperature_rate / 60.0, dt)
 
     def on_exit(self, dt):
         # If we exit the cooling state, the cooling pump should no longer run
