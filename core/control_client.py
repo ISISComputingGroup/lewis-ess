@@ -32,14 +32,15 @@ class RemoteException(Exception):
         """
         This exception type replaces exceptions that are raised on the server,
         but unknown (i.e. not in the exceptions-module) on the client side.
-        To retain as much information as possible, the exception type on the server and
-        the message are stored.
+        To retain as much information as possible, the exception type on the
+        server and the message are stored.
 
         :param type: Type of the exception on the server side.
         :param message: Exception message on the server side.
         """
         super(RemoteException, self).__init__(
-            'Exception on server side of type \'{}\': \'{}\''.format(type, message))
+            'Exception on server side of '
+            'type \'{}\': \'{}\''.format(type, message))
 
         self.server_side_type = type
         self.server_side_message = message
@@ -74,10 +75,11 @@ class ControlClient(object):
     def json_rpc(self, method, *args):
         """
         This method takes a ZMQ REQ-socket and submits a JSON-object containing
-        the RPC (JSON-RPC 2.0 format) to the supplied method with the supplied arguments.
-        Then it waits for a reply from the server and blocks until it has received
-        a JSON-response. The method returns the response and the id it used to tag
-        the original request, which is a random UUID (uuid.uuid4).
+        the RPC (JSON-RPC 2.0 format) to the supplied method with the supplied
+        arguments. Then it waits for a reply from the server and blocks until
+        it has received a JSON-response. The method returns the response and
+        the id it used to tag the original request,
+        which is a random UUID (uuid.uuid4).
 
         :param method: Method to call on remote.
         :param args: Arguments to method call.
@@ -96,7 +98,7 @@ class ControlClient(object):
     def get_object(self, object_name=''):
         api, request_id = self.json_rpc(object_name + ':api')
 
-        if not 'result' in api or api['id'] != request_id:
+        if 'result' not in api or api['id'] != request_id:
             raise ProtocolException('Failed to retrieve API of remote object.')
 
         object_type = type(str(api['result']['class']), (ObjectProxy,), {})
@@ -107,13 +109,15 @@ class ControlClient(object):
 
     def get_object_collection(self, object_name=''):
         """
-        If the remote end exposes a collection of objects under the supplied object name (empty
-        for top level), this method returns a dictionary of these objects stored under their
-        names on the server.
+        If the remote end exposes a collection of objects under the supplied
+        object name (empty for top level), this method returns a dictionary
+        of these objects stored under their names on the server.
 
-        This function performs n + 1 calls to the server, where n is the number of objects.
+        This function performs n + 1 calls to the server, where n is
+        the number of objects.
 
-        :param object_name: Object name on the server. This is required if the object collection is not the top level object.
+        :param object_name: Object name on the server. This is required if
+        the object collection is not the top level object.
         """
 
         object_names = self.get_object(object_name).get_objects()
@@ -124,25 +128,27 @@ class ControlClient(object):
 class ObjectProxy(object):
     def __init__(self, connection, members, prefix=''):
         """
-        This class serves as a base class for dynamically created classes on the
-        client side that represent server-side objects. Upon initialization,
-        this class takes the supplied methods and installs appropriate proxy methods
-        or properties into the object and class respectively. Because of that
-        class manipulation, this class must never be used directly.
-        Instead, it should be used as a base-class for dynamically created types
-        that mirror types on the server, like this:
+        This class serves as a base class for dynamically created classes on
+        the client side that represent server-side objects.
+        Upon initialization, this class takes the supplied methods and installs
+        appropriate proxy methods or properties into the object and class
+        respectively. Because of that class manipulation, this class must never
+        be used directly. Instead, it should be used as a base-class for
+        dynamically created types that mirror types on the server, like this:
 
-            proxy = type('SomeClassName', (ObjectProxy, ), {})(connection, methods, prefix)
+            proxy = type('SomeClassName', (ObjectProxy, ), {})(
+                        connection, methods, prefix)
 
         There is however, the class ControlClient, which automates all that
         and provides objects that are ready to use.
 
-        Exceptions on the server are propagated to the client. If the exception is not part
-        of the exceptions-module (builtins for Python 3), a RemoteException is raised instead
-        which contains information about the server side exception.
+        Exceptions on the server are propagated to the client. If the exception
+        is not part of the exceptions-module (builtins for Python 3),
+        a RemoteException is raised instead which contains information about
+        the server side exception.
 
-        All RPC method names are prefixed with the supplied prefix, which is usually the
-        object name on the server plus a dot.
+        All RPC method names are prefixed with the supplied prefix, which is
+        usually the object name on the server plus a dot.
 
         :param connection: ControlClient-object for remote calls.
         :param members: List of strings to generate methods and properties.
@@ -156,9 +162,10 @@ class ObjectProxy(object):
 
     def _make_request(self, method, *args):
         """
-        This method performs a JSON-RPC request via the object's ZMQ socket. If successful,
-        the result is returned, otherwise exceptions are raised. Server side exceptions are
-        raised using the same type as on the server if they are part of the exceptions-module.
+        This method performs a JSON-RPC request via the object's ZMQ socket.
+        If successful, the result is returned, otherwise exceptions are raised.
+        Server side exceptions are raised using the same type as on the server
+        if they are part of the exceptions-module.
         Otherwise, a RemoteException is raised.
 
         :param method: Method of the object to call on the remote.
@@ -191,8 +198,9 @@ class ObjectProxy(object):
                 setattr(self, member, self._create_method_proxy(member))
 
         for prop in self._properties:
-            setattr(type(self), prop, property(self._create_getter_proxy(prop),
-                                               self._create_setter_proxy(prop)))
+            setattr(type(self),
+                    prop, property(self._create_getter_proxy(prop),
+                                   self._create_setter_proxy(prop)))
 
     def _create_getter_proxy(self, property_name):
         def getter(obj):
