@@ -22,7 +22,7 @@ from collections import OrderedDict
 
 from devices import StateMachineDevice
 
-import states
+from . import states
 
 
 class SimulatedLinkamT95(StateMachineDevice):

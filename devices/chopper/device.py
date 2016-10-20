@@ -21,7 +21,7 @@ from collections import OrderedDict
 from core import StateMachine, CanProcess
 from devices import StateMachineDevice
 from .bearings import MagneticBearings
-import states
+from . import states
 
 
 class SimulatedBearings(CanProcess, MagneticBearings):
