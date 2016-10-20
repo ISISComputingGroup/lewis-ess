@@ -18,3 +18,5 @@
 # *********************************************************************
 
 from .device import SimulatedChopper
+
+__all__ = [SimulatedChopper]

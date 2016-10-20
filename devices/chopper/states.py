@@ -32,9 +32,10 @@ class DefaultParkingState(State):
         self._parking_speed = parking_speed
 
     def in_state(self, dt):
-        self._context.parking_position = approaches.linear(self._context.parking_position,
-                                                           self._context.target_parking_position,
-                                                           self._parking_speed, dt)
+        self._context.parking_position = \
+            approaches.linear(self._context.parking_position,
+                              self._context.target_parking_position,
+                              self._parking_speed, dt)
 
     def on_entry(self, dt):
         self._context._park_commanded = False
@@ -50,8 +51,8 @@ class DefaultStoppingState(State):
         self._acceleration = acceleration
 
     def in_state(self, dt):
-        self._context.speed = approaches.linear(self._context.speed, 0.0,
-                                                self._acceleration, dt)
+        self._context.speed = \
+            approaches.linear(self._context.speed, 0.0, self._acceleration, dt)
 
     def on_entry(self, dt):
         self._context._stop_commanded = False
@@ -69,8 +70,9 @@ class DefaultIdleState(State):
         self._acceleration = acceleration
 
     def in_state(self, dt):
-        self._context.speed = approaches.linear(self._context.speed, self._context.target_speed,
-                                                self._acceleration, dt)
+        self._context.speed = \
+            approaches.linear(self._context.speed, self._context.target_speed,
+                              self._acceleration, dt)
 
 
 def on_entry(self, dt):
@@ -83,8 +85,9 @@ class DefaultAcceleratingState(State):
         self._acceleration = acceleration
 
     def in_state(self, dt):
-        self._context.speed = approaches.linear(self._context.speed, self._context.target_speed,
-                                                self._acceleration, dt)
+        self._context.speed = \
+            approaches.linear(self._context.speed, self._context.target_speed,
+                              self._acceleration, dt)
 
     def on_entry(self, dt):
         self._context._start_commanded = False
@@ -96,8 +99,9 @@ class DefaultPhaseLockingState(State):
         self._phase_locking_speed = phase_locking_speed
 
     def in_state(self, dt):
-        self._context.phase = approaches.linear(self._context.phase, self._context.target_phase,
-                                                self._phase_locking_speed, dt)
+        self._context.phase = \
+            approaches.linear(self._context.phase, self._context.target_phase,
+                              self._phase_locking_speed, dt)
 
     def on_entry(self, dt):
         self._context._phase_commanded = False
