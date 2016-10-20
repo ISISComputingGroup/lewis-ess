@@ -134,7 +134,8 @@ class TestSimulation(unittest.TestCase):
 
     def test_process_calls_control_server(self):
         control_mock = Mock()
-        env = Simulation(device=Mock(), adapter=Mock(), control_server=control_mock)
+        env = Simulation(device=Mock(), adapter=Mock(),
+                         control_server=control_mock)
 
         set_simulation_running(env)
         env._process_cycle(0.5)
@@ -172,7 +173,8 @@ class TestSimulation(unittest.TestCase):
     def test_start_stop(self):
         env = Simulation(device=Mock(), adapter=Mock())
 
-        with patch.object(env, '_process_cycle', side_effect=lambda x: env.stop()) as mock_cycle:
+        with patch.object(env, '_process_cycle',
+                          side_effect=lambda x: env.stop()) as mock_cycle:
             env.start()
 
             mock_cycle.assert_has_calls([call(0.0)])

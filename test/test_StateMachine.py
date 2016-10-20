@@ -33,12 +33,15 @@ class TestStateMachine(unittest.TestCase):
 
     def test_state_machine_starts_in_None(self):
         sm = StateMachine({'initial': 'foobar'})
-        self.assertIsNone(sm.state, "StateMachine should start in the 'None' non-state")
+        self.assertIsNone(sm.state,
+                          "StateMachine should start in the 'None' non-state")
 
     def test_first_cycle_transitions_to_initial(self):
         sm = StateMachine({'initial': 'foobar'})
         sm.process(0.1)
-        self.assertEqual(sm.state, 'foobar', "StateMachine failed to transition into initial state on first cycle")
+        self.assertEqual(sm.state, 'foobar',
+                         "StateMachine failed to transition into "
+                         "initial state on first cycle")
 
     def test_can_transition_with_lambda(self):
         sm = StateMachine({
@@ -94,7 +97,7 @@ class TestStateMachine(unittest.TestCase):
     def test_Transition_receives_Context(self):
         transition = Transition()
         context = object()
-        sm = StateMachine({
+        StateMachine({
             'initial': 'foo',
             'transitions': {
                 ('foo', 'bar'): transition
@@ -110,14 +113,16 @@ class TestStateMachine(unittest.TestCase):
         sm = StateMachine({
             'initial': 'foo',
             'states': {
-                'foo': {'on_entry': on_entry, 'in_state': in_state, 'on_exit': on_exit},
+                'foo': {'on_entry': on_entry, 'in_state': in_state,
+                        'on_exit': on_exit},
             },
             'transitions': {
                 ('foo', 'bar'): lambda: True
             }
         })
 
-        # First cycle enters and executes initial state, but forces delta T to zero
+        # First cycle enters and executes initial state,
+        # but forces delta T to zero
         sm.process(1.0)
         on_entry.assert_called_once_with(0)
         in_state.assert_called_once_with(0)
@@ -151,7 +156,8 @@ class TestStateMachine(unittest.TestCase):
             }
         })
 
-        # First cycle enters and executes initial state, but forces delta T to zero
+        # First cycle enters and executes initial state,
+        # but forces delta T to zero
         sm.process(1.0)
         on_entry.assert_called_once_with(0)
         in_state.assert_called_once_with(0)
@@ -188,7 +194,8 @@ class TestStateMachine(unittest.TestCase):
             }
         })
 
-        # First cycle enters and executes initial state, but forces delta T to zero
+        # First cycle enters and executes initial state,
+        # but forces delta T to zero
         sm.process(1.0)
         foo.on_entry.assert_called_once_with(0)
         foo.in_state.assert_called_once_with(0)
@@ -215,7 +222,7 @@ class TestStateMachine(unittest.TestCase):
     def test_State_receives_Context(self):
         state = State()
         context = object()
-        sm = StateMachine({
+        StateMachine({
             'initial': 'foo',
             'states': {
                 'foo': state
@@ -234,7 +241,8 @@ class TestStateMachine(unittest.TestCase):
         })
         sm.bind_handlers_by_name(target)
 
-        # First cycle enters and executes initial state, but forces delta T to zero
+        # First cycle enters and executes initial state,
+        # but forces delta T to zero
         sm.process(1.0)
         target._on_entry_foo.assert_called_once_with(0)
         target._in_state_foo.assert_called_once_with(0)
@@ -272,7 +280,8 @@ class TestStateMachine(unittest.TestCase):
             'on_exit': 'exit_',
         })
 
-        # First cycle enters and executes initial state, but forces delta T to zero
+        # First cycle enters and executes initial state,
+        # but forces delta T to zero
         sm.process(1.0)
         target.enter_foo.assert_called_once_with(0)
         target.do_foo.assert_called_once_with(0)
@@ -312,7 +321,8 @@ class TestStateMachine(unittest.TestCase):
         sm.bind_handlers_by_name(first)
         sm.bind_handlers_by_name(second, override=True)
 
-        # First cycle enters and executes initial state, but forces delta T to zero
+        # First cycle enters and executes initial state,
+        # but forces delta T to zero
         sm.process(1.0)
         first._on_entry_foo.assert_called_once_with(0)
         first._in_state_foo.assert_called_once_with(0)
