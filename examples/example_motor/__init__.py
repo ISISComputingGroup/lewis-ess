@@ -114,7 +114,7 @@ setups = dict(
         parameters=dict(
             override_initial_state='moving',
             override_initial_data=dict(
-                _target=120.0,position=20.0
+                _target=120.0, position=20.0
             )
         )
     )
