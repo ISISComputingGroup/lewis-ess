@@ -39,13 +39,14 @@ class Device(CanProcess):
 
 
 class StateMachineDevice(CanProcessComposite):
-    def __init__(self, override_states=None, override_transitions=None, override_initial_state=None,
-                 override_initial_data=None):
+    def __init__(self, override_states=None, override_transitions=None,
+                 override_initial_state=None, override_initial_data=None):
         """
         This class is intended to be sub-classed to implement devices using a finite state machine
         internally.
 
-        Implementing such a device is straightforward, there are three methods that *must* be overriden:
+        Implementing such a device is straightforward, there are three methods
+        that *must* be overriden:
 
             `_get_state_handlers`
             `_get_initial_state`
@@ -66,21 +67,25 @@ class StateMachineDevice(CanProcessComposite):
 
             `_initialize_data`
 
-        This method should initialise device state variables (such as temperature, speed, etc.). Having
-        this in a separate method from `__init__` has the advantage that it can be used to reset those
-        variables at a later stage, without having to write the same code again.
+        This method should initialise device state variables (such as temperature, speed, etc.).
+        Having this in a separate method from `__init__` has the advantage that it can be used
+        to reset those variables at a later stage, without having to write the same code again.
 
         Following this scheme, inheriting from `StateMachineDevice` also provides the possibility
         for users of the class to override the states, the transitions, the initial state and
-        even the data. For states, transitions and data, dicts need to be passed to the constructor,
-        for the initial state that should be a string.
+        even the data. For states, transitions and data, dicts need to be passed to the
+        constructor, for the initial state that should be a string.
 
-        All these overrides can be used to define device setups to describe certain scenarios more easily.
+        All these overrides can be used to define device setups to describe certain scenarios
+        more easily.
 
-        :param override_states: Dict with one entry per state. Only states defined in the state machine are allowed.
-        :param override_transitions: Dict with (state, state) tuples as keys and callables as values.
+        :param override_states: Dict with one entry per state. Only states defined in the state
+        machine are allowed.
+        :param override_transitions: Dict with (state, state) tuples as keys and
+        callables as values.
         :param override_initial_state: The initial state.
-        :param override_initial_data: A dict that contains data members that should be overwritten on construction.
+        :param override_initial_data: A dict that contains data members
+        that should be overwritten on construction.
         """
         super(StateMachineDevice, self).__init__()
 
@@ -88,7 +93,7 @@ class StateMachineDevice(CanProcessComposite):
         self._override_data(override_initial_data)
 
         state_handlers = self._get_final_state_handlers(override_states)
-        initial = self._get_initial_state() if override_initial_state is None else override_initial_state
+        initial = override_initial_state or self._get_initial_state()
 
         if initial not in state_handlers:
             raise RuntimeError('Initial state \'{}\' is not a valid state.'.format(initial))
@@ -103,35 +108,40 @@ class StateMachineDevice(CanProcessComposite):
 
     def _get_state_handlers(self):
         """
-        Implement this method to return a dict-like object with state handlers (see core.statemachine.State) for each
-        state of the state machine. The default implementation raises a NotImplementedError.
+        Implement this method to return a dict-like object with state handlers
+        (see core.statemachine.State) for each state of the state machine.
+        The default implementation raises a NotImplementedError.
 
         :return: A dict-like object containing named state handlers.
         """
-        raise NotImplementedError('_get_state_handlers must be implemented in a StateMachineDevice.')
+        raise NotImplementedError(
+            '_get_state_handlers must be implemented in a StateMachineDevice.')
 
     def _get_initial_state(self):
         """
-        Implement this method to return the initial state of the internal state machine. The default implementation
-        raises a NotImplementedError.
+        Implement this method to return the initial state of the internal state machine.
+        The default implementation raises a NotImplementedError.
 
         :return: The initial state of the state machine.
         """
-        raise NotImplementedError('_get_initial_state must be implemented in a StateMachineDevice.')
+        raise NotImplementedError(
+            '_get_initial_state must be implemented in a StateMachineDevice.')
 
     def _get_transition_handlers(self):
         """
-        Implement this method to return transition handlers for the internal state machine. The keys should be
-        (state, state)-tuples and the values functions that return true if the transition should be triggered.
+        Implement this method to return transition handlers for the internal state machine.
+        The keys should be (state, state)-tuples and the values functions that return true
+        if the transition should be triggered.
 
         :return: A dict-like object containing transition handlers.
         """
-        raise NotImplementedError('_get_transition_handlers must be implemented in a StateMachineDevice.')
+        raise NotImplementedError(
+            '_get_transition_handlers must be implemented in a StateMachineDevice.')
 
     def _initialize_data(self):
         """
-        Implement this method to initialize data members of the device, such as temperature, speed and others. It gets
-        called first in the __init__-method.
+        Implement this method to initialize data members of the device, such as temperature,
+        speed and others. It gets called first in the __init__-method.
         """
         pass
 
@@ -160,8 +170,9 @@ class StateMachineDevice(CanProcessComposite):
         if overrides is not None:
             for name, val in overrides.items():
                 if name not in dir(self):
-                    raise AttributeError('Can not override non-existing attribute \'{}\' of class \'{}\'.'.format(
-                        name, type(self).__name__))
+                    raise AttributeError(
+                        'Can not override non-existing attribute'
+                        '\'{}\' of class \'{}\'.'.format(name, type(self).__name__))
 
                 setattr(self, name, val)
 
@@ -178,17 +189,17 @@ def import_device(device, setup=None, device_package='devices'):
         device_package.device.setups.setup
 
     and tries to import two members from that module `device_type` and `parameters`. The former
-    must be the device class and the latter the parameters that are passed to the class' constructor.
-    The above mentioned module might look like this:
+    must be the device class and the latter the parameters that are passed to the
+    class' constructor. The above mentioned module might look like this:
 
         from ..device import SomeDeviceClass as device_type
 
         parameters = dict(device_param1='some_value', device_param2=3.4)
 
     This allows for a large degree of freedom for specifying setups. If that is not required,
-    and the setup does not exist in that sub-module of the device, this function checks for a dictionary
-    named `setups` directly in the device module (device_package.device). So the device_package.device.__init__.py
-    could contain something like this:
+    and the setup does not exist in that sub-module of the device, this function checks for a
+    dictionary named `setups` directly in the device module (device_package.device).
+    So the device_package.device.__init__.py could contain something like this:
 
         from .device import SomeDeviceClass
 
@@ -199,9 +210,10 @@ def import_device(device, setup=None, device_package='devices'):
                      )
                  )
 
-    If that also fails, but no setup was specified in the function's arguments, the function will try to return
-    the first sub-class of `CanProcess` that it finds in the device module. That means in the simplest case,
-    the __init__.py only needs to declare a class that can be instantiated without parameters.
+    If that also fails, but no setup was specified in the function's arguments, the function will
+    try to return  the first sub-class of `CanProcess` that it finds in the device module.
+    That means in the simplest case, the __init__.py only needs to declare a class that can be
+    instantiated without parameters.
 
     If all of that fails, an exception is raised.
 
@@ -215,7 +227,8 @@ def import_device(device, setup=None, device_package='devices'):
     setup_name = setup if setup is not None else 'default'
 
     try:
-        setup_module = importlib.import_module('{}.{}.{}.{}'.format(device_package, device, 'setups', setup_name))
+        setup_module = importlib.import_module(
+            '{}.{}.{}.{}'.format(device_package, device, 'setups', setup_name))
         device_type = getattr(setup_module, 'device_type')
         parameters = getattr(setup_module, 'parameters')
 
@@ -243,4 +256,5 @@ def import_device(device, setup=None, device_package='devices'):
                 raise
 
         except (ImportError, AttributeError, KeyError):
-            raise RuntimeError('Could not find setup \'{}\' for device \'{}\'.'.format(setup_name, device))
+            raise RuntimeError(
+                'Could not find setup \'{}\' for device \'{}\'.'.format(setup_name, device))
