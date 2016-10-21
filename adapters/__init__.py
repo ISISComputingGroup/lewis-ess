@@ -54,8 +54,9 @@ def get_available_adapters(device_name, device_package):
     adapters = dict()
 
     try:
-        adapter_module = importlib.import_module('{}.{}.{}'.format(device_package, device_name, 'interfaces'))
-        module_members = {member: getattr(adapter_module, member) for member in dir(adapter_module)}
+        adapter_module = importlib.import_module(
+            '{}.{}.{}'.format(device_package, device_name, 'interfaces'))
+        module_members = {name: getattr(adapter_module, name) for name in dir(adapter_module)}
 
         for name, member in module_members.items():
             if is_adapter(member):
@@ -96,7 +97,8 @@ def import_adapter(device_name, protocol_name, device_package='devices'):
             return adapter
 
     raise RuntimeError(
-        'No suitable adapter found for device \'{}\' and protocol \'{}\'.'.format(device_name, protocol_name))
+        'No suitable adapter found for device \'{}\' '
+        'and protocol \'{}\'.'.format(device_name, protocol_name))
 
 
 class ForwardProperty(object):

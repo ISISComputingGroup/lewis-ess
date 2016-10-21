@@ -22,7 +22,7 @@ from collections import OrderedDict
 
 from devices import StateMachineDevice
 
-from .states import *
+from . import states
 
 
 class SimulatedLinkamT95(StateMachineDevice):
@@ -56,12 +56,12 @@ class SimulatedLinkamT95(StateMachineDevice):
 
     def _get_state_handlers(self):
         return {
-            'init': DefaultInitState(),
-            'stopped': DefaultStoppedState(),
-            'started': DefaultStartedState(),
-            'heat': DefaultHeatState(),
-            'hold': DefaultHoldState(),
-            'cool': DefaultCoolState(),
+            'init': states.DefaultInitState(),
+            'stopped': states.DefaultStoppedState(),
+            'started': states.DefaultStartedState(),
+            'heat': states.DefaultHeatState(),
+            'hold': states.DefaultHoldState(),
+            'cool': states.DefaultCoolState(),
         }
 
     def _get_initial_state(self):

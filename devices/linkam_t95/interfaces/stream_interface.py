@@ -77,7 +77,8 @@ class LinkamT95StreamInterface(StreamAdapter):
 
         Sets the target rate of temperature change.
 
-        :param param: Rate of temperature change in C/min, multiplied by 100, as a string. Must be positive.
+        :param param: Rate of temperature change in C/min, multiplied by 100, as a string.
+        Must be positive.
         :return: Empty string.
         """
         # TODO: Is not having leading zeroes / 4 digits an error?
@@ -105,7 +106,8 @@ class LinkamT95StreamInterface(StreamAdapter):
         """
         Models "Start Command" functionality of device.
 
-        Tells the T95 unit to start heating or cooling at the rate specified by setRate and to a limit set by setLimit.
+        Tells the T95 unit to start heating or cooling at the rate specified by setRate and to a
+        limit set by setLimit.
 
         :return: Empty string.
         """

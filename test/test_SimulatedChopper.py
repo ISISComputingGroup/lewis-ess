@@ -24,7 +24,8 @@ from devices.chopper.states import DefaultIdleState
 
 class TestSimulatedChopper(unittest.TestCase):
     def test_invalid_state_override_fails(self):
-        self.assertRaises(RuntimeError, SimulatedChopper, override_states={'invalid': DefaultIdleState()})
+        self.assertRaises(
+            RuntimeError, SimulatedChopper, override_states={'invalid': DefaultIdleState()})
 
     def test_valid_state_override_does_not_fail(self):
         chopper = SimulatedChopper(override_states={'idle': DefaultIdleState()})

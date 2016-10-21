@@ -21,7 +21,13 @@ from six import iteritems
 import unittest
 from mock import patch
 
-from core.utils import dict_strict_update
+import os
+import shutil
+import tempfile
+from datetime import datetime
+
+from core.utils import dict_strict_update, extract_module_name, \
+    is_module, seconds_since, get_available_submodules
 
 
 class TestDictStrictUpdate(unittest.TestCase):
@@ -46,11 +52,6 @@ class TestDictStrictUpdate(unittest.TestCase):
         update_dict = {51: 3, 2: 43}
 
         self.assertRaises(RuntimeError, dict_strict_update, base_dict, update_dict)
-
-
-from core.utils import extract_module_name
-import os, shutil
-import tempfile
 
 
 class TestWithPackageStructure(unittest.TestCase):
@@ -128,37 +129,32 @@ class TestExtractModuleName(TestWithPackageStructure):
         self.assertEqual(extract_module_name(self._files['valid']), 'some_file')
 
 
-from core.utils import is_module
-
-
 class TestIsModule(TestWithPackageStructure):
     def test_valid_directory(self):
-        self.assertTrue(is_module(extract_module_name(self._dirs['valid']), [self._tmp_package]), self._tmp_package)
+        self.assertTrue(is_module(
+            extract_module_name(self._dirs['valid']), [self._tmp_package]), self._tmp_package)
 
     def test_invalid_directory(self):
-        self.assertFalse(is_module(extract_module_name(self._dirs['invalid']), [self._tmp_package]))
+        self.assertFalse(is_module(
+            extract_module_name(self._dirs['invalid']), [self._tmp_package]))
 
     def test_invalid_file_name(self):
-        self.assertFalse(is_module(extract_module_name(self._files['invalid_name']), [self._tmp_package]))
+        self.assertFalse(is_module(
+            extract_module_name(self._files['invalid_name']), [self._tmp_package]))
 
     def test_invalid_file_ext(self):
-        self.assertFalse(is_module(extract_module_name(self._files['invalid_ext']), [self._tmp_package]))
+        self.assertFalse(is_module(
+            extract_module_name(self._files['invalid_ext']), [self._tmp_package]))
 
     def test_valid_file(self):
-        self.assertTrue(is_module(extract_module_name(self._files['valid']), [self._tmp_package]), self._tmp_package)
-
-
-from core.utils import get_available_submodules
+        self.assertTrue(is_module(
+            extract_module_name(self._files['valid']), [self._tmp_package]), self._tmp_package)
 
 
 class TestGetAvailableSubModules(TestWithPackageStructure):
     def test_correct_modules_are_returned(self):
         self.assertEqual(sorted(get_available_submodules(self._tmp_package_name, [self._tmp_dir])),
                          sorted(self._expected_modules))
-
-
-from core.utils import seconds_since
-from datetime import datetime
 
 
 class TestSecondsSince(unittest.TestCase):

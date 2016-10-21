@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+
 class CanProcess(object):
     """
     The CanProcess class is meant as a base for all things that
@@ -24,7 +25,8 @@ class CanProcess(object):
 
     The base implementation does nothing.
 
-    There are three methods that can be implemented by sub-classes and are called in the process-method in this order:
+    There are three methods that can be implemented by sub-classes and are called in the
+    process-method in this order:
 
         1. doBeforeProcess
         2. doProcess

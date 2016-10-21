@@ -96,7 +96,7 @@ class ControlClient(object):
     def get_object(self, object_name=''):
         api, request_id = self.json_rpc(object_name + ':api')
 
-        if not 'result' in api or api['id'] != request_id:
+        if 'result' not in api or api['id'] != request_id:
             raise ProtocolException('Failed to retrieve API of remote object.')
 
         object_type = type(str(api['result']['class']), (ObjectProxy,), {})
@@ -113,7 +113,8 @@ class ControlClient(object):
 
         This function performs n + 1 calls to the server, where n is the number of objects.
 
-        :param object_name: Object name on the server. This is required if the object collection is not the top level object.
+        :param object_name: Object name on the server. This is required if the object collection
+        is not the top level object.
         """
 
         object_names = self.get_object(object_name).get_objects()

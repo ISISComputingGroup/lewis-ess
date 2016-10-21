@@ -33,24 +33,32 @@ from devices import import_device
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
 
-parser.add_argument('-r', '--rpc-host', help='HOST:PORT format string for exposing the device via JSON-RPC over ZMQ.')
-parser.add_argument('-s', '--setup', help='Name of the setup to load.', default=None)
-parser.add_argument('-l', '--list-protocols', help='List available protocols for selected device.', action='store_true')
-parser.add_argument('-p', '--protocol', help='Communication protocol to expose devices.', default=None)
-parser.add_argument('-c', '--cycle-delay',
-                    help='Approximate time to spend in each cycle of the simulation. 0 for maximum simulation rate.',
-                    type=float, default=0.1)
+parser.add_argument('-r', '--rpc-host',
+                    help='HOST:PORT format string for exposing the device via JSON-RPC over ZMQ.')
+parser.add_argument('-s', '--setup', default=None,
+                    help='Name of the setup to load.')
+parser.add_argument('-l', '--list-protocols',
+                    help='List available protocols for selected device.', action='store_true')
+parser.add_argument('-p', '--protocol', default=None,
+                    help='Communication protocol to expose devices.')
+parser.add_argument('-c', '--cycle-delay', type=float, default=0.1,
+                    help='Approximate time to spend in each cycle of the simulation. '
+                         '0 for maximum simulation rate.')
 parser.add_argument('-e', '--speed', type=float, default=1.0,
-                    help='Simulation speed. The actually elapsed time '
-                         'between two cycles is multiplied with this speed to determine the simulated time.')
-parser.add_argument('-k', '--device-package', help='Name of packages where devices are found.', default='devices')
-parser.add_argument('-a', '--add-path', help='Path where the device package exists. Is added to the path.',
-                    default=None)
-parser.add_argument('-v', '--version', help='Prints the version and exits.', action='store_true')
+                    help='Simulation speed. The actually elapsed time between two cycles is '
+                         'multiplied with this speed to determine the simulated time.')
+parser.add_argument('-k', '--device-package', default='devices',
+                    help='Name of packages where devices are found.')
+parser.add_argument('-a', '--add-path', default=None,
+                    help='Path where the device package exists. Is added to the path.')
+parser.add_argument('-v', '--version', action='store_true',
+                    help='Prints the version and exits.')
 
-parser.add_argument('device', help='Name of the device to simulate, omitting prints list of available devices.',
-                    nargs='?')
-parser.add_argument('adapter_args', nargs='*', help='Arguments for the adapter.')
+parser.add_argument('device', nargs='?',
+                    help='Name of the device to simulate, '
+                         'omitting prints list of available devices.')
+parser.add_argument('adapter_args', nargs='*',
+                    help='Arguments for the adapter.')
 
 arguments = parser.parse_args()
 
@@ -70,7 +78,8 @@ if not arguments.device:
     exit()
 
 # Import the device type and required initialisation parameters.
-device_type, parameters = import_device(arguments.device, arguments.setup, device_package=arguments.device_package)
+device_type, parameters = import_device(arguments.device, arguments.setup,
+                                        device_package=arguments.device_package)
 
 if arguments.list_protocols:
     adapters = get_available_adapters(arguments.device, device_package=arguments.device_package)

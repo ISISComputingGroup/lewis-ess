@@ -38,7 +38,8 @@ class TestStateMachine(unittest.TestCase):
     def test_first_cycle_transitions_to_initial(self):
         sm = StateMachine({'initial': 'foobar'})
         sm.process(0.1)
-        self.assertEqual(sm.state, 'foobar', "StateMachine failed to transition into initial state on first cycle")
+        self.assertEqual(sm.state, 'foobar', "StateMachine failed to transition into "
+                                             "initial state on first cycle")
 
     def test_can_transition_with_lambda(self):
         sm = StateMachine({
@@ -94,7 +95,7 @@ class TestStateMachine(unittest.TestCase):
     def test_Transition_receives_Context(self):
         transition = Transition()
         context = object()
-        sm = StateMachine({
+        StateMachine({
             'initial': 'foo',
             'transitions': {
                 ('foo', 'bar'): transition
@@ -215,7 +216,7 @@ class TestStateMachine(unittest.TestCase):
     def test_State_receives_Context(self):
         state = State()
         context = object()
-        sm = StateMachine({
+        StateMachine({
             'initial': 'foo',
             'states': {
                 'foo': state

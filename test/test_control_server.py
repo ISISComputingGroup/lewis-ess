@@ -155,13 +155,15 @@ class TestExposedObjectCollection(unittest.TestCase):
         exposed_objects = ExposedObjectCollection({})
         obj = TestObject()
 
-        assertRaisesNothing(self, exposed_objects.add_object, ExposedObject(obj, ('setTest', 'getTest')), 'testObject')
+        assertRaisesNothing(self, exposed_objects.add_object,
+                            ExposedObject(obj, ('setTest', 'getTest')), 'testObject')
         exposed_objects['testObject.getTest'](41, 11)
         obj.getTest.assert_called_once_with(41, 11)
 
     def test_nested_collections(self):
         obj = TestObject()
-        exposed_objects = ExposedObjectCollection({'container': ExposedObjectCollection({'test': obj})})
+        exposed_objects = ExposedObjectCollection(
+            {'container': ExposedObjectCollection({'test': obj})})
 
         exposed_objects['container.test.getTest'](454, 43)
         obj.getTest.assert_called_once_with(454, 43)
