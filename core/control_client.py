@@ -113,7 +113,8 @@ class ControlClient(object):
 
         This function performs n + 1 calls to the server, where n is the number of objects.
 
-        :param object_name: Object name on the server. This is required if the object collection is not the top level object.
+        :param object_name: Object name on the server. This is required if the object collection
+        is not the top level object.
         """
 
         object_names = self.get_object(object_name).get_objects()

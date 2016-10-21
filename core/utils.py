@@ -55,7 +55,7 @@ def extract_module_name(absolute_path):
     if base_name.startswith('_'):
         return None
 
-    # If it's a directory, there's nothing else to check, so it can be returned directly as the name
+    # If it's a directory, there's nothing else to check, so it can be returned directly
     if osp.isdir(absolute_path):
         return base_name
 
@@ -97,8 +97,8 @@ def dict_strict_update(base_dict, update_dict):
     additional_keys = set(update_dict.keys()) - set(base_dict.keys())
     if len(additional_keys) > 0:
         raise RuntimeError(
-            'The update dictionary contains keys that are not part of the base dictionary: {}'.format(
-                str(additional_keys)))
+            'The update dictionary contains keys that are not part of '
+            'the base dictionary: {}'.format(str(additional_keys)))
 
     base_dict.update(update_dict)
 

@@ -166,7 +166,8 @@ class StateMachine(CanProcess):
 
         # Specifying an initial state is not optional
         if 'initial' not in cfg:
-            raise StateMachineException("StateMachine configuration must include 'initial' to specify starting state.")
+            raise StateMachineException("StateMachine configuration must include "
+                                        "'initial' to specify starting state.")
         self._initial = cfg['initial']
         self._set_handlers(self._initial)
 
@@ -188,7 +189,8 @@ class StateMachine(CanProcess):
 
             try:
                 if isinstance(handlers, State):
-                    self._set_handlers(state_name, handlers.on_entry, handlers.in_state, handlers.on_exit)
+                    self._set_handlers(
+                        state_name, handlers.on_entry, handlers.in_state, handlers.on_exit)
                 elif isinstance(handlers, dict):
                     self._set_handlers(state_name, **handlers)
                 elif hasattr(handlers, '__iter__'):
@@ -197,7 +199,8 @@ class StateMachine(CanProcess):
                     raise RuntimeError('Handler is not State, dict or __iter__.')
             except Exception:
                 raise StateMachineException(
-                    "Failed to parse state handlers for state '%s'. Must be dict or iterable." % state_name)
+                    "Failed to parse state handlers for state '%s'. "
+                    "Must be dict or iterable." % state_name)
 
     def _setup_transition_handlers(self, transition_handler_configuration,
                                    context):
@@ -249,26 +252,31 @@ class StateMachine(CanProcess):
         Auto-bind state handlers based on naming convention.
 
         :param instance: Target object instance to search for handlers and bind events to.
-        :param override: [optional] If set to True, matching handlers will replace previously registered handlers.
-        :param prefix: [optional] Dict of prefixes to override defaults (keys: on_entry, in_state, on_exit)
+        :param override: [optional] If set to True, matching handlers will replace
+        previously registered handlers.
+        :param prefix: [optional] Dict of prefixes to override defaults
+        (keys: on_entry, in_state, on_exit)
 
-        This function enables automatically binding state handlers to events without having to specify them in the
-        constructor. When called, this function searches `instance` for member functions that match the following
-        patterns for all known states (states mentioned in 'states' or 'transitions' dicts of cfg):
+        This function enables automatically binding state handlers to events without having to
+        specify them in the constructor. When called, this function searches `instance` for
+        member functions that match the following patterns for all known states
+        (states mentioned in 'states' or 'transitions' dicts of cfg):
 
         - instance._on_entry_[state]
         - instance._in_state_[state]
         - instance._on_exit_[state]
 
-        The default prefixes may be overridden using the prefix parameter. Supported keys are 'on_entry', 'in_state',
-        and 'on_exit'. Values should include any and all desired underscores.
+        The default prefixes may be overridden using the prefix parameter. Supported keys are
+        'on_entry', 'in_state', and 'on_exit'. Values should include any and
+        all desired underscores.
 
-        Matching functions are assigned as handlers to the corresponding state events, iff no handler was previously
-        assigned to that event.
+        Matching functions are assigned as handlers to the corresponding state events,
+        iff no handler was previously assigned to that event.
 
-        If a state event already had a handler assigned (during construction or previous call to this function), no
-        changes are made even if a matching function is found. To force previously assigned handlers to be overwritten,
-        set the third parameter to True. This may be useful to implement inheritance-like specialization using multiple
+        If a state event already had a handler assigned (during construction or previous call
+        to this function), no changes are made even if a matching function is found. To force
+        previously assigned handlers to be overwritten, set the third parameter to True.
+        This may be useful to implement inheritance-like specialization using multiple
         implementation classes but only one StateMachine instance.
         """
         if prefix is None:
@@ -328,7 +336,8 @@ class StateMachine(CanProcess):
 
     def reset(self):
         """
-        Reset the state machine to before the first cycle. The next process() will enter the initial state.
+        Reset the state machine to before the first cycle. The next process() will
+        enter the initial state.
         """
         self._state = None
 
@@ -341,7 +350,8 @@ class StateMachine(CanProcess):
         :param in_state: Handler for in_state events. May be None, callable, or list of callables.
         :param on_exit: Handler for on_exit events. May be None, callable, or list of callables.
 
-        Handlers may take up to one parameter (not counting self), delta T since last cycle, and should return nothing.
+        Handlers may take up to one parameter (not counting self), delta T since last cycle,
+        and should return nothing.
 
         When handlers are omitted or set to None, no event will be raised at all.
         """
@@ -361,9 +371,11 @@ class StateMachine(CanProcess):
 
         :param from_state: Name of state this transition leaves
         :param to_state: Name of state this transition enters
-        :param transition_check: Callable condition under which this transition occurs. Should return True or False.
+        :param transition_check: Callable condition under which this transition occurs.
+        Should return True or False.
 
-        The transition_check function should return True if the transition should occur. Otherwise, False.
+        The transition_check function should return True if the transition should occur.
+        Otherwise, False.
 
         Transition condition functions should take no parameters (not counting self).
         """
@@ -375,8 +387,9 @@ class StateMachine(CanProcess):
 
         # Remove previously added transition with same From -> To mapping
         try:
-            del self._transition[from_state][[x[0] for x in self._transition[from_state]].index(to_state)]
-        except:
+            del self._transition[from_state][
+                [x[0] for x in self._transition[from_state]].index(to_state)]
+        except Exception:
             pass
 
         self._transition[from_state].append((to_state, transition_check,))

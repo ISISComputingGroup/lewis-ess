@@ -26,9 +26,9 @@ from jsonrpc import JSONRPCResponseManager
 class ExposedObject(object):
     def __init__(self, object, members=None, exclude=None):
         """
-        ExposedObject is a class that makes it easy to expose an object via the JSONRPCResponseManager
-        from the json-rpc package, where it can serve as a dispatcher. For this purpose it exposes
-        a read-only dict-like interface.
+        ExposedObject is a class that makes it easy to expose an object via the
+        JSONRPCResponseManager from the json-rpc package, where it can serve as a dispatcher.
+        For this purpose it exposes a read-only dict-like interface.
 
         The basic problem solved by this wrapper is that plain data members of an object are not
         really captured well by the RPC-approach, where a client performs function calls on a
@@ -37,8 +37,8 @@ class ExposedObject(object):
         The supplied object is inspected using dir(object) and all entries that do not start
         with a _ are exposed in a way that depends on whether the corresponding member
         is a method or a property (either in the Python-sense or the general OO-sense). Methods
-        are stored directly, and stored in an internal dict where the method name is the key and the
-        callable method object is the value. For properties, a getter- and a setter function
+        are stored directly, and stored in an internal dict where the method name is the key and
+        the callable method object is the value. For properties, a getter- and a setter function
         are generated, which are then stored in the same dict. The names of these methods for
         a property called 'a' are 'a:get' and 'a:set'. The separator has been chosen to be
         colon because it can't be part of a valid Python identifier.
@@ -61,11 +61,17 @@ class ExposedObject(object):
 
         self._add_function(':api', self.get_api)
 
-        exposed_members = members if members else [prop for prop in dir(self._object) if not prop.startswith('_')]
+        exposed_members = members if members else self._public_members()
 
         for method in exposed_members:
             if not exclude or method not in exclude:
                 self._add_member_wrappers(method)
+
+    def _public_members(self):
+        """
+        Returns a list of members that do not start with an underscore.
+        """
+        return [prop for prop in dir(self._object) if not prop.startswith('_')]
 
     def _add_member_wrappers(self, member):
         """
@@ -89,8 +95,8 @@ class ExposedObject(object):
 
     def get_api(self):
         """
-        This method returns the class name and a list of exposed methods. It is exposed to RPC-clients by an
-        instance of ExposedObjectCollection.
+        This method returns the class name and a list of exposed methods.
+        It is exposed to RPC-clients by an instance of ExposedObjectCollection.
 
         :return: A dictionary describing the exposed API (consisting of a class name and methods).
         """
@@ -118,7 +124,8 @@ class ExposedObject(object):
 class ExposedObjectCollection(ExposedObject):
     def __init__(self, named_objects):
         """
-        This class helps expose a number of objects (plain or RPCObject) by exposing the methods of each object as
+        This class helps expose a number of objects (plain or RPCObject) by
+        exposing the methods of each object as
 
             name.method
 
@@ -145,7 +152,8 @@ class ExposedObjectCollection(ExposedObject):
         if name in self._object_map:
             raise RuntimeError('An object is already registered under that name.')
 
-        exposed_object = self._object_map[name] = obj if isinstance(obj, ExposedObject) else ExposedObject(obj)
+        exposed_object = self._object_map[name] = \
+            obj if isinstance(obj, ExposedObject) else ExposedObject(obj)
 
         for method_name in exposed_object:
             glue = '.' if not method_name.startswith(':') else ''
@@ -158,18 +166,20 @@ class ExposedObjectCollection(ExposedObject):
 class ControlServer(object):
     def __init__(self, object_map=None, host='127.0.0.1', port='10000'):
         """
-        This server opens a ZMQ REP-socket at the given host and port. It constructs an ExposedObjectCollection
-        from the supplied name: object-dictionary and uses that as a handler for JSON-RPC requests. If it is an
-        instance of ExposedObject, that is used directly.
+        This server opens a ZMQ REP-socket at the given host and port. It constructs an
+        ExposedObjectCollection from the supplied name: object-dictionary and uses that
+        as a handler for JSON-RPC requests. If it is an instance of ExposedObject,
+        that is used directly.
 
-        Each time process is called, the server tries to get request data and responds to that. If there is
-        no data, the method does nothing.
+        Each time process is called, the server tries to get request data and responds to that.
+        If there is no data, the method does nothing.
 
-        Please note that this RPC-service comes without any security, authentication, etc. Only use it
-        to expose objects on a trusted network and be aware that anyone on that network can access
-        the exposed objects without any restrictions.
+        Please note that this RPC-service comes without any security, authentication, etc.
+        Only use it to expose objects on a trusted network and be aware that anyone on that
+        network can access the exposed objects without any restrictions.
 
-        :param object_map: Dictionary with name: object-pairs to construct an ExposedObjectCollection or ExposedObject
+        :param object_map: Dictionary with name: object-pairs to construct an
+        ExposedObjectCollection or ExposedObject
         :param host: Host on which the RPC service listens. Default is 127.0.0.1.
         :param port: Port on which the RPC service listens. Default is 10000.
         """
@@ -205,7 +215,8 @@ class ControlServer(object):
     def process(self):
         """
         Each time this method is called, the socket tries to retrieve data and passes
-        it to the JSONRPCResponseManager, which in turn passes the RPC to the ExposedObjectCollection.
+        it to the JSONRPCResponseManager, which in turn passes the RPC to the
+        ExposedObjectCollection.
 
         In case no data are available, the method does nothing. This behavior is required for
         Plankton where everything is running in one thread. The central loop can call process
@@ -219,6 +230,7 @@ class ControlServer(object):
                 response = JSONRPCResponseManager.handle(request, self._rpc_object_collection)
                 self._socket.send_unicode(response.json)
             except TypeError as e:
-                self._socket.send_json(self._unhandled_exception_response(json.loads(request)['id'], e))
+                self._socket.send_json(
+                    self._unhandled_exception_response(json.loads(request)['id'], e))
         except zmq.Again:
             pass
