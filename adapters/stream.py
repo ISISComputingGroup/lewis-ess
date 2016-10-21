@@ -155,8 +155,8 @@ class StreamAdapter(Adapter):
         for cmd in cmds:
             method = cmd.method
 
-            if not method in dir(self):
-                if not method in dir(self._device):
+            if method not in dir(self):
+                if method not in dir(self._device):
                     raise AttributeError('Can not find method \'' + method + '\' in device or interface.')
 
                 setattr(self, method, ForwardMethod(self._device, method))

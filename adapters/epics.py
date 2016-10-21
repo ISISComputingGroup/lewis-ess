@@ -162,8 +162,8 @@ class EpicsAdapter(Adapter):
         for pv in pvs:
             prop = pv.property
 
-            if not prop in dir(self):
-                if not prop in dir(self._device):
+            if prop not in dir(self):
+                if prop not in dir(self._device):
                     raise AttributeError('Can not find property \'' + prop + '\' in device or interface.')
                 setattr(type(self), prop, ForwardProperty('_device', prop))
 

@@ -10,7 +10,7 @@ def list_objects(remote):
 
 
 def show_api(remote, object_name):
-    if not object_name in remote.keys():
+    if object_name not in remote.keys():
         raise RuntimeError(
             'Object \'{}\' is not exposed by remote. Use -l to get a list of objects.'.format(object_name))
 
