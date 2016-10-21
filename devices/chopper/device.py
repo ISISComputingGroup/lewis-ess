@@ -25,7 +25,7 @@ from core.processor import CanProcess
 from devices import StateMachineDevice
 
 from .bearings import MagneticBearings
-from .states import *
+from . import states
 
 
 class SimulatedBearings(CanProcess, MagneticBearings):
@@ -102,16 +102,16 @@ class SimulatedChopper(StateMachineDevice):
 
     def _get_state_handlers(self):
         return {
-            'init': DefaultInitState(),
+            'init': states.DefaultInitState(),
             'bearings': {'in_state': self._bearings},
-            'stopped': DefaultStoppedState(),
-            'stopping': DefaultStoppingState(),
-            'accelerating': DefaultAcceleratingState(),
-            'phase_locking': DefaultPhaseLockingState(),
-            'phase_locked': DefaultPhaseLockedState(),
-            'idle': DefaultIdleState(),
-            'parking': DefaultParkingState(),
-            'parked': DefaultParkedState(),
+            'stopped': states.DefaultStoppedState(),
+            'stopping': states.DefaultStoppingState(),
+            'accelerating': states.DefaultAcceleratingState(),
+            'phase_locking': states.DefaultPhaseLockingState(),
+            'phase_locked': states.DefaultPhaseLockedState(),
+            'idle': states.DefaultIdleState(),
+            'parking': states.DefaultParkingState(),
+            'parked': states.DefaultParkedState(),
         }
 
     def _get_initial_state(self):

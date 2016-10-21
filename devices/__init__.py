@@ -20,7 +20,7 @@
 from __future__ import absolute_import
 import importlib
 from core.statemachine import StateMachine
-from core.processor import  CanProcess, CanProcessComposite
+from core.processor import CanProcess, CanProcessComposite
 from core.utils import dict_strict_update
 
 
@@ -90,7 +90,7 @@ class StateMachineDevice(CanProcessComposite):
         state_handlers = self._get_final_state_handlers(override_states)
         initial = self._get_initial_state() if override_initial_state is None else override_initial_state
 
-        if not initial in state_handlers:
+        if initial not in state_handlers:
             raise RuntimeError('Initial state \'{}\' is not a valid state.'.format(initial))
 
         self._csm = StateMachine({
@@ -159,7 +159,7 @@ class StateMachineDevice(CanProcessComposite):
         """
         if overrides is not None:
             for name, val in overrides.items():
-                if not name in dir(self):
+                if name not in dir(self):
                     raise AttributeError('Can not override non-existing attribute \'{}\' of class \'{}\'.'.format(
                         name, type(self).__name__))
 
@@ -167,9 +167,7 @@ class StateMachineDevice(CanProcessComposite):
 
 
 def is_device(obj):
-    return issubclass(obj, CanProcess) \
-           and not obj.__module__ == 'core.processor' \
-           and not obj.__module__ == 'devices'
+    return issubclass(obj, CanProcess) and obj.__module__ not in ('core.processor', 'devices')
 
 
 def import_device(device, setup=None, device_package='devices'):
