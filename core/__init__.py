@@ -23,6 +23,6 @@ from .control_server import ControlServer, ExposedObject, \
     ExposedObjectCollection
 from .control_client import ControlClient
 
-__all__ = [StateMachine, State, Transition, HasContext, CanProcess,
-           CanProcessComposite, ControlServer, ExposedObject,
-           ExposedObjectCollection, ControlClient]
+__all__ = ['StateMachine', 'State', 'Transition', 'HasContext', 'CanProcess',
+           'CanProcessComposite', 'ControlServer', 'ExposedObject',
+           'ExposedObjectCollection', 'ControlClient']

@@ -19,4 +19,4 @@
 
 from .device import SimulatedChopper
 
-__all__ = [SimulatedChopper]
+__all__ = ['SimulatedChopper']

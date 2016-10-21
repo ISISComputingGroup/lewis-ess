@@ -19,4 +19,4 @@
 
 from .epics_interface import ChopperEpicsInterface
 
-__all__ = [ChopperEpicsInterface]
+__all__ = ['ChopperEpicsInterface']
