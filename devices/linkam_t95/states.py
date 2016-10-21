@@ -17,7 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from core import State, approaches
+from core.statemachine import State
+from core import approaches
 
 
 class DefaultInitState(State):

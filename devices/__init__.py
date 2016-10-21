@@ -19,7 +19,8 @@
 
 from __future__ import absolute_import
 import importlib
-from core import CanProcess, CanProcessComposite, StateMachine
+from core.statemachine import StateMachine
+from core.processor import  CanProcess, CanProcessComposite
 from core.utils import dict_strict_update
 
 

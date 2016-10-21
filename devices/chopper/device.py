@@ -19,7 +19,8 @@
 
 from collections import OrderedDict
 
-from core import StateMachine, CanProcess
+from core.statemachine import StateMachine
+from core.processor import CanProcess
 
 from devices import StateMachineDevice
 
