@@ -54,8 +54,11 @@ class StreamHandler(asynchat.async_chat):
                     groups = match.groups()
                     func = getattr(self.target, cmd.method)
 
-                    args = groups if not cmd.argument_mappings else [f(a) for f, a in
-                                                                     zip(cmd.argument_mappings, groups)]
+                    # Use match groups directly if no argument_mappings exist
+                    args = groups if not cmd.argument_mappings \
+                        else [f(a) for f, a in
+                              zip(cmd.argument_mappings, groups)]
+
                     reply = cmd.return_mapping(func(*args))
                     break
 
@@ -87,36 +90,43 @@ class StreamServer(asyncore.dispatcher):
 
 
 class Cmd(object):
-    def __init__(self, target_method, regex, regex_flags=0, argument_mappings=None,
+    def __init__(self, target_method, regex, regex_flags=0,
+                 argument_mappings=None,
                  return_mapping=lambda x: None if x is None else str(x)):
         """
-        This is a small helper class that makes it easy to define commands that are parsed
-        by StreamAdapter and forwarded to the correct methods on the Adapter.
+        This is a small helper class that makes it easy to define commands that
+        are parsed by StreamAdapter and forwarded to the correct methods
+        on the Adapter.
 
-        Method arguments are indicated by groups in the regular expression. The number of
-        groups has to match the number of arguments of the method. The optional argument_mappings
-        can be an iterable of callables with one parameter of the same length as the
-        number of arguments of the method. The first parameter will be transformed using the
-        first function, the second using the second function and so on. This can be useful
-        to automatically transform strings provided by the adapter into a proper data type
-        such as int or float before they are passed to the method.
+        Method arguments are indicated by groups in the regular expression.
+        The number of groups has to match the number of arguments of the
+        method. The optional argument_mappings can be an iterable of callables
+        with one parameter of the same length as the number of arguments
+        of the method. The first parameter will be transformed using the
+        first function, the second using the second function and so on.
+        This can be useful to automatically transform strings provided by
+        the adapter into a proper data type such as int or float before they
+        are passed to the method.
 
-        The return_mapping argument is similar, it should map the return value of the method
-        to a string. The default map function only does that when the supplied value
-        is not None.
+        The return_mapping argument is similar, it should map the return value
+        of the method to a string. The default map function only does that
+        when the supplied value is not None.
 
         :param target_method: Method to be called when regex matches.
         :param regex: Regex to match for method call.
         :param regex_flags: Flags to pass ot re.compile, default is 0.
-        :param argument_mappings: Iterable with mapping functions from string to some type.
+        :param argument_mappings: Iterable with mapping functions from string
+        to some type.
         :param return_mapping: Mapping function for return value of method.
         """
         self.method = target_method
         self.pattern = re.compile(b(regex), regex_flags)
 
-        if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
+        if argument_mappings is not None and (
+                    self.pattern.groups != len(argument_mappings)):
             raise RuntimeError(
-                'Expected {} argument mapping(s), got {}'.format(self.pattern.groups, len(argument_mappings)))
+                'Expected {} argument mapping(s), got {}'.format(
+                    self.pattern.groups, len(argument_mappings)))
 
         self.argument_mappings = argument_mappings
         self.return_mapping = return_mapping
@@ -141,13 +151,17 @@ class StreamAdapter(Adapter):
         self._create_properties(self.commands)
 
     def start_server(self):
-        self._server = StreamServer(self._options.bind_address, self._options.port, self)
+        self._server = StreamServer(self._options.bind_address,
+                                    self._options.port, self)
 
     def _parseArguments(self, arguments):
-        parser = ArgumentParser(description='Adapter to expose a device via TCP Stream')
-        parser.add_argument('-b', '--bind-address', help='IP Address to bind and listen for connections on',
-                            default='0.0.0.0')
-        parser.add_argument('-p', '--port', help='Port to listen for connections on', type=int, default=9999)
+        parser = ArgumentParser(
+            description='Adapter to expose a device via TCP Stream')
+        parser.add_argument('-b', '--bind-address', default='0.0.0.0',
+                            help='IP Address to bind and listen '
+                                 'for connections on.')
+        parser.add_argument('-p', '--port', type=int, default=9999,
+                            help='Port to listen for connections on.')
         return parser.parse_args(arguments)
 
     def _create_properties(self, cmds):
@@ -155,15 +169,18 @@ class StreamAdapter(Adapter):
         for cmd in cmds:
             method = cmd.method
 
-            if not method in dir(self):
-                if not method in dir(self._device):
-                    raise AttributeError('Can not find method \'' + method + '\' in device or interface.')
+            if method not in dir(self):
+                if method not in dir(self._device):
+                    raise AttributeError(
+                        'Can not find method \'' +
+                        method + '\' in device or interface.')
 
                 setattr(self, method, ForwardMethod(self._device, method))
 
             if cmd.pattern.pattern in patterns:
                 raise RuntimeError(
-                    'The regular expression \'{}\' is associated with multiple methods.'.format(cmd.pattern.pattern))
+                    'The regular expression \'{}\' is associated '
+                    'with multiple methods.'.format(cmd.pattern.pattern))
 
             patterns.add(cmd.pattern.pattern)
 

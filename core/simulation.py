@@ -52,19 +52,21 @@ class Simulation(object):
 
         A number of status properties provide information about the simulation.
         The total uptime (in actually elapsed time) can be obtained through the
-        uptime-property, whereas the runtime-property contains the simulated time.
-        The cycles-property indicates the total number of simulation cycles, which
-        does not increase when the simulation is paused.
+        uptime-property, whereas the runtime-property contains the simulated
+        time. The cycles-property indicates the total number of simulation
+        cycles, which does not increase when the simulation is paused.
 
         Finally, the simulation can be stopped entirely with the stop-method.
 
-        All functionality except for the start-method can be made available to remote
-        computers via a ControlServer-instance. This can either be passed to __init__
-        or set as a property before the simulation has been started.
+        All functionality except for the start-method can be made available to
+        remote computers via a ControlServer-instance. This can either be
+        passed to __init__ or set as a property before the simulation
+        has been started.
 
         :param device: The simulated device.
         :param adapter: Adapter which contains the simulated device.
-        :param control_server: ControlServer instance to expose the simulation remotely.
+        :param control_server: ControlServer instance to expose the simulation
+        remotely.
         """
         self._device = device
         self._adapter = adapter
@@ -104,9 +106,9 @@ class Simulation(object):
 
     def _process_cycle(self, delta):
         """
-        Processes one cycle, which consists of one simulation cycle and processing
-        of control server commands. The method measures how long all this takes
-        and returns the elapsed time in seconds.
+        Processes one cycle, which consists of one simulation cycle and
+        processing of control server commands. The method measures how long all
+        this takes and returns the elapsed time in seconds.
 
         :param delta: Elapsed time in last cycle, passed to simulation.
         :return: Elapsed time in this cycle.
@@ -179,9 +181,9 @@ class Simulation(object):
     def speed(self):
         """
         Simulation speed. Actual elapsed time is multiplied with this property
-        to determine simulated time. Values greater than 1 increase the simulation
-        speed, values between 1 and 0 decrease it. A speed of 0 effectively pauses
-        the simulation.
+        to determine simulated time. Values greater than 1 increase the
+        simulation speed, values between 1 and 0 decrease it. A speed of 0
+        effectively pauses the simulation.
         """
         return self._speed
 
@@ -195,25 +197,25 @@ class Simulation(object):
     @property
     def runtime(self):
         """
-        The accumulated simulation time. Whenever speed is different from 1, this
-        progresses at a different rate than uptime.
+        The accumulated simulation time. Whenever speed is different from 1,
+        this progresses at a different rate than uptime.
         """
         return self._runtime
 
     @property
     def device_connected(self):
         """
-        Indicates whether the adapter is processing, i.e. the device is connected.
-        The device simulation can still be running, but if the adapter is not being
-        processed, the device appears disconnected.
+        Indicates whether the adapter is processing, i.e. the device is
+        connected. The device simulation can still be running, but if the
+        adapter is not being processed, the device appears disconnected.
         """
         return self._device_connected
 
     def disconnect_device(self):
         """
-        Simulate disconnecting the device. The simulation continues running, but
-        the outside communication of the device is suspended, so that it appears
-        disconnected.
+        Simulate disconnecting the device. The simulation continues running,
+        but the outside communication of the device is suspended, so that it
+        appears disconnected.
         """
         if not self._device_connected:
             raise RuntimeError('Device is already disconnected.')
@@ -222,8 +224,8 @@ class Simulation(object):
 
     def connect_device(self):
         """
-        Simulate (re-)connecting the device. This is only possible after the device
-        has been virtually disconnected using disconnect_device.
+        Simulate (re-)connecting the device. This is only possible after
+        the device has been virtually disconnected using disconnect_device.
         """
         if self._device_connected:
             raise RuntimeError('Device is already connected.')
@@ -265,21 +267,23 @@ class Simulation(object):
     @property
     def is_paused(self):
         """
-        True if the simulation is paused (implies that the simulation has been started).
+        True if the simulation is paused (implies that the simulation
+        has been started).
         """
         return self._started and not self._running
 
     @property
     def control_server(self):
         """
-        ControlServer-instance that exposes the object to remote machines. Can only
-        be set before start has been called or on a running simulation if no
-        control server was previously present.
+        ControlServer-instance that exposes the object to remote machines.
+        Can only be set before start has been called or on a running simulation
+        if no control server was previously present.
         """
         return self._control_server
 
     @control_server.setter
     def control_server(self, control_server):
         if self.is_started and self._control_server:
-            raise RuntimeError('Can not replace control server while simulation is running.')
+            raise RuntimeError(
+                'Can not replace control server while simulation is running.')
         self._control_server = control_server

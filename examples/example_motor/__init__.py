@@ -28,8 +28,9 @@ from collections import OrderedDict
 
 class DefaultMovingState(State):
     def in_state(self, dt):
-        self._context.position = approaches.linear(self._context.position, self._context.target,
-                                                   self._context.speed, dt)
+        self._context.position = \
+            approaches.linear(self._context.position, self._context.target,
+                              self._context.speed, dt)
 
 
 class SimulatedExampleMotor(StateMachineDevice):
@@ -81,7 +82,8 @@ class ExampleMotorStreamInterface(StreamAdapter):
         Cmd('get_status', r'^S\?$'),
         Cmd('get_position', r'^P\?$'),
         Cmd('get_target', r'^T\?$'),
-        Cmd('set_target', r'^T=([-+]?[0-9]*\.?[0-9]+)$', argument_mappings=(float,)),
+        Cmd('set_target', r'^T=([-+]?[0-9]*\.?[0-9]+)$',
+            argument_mappings=(float,)),
         Cmd('stop', r'^H$',
             return_mapping=lambda x: 'T={},P={}'.format(x[0], x[1])),
     }
@@ -114,7 +116,7 @@ setups = dict(
         parameters=dict(
             override_initial_state='moving',
             override_initial_data=dict(
-                _target=120.0,position=20.0
+                _target=120.0, position=20.0
             )
         )
     )

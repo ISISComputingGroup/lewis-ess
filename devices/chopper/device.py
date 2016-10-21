@@ -18,13 +18,10 @@
 # *********************************************************************
 
 from collections import OrderedDict
-
 from core import StateMachine, CanProcess
-
 from devices import StateMachineDevice
-
 from .bearings import MagneticBearings
-from .states import *
+from . import states
 
 
 class SimulatedBearings(CanProcess, MagneticBearings):
@@ -101,16 +98,16 @@ class SimulatedChopper(StateMachineDevice):
 
     def _get_state_handlers(self):
         return {
-            'init': DefaultInitState(),
+            'init': states.DefaultInitState(),
             'bearings': {'in_state': self._bearings},
-            'stopped': DefaultStoppedState(),
-            'stopping': DefaultStoppingState(),
-            'accelerating': DefaultAcceleratingState(),
-            'phase_locking': DefaultPhaseLockingState(),
-            'phase_locked': DefaultPhaseLockedState(),
-            'idle': DefaultIdleState(),
-            'parking': DefaultParkingState(),
-            'parked': DefaultParkedState(),
+            'stopped': states.DefaultStoppedState(),
+            'stopping': states.DefaultStoppingState(),
+            'accelerating': states.DefaultAcceleratingState(),
+            'phase_locking': states.DefaultPhaseLockingState(),
+            'phase_locked': states.DefaultPhaseLockedState(),
+            'idle': states.DefaultIdleState(),
+            'parking': states.DefaultParkingState(),
+            'parked': states.DefaultParkedState(),
         }
 
     def _get_initial_state(self):
@@ -122,7 +119,8 @@ class SimulatedChopper(StateMachineDevice):
             (('bearings', 'stopped'), lambda: self._bearings.ready),
             (('bearings', 'init'), lambda: self._bearings.idle),
 
-            (('parking', 'parked'), lambda: self.parking_position == self.target_parking_position),
+            (('parking', 'parked'),
+             lambda: self.parking_position == self.target_parking_position),
             (('parking', 'stopping'), lambda: self._stop_commanded),
 
             (('parked', 'stopping'), lambda: self._stop_commanded),
@@ -134,13 +132,15 @@ class SimulatedChopper(StateMachineDevice):
 
             (('accelerating', 'stopping'), lambda: self._stop_commanded),
             (('accelerating', 'idle'), lambda: self._idle_commanded),
-            (('accelerating', 'phase_locking'), lambda: self.speed == self.target_speed),
+            (('accelerating', 'phase_locking'),
+             lambda: self.speed == self.target_speed),
 
             (('idle', 'accelerating'), lambda: self._start_commanded),
             (('idle', 'stopping'), lambda: self._stop_commanded),
 
             (('phase_locking', 'stopping'), lambda: self._stop_commanded),
-            (('phase_locking', 'phase_locked'), lambda: self.phase == self.target_phase),
+            (('phase_locking', 'phase_locked'),
+             lambda: self.phase == self.target_phase),
             (('phase_locking', 'idle'), lambda: self._idle_commanded),
 
             (('phase_locked', 'accelerating'), lambda: self._start_commanded),

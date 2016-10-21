@@ -37,7 +37,8 @@ class LinkamT95StreamInterface(StreamAdapter):
         """
         Models "T Command" functionality of device.
 
-        Returns all available status information about the device as single byte array.
+        Returns all available status information about the device as
+        single byte array.
 
         :return: Byte array consisting of 10 status bytes.
         """
@@ -67,7 +68,8 @@ class LinkamT95StreamInterface(StreamAdapter):
         Tarray[2] = 0x80 + self._device.pump_speed
 
         # Temperature
-        Tarray[6:10] = [ord(x) for x in "%04x" % (int(self._device.temperature * 10) & 0xFFFF)]
+        Tarray[6:10] = [ord(x) for x in
+                        "%04x" % (int(self._device.temperature * 10) & 0xFFFF)]
 
         return ''.join(chr(c) for c in Tarray)
 
@@ -77,7 +79,8 @@ class LinkamT95StreamInterface(StreamAdapter):
 
         Sets the target rate of temperature change.
 
-        :param param: Rate of temperature change in C/min, multiplied by 100, as a string. Must be positive.
+        :param param: Rate of temperature change in C/min, multiplied by 100,
+        as a string. Must be positive.
         :return: Empty string.
         """
         # TODO: Is not having leading zeroes / 4 digits an error?
@@ -92,7 +95,8 @@ class LinkamT95StreamInterface(StreamAdapter):
 
         Sets the target temperate to be reached.
 
-        :param param: Target temperature in C, multiplied by 10, as a string. Can be negative.
+        :param param: Target temperature in C, multiplied by 10, as a string.
+        Can be negative.
         :return: Empty string.
         """
         # TODO: Is not having leading zeroes / 4 digits an error?
@@ -105,7 +109,8 @@ class LinkamT95StreamInterface(StreamAdapter):
         """
         Models "Start Command" functionality of device.
 
-        Tells the T95 unit to start heating or cooling at the rate specified by setRate and to a limit set by setLimit.
+        Tells the T95 unit to start heating or cooling at the rate specified by
+        set_rate and to a limit set by setLimit.
 
         :return: Empty string.
         """
@@ -127,7 +132,8 @@ class LinkamT95StreamInterface(StreamAdapter):
         """
         Models "Hold Command" functionality of device.
 
-        Device will hold current temperature until a heat or cool command is issued.
+        Device will hold current temperature until a heat or cool command
+        is issued.
 
         :return: Empty string.
         """
@@ -158,7 +164,8 @@ class LinkamT95StreamInterface(StreamAdapter):
         """
         Models "LNP Pump Commands" functionality of device.
 
-        Switches between automatic or manual pump mode, and adjusts speed when in manual mode.
+        Switches between automatic or manual pump mode, and adjusts speed when
+        in manual mode.
 
         :param param: 'a0' for auto, 'm0' for manual, [0-N] for speed.
         :return:

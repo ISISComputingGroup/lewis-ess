@@ -17,5 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from .statemachine import StateMachine, State, Transition
+from .statemachine import StateMachine, State, Transition, HasContext
 from .processor import CanProcess, CanProcessComposite
+from .control_server import ControlServer, ExposedObject, \
+    ExposedObjectCollection
+from .control_client import ControlClient
+
+__all__ = ['StateMachine', 'State', 'Transition', 'HasContext', 'CanProcess',
+           'CanProcessComposite', 'ControlServer', 'ExposedObject',
+           'ExposedObjectCollection', 'ControlClient']

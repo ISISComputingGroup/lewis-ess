@@ -2,3 +2,5 @@ mock>=1.0.1
 six
 pyzmq
 json-rpc
+flake8
+nose
