@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+import socket
 import zmq
 import json
 from jsonrpc import JSONRPCResponseManager
@@ -170,10 +171,15 @@ class ControlServer(object):
 
         :param object_map: Dictionary with name: object-pairs to construct an ExposedObjectCollection or ExposedObject
         :param host: Host on which the RPC service listens. Default is 127.0.0.1.
-        :param port: Port on which the RPC service listes.
+        :param port: Port on which the RPC service listens. Default is 10000.
         """
         super(ControlServer, self).__init__()
-        self.host = host
+
+        try:
+            self.host = socket.gethostbyname(host)
+        except socket.gaierror:
+            raise RuntimeError('Could not resolve control server host: {}'.format(host))
+
         self.port = port
 
         if isinstance(object_map, ExposedObject):
