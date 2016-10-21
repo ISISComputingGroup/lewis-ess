@@ -45,8 +45,8 @@ class TestControlClient(unittest.TestCase):
         with patch.object(client, 'json_rpc') as json_rpc_mock:
             json_rpc_mock.return_value = ({'id': 2,
                                            'result': {'class': 'Test',
-                                                      'methods': ['a:set', 'a:get', 'setTest']}}
-                                          , 2)
+                                                      'methods': ['a:set', 'a:get', 'setTest']}},
+                                          2)
 
             obj = client.get_object()
 
@@ -101,7 +101,7 @@ class TestObjectProxy(unittest.TestCase):
         obj = type('TestType', (ObjectProxy,), {})(Mock(), ['a:get', 'a:set', 'setTest'])
 
         with patch.object(obj, '_make_request') as request_mock:
-            b = obj.a
+            obj.a
             obj.a = 4
             obj.setTest()
 

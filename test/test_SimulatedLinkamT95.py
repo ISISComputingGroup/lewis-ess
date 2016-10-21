@@ -156,7 +156,7 @@ class TestSimulatedLinkamT95(unittest.TestCase):
 
         # Ensure status byte reports stopped
         status_bytes = linkam.get_status()
-        self.assertEqual(ord(status_bytes[0]),  0x01)
+        self.assertEqual(ord(status_bytes[0]), 0x01)
 
     def test_hold_and_resume(self):
         linkam_device = SimulatedLinkamT95()

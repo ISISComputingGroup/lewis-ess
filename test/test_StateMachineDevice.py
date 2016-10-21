@@ -20,7 +20,7 @@
 import unittest
 
 from . import assertRaisesNothing
-from mock import Mock, patch, call
+from mock import Mock, call
 
 from devices import StateMachineDevice
 

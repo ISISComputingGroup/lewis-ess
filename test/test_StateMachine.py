@@ -94,7 +94,7 @@ class TestStateMachine(unittest.TestCase):
     def test_Transition_receives_Context(self):
         transition = Transition()
         context = object()
-        sm = StateMachine({
+        StateMachine({
             'initial': 'foo',
             'transitions': {
                 ('foo', 'bar'): transition
@@ -215,7 +215,7 @@ class TestStateMachine(unittest.TestCase):
     def test_State_receives_Context(self):
         state = State()
         context = object()
-        sm = StateMachine({
+        StateMachine({
             'initial': 'foo',
             'states': {
                 'foo': state
