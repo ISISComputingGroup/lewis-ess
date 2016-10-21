@@ -96,7 +96,7 @@ class ControlClient(object):
     def get_object(self, object_name=''):
         api, request_id = self.json_rpc(object_name + ':api')
 
-        if not 'result' in api or api['id'] != request_id:
+        if 'result' not in api or api['id'] != request_id:
             raise ProtocolException('Failed to retrieve API of remote object.')
 
         object_type = type(str(api['result']['class']), (ObjectProxy,), {})

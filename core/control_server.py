@@ -64,7 +64,7 @@ class ExposedObject(object):
         exposed_members = members if members else [prop for prop in dir(self._object) if not prop.startswith('_')]
 
         for method in exposed_members:
-            if not exclude or not method in exclude:
+            if not exclude or method not in exclude:
                 self._add_member_wrappers(method)
 
     def _add_member_wrappers(self, member):

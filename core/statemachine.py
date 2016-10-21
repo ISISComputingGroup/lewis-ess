@@ -194,8 +194,8 @@ class StateMachine(CanProcess):
                 elif hasattr(handlers, '__iter__'):
                     self._set_handlers(state_name, *handlers)
                 else:
-                    raise
-            except:
+                    raise RuntimeError('Handler is not State, dict or __iter__.')
+            except Exception:
                 raise StateMachineException(
                     "Failed to parse state handlers for state '%s'. Must be dict or iterable." % state_name)
 

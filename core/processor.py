@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+
 class CanProcess(object):
     """
     The CanProcess class is meant as a base for all things that
