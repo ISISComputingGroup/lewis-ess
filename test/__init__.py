@@ -20,9 +20,8 @@
 
 def assertRaisesNothing(testobj, func, *args, **kwargs):
     """
-    unittest does not have an assertRaisesNothing. This function adopted from Mantid
-    (https://github.com/mantidproject/mantid/blob/master/Framework/PythonInterface/test/testhelpers/__init__.py)
-    provides that functionality.
+    unittest does not have an assertRaisesNothing. This function adopted from
+    the Mantid testhelpers module provides that functionality.
 
     :param testobj: A unittest object
     :param func: A callable object
@@ -32,4 +31,6 @@ def assertRaisesNothing(testobj, func, *args, **kwargs):
     try:
         return func(*args, **kwargs)
     except Exception as exc:
-        testobj.fail("Assertion error. An exception was caught where none was expected in %s. Message: %s" % (func.__name__, str(exc)))
+        testobj.fail(
+            "Assertion error. An exception was caught where none "
+            "was expected in %s. Message: %s" % (func.__name__, str(exc)))

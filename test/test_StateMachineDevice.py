@@ -51,9 +51,11 @@ class TestStateMachineDevice(unittest.TestCase):
         self.assertRaises(RuntimeError, MockStateMachineDevice, override_initial_state='invalid')
 
     def test_overriding_undefined_data_fails(self):
-        assertRaisesNothing(self, MockStateMachineDevice, override_initial_data={'existing_member': 2.0})
+        assertRaisesNothing(
+            self, MockStateMachineDevice, override_initial_data={'existing_member': 2.0})
 
         smd = MockStateMachineDevice(override_initial_data={'existing_member': 2.0})
         self.assertEqual(smd.existing_member, 2.0)
 
-        self.assertRaises(AttributeError, MockStateMachineDevice, override_initial_data={'nonexisting_member': 1.0})
+        self.assertRaises(AttributeError, MockStateMachineDevice,
+                          override_initial_data={'nonexisting_member': 1.0})

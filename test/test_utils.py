@@ -131,19 +131,24 @@ class TestExtractModuleName(TestWithPackageStructure):
 
 class TestIsModule(TestWithPackageStructure):
     def test_valid_directory(self):
-        self.assertTrue(is_module(extract_module_name(self._dirs['valid']), [self._tmp_package]), self._tmp_package)
+        self.assertTrue(is_module(
+            extract_module_name(self._dirs['valid']), [self._tmp_package]), self._tmp_package)
 
     def test_invalid_directory(self):
-        self.assertFalse(is_module(extract_module_name(self._dirs['invalid']), [self._tmp_package]))
+        self.assertFalse(is_module(
+            extract_module_name(self._dirs['invalid']), [self._tmp_package]))
 
     def test_invalid_file_name(self):
-        self.assertFalse(is_module(extract_module_name(self._files['invalid_name']), [self._tmp_package]))
+        self.assertFalse(is_module(
+            extract_module_name(self._files['invalid_name']), [self._tmp_package]))
 
     def test_invalid_file_ext(self):
-        self.assertFalse(is_module(extract_module_name(self._files['invalid_ext']), [self._tmp_package]))
+        self.assertFalse(is_module(
+            extract_module_name(self._files['invalid_ext']), [self._tmp_package]))
 
     def test_valid_file(self):
-        self.assertTrue(is_module(extract_module_name(self._files['valid']), [self._tmp_package]), self._tmp_package)
+        self.assertTrue(is_module(
+            extract_module_name(self._files['valid']), [self._tmp_package]), self._tmp_package)
 
 
 class TestGetAvailableSubModules(TestWithPackageStructure):

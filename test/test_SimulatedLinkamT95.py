@@ -29,10 +29,12 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         assertRaisesNothing(self, SimulatedLinkamT95)
 
     def test_state_override_construction(self):
-        assertRaisesNothing(self, SimulatedLinkamT95, override_states={'started': DefaultStartedState()})
+        assertRaisesNothing(
+            self, SimulatedLinkamT95, override_states={'started': DefaultStartedState()})
 
     def test_transition_override_construction(self):
-        assertRaisesNothing(self, SimulatedLinkamT95, override_transitions={('init', 'stopped'): lambda: True})
+        assertRaisesNothing(
+            self, SimulatedLinkamT95, override_transitions={('init', 'stopped'): lambda: True})
 
     def test_default_status(self):
         linkam_device = SimulatedLinkamT95()
@@ -225,15 +227,18 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         linkam.start()
         linkam_device.process()
 
-        # Since the pump feature is not fully implemented, we can only make sure all valid input is accepted
-        assertRaisesNothing(self, linkam.pump_command, 'm0')    # Manual
+        # Since the pump feature is not fully implemented,
+        # we can only make sure all valid input is accepted
+        assertRaisesNothing(self, linkam.pump_command, 'm0')  # Manual
         linkam_device.process()
 
         for int_value, char_value in enumerate("0123456789:;<=>?@ABCDEFGHIJKLMN"):
-            assertRaisesNothing(self, linkam.pump_command, char_value)   # Various speeds (characters mean speeds 0 - 30)
+            assertRaisesNothing(
+                self, linkam.pump_command, char_value)  # Characters mean speeds 0 - 30
             linkam_device.process()
             status_bytes = linkam.get_status()
-            self.assertEqual(status_bytes[2], chr(0x80 | int_value))    # Verify Pump Status Byte reflects speed
+            self.assertEqual(
+                status_bytes[2], chr(0x80 | int_value))  # Verify Pump Status Byte reflects speed
 
         assertRaisesNothing(self, linkam.pump_command, 'a0')    # Auto
         linkam_device.process()
