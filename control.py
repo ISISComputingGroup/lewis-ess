@@ -12,7 +12,8 @@ def list_objects(remote):
 def show_api(remote, object_name):
     if object_name not in remote.keys():
         raise RuntimeError(
-            'Object \'{}\' is not exposed by remote. Use -l to get a list of objects.'.format(object_name))
+            'Object \'{}\' is not exposed by remote. '
+            'Use -l to get a list of objects.'.format(object_name))
 
     obj = remote[object_name]
 
@@ -59,16 +60,19 @@ def call_method(remote, object_name, method, arguments):
 
 
 parser = argparse.ArgumentParser(
-    description='A client to manipulate the simulated device remotely through a separate channel. The simulation must be started with the --rpc-host option.')
+    description='A client to manipulate the simulated device remotely through a separate channel. '
+                'The simulation must be started with the --rpc-host option.')
 parser.add_argument('-r', '--rpc-host', default='127.0.0.1:10000',
                     help='HOST:PORT string specifying control server to connect to.')
 parser.add_argument('-n', '--print-none', action='store_true',
                     help='Print None return value.')
-parser.add_argument('object', nargs='?', default=None, help='Object to control. If left out, all objects are listed.')
+parser.add_argument('object', nargs='?', default=None,
+                    help='Object to control. If left out, all objects are listed.')
 parser.add_argument('member', nargs='?', default=None,
                     help='Object-member to access. If omitted, API of the object is listed.')
 parser.add_argument('arguments', nargs='*',
-                    help='Arguments to method call. For setting a property, supply the property value. ')
+                    help='Arguments to method call. For setting a property, '
+                         'supply the property value. ')
 
 args = parser.parse_args()
 
