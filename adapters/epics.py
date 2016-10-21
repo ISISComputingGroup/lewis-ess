@@ -164,7 +164,8 @@ class EpicsAdapter(Adapter):
 
             if prop not in dir(self):
                 if prop not in dir(self._device):
-                    raise AttributeError('Can not find property \'' + prop + '\' in device or interface.')
+                    raise AttributeError('Can not find property \''
+                                         + prop + '\' in device or interface.')
                 setattr(type(self), prop, ForwardProperty('_device', prop))
 
     def _parseArguments(self, arguments):

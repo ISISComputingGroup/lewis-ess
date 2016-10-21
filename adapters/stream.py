@@ -54,8 +54,7 @@ class StreamHandler(asynchat.async_chat):
                     groups = match.groups()
                     func = getattr(self.target, cmd.method)
 
-                    args = groups if not cmd.argument_mappings else [f(a) for f, a in
-                                                                     zip(cmd.argument_mappings, groups)]
+                    args = cmd.map_arguments(groups)
                     reply = cmd.return_mapping(func(*args))
                     break
 
@@ -116,10 +115,24 @@ class Cmd(object):
 
         if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
             raise RuntimeError(
-                'Expected {} argument mapping(s), got {}'.format(self.pattern.groups, len(argument_mappings)))
+                'Expected {} argument mapping(s), got {}'.format(
+                    self.pattern.groups, len(argument_mappings)))
 
         self.argument_mappings = argument_mappings
         self.return_mapping = return_mapping
+
+    def map_arguments(self, arguments):
+        """
+        Returns the mapped function arguments. If no mapping functions are defined, the arguments
+        are returned as they were supplied.
+
+        :param arguments: List of arguments for bound function as strings.
+        :return: Mapped arguments.
+        """
+        if not self.argument_mappings:
+            return arguments
+
+        return [f(a) for f, a in zip(self.argument_mappings, arguments)]
 
 
 class StreamAdapter(Adapter):
@@ -145,9 +158,10 @@ class StreamAdapter(Adapter):
 
     def _parseArguments(self, arguments):
         parser = ArgumentParser(description='Adapter to expose a device via TCP Stream')
-        parser.add_argument('-b', '--bind-address', help='IP Address to bind and listen for connections on',
-                            default='0.0.0.0')
-        parser.add_argument('-p', '--port', help='Port to listen for connections on', type=int, default=9999)
+        parser.add_argument('-b', '--bind-address', default='0.0.0.0',
+                            help='IP Address to bind and listen for connections on')
+        parser.add_argument('-p', '--port', type=int, default=9999,
+                            help='Port to listen for connections on')
         return parser.parse_args(arguments)
 
     def _create_properties(self, cmds):
@@ -157,13 +171,15 @@ class StreamAdapter(Adapter):
 
             if method not in dir(self):
                 if method not in dir(self._device):
-                    raise AttributeError('Can not find method \'' + method + '\' in device or interface.')
+                    raise AttributeError('Can not find method \''
+                                         + method + '\' in device or interface.')
 
                 setattr(self, method, ForwardMethod(self._device, method))
 
             if cmd.pattern.pattern in patterns:
                 raise RuntimeError(
-                    'The regular expression \'{}\' is associated with multiple methods.'.format(cmd.pattern.pattern))
+                    'The regular expression \'{}\' is '
+                    'associated with multiple methods.'.format(cmd.pattern.pattern))
 
             patterns.add(cmd.pattern.pattern)
 
