@@ -18,10 +18,10 @@
 # *********************************************************************
 
 import unittest
+
 from mock import Mock, patch
 
-from core.statemachine import StateMachine, State, Transition
-from core.statemachine import StateMachineException
+from plankton.core.statemachine import StateMachine, State, Transition, StateMachineException
 
 
 class TestStateMachine(unittest.TestCase):

@@ -22,13 +22,13 @@ import argparse
 import os
 import sys
 
-from core.version import __version__
+from plankton.adapters import import_adapter, get_available_adapters
+from plankton.core.control_server import ControlServer, ExposedObject
+from plankton.core.utils import get_available_submodules
+from plankton.core.version import __version__
+from plankton.devices import import_device
 
-from adapters import import_adapter, get_available_adapters
-from core.control_server import ControlServer, ExposedObject
-from core.simulation import Simulation
-from core.utils import get_available_submodules
-from devices import import_device
+from plankton.core.simulation import Simulation
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
@@ -47,7 +47,7 @@ parser.add_argument('-c', '--cycle-delay', type=float, default=0.1,
 parser.add_argument('-e', '--speed', type=float, default=1.0,
                     help='Simulation speed. The actually elapsed time between two cycles is '
                          'multiplied with this speed to determine the simulated time.')
-parser.add_argument('-k', '--device-package', default='devices',
+parser.add_argument('-k', '--device-package', default='plankton.devices',
                     help='Name of packages where devices are found.')
 parser.add_argument('-a', '--add-path', default=None,
                     help='Path where the device package exists. Is added to the path.')

@@ -18,8 +18,9 @@
 # *********************************************************************
 
 import unittest
-from devices.chopper import SimulatedChopper
-from devices.chopper.states import DefaultIdleState
+
+from plankton.devices.chopper.states import DefaultIdleState
+from plankton.devices.chopper import SimulatedChopper
 
 
 class TestSimulatedChopper(unittest.TestCase):

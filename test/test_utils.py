@@ -17,16 +17,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from six import iteritems
-import unittest
-from mock import patch
-
 import os
 import shutil
 import tempfile
+import unittest
 from datetime import datetime
 
-from core.utils import dict_strict_update, extract_module_name, \
+from mock import patch
+from six import iteritems
+
+from plankton.core.utils import dict_strict_update, extract_module_name, \
     is_module, seconds_since, get_available_submodules
 
 
@@ -158,19 +158,19 @@ class TestGetAvailableSubModules(TestWithPackageStructure):
 
 
 class TestSecondsSince(unittest.TestCase):
-    @patch('core.utils.datetime')
+    @patch('plankton.core.utils.datetime')
     def test_seconds_since_past(self, datetime_mock):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 
         self.assertEqual(seconds_since(datetime(2016, 9, 1, 1, 0)), 3600.0)
 
-    @patch('core.utils.datetime')
+    @patch('plankton.core.utils.datetime')
     def test_seconds_since_future(self, datetime_mock):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 
         self.assertEqual(seconds_since(datetime(2016, 9, 1, 3, 0)), -3600.0)
 
-    @patch('core.utils.datetime')
+    @patch('plankton.core.utils.datetime')
     def test_seconds_since_none(self, datetime_mock):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 

@@ -18,14 +18,16 @@
 # *********************************************************************
 
 import unittest
+
 from mock import Mock, patch, call
 
-from core.control_client import ObjectProxy, ControlClient, ProtocolException, RemoteException
+from plankton.core.control_client import ObjectProxy, ControlClient, \
+    ProtocolException, RemoteException
 
 
 class TestControlClient(unittest.TestCase):
     @patch('uuid.uuid4')
-    @patch('core.control_client.ControlClient._get_zmq_req_socket')
+    @patch('plankton.core.control_client.ControlClient._get_zmq_req_socket')
     def testjson_rpc(self, mock_socket, mock_uuid):
         mock_uuid.return_value = '2'
 
@@ -38,7 +40,7 @@ class TestControlClient(unittest.TestCase):
              call().send_json({'method': 'foo', 'params': (), 'jsonrpc': '2.0', 'id': '2'}),
              call().recv_json()])
 
-    @patch('core.control_client.ControlClient._get_zmq_req_socket')
+    @patch('plankton.core.control_client.ControlClient._get_zmq_req_socket')
     def test_get_remote_object_works(self, mock_socket):
         client = ControlClient(host='127.0.0.1', port='10001')
 
@@ -55,7 +57,7 @@ class TestControlClient(unittest.TestCase):
 
             json_rpc_mock.assert_has_calls([call(':api')])
 
-    @patch('core.control_client.ControlClient._get_zmq_req_socket')
+    @patch('plankton.core.control_client.ControlClient._get_zmq_req_socket')
     def test_get_remote_object_raises_exception(self, mock_socket):
         client = ControlClient(host='127.0.0.1', port='10001')
 
@@ -66,7 +68,7 @@ class TestControlClient(unittest.TestCase):
 
             json_rpc_mock.assert_has_calls([call(':api')])
 
-    @patch('core.control_client.ControlClient._get_zmq_req_socket')
+    @patch('plankton.core.control_client.ControlClient._get_zmq_req_socket')
     def test_get_remote_object_collection(self, mock_socket):
         client = ControlClient(host='127.0.0.1', port='10001')
 

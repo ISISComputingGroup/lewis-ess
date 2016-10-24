@@ -19,7 +19,7 @@
 
 import unittest
 
-from core.approaches import linear
+from plankton.core.approaches import linear
 
 
 class TestApproachLinear(unittest.TestCase):

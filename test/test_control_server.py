@@ -19,13 +19,12 @@
 
 import unittest
 
-from . import assertRaisesNothing
 from mock import Mock, patch, call
-
-
-from core.control_server import ExposedObject, ExposedObjectCollection, ControlServer
 from zmq import Again as zmq_again_exception
 from zmq import NOBLOCK as zmq_no_block_flag
+
+from plankton.core.control_server import ExposedObject, ExposedObjectCollection, ControlServer
+from . import assertRaisesNothing
 
 
 class TestObject(object):
@@ -170,13 +169,13 @@ class TestExposedObjectCollection(unittest.TestCase):
 
 
 class TestControlServer(unittest.TestCase):
-    @patch('core.control_server.ControlServer._get_zmq_rep_socket')
+    @patch('plankton.core.control_server.ControlServer._get_zmq_rep_socket')
     def test_connection(self, mock_socket_method):
         ControlServer(host='127.0.0.1', port='10001')
 
         mock_socket_method.assert_has_calls([call(), call().bind('tcp://127.0.0.1:10001')])
 
-    @patch('core.control_server.ControlServer._get_zmq_rep_socket')
+    @patch('plankton.core.control_server.ControlServer._get_zmq_rep_socket')
     def test_process_does_not_block(self, mock_socket_method):
         mock_socket = Mock()
         mock_socket.recv_unicode.side_effect = zmq_again_exception()

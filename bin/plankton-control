@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import ast
 import argparse
-from core.control_client import ControlClient
+import ast
+
+from plankton.core.control_client import ControlClient
 
 
 def list_objects(remote):
