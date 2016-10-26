@@ -282,5 +282,5 @@ class Simulation(object):
     @control_server.setter
     def control_server(self, control_server):
         if self.is_started and self._control_server:
-            raise RuntimeError('Can not replace plankton-control server while simulation is running.')
+            raise RuntimeError('Can not replace control server while simulation is running.')
         self._control_server = control_server
