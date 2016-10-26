@@ -21,6 +21,7 @@ import os
 import shutil
 import tempfile
 import unittest
+import sys
 from datetime import datetime
 
 from mock import patch
@@ -107,9 +108,13 @@ class TestWithPackageStructure(unittest.TestCase):
 
         cls._expected_modules = ['some_dir', 'some_file']
 
+        sys.path.insert(0, cls._tmp_dir)
+
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls._tmp_package)
+        sys.path.pop(0)
+
 
 
 class TestExtractModuleName(TestWithPackageStructure):
@@ -153,7 +158,7 @@ class TestIsModule(TestWithPackageStructure):
 
 class TestGetAvailableSubModules(TestWithPackageStructure):
     def test_correct_modules_are_returned(self):
-        self.assertEqual(sorted(get_available_submodules(self._tmp_package_name, [self._tmp_dir])),
+        self.assertEqual(sorted(get_available_submodules(self._tmp_package_name)),
                          sorted(self._expected_modules))
 
 
