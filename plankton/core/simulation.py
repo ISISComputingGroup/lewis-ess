@@ -106,7 +106,7 @@ class Simulation(object):
     def _process_cycle(self, delta):
         """
         Processes one cycle, which consists of one simulation cycle and processing
-        of plankton-control server commands. The method measures how long all this takes
+        of control server commands. The method measures how long all this takes
         and returns the elapsed time in seconds.
 
         :param delta: Elapsed time in last cycle, passed to simulation.
@@ -275,7 +275,7 @@ class Simulation(object):
         """
         ControlServer-instance that exposes the object to remote machines. Can only
         be set before start has been called or on a running simulation if no
-        plankton-control server was previously present.
+        control server was previously present.
         """
         return self._control_server
 
