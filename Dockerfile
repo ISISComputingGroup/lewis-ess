@@ -14,5 +14,5 @@ RUN pip install -r plankton/requirements.txt && \
 # Plankton source is pulled in from current directory (note .dockerignore filters out some files)
 COPY . /plankton
 
-ENTRYPOINT ["/init.sh", "/plankton/bin/plankton"]
+ENTRYPOINT ["/init.sh", "/plankton/plankton.py"]
 

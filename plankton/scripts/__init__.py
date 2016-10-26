@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 # *********************************************************************
 # plankton - a library for creating hardware device simulators
@@ -17,8 +16,3 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
-
-from plankton.scripts.run import run_simulation
-
-if __name__ == '__main__':
-    run_simulation()

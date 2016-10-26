@@ -116,7 +116,6 @@ class TestWithPackageStructure(unittest.TestCase):
         sys.path.pop(0)
 
 
-
 class TestExtractModuleName(TestWithPackageStructure):
     def test_directory_basename_is_returned(self):
         self.assertEqual(extract_module_name(self._dirs['valid']), 'some_dir')

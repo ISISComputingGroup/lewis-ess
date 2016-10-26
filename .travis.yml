@@ -16,7 +16,7 @@ install:
 
 script:
   - flake8 .
-  - nosetests -w test --with-coverage --cover-package=core,devices
+  - nosetests -w test --with-coverage --cover-package=plankton.core,plankton.devices
 
 after_success:
   - coveralls
