@@ -44,7 +44,7 @@ The states and transitions described above form a finite state machine with two 
 
 ### Implementing the device simulation
 
-Each device resides in its own sub-package in the `devices`-package. The first step is to create a new directory in the [devices](../devices) directory called `example_motor`, which should contain a single file, `__init__.py`. For simple devices like this it's acceptable to put everything into one file, but for more complex simulators it's recommended to follow the structure of the devices that are already part of the Plankton distribution.
+Each device resides in the sub-package `devices` in the `plankton`-package. The first step is to create a new directory in the [devices](../plankton/devices) directory called `example_motor`, which should contain a single file, `__init__.py`. For simple devices like this it's acceptable to put everything into one file, but for more complex simulators it's recommended to follow the structure of the devices that are already part of the Plankton distribution.
 
 Conceptually, in Plankton, devices are split in two Parts: a device model, which contains internal device state, as well as potentially a state machine, and an interface that exposes the device to the outside world via a communication protocol that is provided by an "adapter". The adapter specifies the communication protocol (for example [EPICS](http://www.aps.anl.gov/epics/) or TCP/IP), whereas the interface specifies the syntax and semantics of the actual command language of the device.
 
@@ -53,10 +53,10 @@ For the actual device simulation there are two classes to choose between for sub
 `StateMachineDevice` has three methods that must be implemented by sub-classes: `_get_state_handlers`, `_get_initial_state` and `_get_transition_handlers`. They are used to define the state machine. A fourth, optional method can be used to initialize internal device state, it's calld `_initialize_data`. In this case the device implementation should also go into `__init__.py`:
 
 ```python
-from devices import StateMachineDevice
+from plankton.devices import StateMachineDevice
 
-from core.statemachine import State
-from core import approaches
+from plankton.core.statemachine import State
+from plankton.core import approaches
 
 from collections import OrderedDict
 
@@ -125,7 +125,7 @@ The device also provides a read-only property `state`, which forwards the state 
 Device interfaces are implemented by sub-classing an appropriate pre-written communication adapter base class from the framework's `adapters`-package and overriding a few members. In this case this adapter is called `StreamAdapter`. The first step is to specify the available commands in terms of a collection of `Cmd`-objects. These objects effectively bind commands specified in terms of regular expressions to a the adapter's methods. According to the specifications above, the commands are defined like this:
 
 ```python
-from adapters.stream import StreamAdapter, Cmd
+from plankton.adapters.stream import StreamAdapter, Cmd
 
 class ExampleMotorStreamInterface(StreamAdapter):
     commands = {
@@ -170,10 +170,10 @@ Finally, in- and out-terminators need to be specified. These are stripped from a
 This entire device can be found in the `examples` directory. It can be started using the `-k` parameter of `plankton.py`:
 
 ```
-$ ./plankton.py -k examples example_motor -- -b 127.0.0.1 -p 9999
+$ ./plankton.py -k plankton.examples example_motor -- -b 127.0.0.1 -p 9999
 ```
 
-All functionality described in the [Readme](https://github.com/DMSC-Instrument-Data/plankton), such as accessing the device and the simulation via the `control.py`-script are automatically available.
+All functionality described in the [Readme](https://github.com/DMSC-Instrument-Data/plankton), such as accessing the device and the simulation via the `plankton-control.py`-script are automatically available.
 
 ### Unit tests
 
@@ -205,7 +205,7 @@ Once a device is developed far enough, it's time to submit a pull request. As an
 
 If a second interface is added to a device, either using a different adapter or the same adapter but with different commands, the interface definitions should be moved out of the `__init__.py` file. Plankton will continue to work if the interfaces are moved to a sub-folder of the device called `interfaces`. This needs to have its own `__init__.py`, where interface-classes can be imported from other files in that module. It's best to look at the chopper and linkam_t95 devices that are already in Plankton.
 
-The same is true for setups. For complex setups, these should be moved to a sub-module of the device called `setups`, where each setup can live in its own file. Please see the documentation of `devices.import_device` for reference.
+The same is true for setups. For complex setups, these should be moved to a sub-module of the device called `setups`, where each setup can live in its own file. Please see the documentation of `plankton.devices.import_device` for reference.
 
 For initial experiments it's also possible to develop a device outside of Planton's source tree. Assuming the device package is called `my_devices`, which is a subdirectory in `/some/arbitrary/path`:
 
@@ -228,4 +228,4 @@ $ ./plankton.py -a /some/arbitrary/path -k my_devices device_1
 ```
 
 ## More Examples
-More example devices and interfaces are provided in the [examples](../examples) directory
+More example devices and interfaces are provided in the [examples](../plankton/examples) directory
