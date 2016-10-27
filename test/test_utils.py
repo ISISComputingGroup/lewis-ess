@@ -112,7 +112,7 @@ class TestWithPackageStructure(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        sys.path.pop(0)
+        sys.path.pop(sys.path.index(cls._tmp_dir))
         shutil.rmtree(cls._tmp_dir)
 
 
