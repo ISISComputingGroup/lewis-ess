@@ -19,13 +19,12 @@
 
 from collections import OrderedDict
 
-from core.statemachine import StateMachine
-from core.processor import CanProcess
+from plankton.core.processor import CanProcess
+from plankton.core.statemachine import StateMachine
+from plankton.devices import StateMachineDevice
 
-from devices import StateMachineDevice
-
-from .bearings import MagneticBearings
 from . import states
+from .bearings import MagneticBearings
 
 
 class SimulatedBearings(CanProcess, MagneticBearings):

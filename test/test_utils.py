@@ -17,16 +17,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from six import iteritems
-import unittest
-from mock import patch
-
 import os
 import shutil
 import tempfile
+import unittest
+import sys
 from datetime import datetime
 
-from core.utils import dict_strict_update, extract_module_name, \
+from mock import patch
+from six import iteritems
+
+from plankton.core.utils import dict_strict_update, extract_module_name, \
     is_module, seconds_since, get_available_submodules
 
 
@@ -76,9 +77,9 @@ class TestWithPackageStructure(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._tmp_package = tempfile.mkdtemp()
+        cls._tmp_dir = tempfile.mkdtemp()
+        cls._tmp_package = tempfile.mkdtemp(dir=cls._tmp_dir)
         cls._tmp_package_name = os.path.basename(cls._tmp_package)
-        cls._tmp_dir = tempfile.gettempdir()
 
         cls._files = {k: os.path.join(cls._tmp_package, v) for k, v in iteritems(dict(
             valid='some_file.py',
@@ -107,9 +108,12 @@ class TestWithPackageStructure(unittest.TestCase):
 
         cls._expected_modules = ['some_dir', 'some_file']
 
+        sys.path.insert(0, cls._tmp_dir)
+
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(cls._tmp_package)
+        sys.path.pop(sys.path.index(cls._tmp_dir))
+        shutil.rmtree(cls._tmp_dir)
 
 
 class TestExtractModuleName(TestWithPackageStructure):
@@ -153,24 +157,24 @@ class TestIsModule(TestWithPackageStructure):
 
 class TestGetAvailableSubModules(TestWithPackageStructure):
     def test_correct_modules_are_returned(self):
-        self.assertEqual(sorted(get_available_submodules(self._tmp_package_name, [self._tmp_dir])),
+        self.assertEqual(sorted(get_available_submodules(self._tmp_package_name)),
                          sorted(self._expected_modules))
 
 
 class TestSecondsSince(unittest.TestCase):
-    @patch('core.utils.datetime')
+    @patch('plankton.core.utils.datetime')
     def test_seconds_since_past(self, datetime_mock):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 
         self.assertEqual(seconds_since(datetime(2016, 9, 1, 1, 0)), 3600.0)
 
-    @patch('core.utils.datetime')
+    @patch('plankton.core.utils.datetime')
     def test_seconds_since_future(self, datetime_mock):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 
         self.assertEqual(seconds_since(datetime(2016, 9, 1, 3, 0)), -3600.0)
 
-    @patch('core.utils.datetime')
+    @patch('plankton.core.utils.datetime')
     def test_seconds_since_none(self, datetime_mock):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 

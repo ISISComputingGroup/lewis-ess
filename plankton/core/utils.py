@@ -18,20 +18,23 @@
 # *********************************************************************
 
 import imp
-import os.path as osp
+import importlib
 from datetime import datetime
+
+import os.path as osp
 from os import listdir
 
 
-def get_available_submodules(package, search_path=None):
+def get_available_submodules(package):
     """
     This function returns a list of available submodules in a package.
 
     :param package: Name of the package.
-    :param search_path: List of paths to search for package or None. Passed to imp.find_module
     :return: Available submodules in package.
     """
-    file_name, path, descriptor = imp.find_module(package, search_path)
+
+    module = importlib.import_module(package)
+    path = module.__path__[0]
 
     submodule_candidates = [extract_module_name(osp.join(path, entry)) for entry in listdir(path)]
 

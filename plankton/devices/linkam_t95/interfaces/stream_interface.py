@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from adapters.stream import StreamAdapter, Cmd
+from plankton.adapters.stream import StreamAdapter, Cmd
 
 
 class LinkamT95StreamInterface(StreamAdapter):

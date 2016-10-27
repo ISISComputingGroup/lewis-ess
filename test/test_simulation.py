@@ -18,10 +18,11 @@
 # *********************************************************************
 
 import unittest
-from . import assertRaisesNothing
+
 from mock import Mock, patch, call, ANY
 
-from core.simulation import Simulation
+from plankton.core.simulation import Simulation
+from . import assertRaisesNothing
 
 
 def set_simulation_running(environment):
@@ -30,7 +31,7 @@ def set_simulation_running(environment):
 
 
 class TestSimulation(unittest.TestCase):
-    @patch('core.simulation.seconds_since')
+    @patch('plankton.core.simulation.seconds_since')
     def test_process_cycle_returns_elapsed_time(self, elapsed_seconds_mock):
         env = Simulation(device=Mock(), adapter=Mock())
 
@@ -43,7 +44,7 @@ class TestSimulation(unittest.TestCase):
             elapsed_seconds_mock.assert_called_once_with(ANY)
             self.assertEqual(delta, 0.5)
 
-    @patch('core.simulation.seconds_since')
+    @patch('plankton.core.simulation.seconds_since')
     def test_process_cycle_changes_runtime_status(self, elapsed_seconds_mock):
         env = Simulation(device=Mock(), adapter=Mock())
 
@@ -207,7 +208,7 @@ class TestSimulation(unittest.TestCase):
         self.assertTrue(env.device_connected)
         self.assertRaises(RuntimeError, env.connect_device)
 
-    @patch('core.simulation.sleep')
+    @patch('plankton.core.simulation.sleep')
     def test_disconnect_device(self, sleep_mock):
         adapter_mock = Mock()
         env = Simulation(device=Mock(), adapter=adapter_mock)

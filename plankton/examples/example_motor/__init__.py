@@ -17,13 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from devices import StateMachineDevice
-from adapters.stream import StreamAdapter, Cmd
-
-from core.statemachine import State
-from core import approaches
-
 from collections import OrderedDict
+
+from plankton.core import approaches
+from plankton.core.statemachine import State
+from plankton.devices import StateMachineDevice
+
+from plankton.adapters.stream import StreamAdapter, Cmd
 
 
 class DefaultMovingState(State):

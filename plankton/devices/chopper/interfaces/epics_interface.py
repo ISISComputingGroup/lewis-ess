@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from adapters.epics import EpicsAdapter, PV
+from plankton.adapters.epics import EpicsAdapter, PV
 
 
 class ChopperEpicsInterface(EpicsAdapter):

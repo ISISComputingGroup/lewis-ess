@@ -18,9 +18,11 @@
 # *********************************************************************
 
 import unittest
-from devices.linkam_t95 import SimulatedLinkamT95
-from devices.linkam_t95.states import DefaultStartedState
-from devices.linkam_t95.interfaces.stream_interface import LinkamT95StreamInterface
+
+from plankton.devices.linkam_t95 import SimulatedLinkamT95
+from plankton.devices.linkam_t95.states import DefaultStartedState
+
+from plankton.devices.linkam_t95.interfaces.stream_interface import LinkamT95StreamInterface
 from . import assertRaisesNothing
 
 

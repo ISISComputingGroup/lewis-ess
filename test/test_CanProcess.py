@@ -18,9 +18,10 @@
 # *********************************************************************
 
 import unittest
+
 from mock import call, patch
 
-from core.processor import CanProcess, CanProcessComposite
+from plankton.core.processor import CanProcess, CanProcessComposite
 
 
 class TestCanProcess(unittest.TestCase):

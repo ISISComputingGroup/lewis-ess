@@ -19,7 +19,8 @@
 
 from datetime import datetime
 from time import sleep
-from core.utils import seconds_since
+
+from plankton.core.utils import seconds_since
 
 
 class Simulation(object):

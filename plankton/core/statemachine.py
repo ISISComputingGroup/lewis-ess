@@ -18,7 +18,8 @@
 # *********************************************************************
 
 from six import iteritems
-from core.processor import CanProcess
+
+from plankton.core.processor import CanProcess
 
 
 class StateMachineException(Exception):

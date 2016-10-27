@@ -18,10 +18,13 @@
 # *********************************************************************
 
 from __future__ import absolute_import
+
 import importlib
-from core.statemachine import StateMachine
-from core.processor import CanProcess, CanProcessComposite
-from core.utils import dict_strict_update
+
+from ..core.statemachine import StateMachine
+from ..core.utils import dict_strict_update
+
+from plankton.core.processor import CanProcess, CanProcessComposite
 
 
 class Device(CanProcess):
@@ -178,7 +181,8 @@ class StateMachineDevice(CanProcessComposite):
 
 
 def is_device(obj):
-    return issubclass(obj, CanProcess) and obj.__module__ not in ('core.processor', 'devices')
+    return issubclass(obj, CanProcess) and obj.__module__ not in (
+        'plankton.core.processor', 'plankton.devices')
 
 
 def import_device(device, setup=None, device_package='devices'):

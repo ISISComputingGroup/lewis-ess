@@ -19,10 +19,10 @@
 
 import unittest
 
-from . import assertRaisesNothing
 from mock import Mock, call
 
-from devices import StateMachineDevice
+from plankton.devices import StateMachineDevice
+from . import assertRaisesNothing
 
 
 class MockStateMachineDevice(StateMachineDevice):

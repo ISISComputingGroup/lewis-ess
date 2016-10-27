@@ -1,7 +1,28 @@
 #!/usr/bin/env python
-import ast
+#  -*- coding: utf-8 -*-
+# *********************************************************************
+# plankton - a library for creating hardware device simulators
+# Copyright (C) 2016 European Spallation Source ERIC
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# *********************************************************************
+
 import argparse
-from core.control_client import ControlClient
+import ast
+import sys
+
+from plankton.core.control_client import ControlClient
 
 
 def list_objects(remote):
@@ -12,8 +33,7 @@ def list_objects(remote):
 def show_api(remote, object_name):
     if object_name not in remote.keys():
         raise RuntimeError(
-            'Object \'{}\' is not exposed by remote. '
-            'Use -l to get a list of objects.'.format(object_name))
+            'Object \'{}\' is not exposed by remote.'.format(object_name))
 
     obj = remote[object_name]
 
@@ -45,7 +65,7 @@ def convert_type(value):
 
 def call_method(remote, object_name, method, arguments):
     if not method:
-        raise RuntimeError('Missing object member. Use -a to get a list of members.')
+        raise RuntimeError('Missing object member, can not make call.')
 
     attr = getattr(remote[object_name], method)
     args = [convert_type(arg) for arg in arguments]
@@ -60,8 +80,8 @@ def call_method(remote, object_name, method, arguments):
 
 
 parser = argparse.ArgumentParser(
-    description='A client to manipulate the simulated device remotely through a separate channel. '
-                'The simulation must be started with the --rpc-host option.')
+    description='A client to manipulate the simulated device remotely through a separate '
+                'channel. The simulation must be started with the --rpc-host option.')
 parser.add_argument('-r', '--rpc-host', default='127.0.0.1:10000',
                     help='HOST:PORT string specifying control server to connect to.')
 parser.add_argument('-n', '--print-none', action='store_true',
@@ -74,17 +94,19 @@ parser.add_argument('arguments', nargs='*',
                     help='Arguments to method call. For setting a property, '
                          'supply the property value. ')
 
-args = parser.parse_args()
 
-remote = ControlClient(*args.rpc_host.split(':')).get_object_collection()
+def control_simulation(argument_list=None):
+    args = parser.parse_args(argument_list or sys.argv[1:])
 
-if not args.object:
-    list_objects(remote)
-else:
-    if not args.member:
-        show_api(remote, args.object)
+    remote = ControlClient(*args.rpc_host.split(':')).get_object_collection()
+
+    if not args.object:
+        list_objects(remote)
     else:
-        response = call_method(remote, args.object, args.member, args.arguments)
+        if not args.member:
+            show_api(remote, args.object)
+        else:
+            response = call_method(remote, args.object, args.member, args.arguments)
 
-        if response is not None or args.print_none:
-            print(response)
+            if response is not None or args.print_none:
+                print(response)

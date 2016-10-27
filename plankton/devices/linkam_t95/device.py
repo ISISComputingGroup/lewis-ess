@@ -18,9 +18,10 @@
 # *********************************************************************
 
 from __future__ import print_function
+
 from collections import OrderedDict
 
-from devices import StateMachineDevice
+from plankton.devices import StateMachineDevice
 
 from . import states
 

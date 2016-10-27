@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from plankton.scripts.run import run_simulation
+from plankton.scripts.control import control_simulation
 
 if __name__ == '__main__':
-    run_simulation()
+    control_simulation()

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 # *********************************************************************
 # plankton - a library for creating hardware device simulators
@@ -18,7 +17,29 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from plankton.scripts.run import run_simulation
+from plankton.devices import Device
 
-if __name__ == '__main__':
-    run_simulation()
+from plankton.adapters.stream import StreamAdapter, Cmd
+
+
+class VerySimpleDevice(Device):
+    param = 10
+
+
+class VerySimpleInterface(StreamAdapter):
+    commands = {
+        Cmd('get_param', '^P$'),
+        Cmd('set_param', '^P=(.+)$'),
+    }
+
+    in_terminator = '\r\n'
+    out_terminator = '\r\n'
+
+    def get_param(self):
+        return self._device.param
+
+    def set_param(self, new_param):
+        self._device.param = new_param
+
+    def handle_error(self, request, error):
+        return 'An error occurred: ' + repr(error)

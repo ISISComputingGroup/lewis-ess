@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from core.statemachine import State
-from core import approaches
+from plankton.core.statemachine import State
+from plankton.core import approaches
 
 
 class DefaultInitState(State):

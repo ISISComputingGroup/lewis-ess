@@ -19,16 +19,15 @@
 
 from __future__ import print_function
 
-from six import b
-
-import asyncore
 import asynchat
+import asyncore
+import re
 import socket
-
-from adapters import Adapter, ForwardMethod
 from argparse import ArgumentParser
 
-import re
+from six import b
+
+from plankton.adapters import Adapter, ForwardMethod
 
 
 class StreamHandler(asynchat.async_chat):

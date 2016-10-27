@@ -36,7 +36,7 @@ class Adapter(object):
 
 def is_adapter(obj):
     try:
-        return issubclass(obj, Adapter) and not obj.__module__.startswith('adapters')
+        return issubclass(obj, Adapter) and not obj.__module__.startswith('plankton.adapters')
     except TypeError:
         return False
 
