@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#  -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # *********************************************************************
 # plankton - a library for creating hardware device simulators
 # Copyright (C) 2016 European Spallation Source ERIC
