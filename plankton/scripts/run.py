@@ -24,7 +24,7 @@ import sys
 from plankton.adapters import import_adapter, get_available_adapters
 from plankton.core.control_server import ControlServer, ExposedObject
 from plankton.core.utils import get_available_submodules
-from plankton.core.version import __version__
+from plankton import __version__
 from plankton.devices import import_device
 
 from plankton.core.simulation import Simulation
