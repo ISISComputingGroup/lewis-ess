@@ -8,7 +8,7 @@ Besides the device specific protocols, the device can be made accessible from th
 $ python plankton.py -r 127.0.0.1:10000 chopper -- -p SIM:
 ```
 
-Now the device can be controlled via the `control.py`-script in a different terminal window. The service can be queried to show the available objects by not supplying an object name:
+Now the device can be controlled via the `plankton-control.py`-script in a different terminal window. The service can be queried to show the available objects by not supplying an object name:
 
 ```
 $ python plankton-control.py -r 127.0.0.1:10000
@@ -35,7 +35,7 @@ $ python plankton-control.py device initialize
 To set a property to a new value, the value has to be supplied on the command line:
 
 ```
-$ python plankton-control.py device targetSpeed 100
+$ python plankton-control.py device target_speed 100
 $ python plankton-control.py device start
 ```
 
@@ -48,7 +48,7 @@ from plankton.core.control_client import ControlClient
 client = ControlClient(host='127.0.0.1', port='10000')
 chopper = client.get_object('device')
 
-chopper.targetSpeed = 100
+chopper.target_speed = 100
 chopper.initialize()
 
 while chopper.state != 'stopped':

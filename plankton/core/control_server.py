@@ -188,7 +188,7 @@ class ControlServer(object):
         try:
             self.host = socket.gethostbyname(host)
         except socket.gaierror:
-            raise RuntimeError('Could not resolve plankton-control server host: {}'.format(host))
+            raise RuntimeError('Could not resolve control server host: {}'.format(host))
 
         self.port = port
 

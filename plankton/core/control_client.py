@@ -61,8 +61,8 @@ class ControlClient(object):
         of objects at the top level, a dictionary of named objects can be
         obtained via get_object_collection.
 
-        :param host: Host the plankton-control server is running on
-        :param port: Port on which the plankton-control server is listening
+        :param host: Host the control server is running on
+        :param port: Port on which the control server is listening
         """
         self._socket = self._get_zmq_req_socket()
         self._socket.connect('tcp://{0}:{1}'.format(host, port))
