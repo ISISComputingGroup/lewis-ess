@@ -77,9 +77,9 @@ class TestWithPackageStructure(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._tmp_package = tempfile.mkdtemp()
+        cls._tmp_dir = tempfile.mkdtemp()
+        cls._tmp_package = tempfile.mkdtemp(dir=cls._tmp_dir)
         cls._tmp_package_name = os.path.basename(cls._tmp_package)
-        cls._tmp_dir = tempfile.gettempdir()
 
         cls._files = {k: os.path.join(cls._tmp_package, v) for k, v in iteritems(dict(
             valid='some_file.py',
@@ -112,8 +112,8 @@ class TestWithPackageStructure(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(cls._tmp_package)
         sys.path.pop(0)
+        shutil.rmtree(cls._tmp_dir)
 
 
 class TestExtractModuleName(TestWithPackageStructure):
