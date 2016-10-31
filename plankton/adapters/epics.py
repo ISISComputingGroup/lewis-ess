@@ -23,10 +23,19 @@ from argparse import ArgumentParser
 from datetime import datetime
 
 from . import Adapter, ForwardProperty
-from pcaspy import Driver, SimpleServer
 from six import iteritems
 
 from plankton.core.utils import seconds_since
+from plankton.core.exceptions import PlanktonException
+
+# pcaspy might not be available. To make EPICS-based adapters show up anyway,
+# dummy types are created in this case and the failure is postponed to
+# runtime, where a more appropriate PlanktonException can be raised.
+try:
+    from pcaspy import Driver, SimpleServer
+except ImportError:
+    Driver = type('Driver', (object,), {})
+    SimpleServer = type('SimpleServer', (object,), {})
 
 
 class PV(object):
@@ -151,12 +160,19 @@ class EpicsAdapter(Adapter):
         self._driver = None
 
     def start_server(self):
-        self._server = SimpleServer()
-        self._server.createPV(prefix=self._options.prefix,
-                              pvdb={k: v.config for k, v in self.pvs.items()})
-        self._driver = PropertyExposingDriver(target=self, pv_dict=self.pvs)
+        try:
+            self._server = SimpleServer()
+            self._server.createPV(prefix=self._options.prefix,
+                                  pvdb={k: v.config for k, v in self.pvs.items()})
+            self._driver = PropertyExposingDriver(target=self, pv_dict=self.pvs)
 
-        self._last_update = datetime.now()
+            self._last_update = datetime.now()
+        except AttributeError:
+            raise PlanktonException(
+                'In order to use EPICS-interfaces, pcaspy must beinstalled:\n'
+                '\tpip install pcaspy\n'
+                'A fully working installation of EPICS-base is required for this package. '
+                'Please refer to the documentation for advice.')
 
     def _create_properties(self, pvs):
         for pv in pvs:
