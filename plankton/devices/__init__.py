@@ -23,8 +23,8 @@ import importlib
 
 from ..core.statemachine import StateMachine
 from ..core.utils import dict_strict_update
-
-from plankton.core.processor import CanProcess, CanProcessComposite
+from ..core.processor import CanProcess, CanProcessComposite
+from ..core.exceptions import PlanktonException
 
 
 class Device(CanProcess):
@@ -260,5 +260,7 @@ def import_device(device, setup=None, device_package='devices'):
                 raise
 
         except (ImportError, AttributeError, KeyError):
-            raise RuntimeError(
-                'Could not find setup \'{}\' for device \'{}\'.'.format(setup_name, device))
+            raise PlanktonException(
+                'Could not find setup \'{}\' for device \'{}\'.\n'
+                'Are you sure the correct device package is used (flag -k) '
+                'and that it is in the path (flag -a)?'.format(setup_name, device))
