@@ -28,6 +28,7 @@ from plankton import __version__
 from plankton.devices import import_device
 
 from plankton.core.simulation import Simulation
+from plankton.core.exceptions import PlanktonException
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
@@ -61,23 +62,23 @@ parser.add_argument('adapter_args', nargs='*',
                     help='Arguments for the adapter.')
 
 
-def run_simulation(argument_list=None):
+def do_run_simulation(argument_list=None):
     arguments = parser.parse_args(argument_list or sys.argv[1:])
 
     if arguments.version:
-        print(__version__)
-        return
+        return __version__
 
     if arguments.add_path is not None:
         sys.path.append(os.path.abspath(arguments.add_path))
 
     if not arguments.device:
-        print('Please specify a device to simulate.')
-        print('The following devices are available:')
+        ret = ['Please specify a device to simulate.'
+               'The following devices are available:']
 
         for dev in get_available_submodules(arguments.device_package):
-            print('\t' + dev)
-        return
+            ret.append('\t' + dev)
+
+        return '\n'.join(ret)
 
     # Import the device type and required initialisation parameters.
     device_type, parameters = import_device(arguments.device, arguments.setup,
@@ -89,9 +90,7 @@ def run_simulation(argument_list=None):
 
         protocols = {adapter.protocol for adapter in adapters.values()}
 
-        for p in protocols:
-            print(p)
-        return
+        return '\n'.join(protocols)
 
     device = device_type(**parameters)
     adapter = import_adapter(
@@ -112,3 +111,19 @@ def run_simulation(argument_list=None):
             *arguments.rpc_host.split(':'))
 
     simulation.start()
+
+    return None
+
+
+def run_simulation(argument_list=None):
+    """
+    This function is just a very thin wrapper around do_run_simulation to catch expected
+    exceptions that are derived from PlanktonException.
+
+    :param argument_list: Argument list to pass to the argument parser declared in this module.
+    :return:
+    """
+    try:
+        return do_run_simulation(argument_list)
+    except PlanktonException as e:
+        return '\n'.join(('An error occured:', e.message))
