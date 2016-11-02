@@ -164,11 +164,13 @@ class ExposedObjectCollection(ExposedObject):
 
 
 class ControlServer(object):
-    def __init__(self, object_map=None, host='127.0.0.1', port='10000'):
+    def __init__(self, object_map=None, host='127.0.0.1', port='10000', start=False):
         """
-        This server opens a ZMQ REP-socket at the given host and port. It constructs an
-        ExposedObjectCollection from the supplied name: object-dictionary and uses that
-        as a handler for JSON-RPC requests. If it is an instance of ExposedObject,
+        This server opens a ZMQ REP-socket at the given host and port when start_server
+        is called. If the start-parameter is set to True, this happens directly on construction.
+
+        The server constructs an ExposedObjectCollection from the supplied name: object-dictionary
+        and uses that as a handler for JSON-RPC requests. If it is an instance of ExposedObject,
         that is used directly.
 
         Each time process is called, the server tries to get request data and responds to that.
@@ -182,6 +184,7 @@ class ControlServer(object):
         ExposedObjectCollection or ExposedObject
         :param host: Host on which the RPC service listens. Default is 127.0.0.1.
         :param port: Port on which the RPC service listens. Default is 10000.
+        :param start: Automatically bind to host and port and start listening.
         """
         super(ControlServer, self).__init__()
 
@@ -193,16 +196,37 @@ class ControlServer(object):
         self.port = port
 
         if isinstance(object_map, ExposedObject):
-            self._rpc_object_collection = object_map
+            self._exposed_object = object_map
         else:
-            self._rpc_object_collection = ExposedObjectCollection(object_map)
+            self._exposed_object = ExposedObjectCollection(object_map)
 
-        self._socket = self._get_zmq_rep_socket()
-        self._socket.bind('tcp://{0}:{1}'.format(self.host, self.port))
+        self._socket = None
 
-    def _get_zmq_rep_socket(self):
-        context = zmq.Context()
-        return context.socket(zmq.REP)
+        if start:
+            self.start_server()
+
+    @property
+    def is_running(self):
+        """
+        This property is true if the server is running.
+        """
+        return self._socket is not None
+
+    @property
+    def exposed_object(self):
+        """
+        The exposed object. This is a read only property.
+        """
+        return self._exposed_object
+
+    def start_server(self):
+        """
+        Binds the server to the configured host and port and starts listening.
+        """
+        if self._socket is None:
+            context = zmq.Context()
+            self._socket = context.socket(zmq.REP)
+            self._socket.bind('tcp://{0}:{1}'.format(self.host, self.port))
 
     def _unhandled_exception_response(self, id, exception):
         return {"jsonrpc": "2.0", "id": id,
@@ -222,12 +246,18 @@ class ControlServer(object):
         Plankton where everything is running in one thread. The central loop can call process
         at some point to process remote calls, so the RPC-server does not introduce its own
         infinite processing loop.
+
+        If the server has not been started yet (either via start_server or by supplying the
+        start-parameter to the constructor), a RuntimeError is raised.
         """
+        if self._socket is None:
+            raise RuntimeError('The server has not been started yet, use start_server to do so.')
+
         try:
             request = self._socket.recv_unicode(flags=zmq.NOBLOCK)
 
             try:
-                response = JSONRPCResponseManager.handle(request, self._rpc_object_collection)
+                response = JSONRPCResponseManager.handle(request, self._exposed_object)
                 self._socket.send_unicode(response.json)
             except TypeError as e:
                 self._socket.send_json(

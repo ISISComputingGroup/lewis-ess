@@ -22,6 +22,7 @@ import unittest
 from mock import Mock, patch, call, ANY
 
 from plankton.core.simulation import Simulation
+from plankton.core.control_server import ControlServer
 from . import assertRaisesNothing
 
 
@@ -134,13 +135,61 @@ class TestSimulation(unittest.TestCase):
         self.assertEqual(env.runtime, 1.0)
 
     def test_process_calls_control_server(self):
-        control_mock = Mock()
+        control_mock = Mock(spec=ControlServer)
         env = Simulation(device=Mock(), adapter=Mock(), control_server=control_mock)
 
         set_simulation_running(env)
         env._process_cycle(0.5)
 
         control_mock.assert_has_calls([call.process()])
+
+    def test_None_control_server_is_None(self):
+        env = Simulation(device=Mock(), adapter=Mock(), control_server=None)
+
+        self.assertIsNone(env.control_server)
+
+    def test_invalid_control_server_fails(self):
+        self.assertRaises(Exception, Simulation,
+                          device=Mock(), adapter=Mock(), control_server=5.0)
+        self.assertRaises(Exception, Simulation,
+                          device=Mock(), adapter=Mock(), control_server=3434)
+
+        # With an arbitrary object it should also fail
+        self.assertRaises(Exception, Simulation,
+                          device=Mock(), adapter=Mock(), control_server=Mock())
+
+        # The string must have two components separated by :
+        self.assertRaises(Exception, Simulation,
+                          device=Mock(), adapter=Mock(), control_server='a:b:c')
+
+    @patch('plankton.core.simulation.ExposedObject')
+    @patch('plankton.core.simulation.ControlServer.__new__', spec=ControlServer)
+    def test_construct_control_server(self, mock_control_server_type, exposed_object_mock):
+        device = Mock()
+        adapter = Mock()
+
+        exposed_object_mock.return_value = 'test'
+        assertRaisesNothing(self, Simulation, device=device, adapter=adapter,
+                            control_server='localhost')
+
+        mock_control_server_type.assert_called_once_with(
+            ControlServer,
+            {'device': device, 'simulation': 'test'},
+            'localhost')
+
+    def test_start_starts_control_server(self):
+        env = Simulation(device=Mock(), adapter=Mock())
+
+        control_server_mock = Mock(spec=ControlServer)
+        env.control_server = control_server_mock
+
+        def process_cycle_side_effect(delta):
+            env.stop()
+
+        env._process_cycle = Mock(side_effect=process_cycle_side_effect)
+        env.start()
+
+        control_server_mock.assert_has_calls([call.start_server()])
 
     def test_speed_range(self):
         env = Simulation(device=Mock(), adapter=Mock())
@@ -181,19 +230,26 @@ class TestSimulation(unittest.TestCase):
     def test_control_server_setter(self):
         env = Simulation(device=Mock(), adapter=Mock())
 
-        control_mock = Mock()
+        control_mock = Mock(spec=ControlServer)
         assertRaisesNothing(self, setattr, env, 'control_server', control_mock)
         self.assertEqual(env.control_server, control_mock)
 
+        # The server is not started when the simulation is not running
+        control_mock.assert_not_called()
+
         assertRaisesNothing(self, setattr, env, 'control_server', None)
+        self.assertIsNone(env.control_server)
 
         set_simulation_running(env)
 
         # Can set new control server even when simulation is running
-        assertRaisesNothing(self, setattr, env, 'control_server', Mock())
+        assertRaisesNothing(self, setattr, env, 'control_server', control_mock)
+
+        # The server is started automatically when the simulation is running
+        control_mock.assert_has_calls([call.start_server()])
 
         # Can not replace control server when simulation is running
-        self.assertRaises(RuntimeError, setattr, env, 'control_server', Mock())
+        self.assertRaises(RuntimeError, setattr, env, 'control_server', Mock(spec=ControlServer))
 
     def test_connect_disconnect_exceptions(self):
         env = Simulation(device=Mock(), adapter=Mock())

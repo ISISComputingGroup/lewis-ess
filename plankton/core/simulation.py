@@ -21,6 +21,7 @@ from datetime import datetime
 from time import sleep
 
 from plankton.core.utils import seconds_since
+from plankton.core.control_server import ControlServer, ExposedObject
 
 
 class Simulation(object):
@@ -60,8 +61,11 @@ class Simulation(object):
         Finally, the simulation can be stopped entirely with the stop-method.
 
         All functionality except for the start-method can be made available to remote
-        computers via a ControlServer-instance. This can either be passed to __init__
-        or set as a property before the simulation has been started.
+        computers via a ControlServer-instance. It's possible to pass a configures
+        ControlServer-object directly, but the easiest way to expose the device and
+        the simulation is to pass a 'host:port'-string as the control_server argument,
+        which will construct the control server. Simulation will try to start the
+        control server using the start_server method.
 
         :param device: The simulated device.
         :param adapter: Adapter which contains the simulated device.
@@ -69,7 +73,6 @@ class Simulation(object):
         """
         self._device = device
         self._adapter = adapter
-        self._control_server = control_server
 
         self._speed = 1.0  # Multiplier for delta t
         self._cycle_delay = 0.1  # Target time between cycles
@@ -83,6 +86,28 @@ class Simulation(object):
         self._device_connected = True
         self._stop_commanded = False
 
+        # Constructing the control server must be deferred until the end,
+        # because the construction is not complete at this point
+        self._control_server = None  # Just initialize to None and use property setter afterwards
+        self.control_server = control_server
+
+    def _create_control_server(self, control_server):
+        if control_server is None or isinstance(control_server, ControlServer):
+            return control_server
+        else:
+            arguments = control_server.split(':')
+
+            if len(arguments) not in (1, 2):
+                raise RuntimeError(
+                    '\'{}\' is not a valid control server initialization string. '
+                    'A string of the form host:port or just host '
+                    '(port defaults to 10000) is expected.'.format(control_server))
+
+            return ControlServer(
+                {'device': self._device,
+                 'simulation': ExposedObject(self, exclude=('start', 'control_server'))},
+                *arguments)
+
     def start(self):
         """
         Starts the simulation.
@@ -90,6 +115,9 @@ class Simulation(object):
         self._running = True
         self._started = True
         self._stop_commanded = False
+
+        if isinstance(self._control_server, ControlServer):
+            self._control_server.start_server()
 
         self._adapter.start_server()
 
@@ -275,7 +303,8 @@ class Simulation(object):
         """
         ControlServer-instance that exposes the object to remote machines. Can only
         be set before start has been called or on a running simulation if no
-        control server was previously present.
+        control server was previously present. If the server is not running, it will be started
+        after it has been set.
         """
         return self._control_server
 
@@ -283,4 +312,8 @@ class Simulation(object):
     def control_server(self, control_server):
         if self.is_started and self._control_server:
             raise RuntimeError('Can not replace control server while simulation is running.')
-        self._control_server = control_server
+
+        self._control_server = self._create_control_server(control_server)
+
+        if self.is_started and isinstance(self._control_server, ControlServer):
+            self._control_server.start_server()

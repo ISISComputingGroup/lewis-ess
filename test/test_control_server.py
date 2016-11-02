@@ -20,8 +20,7 @@
 import unittest
 
 from mock import Mock, patch, call
-from zmq import Again as zmq_again_exception
-from zmq import NOBLOCK as zmq_no_block_flag
+import zmq
 
 from plankton.core.control_server import ExposedObject, ExposedObjectCollection, ControlServer
 from . import assertRaisesNothing
@@ -169,20 +168,62 @@ class TestExposedObjectCollection(unittest.TestCase):
 
 
 class TestControlServer(unittest.TestCase):
-    @patch('plankton.core.control_server.ControlServer._get_zmq_rep_socket')
-    def test_connection(self, mock_socket_method):
-        ControlServer(host='127.0.0.1', port='10001')
+    @patch('plankton.core.control_server.ControlServer.start_server')
+    def test_start_server_behaves_properly(self, start_server_mock):
+        ControlServer()
+        start_server_mock.assert_not_called()
+        ControlServer(start=False)
+        start_server_mock.assert_not_called()
 
-        mock_socket_method.assert_has_calls([call(), call().bind('tcp://127.0.0.1:10001')])
+        ControlServer(start=True)
+        start_server_mock.assert_has_calls([call()])
 
-    @patch('plankton.core.control_server.ControlServer._get_zmq_rep_socket')
-    def test_process_does_not_block(self, mock_socket_method):
+    @patch('zmq.Context')
+    def test_connection(self, mock_context):
+        ControlServer(host='127.0.0.1', port='10001', start=True)
+
+        mock_context.assert_has_calls([call(), call().socket(zmq.REP),
+                                       call().socket().bind('tcp://127.0.0.1:10001')])
+
+    @patch('zmq.Context')
+    def test_server_can_only_be_started_once(self, mock_context):
+        server = ControlServer(host='127.0.0.1', port='10000')
+        server.start_server()
+        server.start_server()
+
+        mock_context.assert_has_calls([call(), call().socket(zmq.REP),
+                                       call().socket().bind('tcp://127.0.0.1:10000')])
+
+    def test_process_raises_if_not_started(self):
+        server = ControlServer()
+
+        self.assertRaises(Exception, server.process)
+
+    def test_process_does_not_block(self):
         mock_socket = Mock()
-        mock_socket.recv_unicode.side_effect = zmq_again_exception()
-
-        mock_socket_method.return_value = mock_socket
+        mock_socket.recv_unicode.side_effect = zmq.Again()
 
         server = ControlServer()
+        server._socket = mock_socket
         assertRaisesNothing(self, server.process)
 
-        mock_socket.recv_unicode.assert_has_calls([call(flags=zmq_no_block_flag)])
+        mock_socket.recv_unicode.assert_has_calls([call(flags=zmq.NOBLOCK)])
+
+    def test_exposed_object_is_exposed_directly(self):
+        mock_collection = Mock(spec=ExposedObject)
+
+        server = ControlServer(object_map=mock_collection)
+        self.assertEqual(server.exposed_object, mock_collection)
+
+    @patch('plankton.core.control_server.ExposedObjectCollection')
+    def test_exposed_object_collection_is_constructed(self, exposed_object_mock):
+        ControlServer(object_map='test')
+
+        exposed_object_mock.assert_called_once_with('test')
+
+    @patch('zmq.Context')
+    def test_is_running(self, mock_context):
+        server = ControlServer(start=False)
+        self.assertFalse(server.is_running)
+        server.start_server()
+        self.assertTrue(server.is_running)

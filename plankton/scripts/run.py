@@ -22,7 +22,6 @@ import os
 import sys
 
 from plankton.adapters import import_adapter, get_available_adapters
-from plankton.core.control_server import ControlServer, ExposedObject
 from plankton.core.utils import get_available_submodules
 from plankton import __version__
 from plankton.devices import import_device
@@ -33,7 +32,7 @@ from plankton.core.exceptions import PlanktonException
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
 
-parser.add_argument('-r', '--rpc-host',
+parser.add_argument('-r', '--rpc-host', default=None,
                     help='HOST:PORT format string for exposing the device via '
                          'JSON-RPC over ZMQ.')
 parser.add_argument('-s', '--setup', default=None,
@@ -99,16 +98,11 @@ def do_run_simulation(argument_list=None):
 
     simulation = Simulation(
         device=device,
-        adapter=adapter)
+        adapter=adapter,
+        control_server=arguments.rpc_host)
 
     simulation.cycle_delay = arguments.cycle_delay
     simulation.speed = arguments.speed
-
-    if arguments.rpc_host:
-        simulation.control_server = ControlServer(
-            {'device': device,
-             'simulation': ExposedObject(simulation, exclude=('start', 'control_server'))},
-            *arguments.rpc_host.split(':'))
 
     simulation.start()
 
