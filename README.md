@@ -37,7 +37,7 @@ Using a simulation for the above has the added benefit that, unlike most real de
 
 `Device`s and `Interface`s are two independent concepts in Plankton. The `Device` is model for the device behaviour and internal memory. A `Device` can be represented using a `StateMachine`, but it does not have to be. A `Device` does not include anything specific to the communication protocol with the `Device`. An `Interface` provides a protocol binding to a `Device`. The `Device` and `Interface` are created as part of a `Simulation` that provides a "heart beat" and other environmental aspects.
 
-### What Does Plankton Let You Do?
+### What Can You Do With Plankton?
 
 * Create new `Device`s to closely imitate the internal behaviour and memory of something
 * Optionally make a `Device` work as a `StateMachine` via `StateMachineDevice` to to give rich behaviours
