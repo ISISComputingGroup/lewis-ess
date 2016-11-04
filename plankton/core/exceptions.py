@@ -25,6 +25,7 @@ class PlanktonException(Exception):
     better presentation of errors to the users.
     """
 
+
 class StubAccessException(Exception):
     """
     This exception type is raised when an attribute is accessed on a dummy object instead
