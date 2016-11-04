@@ -72,7 +72,7 @@ def do_run_simulation(argument_list=None):
         sys.path.append(os.path.abspath(arguments.add_path))
 
     if not arguments.device:
-        ret = ['Please specify a device to simulate.'
+        ret = ['Please specify a device to simulate.',
                'The following devices are available:']
 
         for dev in get_available_submodules(arguments.device_package):
