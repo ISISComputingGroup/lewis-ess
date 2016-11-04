@@ -17,12 +17,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+from __future__ import absolute_import
+
 import imp
 import importlib
 from datetime import datetime
 
 import os.path as osp
 from os import listdir
+
+from .exceptions import StubAccessException
 
 
 def get_available_submodules(package):
@@ -115,3 +119,66 @@ def seconds_since(start):
     :return: Elapsed seconds since start time.
     """
     return (datetime.now() - start).total_seconds()
+
+
+class From(object):
+    def __init__(self, module):
+        """
+        This is a utility class for importing clsses from a module or
+        replacing them with dummy types if the module can not be loaded.
+
+        Assume module 'a' that does:
+
+            from b import C, D
+
+        and module 'e' which does:
+
+            from a import F
+
+        where 'b' is a hard to install dependency which is thus optional.
+        To still be able to do:
+
+            import e
+
+        without raising an error, for example for inspection purposes,
+        this class can be used as a workaround in module 'a':
+
+            C, D = From('b').import_or_stub('C', 'D')
+
+        which is not as pretty as the actual syntax, but at least it
+        can be read in a similar way. If the module 'b' can not be imported,
+        stub-types are created that are called 'C' and 'D'. Everything depending
+        on these types will work until any of those are instantiated - in that
+        case a StubAccessException is raised.
+
+        Essentially, this class helps deferring ImportErrors until anything from
+        the module that was attempted to load is actually used.
+
+        :param module: Module from that symbols should be imported.
+        """
+        self._module = module
+
+    def import_or_stub(self, *names):
+        """
+        Tries to import names from the module specified on initialization
+        of the From-object. In case an ImportError occurs, the requested
+        names are replaced with stub objects.
+
+        :param names: List of strings that are used as type names.
+        :return: Tuple of stub types with provided names or one
+        """
+        try:
+            module_object = importlib.import_module(self._module)
+
+            return tuple(getattr(module_object, name) for name in names)
+        except ImportError:
+            def create_getattr_function(name):
+                def failing_init(obj, *args, **kwargs):
+                    raise StubAccessException(
+                        'You are trying to instantiate a stub-type that '
+                        'replaces \'{}\' from module \'{}\''.format(name, self._module))
+
+                return failing_init
+
+            return tuple(type(name, (object,), {'__init__': create_getattr_function(name)})
+                         for name in names)

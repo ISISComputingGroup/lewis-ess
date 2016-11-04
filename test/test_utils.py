@@ -28,7 +28,8 @@ from mock import patch
 from six import iteritems
 
 from plankton.core.utils import dict_strict_update, extract_module_name, \
-    is_module, seconds_since, get_available_submodules
+    is_module, seconds_since, get_available_submodules, From
+from plankton.core.exceptions import StubAccessException
 
 
 class TestDictStrictUpdate(unittest.TestCase):
@@ -179,3 +180,24 @@ class TestSecondsSince(unittest.TestCase):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 
         self.assertRaises(TypeError, seconds_since, None)
+
+
+class TestFrom(unittest.TestCase):
+    def test_existing_module_works(self):
+        a, = From('time').import_or_stub('sleep')
+
+        from time import sleep as b
+
+        self.assertEqual(a, b)
+
+    def test_non_existing_members_in_module_dont_work(self):
+        self.assertRaises(AttributeError, From('time').import_or_stub, 'sleep', 'bleep')
+
+    def test_non_existing_module_works(self):
+        A, B = From('invalid_module').import_or_stub('A', 'B')
+
+        self.assertEqual(A.__name__, 'A')
+        self.assertEqual(B.__name__, 'B')
+
+        self.assertRaises(StubAccessException, A, 'argument_one')
+        self.assertRaises(StubAccessException, B, 'argument_one', 'argument_two')
