@@ -182,7 +182,7 @@ class TestSecondsSince(unittest.TestCase):
         self.assertRaises(TypeError, seconds_since, None)
 
 
-class TestFrom(unittest.TestCase):
+class TestFromOptionalDependency(unittest.TestCase):
     def test_existing_module_works(self):
         a, = FromOptionalDependency('time').do_import('sleep')
 
