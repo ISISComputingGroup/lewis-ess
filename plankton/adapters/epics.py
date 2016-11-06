@@ -25,14 +25,14 @@ from datetime import datetime
 from . import Adapter, ForwardProperty
 from six import iteritems
 
-from plankton.core.utils import seconds_since, From
+from plankton.core.utils import seconds_since, FromOptionalDependency
 from plankton.core.exceptions import PlanktonException, StubAccessException
 
 # pcaspy might not be available. To make EPICS-based adapters show up
 # in the listed adapters anyway dummy types are created in this case
 # and the failure is postponed to runtime, where a more appropriate
 # PlanktonException can be raised.
-Driver, SimpleServer = From('pcaspy').import_or_stub('Driver', 'SimpleServer')
+Driver, SimpleServer = FromOptionalDependency('pcaspy').do_import('Driver', 'SimpleServer')
 
 
 class PV(object):

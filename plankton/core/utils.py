@@ -121,7 +121,7 @@ def seconds_since(start):
     return (datetime.now() - start).total_seconds()
 
 
-class From(object):
+class FromOptionalDependency(object):
     def __init__(self, module):
         """
         This is a utility class for importing clsses from a module or
@@ -143,7 +143,7 @@ class From(object):
         without raising an error, for example for inspection purposes,
         this class can be used as a workaround in module 'a':
 
-            C, D = From('b').import_or_stub('C', 'D')
+            C, D = FromOptionalDependency('b').do_import('C', 'D')
 
         which is not as pretty as the actual syntax, but at least it
         can be read in a similar way. If the module 'b' can not be imported,
@@ -158,7 +158,7 @@ class From(object):
         """
         self._module = module
 
-    def import_or_stub(self, *names):
+    def do_import(self, *names):
         """
         Tries to import names from the module specified on initialization
         of the From-object. In case an ImportError occurs, the requested

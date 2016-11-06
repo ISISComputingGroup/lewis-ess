@@ -28,7 +28,7 @@ from mock import patch
 from six import iteritems
 
 from plankton.core.utils import dict_strict_update, extract_module_name, \
-    is_module, seconds_since, get_available_submodules, From
+    is_module, seconds_since, get_available_submodules, FromOptionalDependency
 from plankton.core.exceptions import StubAccessException
 
 
@@ -184,17 +184,17 @@ class TestSecondsSince(unittest.TestCase):
 
 class TestFrom(unittest.TestCase):
     def test_existing_module_works(self):
-        a, = From('time').import_or_stub('sleep')
+        a, = FromOptionalDependency('time').do_import('sleep')
 
         from time import sleep as b
 
         self.assertEqual(a, b)
 
     def test_non_existing_members_in_module_dont_work(self):
-        self.assertRaises(AttributeError, From('time').import_or_stub, 'sleep', 'bleep')
+        self.assertRaises(AttributeError, FromOptionalDependency('time').do_import, 'sleep', 'bleep')
 
     def test_non_existing_module_works(self):
-        A, B = From('invalid_module').import_or_stub('A', 'B')
+        A, B = FromOptionalDependency('invalid_module').do_import('A', 'B')
 
         self.assertEqual(A.__name__, 'A')
         self.assertEqual(B.__name__, 'B')
