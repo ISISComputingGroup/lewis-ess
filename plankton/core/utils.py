@@ -81,7 +81,7 @@ def is_module(module, paths):
     Small helper function that returns True if module is a sub-module in package.
 
     :param module: Name of the sub-module to check.
-    :param path: List of paths where the module is located.
+    :param paths: List of paths where the module is located.
     :return: True if module is a sub-module of package.
     """
     try:
@@ -183,8 +183,8 @@ class FromOptionalDependency(object):
     def do_import(self, *names):
         """
         Tries to import names from the module specified on initialization
-        of the From-object. In case an ImportError occurs, the requested
-        names are replaced with stub objects.
+        of the FromOptionalDependency-object. In case an ImportError occurs,
+        the requested names are replaced with stub objects.
 
         :param names: List of strings that are used as type names.
         :return: Tuple of actual symbols or stub types with provided names.
