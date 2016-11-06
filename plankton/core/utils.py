@@ -18,6 +18,7 @@
 # *********************************************************************
 
 from __future__ import absolute_import
+from six import string_types
 
 import imp
 import importlib
@@ -169,7 +170,7 @@ class FromOptionalDependency(object):
             exception = 'The optional dependency \'{}\' is required  for the '
             'functionality you tried to use.'.format(self._module)
 
-        if isinstance(exception, basestring):
+        if isinstance(exception, string_types):
             exception = PlanktonException(exception)
 
         if exception is not None and not isinstance(exception, BaseException):
