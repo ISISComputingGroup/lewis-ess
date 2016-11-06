@@ -167,8 +167,8 @@ class FromOptionalDependency(object):
         self._module = module
 
         if exception is None:
-            exception = 'The optional dependency \'{}\' is required for the '
-            'functionality you tried to use.'.format(self._module)
+            exception = 'The optional dependency \'{}\' is required for the ' \
+                        'functionality you tried to use.'.format(self._module)
 
         if isinstance(exception, string_types):
             exception = PlanktonException(exception)
