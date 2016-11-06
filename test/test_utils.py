@@ -191,7 +191,8 @@ class TestFrom(unittest.TestCase):
         self.assertEqual(a, b)
 
     def test_non_existing_members_in_module_dont_work(self):
-        self.assertRaises(AttributeError, FromOptionalDependency('time').do_import, 'sleep', 'bleep')
+        self.assertRaises(
+            AttributeError, FromOptionalDependency('time').do_import, 'sleep', 'bleep')
 
     def test_non_existing_module_works(self):
         A, B = FromOptionalDependency('invalid_module').do_import('A', 'B')
