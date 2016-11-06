@@ -26,7 +26,7 @@ from datetime import datetime
 import os.path as osp
 from os import listdir
 
-from .exceptions import StubAccessException
+from .exceptions import PlanktonException
 
 
 def get_available_submodules(package):
@@ -122,7 +122,7 @@ def seconds_since(start):
 
 
 class FromOptionalDependency(object):
-    def __init__(self, module):
+    def __init__(self, module, exception=None):
         """
         This is a utility class for importing clsses from a module or
         replacing them with dummy types if the module can not be loaded.
@@ -149,14 +149,35 @@ class FromOptionalDependency(object):
         can be read in a similar way. If the module 'b' can not be imported,
         stub-types are created that are called 'C' and 'D'. Everything depending
         on these types will work until any of those are instantiated - in that
-        case a StubAccessException is raised.
+        case an exception is raised.
+
+        The exception can be controlled via the exception-parameter. If it is a
+        string, a PlanktonException is constructed from it. Alternatively it can
+        be an instance of an exception-type. If not provided, a PlanktonException
+        with a standard message is constructed. If it is anything else, a RuntimeError
+        is raised.
 
         Essentially, this class helps deferring ImportErrors until anything from
         the module that was attempted to load is actually used.
 
         :param module: Module from that symbols should be imported.
+        :param exception: Text for PlanktonException or custom exception object.
         """
         self._module = module
+
+        if exception is None:
+            exception = 'The optional dependency \'{}\' is required  for the '
+            'functionality you tried to use.'.format(self._module)
+
+        if isinstance(exception, basestring):
+            exception = PlanktonException(exception)
+
+        if exception is not None and not isinstance(exception, BaseException):
+            raise RuntimeError(
+                'The exception parameter has to be either a string or a an instance of an '
+                'exception type (derived from BaseException).')
+
+        self._exception = exception
 
     def do_import(self, *names):
         """
@@ -165,7 +186,7 @@ class FromOptionalDependency(object):
         names are replaced with stub objects.
 
         :param names: List of strings that are used as type names.
-        :return: Tuple of stub types with provided names or one
+        :return: Tuple of actual symbols or stub types with provided names.
         """
         try:
             module_object = importlib.import_module(self._module)
@@ -174,9 +195,7 @@ class FromOptionalDependency(object):
         except ImportError:
             def create_getattr_function(name):
                 def failing_init(obj, *args, **kwargs):
-                    raise StubAccessException(
-                        'You are trying to instantiate a stub-type that '
-                        'replaces \'{}\' from module \'{}\''.format(name, self._module))
+                    raise self._exception
 
                 return failing_init
 

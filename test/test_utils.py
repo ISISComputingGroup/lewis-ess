@@ -29,7 +29,7 @@ from six import iteritems
 
 from plankton.core.utils import dict_strict_update, extract_module_name, \
     is_module, seconds_since, get_available_submodules, FromOptionalDependency
-from plankton.core.exceptions import StubAccessException
+from plankton.core.exceptions import PlanktonException
 
 
 class TestDictStrictUpdate(unittest.TestCase):
@@ -200,5 +200,18 @@ class TestFromOptionalDependency(unittest.TestCase):
         self.assertEqual(A.__name__, 'A')
         self.assertEqual(B.__name__, 'B')
 
-        self.assertRaises(StubAccessException, A, 'argument_one')
-        self.assertRaises(StubAccessException, B, 'argument_one', 'argument_two')
+        self.assertRaises(PlanktonException, A, 'argument_one')
+        self.assertRaises(PlanktonException, B, 'argument_one', 'argument_two')
+
+    def test_string_exception_is_raised(self):
+        A, = FromOptionalDependency('invalid_module', 'test').do_import('A')
+
+        self.assertRaises(PlanktonException, A)
+
+    def test_custom_exception_is_raised(self):
+        A, = FromOptionalDependency('invalid_module', ValueError('test')).do_import('A')
+
+        self.assertRaises(ValueError, A)
+
+    def test_exception_does_not_accept_arbitrary_type(self):
+        self.assertRaises(RuntimeError, FromOptionalDependency, 'invalid_module', 6.0)

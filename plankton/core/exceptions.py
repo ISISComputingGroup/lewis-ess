@@ -24,10 +24,3 @@ class PlanktonException(Exception):
     from unexpected ones. This enables better error handling and more importantly
     better presentation of errors to the users.
     """
-
-
-class StubAccessException(Exception):
-    """
-    This exception type is raised when an attribute is accessed on a dummy object instead
-    of a real object (see plankton.utils.From).
-    """

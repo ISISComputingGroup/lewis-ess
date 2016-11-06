@@ -26,13 +26,20 @@ from . import Adapter, ForwardProperty
 from six import iteritems
 
 from plankton.core.utils import seconds_since, FromOptionalDependency
-from plankton.core.exceptions import PlanktonException, StubAccessException
+from plankton.core.exceptions import PlanktonException
 
 # pcaspy might not be available. To make EPICS-based adapters show up
 # in the listed adapters anyway dummy types are created in this case
 # and the failure is postponed to runtime, where a more appropriate
 # PlanktonException can be raised.
-Driver, SimpleServer = FromOptionalDependency('pcaspy').do_import('Driver', 'SimpleServer')
+missing_pcaspy_exception = PlanktonException(
+    'In order to use EPICS-interfaces, pcaspy must be installed:\n'
+    '\tpip install pcaspy\n'
+    'A fully working installation of EPICS-base is required for this package. '
+    'Please refer to the documentation for advice.')
+
+Driver, SimpleServer = FromOptionalDependency(
+    'pcaspy', missing_pcaspy_exception).do_import('Driver', 'SimpleServer')
 
 
 class PV(object):
@@ -157,19 +164,12 @@ class EpicsAdapter(Adapter):
         self._driver = None
 
     def start_server(self):
-        try:
-            self._server = SimpleServer()
-            self._server.createPV(prefix=self._options.prefix,
-                                  pvdb={k: v.config for k, v in self.pvs.items()})
-            self._driver = PropertyExposingDriver(target=self, pv_dict=self.pvs)
+        self._server = SimpleServer()
+        self._server.createPV(prefix=self._options.prefix,
+                              pvdb={k: v.config for k, v in self.pvs.items()})
+        self._driver = PropertyExposingDriver(target=self, pv_dict=self.pvs)
 
-            self._last_update = datetime.now()
-        except StubAccessException:
-            raise PlanktonException(
-                'In order to use EPICS-interfaces, pcaspy must beinstalled:\n'
-                '\tpip install pcaspy\n'
-                'A fully working installation of EPICS-base is required for this package. '
-                'Please refer to the documentation for advice.')
+        self._last_update = datetime.now()
 
     def _create_properties(self, pvs):
         for pv in pvs:
