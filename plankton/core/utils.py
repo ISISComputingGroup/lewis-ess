@@ -125,7 +125,7 @@ def seconds_since(start):
 class FromOptionalDependency(object):
     def __init__(self, module, exception=None):
         """
-        This is a utility class for importing clsses from a module or
+        This is a utility class for importing classes from a module or
         replacing them with dummy types if the module can not be loaded.
 
         Assume module 'a' that does:
@@ -167,7 +167,7 @@ class FromOptionalDependency(object):
         self._module = module
 
         if exception is None:
-            exception = 'The optional dependency \'{}\' is required  for the '
+            exception = 'The optional dependency \'{}\' is required for the '
             'functionality you tried to use.'.format(self._module)
 
         if isinstance(exception, string_types):
