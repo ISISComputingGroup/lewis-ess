@@ -86,7 +86,7 @@ Starred PVs are not implemented yet, but will become part of the interface.
 - Parked: The chopper disc is parked in the specified position.
 - Stopping: The chopper disc is actively decelerated to speed 0.
 - Stopped: The chopper disc is at speed 0.
-- Error*: An error has occured (to be specified in more detail).
+- Error*: An error has occurred (to be specified in more detail).
 
 The states marked with a * are not implemented yet and are not present in choppers which work with mechanical bearings.
 

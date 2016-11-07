@@ -126,4 +126,4 @@ def run_simulation(argument_list=None):
     try:
         return do_run_simulation(argument_list)
     except PlanktonException as e:
-        return '\n'.join(('An error occured:', e.message))
+        return '\n'.join(('An error occurred:', e.message))
