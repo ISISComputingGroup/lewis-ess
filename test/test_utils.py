@@ -184,7 +184,7 @@ class TestSecondsSince(unittest.TestCase):
 
 class TestFromOptionalDependency(unittest.TestCase):
     def test_existing_module_works(self):
-        a, = FromOptionalDependency('time').do_import('sleep')
+        a = FromOptionalDependency('time').do_import('sleep')
 
         from time import sleep as b
 
@@ -204,12 +204,12 @@ class TestFromOptionalDependency(unittest.TestCase):
         self.assertRaises(PlanktonException, B, 'argument_one', 'argument_two')
 
     def test_string_exception_is_raised(self):
-        A, = FromOptionalDependency('invalid_module', 'test').do_import('A')
+        A = FromOptionalDependency('invalid_module', 'test').do_import('A')
 
         self.assertRaises(PlanktonException, A)
 
     def test_custom_exception_is_raised(self):
-        A, = FromOptionalDependency('invalid_module', ValueError('test')).do_import('A')
+        A = FromOptionalDependency('invalid_module', ValueError('test')).do_import('A')
 
         self.assertRaises(ValueError, A)
 

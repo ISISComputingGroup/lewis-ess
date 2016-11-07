@@ -187,15 +187,18 @@ class FromOptionalDependency(object):
         the requested names are replaced with stub objects.
 
         :param names: List of strings that are used as type names.
-        :return: Tuple of actual symbols or stub types with provided names.
+        :return: Tuple of actual symbols or stub types with provided names. If there is only one
+        element in the tuple, that element is returned.
         """
         try:
             module_object = importlib.import_module(self._module)
 
-            return tuple(getattr(module_object, name) for name in names)
+            objects = tuple(getattr(module_object, name) for name in names)
         except ImportError:
             def failing_init(obj, *args, **kwargs):
                 raise self._exception
 
-            return tuple(type(name, (object,), {'__init__': failing_init})
-                         for name in names)
+            objects = tuple(type(name, (object,), {'__init__': failing_init})
+                            for name in names)
+
+        return objects if len(objects) != 1 else objects[0]
