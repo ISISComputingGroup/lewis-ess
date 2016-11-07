@@ -18,6 +18,7 @@
 # *********************************************************************
 
 import importlib
+from ..core.exceptions import PlanktonException
 
 
 class Adapter(object):
@@ -89,6 +90,10 @@ def import_adapter(device_name, protocol_name, device_package='devices'):
     """
     available_adapters = get_available_adapters(device_name, device_package)
 
+    if not available_adapters:
+        raise PlanktonException(
+            'Could not find any communication interfaces for device \'{}\'.'.format(device_name))
+
     if not protocol_name:
         return list(available_adapters.values())[0]
 
@@ -96,9 +101,10 @@ def import_adapter(device_name, protocol_name, device_package='devices'):
         if adapter.protocol == protocol_name:
             return adapter
 
-    raise RuntimeError(
-        'No suitable adapter found for device \'{}\' '
-        'and protocol \'{}\'.'.format(device_name, protocol_name))
+    raise PlanktonException(
+        'No interface for device \'{}\' implementing protocol \'{}\' '
+        'could be found.\nPlease check the spelling and the '
+        '-k and -a flags of the run script.'.format(device_name, protocol_name))
 
 
 class ForwardProperty(object):

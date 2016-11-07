@@ -17,10 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+from __future__ import absolute_import
+
 import zmq
 import uuid
 import types
 
+# This does not import .exceptions, because absolute_import from the __future__ module
 try:
     import exceptions
 except ImportError:

@@ -17,12 +17,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+from __future__ import absolute_import
+from six import string_types
+
 import imp
 import importlib
 from datetime import datetime
 
 import os.path as osp
 from os import listdir
+
+from .exceptions import PlanktonException
 
 
 def get_available_submodules(package):
@@ -76,7 +81,7 @@ def is_module(module, paths):
     Small helper function that returns True if module is a sub-module in package.
 
     :param module: Name of the sub-module to check.
-    :param path: List of paths where the module is located.
+    :param paths: List of paths where the module is located.
     :return: True if module is a sub-module of package.
     """
     try:
@@ -115,3 +120,85 @@ def seconds_since(start):
     :return: Elapsed seconds since start time.
     """
     return (datetime.now() - start).total_seconds()
+
+
+class FromOptionalDependency(object):
+    def __init__(self, module, exception=None):
+        """
+        This is a utility class for importing classes from a module or
+        replacing them with dummy types if the module can not be loaded.
+
+        Assume module 'a' that does:
+
+            from b import C, D
+
+        and module 'e' which does:
+
+            from a import F
+
+        where 'b' is a hard to install dependency which is thus optional.
+        To still be able to do:
+
+            import e
+
+        without raising an error, for example for inspection purposes,
+        this class can be used as a workaround in module 'a':
+
+            C, D = FromOptionalDependency('b').do_import('C', 'D')
+
+        which is not as pretty as the actual syntax, but at least it
+        can be read in a similar way. If the module 'b' can not be imported,
+        stub-types are created that are called 'C' and 'D'. Everything depending
+        on these types will work until any of those are instantiated - in that
+        case an exception is raised.
+
+        The exception can be controlled via the exception-parameter. If it is a
+        string, a PlanktonException is constructed from it. Alternatively it can
+        be an instance of an exception-type. If not provided, a PlanktonException
+        with a standard message is constructed. If it is anything else, a RuntimeError
+        is raised.
+
+        Essentially, this class helps deferring ImportErrors until anything from
+        the module that was attempted to load is actually used.
+
+        :param module: Module from that symbols should be imported.
+        :param exception: Text for PlanktonException or custom exception object.
+        """
+        self._module = module
+
+        if exception is None:
+            exception = 'The optional dependency \'{}\' is required for the ' \
+                        'functionality you tried to use.'.format(self._module)
+
+        if isinstance(exception, string_types):
+            exception = PlanktonException(exception)
+
+        if not isinstance(exception, BaseException):
+            raise RuntimeError(
+                'The exception parameter has to be either a string or a an instance of an '
+                'exception type (derived from BaseException).')
+
+        self._exception = exception
+
+    def do_import(self, *names):
+        """
+        Tries to import names from the module specified on initialization
+        of the FromOptionalDependency-object. In case an ImportError occurs,
+        the requested names are replaced with stub objects.
+
+        :param names: List of strings that are used as type names.
+        :return: Tuple of actual symbols or stub types with provided names. If there is only one
+        element in the tuple, that element is returned.
+        """
+        try:
+            module_object = importlib.import_module(self._module)
+
+            objects = tuple(getattr(module_object, name) for name in names)
+        except ImportError:
+            def failing_init(obj, *args, **kwargs):
+                raise self._exception
+
+            objects = tuple(type(name, (object,), {'__init__': failing_init})
+                            for name in names)
+
+        return objects if len(objects) != 1 else objects[0]

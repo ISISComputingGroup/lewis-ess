@@ -28,7 +28,8 @@ from mock import patch
 from six import iteritems
 
 from plankton.core.utils import dict_strict_update, extract_module_name, \
-    is_module, seconds_since, get_available_submodules
+    is_module, seconds_since, get_available_submodules, FromOptionalDependency
+from plankton.core.exceptions import PlanktonException
 
 
 class TestDictStrictUpdate(unittest.TestCase):
@@ -179,3 +180,38 @@ class TestSecondsSince(unittest.TestCase):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 
         self.assertRaises(TypeError, seconds_since, None)
+
+
+class TestFromOptionalDependency(unittest.TestCase):
+    def test_existing_module_works(self):
+        a = FromOptionalDependency('time').do_import('sleep')
+
+        from time import sleep as b
+
+        self.assertEqual(a, b)
+
+    def test_non_existing_members_in_module_dont_work(self):
+        self.assertRaises(
+            AttributeError, FromOptionalDependency('time').do_import, 'sleep', 'bleep')
+
+    def test_non_existing_module_works(self):
+        A, B = FromOptionalDependency('invalid_module').do_import('A', 'B')
+
+        self.assertEqual(A.__name__, 'A')
+        self.assertEqual(B.__name__, 'B')
+
+        self.assertRaises(PlanktonException, A, 'argument_one')
+        self.assertRaises(PlanktonException, B, 'argument_one', 'argument_two')
+
+    def test_string_exception_is_raised(self):
+        A = FromOptionalDependency('invalid_module', 'test').do_import('A')
+
+        self.assertRaises(PlanktonException, A)
+
+    def test_custom_exception_is_raised(self):
+        A = FromOptionalDependency('invalid_module', ValueError('test')).do_import('A')
+
+        self.assertRaises(ValueError, A)
+
+    def test_exception_does_not_accept_arbitrary_type(self):
+        self.assertRaises(RuntimeError, FromOptionalDependency, 'invalid_module', 6.0)

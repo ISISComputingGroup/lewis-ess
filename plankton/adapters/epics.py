@@ -23,10 +23,23 @@ from argparse import ArgumentParser
 from datetime import datetime
 
 from . import Adapter, ForwardProperty
-from pcaspy import Driver, SimpleServer
 from six import iteritems
 
-from plankton.core.utils import seconds_since
+from plankton.core.utils import seconds_since, FromOptionalDependency
+from plankton.core.exceptions import PlanktonException
+
+# pcaspy might not be available. To make EPICS-based adapters show up
+# in the listed adapters anyway dummy types are created in this case
+# and the failure is postponed to runtime, where a more appropriate
+# PlanktonException can be raised.
+missing_pcaspy_exception = PlanktonException(
+    'In order to use EPICS-interfaces, pcaspy must be installed:\n'
+    '\tpip install pcaspy\n'
+    'A fully working installation of EPICS-base is required for this package. '
+    'Please refer to the documentation for advice.')
+
+Driver, SimpleServer = FromOptionalDependency(
+    'pcaspy', missing_pcaspy_exception).do_import('Driver', 'SimpleServer')
 
 
 class PV(object):
