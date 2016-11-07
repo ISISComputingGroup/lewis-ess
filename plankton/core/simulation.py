@@ -61,15 +61,14 @@ class Simulation(object):
         Finally, the simulation can be stopped entirely with the stop-method.
 
         All functionality except for the start-method can be made available to remote
-        computers via a ControlServer-instance. It's possible to pass a configures
-        ControlServer-object directly, but the easiest way to expose the device and
-        the simulation is to pass a 'host:port'-string as the control_server argument,
+        computers via a ControlServer-instance. The way to expose device and simulation
+        is to pass a 'host:port'-string as the control_server argument,
         which will construct the control server. Simulation will try to start the
         control server using the start_server method.
 
         :param device: The simulated device.
         :param adapter: Adapter which contains the simulated device.
-        :param control_server: ControlServer instance to expose the simulation remotely.
+        :param control_server: 'host:port'-string to construct control server or None.
         """
         self._device = device
         self._adapter = adapter
@@ -92,21 +91,13 @@ class Simulation(object):
         self.control_server = control_server
 
     def _create_control_server(self, control_server):
-        if control_server is None or isinstance(control_server, ControlServer):
-            return control_server
-        else:
-            arguments = control_server.split(':')
+        if control_server is None:
+            return None
 
-            if len(arguments) not in (1, 2):
-                raise RuntimeError(
-                    '\'{}\' is not a valid control server initialization string. '
-                    'A string of the form host:port or just host '
-                    '(port defaults to 10000) is expected.'.format(control_server))
-
-            return ControlServer(
-                {'device': self._device,
-                 'simulation': ExposedObject(self, exclude=('start', 'control_server'))},
-                *arguments)
+        return ControlServer(
+            {'device': self._device,
+             'simulation': ExposedObject(self, exclude=('start', 'control_server'))},
+            control_server)
 
     def start(self):
         """
@@ -116,7 +107,7 @@ class Simulation(object):
         self._started = True
         self._stop_commanded = False
 
-        if isinstance(self._control_server, ControlServer):
+        if self._control_server is not None:
             self._control_server.start_server()
 
         self._adapter.start_server()
@@ -315,5 +306,5 @@ class Simulation(object):
 
         self._control_server = self._create_control_server(control_server)
 
-        if self.is_started and isinstance(self._control_server, ControlServer):
+        if self.is_started and self._control_server is not None:
             self._control_server.start_server()

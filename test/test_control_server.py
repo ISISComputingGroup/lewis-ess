@@ -172,7 +172,7 @@ class TestExposedObjectCollection(unittest.TestCase):
 class TestControlServer(unittest.TestCase):
     @patch('zmq.Context')
     def test_connection(self, mock_context):
-        cs = ControlServer(host='127.0.0.1', port='10001')
+        cs = ControlServer(None, connection_string='127.0.0.1:10001')
         cs.start_server()
 
         mock_context.assert_has_calls([call(), call().socket(zmq.REP),
@@ -180,7 +180,7 @@ class TestControlServer(unittest.TestCase):
 
     @patch('zmq.Context')
     def test_server_can_only_be_started_once(self, mock_context):
-        server = ControlServer(host='127.0.0.1', port='10000')
+        server = ControlServer(None, connection_string='127.0.0.1:10000')
         server.start_server()
         server.start_server()
 
@@ -188,7 +188,7 @@ class TestControlServer(unittest.TestCase):
                                        call().socket().bind('tcp://127.0.0.1:10000')])
 
     def test_process_raises_if_not_started(self):
-        server = ControlServer()
+        server = ControlServer(None, connection_string='127.0.0.1:10000')
 
         self.assertRaises(Exception, server.process)
 
@@ -196,7 +196,7 @@ class TestControlServer(unittest.TestCase):
         mock_socket = Mock()
         mock_socket.recv_unicode.side_effect = zmq.Again()
 
-        server = ControlServer()
+        server = ControlServer(None, connection_string='127.0.0.1:10000')
         server._socket = mock_socket
         assertRaisesNothing(self, server.process)
 
@@ -205,18 +205,18 @@ class TestControlServer(unittest.TestCase):
     def test_exposed_object_is_exposed_directly(self):
         mock_collection = Mock(spec=ExposedObject)
 
-        server = ControlServer(object_map=mock_collection)
+        server = ControlServer(object_map=mock_collection, connection_string='127.0.0.1:10000')
         self.assertEqual(server.exposed_object, mock_collection)
 
     @patch('plankton.core.control_server.ExposedObjectCollection')
     def test_exposed_object_collection_is_constructed(self, exposed_object_mock):
-        ControlServer(object_map='test')
+        ControlServer(object_map='test', connection_string='127.0.0.1:10000')
 
         exposed_object_mock.assert_called_once_with('test')
 
     @patch('zmq.Context')
     def test_is_running(self, mock_context):
-        server = ControlServer()
+        server = ControlServer(None, connection_string='127.0.0.1:10000')
         self.assertFalse(server.is_running)
         server.start_server()
         self.assertTrue(server.is_running)
@@ -229,9 +229,12 @@ class TestControlServer(unittest.TestCase):
         gethostbyname_mock.side_effect = raise_exception
 
         self.assertRaises(
-            PlanktonException, ControlServer, host='some_invalid_host.local', port='10000')
+            PlanktonException, ControlServer,
+            object_map=None, connection_string='some_invalid_host.local:10000')
 
         gethostbyname_mock.assert_called_once_with('some_invalid_host.local')
 
     def test_localhost_does_not_raise_socket_error(self):
-        assertRaisesNothing(self, ControlServer, host='localhost', port='10000')
+        assertRaisesNothing(
+            self, ControlServer,
+            object_map=None, connection_string='localhost:10000')

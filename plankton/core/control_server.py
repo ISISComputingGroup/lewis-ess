@@ -168,7 +168,7 @@ class ExposedObjectCollection(ExposedObject):
 
 
 class ControlServer(object):
-    def __init__(self, object_map=None, host='127.0.0.1', port='10000'):
+    def __init__(self, object_map, connection_string):
         """
         This server opens a ZMQ REP-socket at the given host and port when start_server
         is called.
@@ -186,10 +186,16 @@ class ControlServer(object):
 
         :param object_map: Dictionary with name: object-pairs to construct an
         ExposedObjectCollection or ExposedObject
-        :param host: Host on which the RPC service listens. Default is 127.0.0.1.
-        :param port: Port on which the RPC service listens. Default is 10000.
+        :param connection_string: String with host:port pair for binding control server.
         """
         super(ControlServer, self).__init__()
+
+        try:
+            host, port = connection_string.split(':')
+        except ValueError:
+            raise PlanktonException(
+                '\'{}\' is not a valid control server initialization string. '
+                'A string of the form "host:port" is expected.'.format(connection_string))
 
         try:
             self.host = socket.gethostbyname(host)
