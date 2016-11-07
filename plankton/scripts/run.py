@@ -66,19 +66,19 @@ def do_run_simulation(argument_list=None):
     arguments = parser.parse_args(argument_list or sys.argv[1:])
 
     if arguments.version:
-        return __version__
+        print(__version__)
 
     if arguments.add_path is not None:
         sys.path.append(os.path.abspath(arguments.add_path))
 
     if not arguments.device:
-        ret = ['Please specify a device to simulate.',
-               'The following devices are available:']
+        devices = ['Please specify a device to simulate.',
+                   'The following devices are available:']
 
         for dev in get_available_submodules(arguments.device_package):
-            ret.append('\t' + dev)
+            devices.append('\t' + dev)
 
-        return '\n'.join(ret)
+        print('\n'.join(devices))
 
     # Import the device type and required initialisation parameters.
     device_type, parameters = import_device(arguments.device, arguments.setup,
@@ -90,7 +90,7 @@ def do_run_simulation(argument_list=None):
 
         protocols = {adapter.protocol for adapter in adapters.values()}
 
-        return '\n'.join(protocols)
+        print('\n'.join(protocols))
 
     device = device_type(**parameters)
     adapter = import_adapter(
@@ -112,8 +112,6 @@ def do_run_simulation(argument_list=None):
 
     simulation.start()
 
-    return None
-
 
 def run_simulation(argument_list=None):
     """
@@ -124,6 +122,6 @@ def run_simulation(argument_list=None):
     :return:
     """
     try:
-        return do_run_simulation(argument_list)
+        do_run_simulation(argument_list)
     except PlanktonException as e:
-        return '\n'.join(('An error occurred:', e.message))
+        print('\n'.join(('An error occurred:', e.message)))

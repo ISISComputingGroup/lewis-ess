@@ -173,7 +173,7 @@ class FromOptionalDependency(object):
         if isinstance(exception, string_types):
             exception = PlanktonException(exception)
 
-        if exception is not None and not isinstance(exception, BaseException):
+        if not isinstance(exception, BaseException):
             raise RuntimeError(
                 'The exception parameter has to be either a string or a an instance of an '
                 'exception type (derived from BaseException).')
@@ -194,11 +194,8 @@ class FromOptionalDependency(object):
 
             return tuple(getattr(module_object, name) for name in names)
         except ImportError:
-            def create_getattr_function(name):
-                def failing_init(obj, *args, **kwargs):
-                    raise self._exception
+            def failing_init(obj, *args, **kwargs):
+                raise self._exception
 
-                return failing_init
-
-            return tuple(type(name, (object,), {'__init__': create_getattr_function(name)})
+            return tuple(type(name, (object,), {'__init__': failing_init})
                          for name in names)
