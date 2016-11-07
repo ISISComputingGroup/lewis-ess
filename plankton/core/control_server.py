@@ -164,10 +164,10 @@ class ExposedObjectCollection(ExposedObject):
 
 
 class ControlServer(object):
-    def __init__(self, object_map=None, host='127.0.0.1', port='10000', start=False):
+    def __init__(self, object_map=None, host='127.0.0.1', port='10000'):
         """
         This server opens a ZMQ REP-socket at the given host and port when start_server
-        is called. If the start-parameter is set to True, this happens directly on construction.
+        is called.
 
         The server constructs an ExposedObjectCollection from the supplied name: object-dictionary
         and uses that as a handler for JSON-RPC requests. If it is an instance of ExposedObject,
@@ -184,7 +184,6 @@ class ControlServer(object):
         ExposedObjectCollection or ExposedObject
         :param host: Host on which the RPC service listens. Default is 127.0.0.1.
         :param port: Port on which the RPC service listens. Default is 10000.
-        :param start: Automatically bind to host and port and start listening.
         """
         super(ControlServer, self).__init__()
 
@@ -201,9 +200,6 @@ class ControlServer(object):
             self._exposed_object = ExposedObjectCollection(object_map)
 
         self._socket = None
-
-        if start:
-            self.start_server()
 
     @property
     def is_running(self):

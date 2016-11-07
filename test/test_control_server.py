@@ -168,19 +168,10 @@ class TestExposedObjectCollection(unittest.TestCase):
 
 
 class TestControlServer(unittest.TestCase):
-    @patch('plankton.core.control_server.ControlServer.start_server')
-    def test_start_server_behaves_properly(self, start_server_mock):
-        ControlServer()
-        start_server_mock.assert_not_called()
-        ControlServer(start=False)
-        start_server_mock.assert_not_called()
-
-        ControlServer(start=True)
-        start_server_mock.assert_has_calls([call()])
-
     @patch('zmq.Context')
     def test_connection(self, mock_context):
-        ControlServer(host='127.0.0.1', port='10001', start=True)
+        cs = ControlServer(host='127.0.0.1', port='10001')
+        cs.start_server()
 
         mock_context.assert_has_calls([call(), call().socket(zmq.REP),
                                        call().socket().bind('tcp://127.0.0.1:10001')])
@@ -223,7 +214,7 @@ class TestControlServer(unittest.TestCase):
 
     @patch('zmq.Context')
     def test_is_running(self, mock_context):
-        server = ControlServer(start=False)
+        server = ControlServer()
         self.assertFalse(server.is_running)
         server.start_server()
         self.assertTrue(server.is_running)
