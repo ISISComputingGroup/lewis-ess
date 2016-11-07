@@ -17,10 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+from __future__ import absolute_import
+
 import socket
 import zmq
 import json
 from jsonrpc import JSONRPCResponseManager
+
+from .exceptions import PlanktonException
 
 
 class ExposedObject(object):
@@ -190,7 +194,7 @@ class ControlServer(object):
         try:
             self.host = socket.gethostbyname(host)
         except socket.gaierror:
-            raise RuntimeError('Could not resolve control server host: {}'.format(host))
+            raise PlanktonException('Could not resolve control server host: {}'.format(host))
 
         self.port = port
 

@@ -21,8 +21,10 @@ import unittest
 
 from mock import Mock, patch, call
 import zmq
+import socket
 
 from plankton.core.control_server import ExposedObject, ExposedObjectCollection, ControlServer
+from plankton.core.exceptions import PlanktonException
 from . import assertRaisesNothing
 
 
@@ -218,3 +220,18 @@ class TestControlServer(unittest.TestCase):
         self.assertFalse(server.is_running)
         server.start_server()
         self.assertTrue(server.is_running)
+
+    @patch('plankton.core.control_server.socket.gethostbyname')
+    def test_invalid_hostname_raises_PlanktonException(self, gethostbyname_mock):
+        def raise_exception(self):
+            raise socket.gaierror
+
+        gethostbyname_mock.side_effect = raise_exception
+
+        self.assertRaises(
+            PlanktonException, ControlServer, host='some_invalid_host.local', port='10000')
+
+        gethostbyname_mock.assert_called_once_with('some_invalid_host.local')
+
+    def test_localhost_does_not_raise_socket_error(self):
+        assertRaisesNothing(self, ControlServer, host='localhost', port='10000')
