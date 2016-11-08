@@ -22,6 +22,7 @@ from six import string_types
 
 import imp
 import importlib
+import textwrap
 from datetime import datetime
 
 import os.path as osp
@@ -202,3 +203,20 @@ class FromOptionalDependency(object):
                             for name in names)
 
         return objects if len(objects) != 1 else objects[0]
+
+
+def format_doc_text(text):
+    """
+    A very thin wrapper around textwrap.fill to consistently wrap documentation text
+    for display in a command line environment. The text is wrapped to 99 characters with an
+    indentation depth of 4 spaces. Each line is wrapped independently in order to preserve
+    manually added line breaks.
+
+    :param text: The text to format
+    :return: The formatted doc text
+    """
+
+    return '\n'.join(
+        textwrap.fill(line, width=99, initial_indent='    ', subsequent_indent='    ')
+        for line in
+        text.splitlines())

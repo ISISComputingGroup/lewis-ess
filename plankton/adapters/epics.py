@@ -25,9 +25,8 @@ import inspect
 
 from . import Adapter, ForwardProperty
 from six import iteritems
-import textwrap
 
-from plankton.core.utils import seconds_since, FromOptionalDependency
+from plankton.core.utils import seconds_since, FromOptionalDependency, format_doc_text
 from plankton.core.exceptions import PlanktonException
 
 # pcaspy might not be available. To make EPICS-based adapters show up
@@ -171,13 +170,10 @@ class EpicsAdapter(Adapter):
     def documentation(self):
         pv_template = '{} ({}{}):\n{}'
 
-        def wrapped(text):
-            return textwrap.fill(text, width=80, initial_indent='    ', subsequent_indent='    ')
-
         pvs = [pv_template.format(
             self._options.prefix + name,
             pv.config.get('type', 'float'), ', read only' if pv.read_only else '',
-            wrapped(pv.doc or inspect.getdoc(getattr(type(self), pv.property)) or ''))
+            format_doc_text(pv.doc or inspect.getdoc(getattr(type(self), pv.property)) or ''))
                for name, pv in self.pvs.items()]
 
         return '\n\n'.join([inspect.getdoc(self), 'PVs\n==='] + pvs)
