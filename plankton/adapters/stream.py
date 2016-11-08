@@ -171,7 +171,7 @@ class StreamAdapter(Adapter):
                 repr(self.in_terminator), repr(self.out_terminator)))
 
         return '\n\n'.join(
-            [inspect.getdoc(self) or '', 'Parameters\n==========', format_doc_text(options),
+            [inspect.getdoc(self) or '', 'Parameters\n==========', options,
              'Commands\n========'] + cmds)
 
     def start_server(self):

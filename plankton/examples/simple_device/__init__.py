@@ -27,6 +27,17 @@ class VerySimpleDevice(Device):
 
 
 class VerySimpleInterface(StreamAdapter):
+    """
+    A very simple device with TCP-stream interface
+
+    The device has only one parameter, which can be set to an arbitrary
+    value. The interface consists of two commands which can be invoked via telnet.
+    To connect:
+
+        $ telnet host port
+
+    After that, typing either of the commands and pressing enter sends them to the server.
+    """
     commands = {
         Cmd('get_param', '^P$'),
         Cmd('set_param', '^P=(.+)$'),
@@ -36,9 +47,11 @@ class VerySimpleInterface(StreamAdapter):
     out_terminator = '\r\n'
 
     def get_param(self):
+        """Returns the device parameter."""
         return self._device.param
 
     def set_param(self, new_param):
+        """Set the device parameter, does not return anything."""
         self._device.param = new_param
 
     def handle_error(self, request, error):
