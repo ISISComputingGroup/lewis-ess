@@ -67,6 +67,7 @@ def do_run_simulation(argument_list=None):
 
     if arguments.version:
         print(__version__)
+        return
 
     if arguments.add_path is not None:
         sys.path.append(os.path.abspath(arguments.add_path))
@@ -79,6 +80,7 @@ def do_run_simulation(argument_list=None):
             devices.append('\t' + dev)
 
         print('\n'.join(devices))
+        return
 
     # Import the device type and required initialisation parameters.
     device_type, parameters = import_device(arguments.device, arguments.setup,
@@ -91,6 +93,7 @@ def do_run_simulation(argument_list=None):
         protocols = {adapter.protocol for adapter in adapters.values()}
 
         print('\n'.join(protocols))
+        return
 
     device = device_type(**parameters)
     adapter = import_adapter(
