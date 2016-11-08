@@ -71,12 +71,27 @@ class SimulatedExampleMotor(StateMachineDevice):
         self._target = new_target
 
     def stop(self):
+        """Stops the motor and returns the new target and position, which are equal"""
+
         self._target = self.position
 
         return self.target, self.position
 
 
 class ExampleMotorStreamInterface(StreamAdapter):
+    """
+    TCP-stream based example motor interface
+
+    This motor simulation can be controlled via telnet:
+
+        $ telnet host port
+
+    Where the host and port-parameter are part of the dynamically created documentation for
+    a concrete device instance.
+
+    The motor starts moving immediately when a new target position is set. Once it's moving,
+    it has to be stopped to receive a new target, otherwise an error is generated.
+    """
     commands = {
         Cmd('get_status', r'^S\?$'),
         Cmd('get_position', r'^P\?$'),
@@ -90,15 +105,22 @@ class ExampleMotorStreamInterface(StreamAdapter):
     out_terminator = '\r\n'
 
     def get_status(self):
+        """Returns the status of the device, which is one of 'idle' or 'moving'."""
         return self._device.state
 
     def get_position(self):
+        """Returns the current position in mm."""
         return self._device.position
 
     def get_target(self):
+        """Returns the current target in mm."""
         return self._device.target
 
     def set_target(self, new_target):
+        """
+        Sets the new target in mm, the movement starts immediately. If the value is outside
+        the interval [0, 250] or the motor is already moving, an error is returned, otherwise
+        the new target is returned."""
         try:
             self._device.target = new_target
             return 'T={}'.format(new_target)
