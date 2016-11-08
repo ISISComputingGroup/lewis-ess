@@ -176,7 +176,8 @@ class EpicsAdapter(Adapter):
             format_doc_text(pv.doc or inspect.getdoc(getattr(type(self), pv.property)) or ''))
                for name, pv in self.pvs.items()]
 
-        return '\n\n'.join([inspect.getdoc(self), 'PVs\n==='] + pvs)
+        return '\n\n'.join(
+            [inspect.getdoc(self) or '', 'PVs\n==='] + pvs)
 
     def start_server(self):
         self._server = SimpleServer()

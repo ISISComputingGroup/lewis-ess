@@ -105,6 +105,9 @@ class Cmd(object):
         to a string. The default map function only does that when the supplied value
         is not None.
 
+        Finally, documentation can be provided by passing the doc-argument. If it is omitted,
+        the docstring of the bound method is used and if that is not present, left empty.
+
         :param target_method: Method to be called when regex matches.
         :param regex: Regex to match for method call.
         :param regex_flags: Flags to pass ot re.compile, default is 0.
@@ -160,19 +163,19 @@ class StreamAdapter(Adapter):
     def documentation(self):
         cmd_template = '{}:\n{}'
 
-        cmds = [cmd_template.format(
+        commands = [cmd_template.format(
             cmd.pattern.pattern,
             format_doc_text(cmd.doc or inspect.getdoc(getattr(self, cmd.method)) or ''))
-                for cmd in self.commands]
+                    for cmd in self.commands]
 
         options = format_doc_text(
-            'Host: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}'.format(
+            'Listening on: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}'.format(
                 self._options.bind_address, self._options.port,
                 repr(self.in_terminator), repr(self.out_terminator)))
 
         return '\n\n'.join(
-            [inspect.getdoc(self) or '', 'Parameters\n==========', options,
-             'Commands\n========'] + cmds)
+            [inspect.getdoc(self) or '',
+             'Parameters\n==========', options, 'Commands\n========'] + commands)
 
     def start_server(self):
         self._server = StreamServer(self._options.bind_address, self._options.port, self)
