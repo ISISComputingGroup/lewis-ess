@@ -310,5 +310,10 @@ class Simulation(object):
             self._control_server.start_server()
 
     @property
-    def protocol_documentation(self):
+    def device_documentation(self):
+        """
+        This property returns the dynamically created device interface documentation. With the
+        information contained in the documentation it should be obvious to users how to operate
+        the exposed device via its native protocol.
+        """
         return self._adapter.documentation

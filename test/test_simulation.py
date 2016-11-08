@@ -302,3 +302,12 @@ class TestSimulation(unittest.TestCase):
         env._process_cycle(0.5)
         adapter_mock.assert_has_calls([call.handle(env.cycle_delay)])
         sleep_mock.assert_not_called()
+
+    def test_device_documentation_returns_adapter_documentation(self):
+        adapter_mock = Mock()
+        adapter_mock.documentation = 'test'
+
+        env = Simulation(device=Mock(), adapter=adapter_mock)
+        doc = env.device_documentation
+
+        self.assertEqual(doc, 'test')
