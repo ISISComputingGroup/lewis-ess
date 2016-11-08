@@ -18,6 +18,7 @@
 # *********************************************************************
 
 import importlib
+import inspect
 from ..core.exceptions import PlanktonException
 
 
@@ -27,6 +28,10 @@ class Adapter(object):
     def __init__(self, device, arguments=None):
         super(Adapter, self).__init__()
         self._device = device
+
+    @property
+    def documentation(self):
+        return inspect.getdoc(self) or ''
 
     def start_server(self):
         pass

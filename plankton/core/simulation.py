@@ -308,3 +308,7 @@ class Simulation(object):
 
         if self.is_started and self._control_server is not None:
             self._control_server.start_server()
+
+    @property
+    def protocol_documentation(self):
+        return self._adapter.documentation

@@ -39,6 +39,8 @@ parser.add_argument('-s', '--setup', default=None,
                     help='Name of the setup to load.')
 parser.add_argument('-l', '--list-protocols',
                     help='List available protocols for selected device.', action='store_true')
+parser.add_argument('-i', '--show-interface', action='store_true',
+                    help='Show command interface of device interface.')
 parser.add_argument('-p', '--protocol', default=None,
                     help='Communication protocol to expose devices.')
 parser.add_argument('-c', '--cycle-delay', type=float, default=0.1,
@@ -98,6 +100,10 @@ def do_run_simulation(argument_list=None):
     adapter = import_adapter(
         arguments.device, arguments.protocol,
         device_package=arguments.device_package)(device, arguments.adapter_args)
+
+    if arguments.show_interface:
+        print(adapter.documentation)
+        return
 
     simulation = Simulation(
         device=device,
