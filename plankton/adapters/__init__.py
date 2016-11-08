@@ -175,5 +175,10 @@ class ForwardMethod(object):
         self._target = target
         self._method = method
 
+        try:
+            self.__doc__ = getattr(self._target, self._method).__doc__
+        except AttributeError:
+            pass
+
     def __call__(self, *args, **kwargs):
         return getattr(self._target, self._method)(*args, **kwargs)
