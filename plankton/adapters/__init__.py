@@ -113,7 +113,7 @@ def import_adapter(device_name, protocol_name, device_package='devices'):
 
 
 class ForwardProperty(object):
-    def __init__(self, target_member, property_name):
+    def __init__(self, target_member, property_name, instance=None):
         """
         This is a small helper class that can be used to act as
         a forwarding property to relay property setting/getting
@@ -128,7 +128,7 @@ class ForwardProperty(object):
 
             a.forward = 10 # equivalent to a._b.baz = 10
 
-        Note that this modifies the type Baz. Usage must thus be
+        Note that this modifies the type Foo. Usage must thus be
         limited to cases where this type modification is
         acceptable.
 
@@ -137,6 +137,12 @@ class ForwardProperty(object):
         """
         self._target_member = target_member
         self._prop = property_name
+
+        try:
+            self.__doc__ = getattr(type(getattr(instance, self._target_member)),
+                                   self._prop).__doc__
+        except AttributeError:
+            pass
 
     def __get__(self, instance, type=None):
         """
@@ -147,7 +153,10 @@ class ForwardProperty(object):
         :param type: Type.
         :return: Attribute value of member property.
         """
-        return getattr(getattr(instance, self._target_member), self._prop)
+        if instance is not None:
+            return getattr(getattr(instance, self._target_member), self._prop)
+
+        return self
 
     def __set__(self, instance, value):
         """
@@ -157,7 +166,8 @@ class ForwardProperty(object):
         :param instance: Instance of type.
         :param value: Type.
         """
-        setattr(getattr(instance, self._target_member), self._prop, value)
+        if instance is not None:
+            setattr(getattr(instance, self._target_member), self._prop, value)
 
 
 class ForwardMethod(object):
