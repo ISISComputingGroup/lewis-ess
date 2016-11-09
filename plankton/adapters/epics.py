@@ -168,13 +168,18 @@ class EpicsAdapter(Adapter):
 
     @property
     def documentation(self):
-        pv_template = '{} ({}{}):\n{}'
+        pvs = []
 
-        pvs = [pv_template.format(
-            self._options.prefix + name,
-            pv.config.get('type', 'float'), ', read only' if pv.read_only else '',
-            format_doc_text(pv.doc or inspect.getdoc(getattr(type(self), pv.property)) or ''))
-               for name, pv in self.pvs.items()]
+        for name, pv in self.pvs.items():
+            complete_name = self._options.prefix + name
+
+            data_type = pv.config.get('type', 'float')
+            read_only_tag = ', read only' if pv.read_only else ''
+
+            doc = pv.doc or inspect.getdoc(getattr(type(self), pv.property)) or ''
+
+            pvs.append('{} ({}{}):\n{}'.format(
+                complete_name, data_type, read_only_tag, format_doc_text(doc)))
 
         return '\n\n'.join(
             [inspect.getdoc(self) or '', 'PVs\n==='] + pvs)

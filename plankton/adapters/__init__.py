@@ -133,16 +133,20 @@ class ForwardProperty(object):
         acceptable.
 
         :param target_member: Target member to forward to.
-        :param prop: Property of target to access.
+        :param property_name: Property of target to access.
+        :param instance: Object from which to obtain target_member for the purpose of extracting
+        the docstring of the property identified by property_name. If it doesn't exist on the type,
+        of target_member, the docstring is not copied.
         """
         self._target_member = target_member
         self._prop = property_name
 
-        try:
-            self.__doc__ = getattr(type(getattr(instance, self._target_member)),
-                                   self._prop).__doc__
-        except AttributeError:
-            pass
+        # Extract docstring from the property that's being forwarded.
+        # The property exists in the type of the specified target_member of instance,
+        # so getattr must be called on the type, not object, otherwise the
+        # docstring of the returned value would be stored.
+        self.__doc__ = getattr(type(getattr(instance, self._target_member)),
+                               self._prop, None).__doc__
 
     def __get__(self, instance, type=None):
         """
@@ -166,8 +170,8 @@ class ForwardProperty(object):
         :param instance: Instance of type.
         :param value: Type.
         """
-        if instance is not None:
-            setattr(getattr(instance, self._target_member), self._prop, value)
+
+        setattr(getattr(instance, self._target_member), self._prop, value)
 
 
 class ForwardMethod(object):
@@ -175,10 +179,7 @@ class ForwardMethod(object):
         self._target = target
         self._method = method
 
-        try:
-            self.__doc__ = getattr(self._target, self._method).__doc__
-        except AttributeError:
-            pass
+        self.__doc__ = getattr(self._target, self._method).__doc__
 
     def __call__(self, *args, **kwargs):
         return getattr(self._target, self._method)(*args, **kwargs)

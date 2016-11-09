@@ -161,9 +161,8 @@ class StreamAdapter(Adapter):
 
     @property
     def documentation(self):
-        cmd_template = '{}:\n{}'
 
-        commands = [cmd_template.format(
+        commands = ['{}:\n{}'.format(
             cmd.pattern.pattern,
             format_doc_text(cmd.doc or inspect.getdoc(getattr(self, cmd.method)) or ''))
                     for cmd in self.commands]
