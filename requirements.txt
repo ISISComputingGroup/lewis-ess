@@ -1,4 +1,8 @@
-pcaspy
 six
 pyzmq
 json-rpc
+
+# If you plan on using devices with EPICS interface, uncomment the pcaspy-line.
+# Installation of pcaspy requires a working EPICS installation,
+# please check the pcaspy-docs at https://pcaspy.readthedocs.io/en/latest/
+#pcaspy
