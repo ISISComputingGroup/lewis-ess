@@ -5,7 +5,6 @@ To use Plankton directly via Python you must first install its
 dependencies:
 
 -  Python 2.7+ or 3.4+
--  EPICS Base R3.14.12.5 (optional, for EPICS based devices)
 -  PIP 8.1+
 
 Clone the repository in a location of your choice:
@@ -23,8 +22,12 @@ pip via the requirements.txt file:
 
     $ pip install -r requirements.txt
 
-**NOTE:** If you have not installed EPICS, you need to remove pcaspy
-from the requirements.txt file.
+**NOTE:** There are a few optional dependencies for certain adapter types. These are commented
+out in the ``requirements.txt``-file and have to be explicitly enabled. Currently the only optional
+dependency is ``pcaspy`` for using devices with an EPICS interface, it requires a working
+installation of EPICS base. Please refer to the `installation instructions
+<https://pcaspy.readthedocs.io/en/latest/installation.html>`__ of the module.
+
 
 If you also want to run Plankton's unit tests, you may also install the
 development dependencies:
@@ -33,7 +36,7 @@ development dependencies:
 
     $ pip install -r requirements-dev.txt
 
-If you want to use the EPICS adapter, you will also need to configure
+If you want to use the EPICS adapter, you will also need to configure a few more
 EPICS environment variables correctly. If you only want to communicate
 using EPICS locally via the loopback device, you can configure it like
 this:
