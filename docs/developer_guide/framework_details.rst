@@ -1,12 +1,12 @@
 Framework Details
------------------
+=================
 
 The Plankton framework is built around a cycle-based statemachine that
 drives the device simulation, and shared protocol adapters that separate
 the communication layer from the simulated device.
 
 Cycle-based
-^^^^^^^^^^^
+-----------
 
 By cycle-based we mean that all processing in the framework occurs
 during "heartbeat" simulation ticks that propagate calls to ``process``
@@ -37,7 +37,7 @@ against the simulation, and for debugging any issues that are
 identified.
 
 Statemachine
-^^^^^^^^^^^^
+------------
 
 A statemachine class designed for a cycle-based approach is provided to
 allow modeling complex device behaviour in an event-driven fashion.

@@ -1,3 +1,6 @@
+Adapter Specifics
+=================
+
 EPICS Adapter Specifics
 -----------------------
 

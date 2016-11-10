@@ -1,5 +1,5 @@
 Usage with Docker
------------------
+=================
 
 Docker Engine must be installed in order to run the Plankton Docker
 image. Detailed installation instructions for various OSes may be found
