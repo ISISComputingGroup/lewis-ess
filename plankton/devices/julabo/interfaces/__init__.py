@@ -17,6 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from .stream_interface import JulaboStreamInterface
+from .julabo_stream_interface_1 import JulaboStreamInterface
 
 __all__ = ['JulaboStreamInterface']

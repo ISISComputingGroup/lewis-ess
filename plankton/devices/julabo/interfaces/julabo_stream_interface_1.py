@@ -20,7 +20,14 @@
 from plankton.adapters.stream import StreamAdapter, Cmd
 
 
-class JulaboStreamInterface(StreamAdapter):
+class JulaboStreamInterfaceV1(StreamAdapter):
+    """Julabos can have different commands sets depending on the version number of the hardware.
+
+    This protocol matches that for: FP50_MH (tested).
+    """
+
+    protocol = "julabo-version-1"
+
     commands = {
         Cmd('get_bath_temperature', '^IN_PV_00$'),
         Cmd('get_external_temperature', '^IN_PV_01$'),
