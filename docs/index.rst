@@ -13,6 +13,7 @@ Contents:
 
    user_guide/index
    developer_guide/index
+   api/index
 
 
 Indices and tables

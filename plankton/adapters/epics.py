@@ -44,22 +44,26 @@ Driver, SimpleServer = FromOptionalDependency(
 
 
 class PV(object):
-    def __init__(self, target_property, poll_interval=1.0, read_only=False, doc=None, **kwargs):
-        """
-        The PV-class is used to declare the EPICS-interface exposed by a sub-class of
-        EpicsAdapter. The target_property argument specifies which property of the adapter
-        the PV maps to. If the PV should be read only, this needs to be specified via
-        the corresponding parameter. The information about the poll interval is used
-        py EpicsAdapter to update the PV in regular intervals. All other named arguments
-        are forwarded to the pcaspy server's `pvdb`, so it's possible to pass on
-        limits, types, enum-values and so on.
+    """
+    The PV-class is used to declare the EPICS-interface exposed by a sub-class of
+    EpicsAdapter. The ``target_property`` argument specifies which property of the adapter
+    the PV maps to. To make development easier it can also be a part of the exposed
+    device. If the property exists on both the Adapter-subclass and the device, the former
+    has precedence. This is useful for overriding behavior for protocol specific "quirks".
 
-        :param target_property: Property of the adapter to expose.
-        :param poll_interval: Update interval of the PV.
-        :param read_only: Should be True if the PV is read only.
-        :param doc: Description of the PV. If not supplied, docstring of mapped property is used.
-        :param kwargs: Arguments forwarded into pcaspy pvdb-dict.
-        """
+    If the PV should be read only, this needs to be specified via
+    the corresponding parameter. The information about the poll interval is used
+    py EpicsAdapter to update the PV in regular intervals. All other named arguments
+    are forwarded to the pcaspy server's `pvdb`, so it's possible to pass on
+    limits, types, enum-values and so on.
+
+    :param target_property: Property of the adapter to expose.
+    :param poll_interval: Update interval of the PV.
+    :param read_only: Should be True if the PV is read only.
+    :param doc: Description of the PV. If not supplied, docstring of mapped property is used.
+    :param kwargs: Arguments forwarded into pcaspy pvdb-dict.
+    """
+    def __init__(self, target_property, poll_interval=1.0, read_only=False, doc=None, **kwargs):
         self.property = target_property
         self.read_only = read_only
         self.poll_interval = poll_interval
@@ -105,24 +109,28 @@ class EpicsAdapter(Adapter):
     """
     Inheriting from this class provides an EPICS-interface to a device, powered by
     the pcaspy-module. In the simplest case all that is required is to inherit
-    from this class and override the `pvs`-member. It should be a dictionary
+    from this class and override the ``pvs``-member. It should be a dictionary
     that contains PV-names (without prefix) as keys and instances of PV as
     values.
 
     For a simple device with two properties, speed and position, the first of which
     should be read-only, it's enough to define the following:
 
-        class SimpleDeviceEpicsAdapter(EpicsAdapter):
+    .. sourcecode:: Python
+
+        class SimpleDeviceEpicsInterface(EpicsAdapter):
             pvs = {
                 'VELO': PV('speed', read_only=True),
                 'POS': PV('position', lolo=0, hihi=100)
             }
 
-    For more complex behavior, the adapter could contain properties that do not
+    For more complex behavior, the interface could contain properties that do not
     exist in the device itself. If the device should also have a PV called STOP
-    that "stops the device", the adapter could look like this:
+    that "stops the device", the interface could look like this:
 
-        class SimpleDeviceEpicsAdapter(EpicsAdapter):
+    .. sourcecode:: Python
+
+        class SimpleDeviceEpicsInterface(EpicsAdapter):
             pvs = {
                 'VELO': PV('speed', read_only=True),
                 'POS': PV('position', lolo=0, hihi=100),
@@ -138,19 +146,24 @@ class EpicsAdapter(Adapter):
                 if value == 1:
                     self._device.halt()
 
-    Even though the device does _not_ have a property called 'stop' (but a method called 'halt'),
-    issuing the command
+    Even though the device does *not* have a property called ``stop`` (but a method called
+    ``halt``), issuing the command
 
-        caput STOP 1
+    ::
 
-    will achieve the desired behavior, because EpicsAdapter merges the properties
-    of the device into SimpleDeviceEpicsAdapter itself, so that it is does not
+        $ caput STOP 1
+
+    will achieve the desired behavior, because ``EpicsAdapter`` merges the properties
+    of the device into ``SimpleDeviceEpicsInterface`` itself, so that it is does not
     matter whether the specified property in PV exists in the device or the adapter.
 
     The intention of this design is to keep device classes small and free of
     protocol specific stuff, such as in the case above where stopping a device
     via EPICS might involve writing a value to a PV, whereas other protocols may
     offer an RPC-way of achieving the same thing.
+
+    :param device: The device that is exposed by the adapter.
+    :param arguments: Command line arguments to parse.
     """
     protocol = 'epics'
     pvs = None
@@ -185,6 +198,13 @@ class EpicsAdapter(Adapter):
             [inspect.getdoc(self) or '', 'PVs\n==='] + pvs)
 
     def start_server(self):
+        """
+        Creates a pcaspy-server.
+
+        .. note::
+
+            The server does not process requests unless :meth:`handle` is called regularly.
+        """
         self._server = SimpleServer()
         self._server.createPV(prefix=self._options.prefix,
                               pvdb={k: v.config for k, v in self.pvs.items()})
@@ -208,11 +228,14 @@ class EpicsAdapter(Adapter):
         return parser.parse_args(arguments)
 
     def handle(self, cycle_delay=0.1):
-        # pcaspy's process() is weird. Docs claim argument is "processing time" in seconds.
-        # But this is not at all consistent with the calculated delta.
-        # Having "watch caget" running has a huge effect too (runs faster when watching!)
-        # Additionally, if you don't call it every ~0.05s or less, PVs stop working. Annoying.
-        # Set it to 0.0 for maximum cycle speed.
+        """
+        Call this method to spend about ``cycle_delay`` seconds processing
+        requests in the pcaspy server. Under load, for example when running ``caget`` at a
+        high frequency, the actual time spent in the method may be much shorter. This effect
+        is not corrected for.
+
+        :param cycle_delay: Approximate time to be spent processing requests in pcaspy server.
+        """
         self._server.process(cycle_delay)
         self._driver.process_pv_updates(seconds_since(self._last_update))
         self._last_update = datetime.now()

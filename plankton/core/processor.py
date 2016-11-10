@@ -60,6 +60,8 @@ class CanProcessComposite(CanProcess):
 
     Items can be added to the composite like this:
 
+    .. sourcecode:: Python
+
         composite = CanProcessComposite()
         composite.add_processor(item_that_implements_CanProcess)
 

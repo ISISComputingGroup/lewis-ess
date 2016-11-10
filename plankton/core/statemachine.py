@@ -33,10 +33,10 @@ class HasContext(object):
     """
     Mixin to provide a Context.
 
-    Creates a `_context` member variable that can be assigned with `setContext`.
+    Creates a `_context` member variable that can be assigned with :meth:`set_context`.
 
     Any state handler or transition callable that derives from this mixin will
-    receive a context from its StateMachine upon initialization (assuming the
+    receive a context from its :class:`StateMachine` upon initialization (assuming the
     StateMachine was provided with a context itself).
     """
 
@@ -45,6 +45,7 @@ class HasContext(object):
         self._context = None
 
     def set_context(self, new_context):
+        """Assigns the new context to the member variable ``_context``."""
         self._context = new_context
 
 
@@ -57,7 +58,7 @@ class State(HasContext):
     will automatically invoke the events in this class when appropriate.
 
     To use this class, create a derived class and override any events that need
-    custom behaviour. Device context is provided via HasContext mixin.
+    custom behaviour. Device context is provided via :class:`HasContext` mixin.
     """
 
     def __init__(self):
@@ -97,10 +98,10 @@ class Transition(HasContext):
     StateMachine transition condition base class.
 
     Provides a way to implement a transition that requires access to the device
-    context. The device context is provided via HasContext mixin, and can be
+    context. The device context is provided via :class:`HasContext` mixin, and can be
     accessed as `self._context`.
 
-    To use this class, create a derived class and override the __call__ attribute.
+    To use this class, create a derived class and override the :meth:`__call__` attribute.
     """
 
     def __init__(self):
@@ -121,39 +122,44 @@ class Transition(HasContext):
 
 
 class StateMachine(CanProcess):
+    """
+    Cycle based state machine.
+
+    :param cfg: dict which contains state machine configuration.
+    :param context: object which is assigned to State and Transition objects as their _context.
+
+    The configuration dict may contain the following keys:
+
+     - initial: Name of the initial state of this machine
+     - states: [optional] Dict of custom state handlers
+     - transitions: [optional] Dict of transitions in this state machine.
+
+    State handlers may be given as a dict, list or State class:
+
+     - dict: May contain keys 'on_entry', 'in_state' and 'on_exit'.
+     - list: May contain up to 3 entries, above events in that order.
+     - class: Should be an instance of a class that derives from State.
+
+    In case of handlers being provided as a dict or a list, values should be callable
+    and may take a single parameter: the Delta T since the last cycle.
+
+    Transitions should be provided as a dict where:
+
+     - Each key is a tuple of two values, the FROM and TO states respectively.
+     - Each value is a callable transition condition that return True or False.
+
+    Transition conditions are called once per cycle when in the FROM state. If one of
+    the transition conditions returns True, the transition is executed that cycle. The
+    remaining conditions aren't called.
+
+    Consider using an OrderedDict if order matters.
+
+    Only one transition may occur per cycle. Every cycle will, at the very least,
+    trigger an in_state event against the current state.
+
+    .. seealso:: See :meth:`~StateMachine.doProcess` for details.
+    """
     def __init__(self, cfg, context=None):
-        """
-        Cycle based state machine.
-
-        :param cfg: dict which contains state machine configuration.
-        :param context: object which is assigned to State and Transition objects as their _context.
-
-        The configuration dict may contain the following keys:
-        - initial: Name of the initial state of this machine
-        - states: [optional] Dict of custom state handlers
-        - transitions: [optional] Dict of transitions in this state machine.
-
-        State handlers may be given as a dict, list or State class:
-        - dict: May contain keys 'on_entry', 'in_state' and 'on_exit'.
-        - list: May contain up to 3 entries, above events in that order.
-        - class: Should be an instance of a class that derives from State.
-
-        In case of handlers being provided as a dict or a list, values should be callable
-        and may take a single parameter: the Delta T since the last cycle.
-
-        Transitions should be provided as a dict where:
-        - Each key is a tuple of two values, the FROM and TO states respectively.
-        - Each value is a callable transition condition that return True or False.
-
-        Transition conditions are called once per cycle when in the FROM state. If one of
-        the transition conditions returns True, the transition is executed that cycle. The
-        remaining conditions aren't called.
-
-        Consider using an OrderedDict if order matters.
-
-        Only one transition may occur per cycle. Every cycle will, at the very least,
-        trigger an in_state event against the current state. See process() for details.
-        """
         super(StateMachine, self).__init__()
 
         self._state = None  # We start outside of any state, first cycle enters initial state
@@ -210,7 +216,7 @@ class StateMachine(CanProcess):
         dict.
 
         :param transition_handler_configuration: Dictionary with transition
-        handler definitions.
+            handler definitions.
         :param context: Context is provided to transition handlers that inherit
         from HasContext.
         """
@@ -231,9 +237,7 @@ class StateMachine(CanProcess):
 
     @property
     def state(self):
-        """
-        :return: Name of the current state
-        """
+        """Name of the current state."""
         return self._state
 
     def can(self, state):
@@ -253,19 +257,18 @@ class StateMachine(CanProcess):
         Auto-bind state handlers based on naming convention.
 
         :param instance: Target object instance to search for handlers and bind events to.
-        :param override: [optional] If set to True, matching handlers will replace
-        previously registered handlers.
-        :param prefix: [optional] Dict of prefixes to override defaults
-        (keys: on_entry, in_state, on_exit)
+        :param override: If set to True, matching handlers will replace
+                         previously registered handlers.
+        :param prefix: Dict of prefixes to override defaults (keys: on_entry, in_state, on_exit)
 
         This function enables automatically binding state handlers to events without having to
         specify them in the constructor. When called, this function searches `instance` for
         member functions that match the following patterns for all known states
         (states mentioned in 'states' or 'transitions' dicts of cfg):
 
-        - instance._on_entry_[state]
-        - instance._in_state_[state]
-        - instance._on_exit_[state]
+            - instance._on_entry_[state]
+            - instance._in_state_[state]
+            - instance._on_exit_[state]
 
         The default prefixes may be overridden using the prefix parameter. Supported keys are
         'on_entry', 'in_state', and 'on_exit'. Values should include any and
@@ -373,7 +376,7 @@ class StateMachine(CanProcess):
         :param from_state: Name of state this transition leaves
         :param to_state: Name of state this transition enters
         :param transition_check: Callable condition under which this transition occurs.
-        Should return True or False.
+                                 Should return True or False.
 
         The transition_check function should return True if the transition should occur.
         Otherwise, False.
