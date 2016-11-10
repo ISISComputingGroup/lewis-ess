@@ -58,7 +58,6 @@ class SimulatedJulabo(StateMachineDevice):
         self.external_i = 3  # The integral
         self.external_d = 0  # The derivative
 
-
     def _get_state_handlers(self):
         return {
             'circulate': states.DefaultCirculatingState(),
@@ -73,3 +72,242 @@ class SimulatedJulabo(StateMachineDevice):
             (('not_circulate', 'circulate'), lambda: self.circulate_commanded),
             (('circulate', 'not_circulate'), lambda: not self.circulate_commanded),
         ])
+
+    def get_bath_temperature(self):
+        """
+        Gets the external temperature of the bath.
+
+        :return: The external temperature.
+        """
+        return self.temperature
+
+    def get_external_temperature(self):
+        """
+        Gets the temperature of the bath.
+
+        :return: The current bath temperature.
+        """
+        return self.external_temperature
+
+    def get_power(self):
+        """
+        Gets the heating power currently being used.
+
+        :return: The heating power.
+        """
+        return self.external_temperature
+
+    def get_set_point(self):
+        """
+        Gets the set point the user requested.
+
+        :return: The set point temperature.
+        """
+        return self.set_point_temperature
+
+    def get_high_limit(self):
+        """
+        Gets the high limit set for the bath.
+
+        These are usually set manually in the hardware.
+
+        :return: The high limit.
+        """
+        return self.temperature_high_limit
+
+    def get_low_limit(self):
+        """
+        Gets the low limit set for the bath.
+
+        These are usually set manually in the hardware.
+
+        :return: The low limit.
+        """
+        return self.temperature_low_limit
+
+    def get_circulating(self):
+        """
+        Gets whether the bath is circulating.
+
+        This means the heater is on?
+
+        :return: O for off, 1 for on.
+        """
+        return self.is_circulating
+
+    def get_version(self):
+        """
+        Gets the Julabo version number.
+
+        :return: Version string.
+        """
+        return "JULABO FP50_MH Simulator, ISIS"
+
+    def get_status(self):
+        """
+        Not sure what a real device returns as the manual is a bit vague.
+        It will return error codes but it is not clear what it returns if everything is okay.
+
+        :return: String
+        """
+        return "Hello from the simulated Julabo"
+
+    def set_set_point(self, param):
+        """
+        Sets the target temperature.
+
+        :param param: The new temperature in C. Must be positive.
+        :return: Empty string.
+        """
+        sp = int(param)
+        if self.temperature_low_limit <= sp <= self.temperature_high_limit:
+            self.set_point_temperature = sp
+        return ""
+
+    def set_mode(self, param):
+        """
+        Sets whether to circulate - in effect whether the heater is on.
+
+        :param param: The mode to set, must be 0 or 1.
+        :return: Empty string.
+        """
+        sp = int(param)
+        if sp == 0:
+            self.is_circulating = sp
+            self._devicecirculate_commanded = False
+        elif sp == 1:
+            self.is_circulating = sp
+            self._devicecirculate_commanded = True
+        return ""
+
+    def get_internal_p(self):
+        """
+        Gets the internal proportional.
+        Xp in Julabo speak
+
+        :return: The p.
+        """
+        return self.internal_p
+
+    def get_internal_i(self):
+        """
+        Gets the internal integral.
+        Tn in Julabo speak
+
+        :return: The i.
+        """
+        return self.internal_i
+
+    def get_internal_d(self):
+        """
+        Gets the internal derivative.
+        Tv in Julabo speak
+
+        :return: The p.
+        """
+        return self.internal_d
+
+    def get_external_p(self):
+        """
+        Gets the external proportional.
+        Xp in Julabo speak
+
+        :return: The d.
+        """
+        return self.external_p
+
+    def get_external_i(self):
+        """
+        Gets the external integral.
+        Tn in Julabo speak
+
+        :return: The i.
+        """
+        return self.external_i
+
+    def get_external_d(self):
+        """
+        Gets the external derivative.
+        Tv in Julabo speak
+
+        :return: The d.
+        """
+        return self.external_d
+
+    def set_internal_p(self, param):
+        """
+        Sets the internal proportional.
+        Xp in Julabo speak.
+
+        :param param: The value to set, must be between 0.1 and 99.9
+        :return: Empty string.
+        """
+        sp = float(param)
+        if 0.1 <= sp <= 99.9:
+            self.internal_p = sp
+        return ""
+
+    def set_internal_i(self, param):
+        """
+        Sets the internal integral.
+        Tn in Julabo speak.
+
+        :param param: The value to set, must be an integer between 3 and 9999
+        :return: Empty string.
+        """
+        sp = int(param)
+        if 3 <= sp <= 9999:
+            self.internal_i = sp
+        return ""
+
+    def set_internal_d(self, param):
+        """
+        Sets the internal derivative.
+        Tv in Julabo speak.
+
+        :param param: The value to set, must be an integer between 0 and 999
+        :return: Empty string.
+        """
+        sp = int(param)
+        if 0 <= sp <= 999:
+            self.internal_d = sp
+        return ""
+
+    def set_external_p(self, param):
+        """
+        Sets the external proportional.
+        Xp in Julabo speak.
+
+        :param param: The value to set, must be between 0.1 and 99.9
+        :return: Empty string.
+        """
+        sp = float(param)
+        if 0.1 <= sp <= 99.9:
+            self.external_p = sp
+        return ""
+
+    def set_external_i(self, param):
+        """
+        Sets the external integral.
+        Tn in Julabo speak.
+
+        :param param: The value to set, must be an integer between 3 and 9999
+        :return: Empty string.
+        """
+        sp = int(param)
+        if 3 <= sp <= 9999:
+            self.external_i = sp
+        return ""
+
+    def set_external_d(self, param):
+        """
+        Sets the external derivative.
+        Tv in Julabo speak.
+
+        :param param: The value to set, must be an integer between 0 and 999
+        :return: Empty string.
+        """
+        sp = int(param)
+        if 0 <= sp <= 999:
+            self.external_d = sp
+        return ""
