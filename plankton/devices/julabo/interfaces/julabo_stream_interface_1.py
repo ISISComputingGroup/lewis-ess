@@ -23,7 +23,7 @@ from plankton.adapters.stream import StreamAdapter, Cmd
 class JulaboStreamInterfaceV1(StreamAdapter):
     """Julabos can have different commands sets depending on the version number of the hardware.
 
-    This protocol matches that for: FP50_MH (tested).
+    This protocol matches that for: FP50_MH (confirmed).
     """
 
     protocol = "julabo-version-1"
