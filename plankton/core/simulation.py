@@ -17,6 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+"""
+A :class:`Simulation` combines a :mod:`Device <plankton.devices>`
+"""
+
 from datetime import datetime
 from time import sleep
 
@@ -25,51 +29,52 @@ from plankton.core.control_server import ControlServer, ExposedObject
 
 
 class Simulation(object):
+    """
+    The Simulation class controls certain aspects of a device simulation,
+    the most important one being time.
+
+    Once :meth:`start` is called, the process-method of the device
+    is called in regular intervals. The time between these calls is
+    influenced by the cycle_delay property. Because of the way some
+    network protocols work, the actual processing time can be
+    longer or shorter, so cycle_delay should be seen as a guideline
+    rather than a guaranteed parameter.
+
+    In the simplest case, the actual time-delta between two cycles
+    is passed to the simulated device so that it can update its internal
+    state according to the elapsed time. It is however possible to set
+    a simulation speed, which serves as a multiplier for this time.
+    If the speed is set to 2 and 0.1 seconds pass between two cycles,
+    the simulation is asked to simulate 0.2 seconds, and so on. Speed 0
+    effectively stops all time dependent calculations in the
+    simulated device.
+
+    Another possibility to pause the simulation is the pause-method. After
+    calling it, all processing in the communication adapters (and thus,
+    possibly also the device) is suspended. This can be used to simulate
+    disconnected devices. The simulation can be continued using
+    the resume-method.
+
+    A number of status properties provide information about the simulation.
+    The total uptime (in actually elapsed time) can be obtained through the
+    uptime-property, whereas the runtime-property contains the simulated time.
+    The cycles-property indicates the total number of simulation cycles, which
+    does not increase when the simulation is paused.
+
+    Finally, the simulation can be stopped entirely with the stop-method.
+
+    All functionality except for the start-method can be made available to remote
+    computers via a :class:`ControlServer`-instance. The way to expose device and simulation
+    is to pass a 'host:port'-string as the control_server argument,
+    which will construct the control server. Simulation will try to start the
+    control server using the start_server method.
+
+    :param device: The simulated device.
+    :param adapter: Adapter which contains the simulated device.
+    :param control_server: 'host:port'-string to construct control server or None.
+    """
+
     def __init__(self, device, adapter, control_server=None):
-        """
-        The Simulation class controls certain aspects of a device simulation,
-        the most important one being time.
-
-        Once the start-method is called, the process-method of the device
-        is called in regular intervals. The time between these calls is
-        influenced by the cycle_delay property. Because of the way some
-        network protocols work, the actual processing time can be
-        longer or shorter, so cycle_delay should be seen as a guideline
-        rather than a guaranteed parameter.
-
-        In the simplest case, the actual time-delta between two cycles
-        is passed to the simulated device so that it can update its internal
-        state according to the elapsed time. It is however possible to set
-        a simulation speed, which serves as a multiplier for this time.
-        If the speed is set to 2 and 0.1 seconds pass between two cycles,
-        the simulation is asked to simulate 0.2 seconds, and so on. Speed 0
-        effectively stops all time dependent calculations in the
-        simulated device.
-
-        Another possibility to pause the simulation is the pause-method. After
-        calling it, all processing in the communication adapters (and thus,
-        possibly also the device) is suspended. This can be used to simulate
-        disconnected devices. The simulation can be continued using
-        the resume-method.
-
-        A number of status properties provide information about the simulation.
-        The total uptime (in actually elapsed time) can be obtained through the
-        uptime-property, whereas the runtime-property contains the simulated time.
-        The cycles-property indicates the total number of simulation cycles, which
-        does not increase when the simulation is paused.
-
-        Finally, the simulation can be stopped entirely with the stop-method.
-
-        All functionality except for the start-method can be made available to remote
-        computers via a ControlServer-instance. The way to expose device and simulation
-        is to pass a 'host:port'-string as the control_server argument,
-        which will construct the control server. Simulation will try to start the
-        control server using the start_server method.
-
-        :param device: The simulated device.
-        :param adapter: Adapter which contains the simulated device.
-        :param control_server: 'host:port'-string to construct control server or None.
-        """
         self._device = device
         self._adapter = adapter
 

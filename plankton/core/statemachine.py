@@ -17,6 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+"""
+The statemachine module contains one of plankton's central parts, the cycle-based
+:class:`StateMachine`. The module also contains classes that make it easier to define the
+state machine (:class:`State`, :class:`Transition`). Despite its central nature, it's unlikely
+to be used directly in client code for device simulations - these should be based on
+:class:`StateMachineDevice`, which provides a more convenient interface for that purpose.
+"""
+
 from six import iteritems
 
 from plankton.core.processor import CanProcess
@@ -159,6 +167,7 @@ class StateMachine(CanProcess):
 
     .. seealso:: See :meth:`~StateMachine.doProcess` for details.
     """
+
     def __init__(self, cfg, context=None):
         super(StateMachine, self).__init__()
 
@@ -266,9 +275,9 @@ class StateMachine(CanProcess):
         member functions that match the following patterns for all known states
         (states mentioned in 'states' or 'transitions' dicts of cfg):
 
-            - instance._on_entry_[state]
-            - instance._in_state_[state]
-            - instance._on_exit_[state]
+            - ``instance._on_entry_[state]``
+            - ``instance._in_state_[state]``
+            - ``instance._on_exit_[state]``
 
         The default prefixes may be overridden using the prefix parameter. Supported keys are
         'on_entry', 'in_state', and 'on_exit'. Values should include any and

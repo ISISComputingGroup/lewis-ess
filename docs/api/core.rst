@@ -1,27 +1,14 @@
-The Core API
-============
+Core API
+========
 
-The Exceptions Module
----------------------
+.. toctree::
+    :maxdepth: 2
 
-.. automodule:: plankton.core.exceptions
-    :members:
-
-The Processor Module
---------------------
-
-.. automodule:: plankton.core.processor
-    :members:
-
-The Statemachine Module
------------------------
-
-.. automodule:: plankton.core.statemachine
-    :members: StateMachineException, HasContext, State
-
-.. autoclass:: plankton.core.statemachine.Transition
-    :members:
-    :special-members:
-
-.. autoclass:: plankton.core.statemachine.StateMachine
-    :members:
+    core/exceptions
+    core/processor
+    core/statemachine
+    core/approaches
+    core/control_server
+    core/control_client
+    core/simulation
+    core/utils

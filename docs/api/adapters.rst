@@ -1,8 +1,8 @@
-The Adapter API
-===============
+Adapter API
+===========
 
-Module contents
----------------
+The Adapter Module
+------------------
 
 .. automodule:: plankton.adapters
     :members:
