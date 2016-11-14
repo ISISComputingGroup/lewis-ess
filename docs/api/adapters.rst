@@ -1,20 +1,13 @@
 Adapter API
 ===========
 
-The Adapter Module
-------------------
+The Adapter API consists of a general :mod:`~plankton.adapters`-module that defines a base class
+for all specific adapters. These specific adapters in turn define slightly different utilities
+for writing device interfaces.
 
-.. automodule:: plankton.adapters
-    :members:
+.. toctree::
+    :maxdepth: 2
 
-The EPICS-Adapter
------------------
-
-.. automodule:: plankton.adapters.epics
-    :members:
-
-The Stream-Adapter
-------------------
-
-.. automodule:: plankton.adapters.stream
-    :members:
+    adapters/adapters
+    adapters/epics
+    adapters/stream
