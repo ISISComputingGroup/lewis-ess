@@ -56,7 +56,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'plankton'
-copyright = u'2016, Michael Hart, Michael Wedel, Owen Arnold'
+copyright = u'2016, European Spallation Source ERIC'
 author = u'Michael Hart, Michael Wedel, Owen Arnold'
 
 # The version info for the project you're documenting, acts as replacement for
