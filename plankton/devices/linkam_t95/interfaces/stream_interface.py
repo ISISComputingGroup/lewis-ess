@@ -21,6 +21,19 @@ from plankton.adapters.stream import StreamAdapter, Cmd
 
 
 class LinkamT95StreamInterface(StreamAdapter):
+    """
+    Linkam T95 TCP stream interface
+
+    This is the interface of a simulated Linkam T95 device. The device listens on a configured
+    host:port-combination, one option to connect to it is via telnet:
+
+        $ telnet host port
+
+    Once connected, it's possible to send the specified commands, described in the dynamically
+    generated documentation. Information about host, port and line terminators in the concrete
+    device instance are also generated dynamically.
+    """
+
     commands = {
         Cmd('get_status', '^T$'),
         Cmd('set_rate', '^R1([0-9]+)$'),

@@ -175,6 +175,14 @@ $ ./plankton.py -k plankton.examples example_motor -- -b 127.0.0.1 -p 9999
 
 All functionality described in the [Readme](https://github.com/DMSC-Instrument-Data/plankton), such as accessing the device and the simulation via the `plankton-control.py`-script are automatically available.
 
+### User facing documentation
+
+The `StreamAdapter`-class has a property `documentation`, which generates user facing documentation from the `Cmd`-objects (it can be displayed via the `-i`-flag of `plankton.py` or as the `device_documentation`-property of the `simulation`-object via `plankton-control.py`. The regular expression of each command is listed, along with a documentation string. If the `doc`-parameter is provided to `Cmd`, it is used, otherwise the docstring of the wrapped method is used (it does not matter whether the method is part of the device or the interface for feature to work). The latter is the recommended way, because it avoids duplication. But in some cases, the user- and the developer facing documentation may be so different that it's useful to override the docstring.
+
+This is also combined with the docstring of the interface (in this case `ExampleMotorStreamInterface`), and some information about the configured host/port, as well as terminators. The documentation has been left out from the above code samples for brevity, but in the `examples`-directory, the docs are present.
+
+All adapters offer similar functionality, the purpose is that the devices are documented in a way that makes them easy to use by non-developers. This is especially important if the protocol is non-obvious.
+
 ### Unit tests
 
 Unit tests should be added to the `test`-directory. While it would be best to have unit tests for device and interface separately, it is most important that the tests capture overall device behavior, so that it's immediately noticed when a change to Plankton's core parts breaks the simulation. It also makes it easier later on to refactor and change the device.

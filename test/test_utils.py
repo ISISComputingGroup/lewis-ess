@@ -28,7 +28,9 @@ from mock import patch
 from six import iteritems
 
 from plankton.core.utils import dict_strict_update, extract_module_name, \
-    is_module, seconds_since, get_available_submodules, FromOptionalDependency
+    is_module, seconds_since, get_available_submodules, FromOptionalDependency, \
+    format_doc_text
+
 from plankton.core.exceptions import PlanktonException
 
 
@@ -215,3 +217,27 @@ class TestFromOptionalDependency(unittest.TestCase):
 
     def test_exception_does_not_accept_arbitrary_type(self):
         self.assertRaises(RuntimeError, FromOptionalDependency, 'invalid_module', 6.0)
+
+
+class TestFormatDocText(unittest.TestCase):
+    def test_lines_are_preserved_and_indented(self):
+        text = 'This is\na test\nwith multiple lines.'
+        expected = '    This is\n    a test\n    with multiple lines.'
+        self.assertEqual(format_doc_text(text), expected)
+
+    def test_indented_lines_are_cleaned_up(self):
+        text = '  This is\n  a test\n  with multiple lines.'
+        expected = '    This is\n    a test\n    with multiple lines.'
+        self.assertEqual(format_doc_text(text), expected)
+
+    def test_long_lines_are_broken(self):
+        text = ' '.join(['ab'] * 44)
+        expected = '    ' + ' '.join(['ab'] * 32) + '\n' + '    ' + ' '.join(['ab'] * 12)
+
+        self.assertEqual(format_doc_text(text), expected)
+
+    def test_no_lines_above_99(self):
+        text = ' '.join(['abc'] * 143)
+        converted = format_doc_text(text).split('\n')
+
+        self.assertTrue(all([len(line) <= 99 for line in converted]))

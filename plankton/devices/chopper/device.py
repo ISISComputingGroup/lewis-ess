@@ -155,6 +155,10 @@ class SimulatedChopper(StateMachineDevice):
 
     @property
     def state(self):
+        """
+        The current state of the chopper. This parameter is read-only, it is
+        determined by the internal state machine of the device.
+        """
         return self._csm.state
 
     @property

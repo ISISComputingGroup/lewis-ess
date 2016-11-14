@@ -21,11 +21,12 @@ from __future__ import print_function
 
 from argparse import ArgumentParser
 from datetime import datetime
+import inspect
 
 from . import Adapter, ForwardProperty
 from six import iteritems
 
-from plankton.core.utils import seconds_since, FromOptionalDependency
+from plankton.core.utils import seconds_since, FromOptionalDependency, format_doc_text
 from plankton.core.exceptions import PlanktonException
 
 # pcaspy might not be available. To make EPICS-based adapters show up
@@ -43,7 +44,7 @@ Driver, SimpleServer = FromOptionalDependency(
 
 
 class PV(object):
-    def __init__(self, target_property, poll_interval=1.0, read_only=False, **kwargs):
+    def __init__(self, target_property, poll_interval=1.0, read_only=False, doc=None, **kwargs):
         """
         The PV-class is used to declare the EPICS-interface exposed by a sub-class of
         EpicsAdapter. The target_property argument specifies which property of the adapter
@@ -56,11 +57,13 @@ class PV(object):
         :param target_property: Property of the adapter to expose.
         :param poll_interval: Update interval of the PV.
         :param read_only: Should be True if the PV is read only.
+        :param doc: Description of the PV. If not supplied, docstring of mapped property is used.
         :param kwargs: Arguments forwarded into pcaspy pvdb-dict.
         """
         self.property = target_property
         self.read_only = read_only
         self.poll_interval = poll_interval
+        self.doc = doc
         self.config = kwargs
 
 
@@ -163,6 +166,24 @@ class EpicsAdapter(Adapter):
         self._server = None
         self._driver = None
 
+    @property
+    def documentation(self):
+        pvs = []
+
+        for name, pv in self.pvs.items():
+            complete_name = self._options.prefix + name
+
+            data_type = pv.config.get('type', 'float')
+            read_only_tag = ', read only' if pv.read_only else ''
+
+            doc = pv.doc or inspect.getdoc(getattr(type(self), pv.property)) or ''
+
+            pvs.append('{} ({}{}):\n{}'.format(
+                complete_name, data_type, read_only_tag, format_doc_text(doc)))
+
+        return '\n\n'.join(
+            [inspect.getdoc(self) or '', 'PVs\n==='] + pvs)
+
     def start_server(self):
         self._server = SimpleServer()
         self._server.createPV(prefix=self._options.prefix,
@@ -179,7 +200,7 @@ class EpicsAdapter(Adapter):
                 if prop not in dir(self._device):
                     raise AttributeError('Can not find property \''
                                          + prop + '\' in device or interface.')
-                setattr(type(self), prop, ForwardProperty('_device', prop))
+                setattr(type(self), prop, ForwardProperty('_device', prop, instance=self))
 
     def _parseArguments(self, arguments):
         parser = ArgumentParser(description="Adapter to expose a device via EPICS")

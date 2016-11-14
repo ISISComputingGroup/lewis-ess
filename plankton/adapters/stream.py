@@ -23,11 +23,13 @@ import asynchat
 import asyncore
 import re
 import socket
+import inspect
 from argparse import ArgumentParser
 
 from six import b
 
 from plankton.adapters import Adapter, ForwardMethod
+from plankton.core.utils import format_doc_text
 
 
 class StreamHandler(asynchat.async_chat):
@@ -86,7 +88,7 @@ class StreamServer(asyncore.dispatcher):
 
 class Cmd(object):
     def __init__(self, target_method, regex, regex_flags=0, argument_mappings=None,
-                 return_mapping=lambda x: None if x is None else str(x)):
+                 return_mapping=lambda x: None if x is None else str(x), doc=None):
         """
         This is a small helper class that makes it easy to define commands that are parsed
         by StreamAdapter and forwarded to the correct methods on the Adapter.
@@ -103,11 +105,15 @@ class Cmd(object):
         to a string. The default map function only does that when the supplied value
         is not None.
 
+        Finally, documentation can be provided by passing the doc-argument. If it is omitted,
+        the docstring of the bound method is used and if that is not present, left empty.
+
         :param target_method: Method to be called when regex matches.
         :param regex: Regex to match for method call.
         :param regex_flags: Flags to pass ot re.compile, default is 0.
         :param argument_mappings: Iterable with mapping functions from string to some type.
         :param return_mapping: Mapping function for return value of method.
+        :param doc: Description of the command. If not supplied, the docstring is used.
         """
         self.method = target_method
         self.pattern = re.compile(b(regex), regex_flags)
@@ -119,6 +125,7 @@ class Cmd(object):
 
         self.argument_mappings = argument_mappings
         self.return_mapping = return_mapping
+        self.doc = doc
 
     def map_arguments(self, arguments):
         """
@@ -152,6 +159,23 @@ class StreamAdapter(Adapter):
 
         self._create_properties(self.commands)
 
+    @property
+    def documentation(self):
+
+        commands = ['{}:\n{}'.format(
+            cmd.pattern.pattern,
+            format_doc_text(cmd.doc or inspect.getdoc(getattr(self, cmd.method)) or ''))
+                    for cmd in self.commands]
+
+        options = format_doc_text(
+            'Listening on: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}'.format(
+                self._options.bind_address, self._options.port,
+                repr(self.in_terminator), repr(self.out_terminator)))
+
+        return '\n\n'.join(
+            [inspect.getdoc(self) or '',
+             'Parameters\n==========', options, 'Commands\n========'] + commands)
+
     def start_server(self):
         self._server = StreamServer(self._options.bind_address, self._options.port, self)
 
@@ -172,7 +196,6 @@ class StreamAdapter(Adapter):
                 if method not in dir(self._device):
                     raise AttributeError('Can not find method \''
                                          + method + '\' in device or interface.')
-
                 setattr(self, method, ForwardMethod(self._device, method))
 
             if cmd.pattern.pattern in patterns:
