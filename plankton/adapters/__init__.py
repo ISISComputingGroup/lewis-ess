@@ -17,12 +17,38 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+"""
+This module defines a base class for adapters and some supporting infrastructure.
+"""
+
 import importlib
 import inspect
 from ..core.exceptions import PlanktonException
 
 
 class Adapter(object):
+    """
+    Base class for adapters
+
+    This class serves as a base class for concrete adapter implementations that expose a device via
+    a certain communication protocol. It defines the minimal interface that an adapter must provide
+    in order to fit seamlessly into other parts of the framework
+    (most importantly :class:`~plankton.core.simulation.Simulation`).
+
+    Sub-classes should re-define the ``protocol``-member to something appropriate. While it is
+    explicitly supported to modify it in concrete device interface implementations, it is good
+    to have a default (for example ``epics`` or ``stream``).
+
+    An adapter should provide everything that is needed for the communication via the protocol it
+    defines. This might involve constructing a server-object, configuring it and starting the
+    service (this should happen in :meth:`start_server`). Due to the large differences between
+    protocols it is very hard to provide general guidelines here. Please take a look at the
+    implementations of existing adapters (:class:`~plankton.adapters.epics.EpicsAdapter`,
+    :class:`~plankton.adapters.stream.StreamAdapter`),to get some examples.
+
+    :param device: Device that is supposed to be exposed. Available as ``_device``.
+    :param arguments: Command line arguments to the adapter, currently ignored.
+    """
     protocol = None
 
     def __init__(self, device, arguments=None):
@@ -31,12 +57,31 @@ class Adapter(object):
 
     @property
     def documentation(self):
+        """
+        This property can be overridden in a sub-class to provide protocol documentation to users
+        at runtime. By default it returns the indentation cleaned-up docstring of the class.
+        """
         return inspect.getdoc(self) or ''
 
     def start_server(self):
+        """
+        This method should be re-implemented to start the infrastructure required for the
+        protocol in question. These startup operations are not supposed to be carried out on
+        construction of the adapter in order to preserve control over when services are
+        started during a run of a simulation.
+        """
         pass
 
     def handle(self, cycle_delay=0.1):
+        """
+        This function is called on each cycle of a simulation. It should process requests that are
+        made via the protocol that exposes the device. The time spent processing should be
+        approximately ``cycle_delay`` seconds, during which the adapter may block the current
+        process. It is desirable to stick to the provided time, but deviations are permissible if
+        necessary due to the way the protocol works.
+
+        :param cycle_delay: Approximate time spent processing requests.
+        """
         pass
 
 
@@ -50,8 +95,8 @@ def is_adapter(obj):
 def get_available_adapters(device_name, device_package):
     """
     This helper function returns a dictionary with name/type pairs. It imports the module
-    device_package.device_name.adapters and puts those members of the module that inherit
-    from Adapter into the dictionary.
+    ``device_package.device_name.adapters`` and puts those members of the module that inherit
+    from :class:`Adapter` into the dictionary.
 
     :param device_name: Device name for which to get the adapters.
     :param device_package: Name of the package where devices are defined.

@@ -18,7 +18,8 @@
 # *********************************************************************
 
 """
-A :class:`Simulation` combines a :mod:`Device <plankton.devices>`
+A :class:`~Simulation` combines a :mod:`Device <plankton.devices>` and its interface (derived from
+an :mod:`Adapter <plankton.adapters>`).
 """
 
 from datetime import datetime

@@ -20,6 +20,12 @@
 """
 This module contains classes to expose objects via a JSON-RPC over ZMQ server. Plankton uses
 this infrastructure in :class:`~plankton.core.simulation.Simulation`.
+
+.. seealso::
+
+    Client classes for the service defined in this module can be found in
+    :mod:`~plankton.core.control_client`.
+
 """
 
 from __future__ import absolute_import

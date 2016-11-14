@@ -17,6 +17,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+"""
+This module provides client code for objects exposed via JSON-RPC over ZMQ.
+
+.. seealso::
+
+    The server-part for these client classes is defined
+    in the module :mod:`~plankton.core.control_server`.
+"""
+
 from __future__ import absolute_import
 
 import zmq
@@ -40,6 +49,7 @@ class RemoteException(Exception):
     :param type: Type of the exception on the server side.
     :param message: Exception message on the server side.
     """
+
     def __init__(self, type, message):
         super(RemoteException, self).__init__(
             'Exception on server side of type \'{}\': \'{}\''.format(type, message))
@@ -66,6 +76,7 @@ class ControlClient(object):
     :param host: Host the control server is running on
     :param port: Port on which the control server is listening
     """
+
     def __init__(self, host='127.0.0.1', port='10000'):
         self._socket = self._get_zmq_req_socket()
         self._socket.connect('tcp://{0}:{1}'.format(host, port))
@@ -151,6 +162,7 @@ class ObjectProxy(object):
     :param members: List of strings to generate methods and properties.
     :param prefix: Usually object name on the server plus dot.
     """
+
     def __init__(self, connection, members, prefix=''):
         self._properties = set()
 
