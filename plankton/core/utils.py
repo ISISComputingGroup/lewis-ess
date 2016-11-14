@@ -23,6 +23,7 @@ from six import string_types
 import imp
 import importlib
 import textwrap
+import inspect
 from datetime import datetime
 
 import os.path as osp
@@ -212,11 +213,10 @@ def format_doc_text(text):
     indentation depth of 4 spaces. Each line is wrapped independently in order to preserve
     manually added line breaks.
 
-    :param text: The text to format, is expected to be cleaned by inspect.cleandoc (for example
-    via inspect.getdoc).
+    :param text: The text to format, it is cleaned by inspect.cleandoc.
     :return: The formatted doc text.
     """
 
     return '\n'.join(
         textwrap.fill(line, width=99, initial_indent='    ', subsequent_indent='    ')
-        for line in text.splitlines())
+        for line in inspect.cleandoc(text).splitlines())
