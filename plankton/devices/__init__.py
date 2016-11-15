@@ -17,6 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+"""
+This module contains base classes for devices. Inherit from :class:`Device` for simple devices
+or from :class:`StateMachineDevice` for devices that are more complex and can be described
+using a state machine.
+"""
+
 from __future__ import absolute_import
 
 import importlib
@@ -42,54 +48,55 @@ class Device(CanProcess):
 
 
 class StateMachineDevice(CanProcessComposite):
+    """
+    This class is intended to be sub-classed to implement devices using a finite state machine
+    internally.
+
+    Implementing such a device is straightforward, there are three methods
+    that *must* be overriden:
+
+        - :meth:`_get_state_handlers`
+        - :meth:`_get_initial_state`
+        - :meth:`_get_transition_handlers`
+
+    The first method is supposed to return a dictionary with state handlers for each state
+    of the state machine, the second method must return the name of the initial state.
+    The third method must return a dict-like object (often an OrderedDict from collections)
+    that defines the conditions for transitions between the states of the state machine.
+
+    They are implemented as methods and not as plain class member variables, because often
+    they use the `self`-variable, which does not exist at the class level.
+
+    From these three methods, a :class:`~plankton.core.statemachine.StateMachine`-instance is
+    constructed, it's available as the device's ``_csm``-member. CSM is short for
+    "cycle-based state machine".
+
+    Most device implementation will also want to override this method:
+
+        - :meth:`_initialize_data`
+
+    This method should initialise device state variables (such as temperature, speed, etc.).
+    Having this in a separate method from ``__init__`` has the advantage that it can be used
+    to reset those variables at a later stage, without having to write the same code again.
+
+    Following this scheme, inheriting from StateMachineDevice also provides the possibility
+    for users of the class to override the states, the transitions, the initial state and
+    even the data. For states, transitions and data, dicts need to be passed to the
+    constructor, for the initial state that should be a string.
+
+    All these overrides can be used to define device setups to describe certain scenarios
+    more easily.
+
+    :param override_states: Dict with one entry per state. Only states defined in the state
+                            machine are allowed.
+    :param override_transitions: Dict with (state, state) tuples as keys and
+                                 callables as values.
+    :param override_initial_state: The initial state.
+    :param override_initial_data: A dict that contains data members
+                                  that should be overwritten on construction.
+    """
     def __init__(self, override_states=None, override_transitions=None,
                  override_initial_state=None, override_initial_data=None):
-        """
-        This class is intended to be sub-classed to implement devices using a finite state machine
-        internally.
-
-        Implementing such a device is straightforward, there are three methods
-        that *must* be overriden:
-
-            `_get_state_handlers`
-            `_get_initial_state`
-            `_get_transition_handlers`
-
-        The first method is supposed to return a dictionary with state handlers for each state
-        of the state machine, the second method must return the name of the initial state.
-        The third method must return a dict-like object (often an OrderedDict from collections)
-        that defines the conditions for transitions between the states of the state machine.
-
-        They are implemented as methods and not as plain class member variables, because often
-        they use the `self`-variable, which does not exist at the class level.
-
-        From these three methods, a `StateMachine`-instance is constructed, it's available as
-        the device's `_csm`-member. CSM is short for "cycle-based state machine".
-
-        Most device implementation will also want to override this method:
-
-            `_initialize_data`
-
-        This method should initialise device state variables (such as temperature, speed, etc.).
-        Having this in a separate method from `__init__` has the advantage that it can be used
-        to reset those variables at a later stage, without having to write the same code again.
-
-        Following this scheme, inheriting from `StateMachineDevice` also provides the possibility
-        for users of the class to override the states, the transitions, the initial state and
-        even the data. For states, transitions and data, dicts need to be passed to the
-        constructor, for the initial state that should be a string.
-
-        All these overrides can be used to define device setups to describe certain scenarios
-        more easily.
-
-        :param override_states: Dict with one entry per state. Only states defined in the state
-        machine are allowed.
-        :param override_transitions: Dict with (state, state) tuples as keys and
-        callables as values.
-        :param override_initial_state: The initial state.
-        :param override_initial_data: A dict that contains data members
-        that should be overwritten on construction.
-        """
         super(StateMachineDevice, self).__init__()
 
         self._initialize_data()
@@ -112,8 +119,8 @@ class StateMachineDevice(CanProcessComposite):
     def _get_state_handlers(self):
         """
         Implement this method to return a dict-like object with state handlers
-        (see core.statemachine.State) for each state of the state machine.
-        The default implementation raises a NotImplementedError.
+        (see :class:`~plankton.core.statemachine.State`) for each state of the state machine.
+        The default implementation raises a ``NotImplementedError``.
 
         :return: A dict-like object containing named state handlers.
         """
@@ -123,7 +130,7 @@ class StateMachineDevice(CanProcessComposite):
     def _get_initial_state(self):
         """
         Implement this method to return the initial state of the internal state machine.
-        The default implementation raises a NotImplementedError.
+        The default implementation raises a ``NotImplementedError``.
 
         :return: The initial state of the state machine.
         """
@@ -134,7 +141,8 @@ class StateMachineDevice(CanProcessComposite):
         """
         Implement this method to return transition handlers for the internal state machine.
         The keys should be (state, state)-tuples and the values functions that return true
-        if the transition should be triggered.
+        if the transition should be triggered. The default implementation raises a
+        ``NotImplementedError``.
 
         :return: A dict-like object containing transition handlers.
         """
@@ -144,7 +152,8 @@ class StateMachineDevice(CanProcessComposite):
     def _initialize_data(self):
         """
         Implement this method to initialize data members of the device, such as temperature,
-        speed and others. It gets called first in the __init__-method.
+        speed and others. It gets called first in the __init__-method. The default implementation
+        does nothing.
         """
         pass
 
@@ -190,11 +199,15 @@ def import_device(device, setup=None, device_package='devices'):
     This function tries to load a given device with a given setup from the package specified
     in the device_package parameter. First it checks if there is a module
 
+    .. sourcecode:: Python
+
         device_package.device.setups.setup
 
     and tries to import two members from that module `device_type` and `parameters`. The former
     must be the device class and the latter the parameters that are passed to the
     class' constructor. The above mentioned module might look like this:
+
+    .. sourcecode:: Python
 
         from ..device import SomeDeviceClass as device_type
 
@@ -204,6 +217,8 @@ def import_device(device, setup=None, device_package='devices'):
     and the setup does not exist in that sub-module of the device, this function checks for a
     dictionary named `setups` directly in the device module (device_package.device).
     So the device_package.device.__init__.py could contain something like this:
+
+    .. sourcecode:: Python
 
         from .device import SomeDeviceClass
 

@@ -10,3 +10,4 @@ This is plankton's API documentation.
 
     adapters
     core
+    devices

@@ -221,7 +221,7 @@ class ForwardProperty(object):
         to the member of instance that was selected in __init__.
 
         :param instance: Instance of type.
-        :param value: Type.
+        :param value: Value of property.
         """
 
         setattr(getattr(instance, self._target_member), self._prop, value)
