@@ -89,31 +89,31 @@ documents:
 
 -  Installation and Usage
 -  `Using Plankton with
-   Docker <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/usage_with_docker.rst>`__:
+   Docker <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/usage_with_docker.rst>`__:
    Plankton provides a Docker image that encapsulates all dependencies
    for ease of use.
 -  `Using Plankton with
-   Python <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/usage_with_python.rst>`__:
+   Python <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/usage_with_python.rst>`__:
    Plankton can be run directly via Python once dependencies are
    installed.
 -  `Adapter Specific
-   Parameters <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/adapter_specifics.rst>`__:
+   Parameters <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/adapter_specifics.rst>`__:
    Usage details for specific protocol adapters.
 -  Runtime Control
 -  `Remote Access to
-   Device <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/remote_access_devices.rst>`__:
+   Device <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/remote_access_devices.rst>`__:
    A simulated device can be inspected and manipulated at runtime.
 -  `Remote Access to
-   Simulation <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/remote_access_simulation.rst>`__:
+   Simulation <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/remote_access_simulation.rst>`__:
    Simulation parameters and statistics can be inspected and manipulated
    at runtime.
 -  Creating Device Simulators
 -  `Contribution
-   Guidelines <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/contributing.rst>`__:
+   Guidelines <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/developer_guide/contributing.rst>`__:
    New device simulators can be added to Plankton.
 -  Framework Internals
 -  `Detailed Overview of
-   Framework <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/framework_details.rst>`__:
+   Framework <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/developer_guide/framework_details.rst>`__:
    Description of framework internals and design decisions.
 
 .. |Version| image:: https://images.microbadger.com/badges/version/dmscid/plankton.svg
