@@ -116,6 +116,17 @@ documents:
    Framework <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/developer_guide/framework_details.rst>`__:
    Description of framework internals and design decisions.
 
+Until the documentation is available online, it can also be generated from the sources:
+
+::
+
+   $ git clone https://github.com/DMSC-Instrument-Data/plankton
+   $ cd plankton
+   $ pip install -r requirements-dev.txt
+   $ sphinx-build -b html docs/ docs/_build/html
+
+The directory will then contain the full documentation in HTML format.
+
 .. |Version| image:: https://images.microbadger.com/badges/version/dmscid/plankton.svg
    :target: https://hub.docker.com/r/dmscid/plankton/
 .. |Layers| image:: https://images.microbadger.com/badges/image/dmscid/plankton.svg
