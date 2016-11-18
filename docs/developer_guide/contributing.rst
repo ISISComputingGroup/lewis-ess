@@ -89,7 +89,7 @@ Implementing the device simulation
 
 Each device resides in the sub-package ``devices`` in the
 ``plankton``-package. The first step is to create a new directory in the
-`devices <../plankton/devices>`__ directory called ``example_motor``,
+``plankton/devices`` directory called ``example_motor``,
 which should contain a single file, ``__init__.py``. For simple devices
 like this it's acceptable to put everything into one file, but for more
 complex simulators it's recommended to follow the structure of the
@@ -105,21 +105,22 @@ interface specifies the syntax and semantics of the actual command
 language of the device.
 
 For the actual device simulation there are two classes to choose between
-for sub-classing. The class ``Device`` can be used for very simple
+for sub-classing. The class :class:`~plankton.devices.Device` can be used for very simple
 devices that do not require a state machine to represent their
 operation. On each simulation cycle, the method ``doProcess`` is
 executed if it is implemented. This can be used to implement
 time-dependent behavior. For the majority of cases, such as in the
-example, it is more convenient to inherit from ``StateMachineDevice``.
+example, it is more convenient to inherit from :class:`~plankton.devices.StateMachineDevice`.
 It provides an internal state machine and options to override
 characteristics of the state machine on initialization.
 
-``StateMachineDevice`` has three methods that must be implemented by
-sub-classes: ``_get_state_handlers``, ``_get_initial_state`` and
-``_get_transition_handlers``. They are used to define the state machine.
-A fourth, optional method can be used to initialize internal device
-state, it's calld ``_initialize_data``. In this case the device
-implementation should also go into ``__init__.py``:
+:class:`~plankton.devices.StateMachineDevice` has three methods that must be implemented by
+sub-classes: :meth:`~plankton.devices.StateMachineDevice._get_state_handlers`,
+:meth:`~plankton.devices.StateMachineDevice._get_initial_state` and
+:meth:`~plankton.devices.StateMachineDevice._get_transition_handlers`. They are used to define
+the state machine. A fourth, optional method can be used to initialize internal device
+state, it's calld :meth:`~plankton.devices.StateMachineDevice._initialize_data`. In this case
+the device implementation should also go into ``__init__.py``:
 
 .. code:: python
 
@@ -184,22 +185,27 @@ of the page and some internal state variables, for example ``target``,
 which has some limits on when and to what values it can be set.
 
 Both states of the motor are described by a state handler. In case of
-the ``idle``-state it is enough to use ``State``, which simply does
-nothing. The ``State``-class has three methods that can be overridden:
-``on_entry``, ``in_state`` and ``on_exit``. For other ways to specify
-those state handlers, please consult the documentation of
-``StateMachine``, where this is described in detail. The advantage of
-using the ``State``-class is that it has a so called context, which is
-stored in the ``_context``-member. In case of ``StateMachineDevice``,
-this context is the device object. This means that device data can be
-modified in a state handler.
+the ``idle``-state it is enough to use :class:`~plankton.core.statemachine.State`,
+which simply does nothing. :class:`~plankton.core.statemachine.State` has three methods that
+can be overridden:
+
+ - :meth:`~plankton.core.statemachine.State.on_entry`
+ - :meth:`~plankton.core.statemachine.State.in_state`
+ - :meth:`~plankton.core.statemachine.State.on_exit`.
+
+For other ways to specify those state handlers, please consult the documentation of
+:class:`~plankton.core.statemachine.StateMachine`, where this is described in detail.
+The advantage of using the :class:`~plankton.core.statemachine.State`-class is that it
+has a so called context, which is stored in the ``_context``-member. In case of
+:class:`~plankton.devices.StateMachineDevice`, this context is the device object.
+This means that device data can be modified in a state handler.
 
 This is the case for the ``moving``-state, where a state handler has
-been defined by sub-classing ``State``. In its ``in_state``-method it
-modifies the ``position`` member of the device until it has reached
+been defined by sub-classing :class:`~plankton.core.statemachine.State`.
+In its ``in_state``-method it modifies the ``position`` member of the device until it has reached
 ``target`` with a rate that is stored in the ``speed``-member. This
-linear change behavior is implemented in the ``linear``-function from
-``core.approaches``. It automatically makes sure that the target is
+linear change behavior is implemented in the :func:`~plankton.core.approaches.linear`-function from
+:mod:`plankton.core.approaches`. It automatically makes sure that the target is
 always obtained even for very coarse ``dt``-values.
 
 The transitions between states are defined using lambda-functions in
@@ -209,7 +215,7 @@ with the target or not.
 The device also provides a read-only property ``state``, which forwards
 the state machine's (in the device as member ``_csm``) state. The speed
 of the motor is not part of the device specification, but it is added as
-a member so that it can be changed via the ``control.py`` script to test
+a member so that it can be changed via the ``plankton-control.py`` script to test
 how the motor behaves at different speeds. The device is now fully
 functional, but it's not possible to interact with it yet, because the
 interface is not specified yet.
@@ -219,12 +225,12 @@ Implementing the device interface
 
 Device interfaces are implemented by sub-classing an appropriate
 pre-written communication adapter base class from the framework's
-``adapters``-package and overriding a few members. In this case this
-adapter is called ``StreamAdapter``. The first step is to specify the
-available commands in terms of a collection of ``Cmd``-objects. These
-objects effectively bind commands specified in terms of regular
-expressions to a the adapter's methods. According to the specifications
-above, the commands are defined like this:
+:mod:`plankton.adapters`-package and overriding a few members. In this case this
+adapter is called :class:`~plankton.adapters.stream.StreamAdapter`. The first step
+is to specify the available commands in terms of a collection of
+:class:`~plankton.adapters.stream.Cmd`-objects. These objects effectively bind
+commands specified in terms of regular expressions to a the adapter's methods.
+According to the specifications above, the commands are defined like this:
 
 .. code:: python
 
@@ -261,8 +267,8 @@ above, the commands are defined like this:
             except ValueError:
                 return 'err: not 0<=T<=250'
 
-The first argument to ``Cmd`` specifies the method name the command is
-bound to, whereas the second argument is the regular expression that a
+The first argument to :class:`~plankton.adapters.stream.Cmd` specifies the method
+name the command is bound to, whereas the second argument is the regular expression that a
 request coming in over the TCP stream must match. If a method has
 arguments (such as ``set_target``), these need to be defined as capture
 groups in the regular expression. These groups are passed as strings to
@@ -276,8 +282,8 @@ overridden by supplying a callable object to ``return_mapping``, as it
 is the case for the ``stop``-command.
 
 You may have noticed that ``stop`` is not a method of the interface.
-``StreamAdapter`` tries to resolve the supplied method names in multiple
-ways. First it checks its own members, then it checks the members of the
+:class:`~plankton.adapters.stream.StreamAdapter` tries to resolve the supplied method
+names in multiple ways. First it checks its own members, then it checks the members of the
 device it owns (accessible in the interface via the ``_device``-member)
 and adds forwarders to itself if possible. If the method name can not be
 found in either the device or the adapter, an error is produced, which
@@ -301,8 +307,7 @@ started using the ``-k`` parameter of ``plankton.py``:
     $ ./plankton.py -k plankton.examples example_motor -- -b 127.0.0.1 -p 9999
 
 All functionality described in the
-`Readme <https://github.com/DMSC-Instrument-Data/plankton>`__, such as
-accessing the device and the simulation via the
+:ref:`user_guide`, such as accessing the device and the simulation via the
 ``plankton-control.py``-script are automatically available.
 
 User facing documentation
@@ -385,7 +390,7 @@ devices that are already in Plankton.
 The same is true for setups. For complex setups, these should be moved
 to a sub-module of the device called ``setups``, where each setup can
 live in its own file. Please see the documentation of
-``plankton.devices.import_device`` for reference.
+:func:`plankton.devices.import_device` for reference.
 
 For initial experiments it's also possible to develop a device outside
 of Planton's source tree. Assuming the device package is called
@@ -412,5 +417,4 @@ These devices can be started from within the Plankton directory by:
 More Examples
 -------------
 
-More example devices and interfaces are provided in the
-`examples <../plankton/examples>`__ directory
+More example devices and interfaces are provided in the ``plankton.examples`` directory.
