@@ -10,7 +10,7 @@ Cycle-based
 
 By cycle-based we mean that all processing in the framework occurs
 during "heartbeat" simulation ticks that propagate calls to ``process``
-methods throughout the simulation, along with a :math:`\Delta t` (delta t) parameter
+methods throughout the simulation, along with a :math:`\Delta t` parameter
 that contains the time that has passed since the last tick. The device
 simulation is then responsible for updating its state based on how much
 time has passed and what input has been received during that time.
