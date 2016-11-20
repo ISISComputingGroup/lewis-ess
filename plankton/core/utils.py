@@ -34,7 +34,7 @@ from datetime import datetime
 import os.path as osp
 from os import listdir
 
-from .exceptions import PlanktonException
+from .exceptions import PlanktonException, LimitViolationException
 
 
 def get_available_submodules(package):
@@ -234,3 +234,74 @@ def format_doc_text(text):
     return '\n'.join(
         textwrap.fill(line, width=99, initial_indent='    ', subsequent_indent='    ')
         for line in inspect.cleandoc(text).splitlines())
+
+
+class check_limits(object):
+    """
+    This decorator helps to make sure that the parameter of a property setter (or any other
+    method with one argument) is within certain numerical limits.
+
+    It's possible to set static limits using floats or ints:
+
+    ..sourcecode:: Python
+
+        class Foo(object):
+            _bar = 0
+
+            @property
+            def bar(self):
+                return self._bar
+
+            @bar.setter
+            @check_limits(0, 15)
+            def bar(self, new_value):
+                self._bar = new_value
+
+    But sometimes this is not flexible enough, so it's also possible to supply strings, which
+    are the names of attributes of the object the decorated method belongs with:
+
+    .. sourcecode:: Python
+
+        class Foo(object):
+            _bar = 0
+
+            bar_min = 0
+            bar_max = 24
+
+            @property
+            def bar(self):
+                return self._bar
+
+            @bar.setter
+            @check_limits('bar_min', 'bar_max')
+            def bar(self, new_value):
+                self._bar = new_value
+
+    This will make sure that the new value is always between ``bar_min`` and ``bar_max``, even
+    if they change at runtime.
+
+    If the value is outside the specified limits, an exception of the type
+    :class:`~plankton.core.exceptions.LimitViolationException` is raised.
+
+    :param low_limit: Numerical lower limit or name of attribute that contains limit.
+    :param high_limit: Numerical upper limit or name of attribute that contains limit.
+    """
+
+    def __init__(self, low_limit, high_limit):
+        self._lower = low_limit
+        self._upper = high_limit
+
+    def __call__(self, f):
+        def limit_checked(obj, new_value):
+            low = getattr(obj, self._lower) if isinstance(self._lower,
+                                                          string_types) else self._lower
+            high = getattr(obj, self._upper) if isinstance(self._upper,
+                                                           string_types) else self._upper
+
+            if not (low <= new_value <= high):
+                raise LimitViolationException(
+                    '%f is outside limits (%f, %f)' % (new_value, low, high))
+
+            return f(obj, new_value)
+
+        return limit_checked

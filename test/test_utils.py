@@ -24,14 +24,15 @@ import unittest
 import sys
 from datetime import datetime
 
+from . import assertRaisesNothing
 from mock import patch
 from six import iteritems
 
 from plankton.core.utils import dict_strict_update, extract_module_name, \
     is_module, seconds_since, get_available_submodules, FromOptionalDependency, \
-    format_doc_text
+    format_doc_text, check_limits
 
-from plankton.core.exceptions import PlanktonException
+from plankton.core.exceptions import PlanktonException, LimitViolationException
 
 
 class TestDictStrictUpdate(unittest.TestCase):
@@ -241,3 +242,46 @@ class TestFormatDocText(unittest.TestCase):
         converted = format_doc_text(text).split('\n')
 
         self.assertTrue(all([len(line) <= 99 for line in converted]))
+
+
+class TestCheckLimits(unittest.TestCase):
+    def test_static_limits(self):
+        class Foo(object):
+            bar = 0
+
+            @check_limits(0, 15)
+            def set_bar(self, new_bar):
+                self.bar = new_bar
+
+        f = Foo()
+
+        assertRaisesNothing(self, f.set_bar, 0)
+        assertRaisesNothing(self, f.set_bar, 15)
+        assertRaisesNothing(self, f.set_bar, 7)
+
+        self.assertRaises(LimitViolationException, f.set_bar, -3)
+        self.assertRaises(LimitViolationException, f.set_bar, 16)
+
+    def test_property_limits(self):
+        class Foo(object):
+            bar = 0
+            bar_min = 0
+            bar_max = 15
+
+            @check_limits('bar_min', 'bar_max')
+            def set_bar(self, new_bar):
+                self.bar = new_bar
+
+        f = Foo()
+
+        assertRaisesNothing(self, f.set_bar, 0)
+        assertRaisesNothing(self, f.set_bar, 15)
+
+        self.assertRaises(LimitViolationException, f.set_bar, -3)
+        self.assertRaises(LimitViolationException, f.set_bar, 16)
+
+        f.bar_min = -3
+        f.bar_max = 16
+
+        assertRaisesNothing(self, f.set_bar, -3)
+        assertRaisesNothing(self, f.set_bar, 16)
