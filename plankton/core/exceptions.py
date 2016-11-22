@@ -17,6 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+"""
+Defines exception types specific to plankton. The main intention of these exception types is
+that they can be caught and meaningful messages can be displayed to the user.
+"""
+
 
 class PlanktonException(Exception):
     """

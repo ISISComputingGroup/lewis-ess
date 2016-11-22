@@ -17,6 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+"""
+Defines functions that model typical behavior, such as a value approaching a target linearly at
+a certain rate.
+"""
+
 
 def linear(current, target, rate, dt):
     """
@@ -27,11 +32,15 @@ def linear(current, target, rate, dt):
     the returned value will be less than 10 if rate and dt are greater
     than 0:
 
-        new_pos = linear(10, -20, 10, 0.1) # new_pos = 9
+    .. sourcecode:: Python
+
+        new_pos = linear(10, -20, 10, 0.1)  # new_pos = 9
 
     The function makes sure that the returned value never overshoots:
 
-        new_pos = linear(10, -20, 10, 100) # new_pos = -20
+    .. sourcecode:: Python
+
+        new_pos = linear(10, -20, 10, 100)  # new_pos = -20
 
     :param current: The current value of the variable to be changed.
     :param target: The target value to approach.

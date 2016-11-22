@@ -17,12 +17,38 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+"""
+This module defines a base class for adapters and some supporting infrastructure.
+"""
+
 import importlib
 import inspect
 from ..core.exceptions import PlanktonException
 
 
 class Adapter(object):
+    """
+    Base class for adapters
+
+    This class serves as a base class for concrete adapter implementations that expose a device via
+    a certain communication protocol. It defines the minimal interface that an adapter must provide
+    in order to fit seamlessly into other parts of the framework
+    (most importantly :class:`~plankton.core.simulation.Simulation`).
+
+    Sub-classes should re-define the ``protocol``-member to something appropriate. While it is
+    explicitly supported to modify it in concrete device interface implementations, it is good
+    to have a default (for example ``epics`` or ``stream``).
+
+    An adapter should provide everything that is needed for the communication via the protocol it
+    defines. This might involve constructing a server-object, configuring it and starting the
+    service (this should happen in :meth:`start_server`). Due to the large differences between
+    protocols it is very hard to provide general guidelines here. Please take a look at the
+    implementations of existing adapters (:class:`~plankton.adapters.epics.EpicsAdapter`,
+    :class:`~plankton.adapters.stream.StreamAdapter`),to get some examples.
+
+    :param device: Device that is supposed to be exposed. Available as ``_device``.
+    :param arguments: Command line arguments to the adapter, currently ignored.
+    """
     protocol = None
 
     def __init__(self, device, arguments=None):
@@ -31,12 +57,31 @@ class Adapter(object):
 
     @property
     def documentation(self):
+        """
+        This property can be overridden in a sub-class to provide protocol documentation to users
+        at runtime. By default it returns the indentation cleaned-up docstring of the class.
+        """
         return inspect.getdoc(self) or ''
 
     def start_server(self):
+        """
+        This method should be re-implemented to start the infrastructure required for the
+        protocol in question. These startup operations are not supposed to be carried out on
+        construction of the adapter in order to preserve control over when services are
+        started during a run of a simulation.
+        """
         pass
 
     def handle(self, cycle_delay=0.1):
+        """
+        This function is called on each cycle of a simulation. It should process requests that are
+        made via the protocol that exposes the device. The time spent processing should be
+        approximately ``cycle_delay`` seconds, during which the adapter may block the current
+        process. It is desirable to stick to the provided time, but deviations are permissible if
+        necessary due to the way the protocol works.
+
+        :param cycle_delay: Approximate time spent processing requests.
+        """
         pass
 
 
@@ -50,8 +95,8 @@ def is_adapter(obj):
 def get_available_adapters(device_name, device_package):
     """
     This helper function returns a dictionary with name/type pairs. It imports the module
-    device_package.device_name.adapters and puts those members of the module that inherit
-    from Adapter into the dictionary.
+    ``device_package.device_name.adapters`` and puts those members of the module that inherit
+    from :class:`Adapter` into the dictionary.
 
     :param device_name: Device name for which to get the adapters.
     :param device_package: Name of the package where devices are defined.
@@ -113,31 +158,39 @@ def import_adapter(device_name, protocol_name, device_package='devices'):
 
 
 class ForwardProperty(object):
+    """
+    This is a small helper class that can be used to act as
+    a forwarding property to relay property setting/getting
+    to a member of the class it's installed on.
+
+    This is a small helper class that can be used to act as
+    a forwarding property to relay property setting/getting
+    to a member of the class it's installed on.
+
+    Typical use would be:
+
+    .. sourcecode:: Python
+
+        a = Foo()
+        a._b = Bar() # Bar has property baz
+
+        type(a).forward = ForwardProperty('_b', 'baz')
+
+        a.forward = 10 # equivalent to a._b.baz = 10
+
+    Note that this modifies the type ``Foo``. Usage must thus be
+    limited to cases where this type modification is
+    acceptable.
+
+    :param target_member: Target member to forward to.
+    :param property_name: Property of target to access.
+    :param instance: Object from which to obtain target_member for the purpose of extracting
+                     the docstring of the property identified by property_name. If it doesn't
+                     exist on the type, of target_member, the docstring is not copied.
+
+    .. seealso:: See :class:`ForwardMethod` to forward method calls to another object.
+    """
     def __init__(self, target_member, property_name, instance=None):
-        """
-        This is a small helper class that can be used to act as
-        a forwarding property to relay property setting/getting
-        to a member of the class it's installed on.
-
-        Typical use would be:
-
-            a = Foo()
-            a._b = Bar() # Bar has property baz
-
-            type(a).forward = ForwardProperty('_b', 'baz')
-
-            a.forward = 10 # equivalent to a._b.baz = 10
-
-        Note that this modifies the type Foo. Usage must thus be
-        limited to cases where this type modification is
-        acceptable.
-
-        :param target_member: Target member to forward to.
-        :param property_name: Property of target to access.
-        :param instance: Object from which to obtain target_member for the purpose of extracting
-        the docstring of the property identified by property_name. If it doesn't exist on the type,
-        of target_member, the docstring is not copied.
-        """
         self._target_member = target_member
         self._prop = property_name
 
@@ -168,13 +221,28 @@ class ForwardProperty(object):
         to the member of instance that was selected in __init__.
 
         :param instance: Instance of type.
-        :param value: Type.
+        :param value: Value of property.
         """
 
         setattr(getattr(instance, self._target_member), self._prop, value)
 
 
 class ForwardMethod(object):
+    """
+    Small helper to forward calls to another target.
+
+    It can be used like this:
+
+    .. sourcecode:: Python
+
+        a = Foo()
+        b = Bar()  # Bar has method baz(parameter)
+
+        a.forward = ForwardProperty(b, 'baz')
+        a.forward(10)  # Calls b.baz(10)
+
+    .. seealso:: See :class:`ForwardProperty` for forwarding properties.
+    """
     def __init__(self, target, method):
         self._target = target
         self._method = method

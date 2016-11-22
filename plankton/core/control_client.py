@@ -17,6 +17,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+"""
+This module provides client code for objects exposed via JSON-RPC over ZMQ.
+
+.. seealso::
+
+    The server-part for these client classes is defined
+    in the module :mod:`~plankton.core.control_server`.
+"""
+
 from __future__ import absolute_import
 
 import zmq
@@ -31,16 +40,17 @@ except ImportError:
 
 
 class RemoteException(Exception):
-    def __init__(self, type, message):
-        """
-        This exception type replaces exceptions that are raised on the server,
-        but unknown (i.e. not in the exceptions-module) on the client side.
-        To retain as much information as possible, the exception type on the server and
-        the message are stored.
+    """
+    This exception type replaces exceptions that are raised on the server,
+    but unknown (i.e. not in the exceptions-module) on the client side.
+    To retain as much information as possible, the exception type on the server and
+    the message are stored.
 
-        :param type: Type of the exception on the server side.
-        :param message: Exception message on the server side.
-        """
+    :param type: Type of the exception on the server side.
+    :param message: Exception message on the server side.
+    """
+
+    def __init__(self, type, message):
         super(RemoteException, self).__init__(
             'Exception on server side of type \'{}\': \'{}\''.format(type, message))
 
@@ -56,17 +66,18 @@ class ProtocolException(Exception):
 
 
 class ControlClient(object):
-    def __init__(self, host='127.0.0.1', port='10000'):
-        """
-        This class provides an interface to a ControlServer instance on
-        the server side. Proxies to exposed objects can be obtained either
-        directly via get_object or, in case the server exposes a collection
-        of objects at the top level, a dictionary of named objects can be
-        obtained via get_object_collection.
+    """
+    This class provides an interface to a ControlServer instance on
+    the server side. Proxies to exposed objects can be obtained either
+    directly via get_object or, in case the server exposes a collection
+    of objects at the top level, a dictionary of named objects can be
+    obtained via get_object_collection.
 
-        :param host: Host the control server is running on
-        :param port: Port on which the control server is listening
-        """
+    :param host: Host the control server is running on
+    :param port: Port on which the control server is listening
+    """
+
+    def __init__(self, host='127.0.0.1', port='10000'):
         self._socket = self._get_zmq_req_socket()
         self._socket.connect('tcp://{0}:{1}'.format(host, port))
 
@@ -117,7 +128,7 @@ class ControlClient(object):
         This function performs n + 1 calls to the server, where n is the number of objects.
 
         :param object_name: Object name on the server. This is required if the object collection
-        is not the top level object.
+                            is not the top level object.
         """
 
         object_names = self.get_object(object_name).get_objects()
@@ -126,32 +137,33 @@ class ControlClient(object):
 
 
 class ObjectProxy(object):
+    """
+    This class serves as a base class for dynamically created classes on the
+    client side that represent server-side objects. Upon initialization,
+    this class takes the supplied methods and installs appropriate proxy methods
+    or properties into the object and class respectively. Because of that
+    class manipulation, this class must never be used directly.
+    Instead, it should be used as a base-class for dynamically created types
+    that mirror types on the server, like this:
+
+        proxy = type('SomeClassName', (ObjectProxy, ), {})(connection, methods, prefix)
+
+    There is however, the class ControlClient, which automates all that
+    and provides objects that are ready to use.
+
+    Exceptions on the server are propagated to the client. If the exception is not part
+    of the exceptions-module (builtins for Python 3), a RemoteException is raised instead
+    which contains information about the server side exception.
+
+    All RPC method names are prefixed with the supplied prefix, which is usually the
+    object name on the server plus a dot.
+
+    :param connection: ControlClient-object for remote calls.
+    :param members: List of strings to generate methods and properties.
+    :param prefix: Usually object name on the server plus dot.
+    """
+
     def __init__(self, connection, members, prefix=''):
-        """
-        This class serves as a base class for dynamically created classes on the
-        client side that represent server-side objects. Upon initialization,
-        this class takes the supplied methods and installs appropriate proxy methods
-        or properties into the object and class respectively. Because of that
-        class manipulation, this class must never be used directly.
-        Instead, it should be used as a base-class for dynamically created types
-        that mirror types on the server, like this:
-
-            proxy = type('SomeClassName', (ObjectProxy, ), {})(connection, methods, prefix)
-
-        There is however, the class ControlClient, which automates all that
-        and provides objects that are ready to use.
-
-        Exceptions on the server are propagated to the client. If the exception is not part
-        of the exceptions-module (builtins for Python 3), a RemoteException is raised instead
-        which contains information about the server side exception.
-
-        All RPC method names are prefixed with the supplied prefix, which is usually the
-        object name on the server plus a dot.
-
-        :param connection: ControlClient-object for remote calls.
-        :param members: List of strings to generate methods and properties.
-        :param prefix: Usually object name on the server plus dot.
-        """
         self._properties = set()
 
         self._connection = connection

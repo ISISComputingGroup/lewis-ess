@@ -17,11 +17,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+"""
+This module defines two classes related to one of plankton's essential concepts, namely
+the cycle-based approach. :class:`CanProcess` and :class:`CanProcessComposite` implement the
+composite design pattern so that it's possible to form a tree of objects which can perform
+calculations based on an elapsed time :math:`\Delta t`.
+"""
+
 
 class CanProcess(object):
     """
     The CanProcess class is meant as a base for all things that
-    are able to process on the bases of a time delta (dt).
+    are able to process on the basis of a time delta (dt).
 
     The base implementation does nothing.
 
@@ -59,6 +66,8 @@ class CanProcessComposite(CanProcess):
     multiple items that implement the CanProcess interface.
 
     Items can be added to the composite like this:
+
+    .. sourcecode:: Python
 
         composite = CanProcessComposite()
         composite.add_processor(item_that_implements_CanProcess)
