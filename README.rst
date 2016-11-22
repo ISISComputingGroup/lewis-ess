@@ -10,9 +10,9 @@ Plankton can be run directly using Python 2.7 or >= 3.4, or using a
 prepackaged Docker image that includes all dependencies. See relevant
 usage sections for details.
 
-Resources: -
-`GitHub <https://github.com/DMSC-Instrument-Data/plankton>`__ -
-`DockerHub <https://hub.docker.com/r/dmscid/plankton/>`__ -
+Resources:
+`GitHub <https://github.com/DMSC-Instrument-Data/plankton>`__ --
+`DockerHub <https://hub.docker.com/r/dmscid/plankton/>`__ --
 `Dockerfile <https://github.com/DMSC-Instrument-Data/plankton/blob/master/Dockerfile>`__
 
 Purpose and Use Cases
@@ -88,33 +88,30 @@ developer, and framework internals are described in the following
 documents:
 
 -  Installation and Usage
--  `Using Plankton with
-   Docker <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/usage_with_docker.rst>`__:
-   Plankton provides a Docker image that encapsulates all dependencies
-   for ease of use.
--  `Using Plankton with
-   Python <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/usage_with_python.rst>`__:
-   Plankton can be run directly via Python once dependencies are
-   installed.
--  `Adapter Specific
-   Parameters <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/adapter_specifics.rst>`__:
-   Usage details for specific protocol adapters.
+ -  `Using Plankton with
+    Docker <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/usage_with_docker.rst>`__:
+    Plankton provides a Docker image that encapsulates all dependencies for ease of use.
+ -  `Using Plankton with
+    Python <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/usage_with_python.rst>`__:
+    Plankton can be run directly via Python once dependencies are installed.
+ -  `Adapter Specific
+    Parameters <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/adapter_specifics.rst>`__:
+    Usage details for specific protocol adapters.
 -  Runtime Control
--  `Remote Access to
-   Device <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/remote_access_devices.rst>`__:
-   A simulated device can be inspected and manipulated at runtime.
--  `Remote Access to
-   Simulation <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/remote_access_simulation.rst>`__:
-   Simulation parameters and statistics can be inspected and manipulated
-   at runtime.
+ -  `Remote Access to
+    Device <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/remote_access_devices.rst>`__:
+    A simulated device can be inspected and manipulated at runtime.
+ -  `Remote Access to
+    Simulation <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/user_guide/remote_access_simulation.rst>`__:
+    Simulation parameters and statistics can be inspected and manipulated at runtime.
 -  Creating Device Simulators
--  `Contribution
-   Guidelines <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/developer_guide/contributing.rst>`__:
-   New device simulators can be added to Plankton.
+ -  `Contribution
+    Guidelines <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/developer_guide/contributing.rst>`__:
+    New device simulators can be added to Plankton.
 -  Framework Internals
--  `Detailed Overview of
-   Framework <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/developer_guide/framework_details.rst>`__:
-   Description of framework internals and design decisions.
+ -  `Detailed Overview of
+    Framework <https://github.com/DMSC-Instrument-Data/plankton/blob/master/docs/developer_guide/framework_details.rst>`__:
+    Description of framework internals and design decisions.
 
 Until the documentation is available online, it can also be generated from the sources:
 
@@ -125,7 +122,7 @@ Until the documentation is available online, it can also be generated from the s
    $ pip install -r requirements-dev.txt
    $ sphinx-build -b html docs/ docs/_build/html
 
-The directory will then contain the full documentation in HTML format.
+The ``docs/_build/html`` directory will then contain the full documentation in HTML format.
 
 .. |Version| image:: https://images.microbadger.com/badges/version/dmscid/plankton.svg
    :target: https://hub.docker.com/r/dmscid/plankton/

@@ -36,6 +36,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 pygments_style = 'sphinx'
 todo_include_todos = False
 
+modindex_common_prefix = ['plankton.']
+
 # -- Options for HTML output ---------------------------------------------
 
 # This is from the sphinx_rtd_theme documentation to make the page work with RTD
@@ -47,7 +49,7 @@ if not on_rtd:
     html_theme = "sphinx_rtd_theme"
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
-html_static_path = ['_static']
+html_static_path = []
 html_show_sourcelink = True
 htmlhelp_basename = 'planktondoc'
 
