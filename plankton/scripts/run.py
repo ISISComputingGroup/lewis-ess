@@ -21,10 +21,8 @@ import argparse
 import os
 import sys
 
-from plankton.adapters import import_adapter, get_available_adapters
-from plankton.core.utils import get_available_submodules
 from plankton import __version__
-from plankton.devices import import_device
+from plankton.core.devices import DeviceRegistry
 
 from plankton.core.simulation import Simulation
 from plankton.core.exceptions import PlanktonException
@@ -73,41 +71,34 @@ def do_run_simulation(argument_list=None):
     if arguments.add_path is not None:
         sys.path.append(os.path.abspath(arguments.add_path))
 
-    if not arguments.device:
-        devices = ['Please specify a device to simulate.',
-                   'The following devices are available:']
+    device_registry = DeviceRegistry(arguments.device_package)
 
-        for dev in get_available_submodules(arguments.device_package):
-            devices.append('\t' + dev)
+    if not arguments.device:
+        devices = ['Please specify a device to simulate. The following devices are available:']
+
+        for dev in device_registry.devices:
+            devices.append('    ' + dev)
 
         print('\n'.join(devices))
         return
 
-    # Import the device type and required initialisation parameters.
-    device_type, parameters = import_device(arguments.device, arguments.setup,
-                                            device_package=arguments.device_package)
+    device_builder = device_registry.device_builder(arguments.device)
 
     if arguments.list_protocols:
-        adapters = get_available_adapters(
-            arguments.device, device_package=arguments.device_package)
-
-        protocols = {adapter.protocol for adapter in adapters.values()}
-
-        print('\n'.join(protocols))
+        print('\n'.join(device_builder.protocols))
         return
 
-    device = device_type(**parameters)
-    adapter = import_adapter(
-        arguments.device, arguments.protocol,
-        device_package=arguments.device_package)(device, arguments.adapter_args)
+    device = device_builder.create_device(arguments.setup)
+    interface = device_builder.create_interface_type(arguments.protocol)(
+        device, arguments.adapter_args)
 
     if arguments.show_interface:
-        print(adapter.documentation)
+        print(interface.documentation)
         return
 
     simulation = Simulation(
         device=device,
-        adapter=adapter,
+        adapter=interface,
         control_server=arguments.rpc_host)
 
     simulation.cycle_delay = arguments.cycle_delay

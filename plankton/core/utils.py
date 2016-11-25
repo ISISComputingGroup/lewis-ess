@@ -25,32 +25,74 @@ module contained in the Core API.
 from __future__ import absolute_import
 from six import string_types
 
-import imp
 import importlib
 import textwrap
 import inspect
-from datetime import datetime
 
-import os.path as osp
+from os import path as osp
 from os import listdir
+
+from datetime import datetime
 
 from .exceptions import PlanktonException
 
 
-def get_available_submodules(package):
+def get_submodules(module):
     """
-    This function returns a list of available submodules in a package.
+    This function imports all sub-modules of the supplied module and returns a dictionary
+    with module names as keys and the sub-module objects as values. If the supplied parameter
+    is not a module object, a RuntimeError is raised.
 
-    :param package: Name of the package.
-    :return: Available submodules in package.
+    :param module: Module object from which to import sub-modules.
+    :return: Dict with name-module pairs.
     """
+    if not inspect.ismodule(module):
+        raise RuntimeError(
+            'Can only extract submodules from a module object, '
+            'for example imported via importlib.import_module')
 
-    module = importlib.import_module(package)
-    path = module.__path__[0]
+    submodules = {}
 
-    submodule_candidates = [extract_module_name(osp.join(path, entry)) for entry in listdir(path)]
+    module_path = module.__path__[0]
+    for item in listdir(module_path):
+        module_name = extract_module_name(osp.join(module_path, item))
 
-    return [submodule for submodule in submodule_candidates if is_module(submodule, [path])]
+        if module_name is not None:
+            try:
+                submodules[module_name] = importlib.import_module(
+                    '.{}'.format(module_name), package=module.__name__)
+            except ImportError:
+                # This is necessary in case random directories are in the path.
+                pass
+
+    return submodules
+
+
+def get_members(obj, predicate=None):
+    """
+    Returns all members of an object for which the supplied predicate is true. Keep in mind
+    that the supplied function must accept a potentially very broad range of inputs, because
+    the members of an object can be of any type. The function returns those members into a dict
+    with the member names as keys and returns it. If no predicate is supplied, all members are
+    put into the dict.
+
+    :param obj: Object from which to get the members.
+    :param predicate: Filter function for the members, only members for which True is returned are
+                      part of the resulting dict.
+    :return: Dict with name-object pairs of members of obj for which predicate returns true.
+    """
+    if predicate is None:
+        return {member: getattr(obj, member) for member in dir(obj)}
+
+    module_members = {}
+
+    for member in dir(obj):
+        member_object = getattr(obj, member)
+
+        if predicate(member_object):
+            module_members[member] = member_object
+
+    return module_members
 
 
 def extract_module_name(absolute_path):
@@ -81,21 +123,6 @@ def extract_module_name(absolute_path):
         return module_name
 
     return None
-
-
-def is_module(module, paths):
-    """
-    Small helper function that returns True if module is a sub-module in package.
-
-    :param module: Name of the sub-module to check.
-    :param paths: List of paths where the module is located.
-    :return: True if module is a sub-module of package.
-    """
-    try:
-        imp.find_module(module, paths)
-        return True
-    except (ImportError, TypeError):
-        return False
 
 
 def dict_strict_update(base_dict, update_dict):
