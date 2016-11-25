@@ -70,29 +70,23 @@ def get_submodules(module):
 
 def get_members(obj, predicate=None):
     """
-    Returns all members of an object for which the supplied predicate is true. Keep in mind
-    that the supplied function must accept a potentially very broad range of inputs, because
-    the members of an object can be of any type. The function returns those members into a dict
-    with the member names as keys and returns it. If no predicate is supplied, all members are
-    put into the dict.
+    Returns all members of an object for which the supplied predicate is true and that do not
+    begin with __. Keep in mind that the supplied function must accept a potentially very broad
+    range of inputs, because the members of an object can be of any type. The function returns
+    those members into a dict with the member names as keys and returns it. If no predicate is
+    supplied, all members are put into the dict.
 
     :param obj: Object from which to get the members.
     :param predicate: Filter function for the members, only members for which True is returned are
                       part of the resulting dict.
     :return: Dict with name-object pairs of members of obj for which predicate returns true.
     """
+    members = {member: getattr(obj, member) for member in dir(obj) if not member.startswith('__')}
+
     if predicate is None:
-        return {member: getattr(obj, member) for member in dir(obj)}
+        return members
 
-    module_members = {}
-
-    for member in dir(obj):
-        member_object = getattr(obj, member)
-
-        if predicate(member_object):
-            module_members[member] = member_object
-
-    return module_members
+    return {name: member for name, member in members.items() if predicate(member)}
 
 
 def extract_module_name(absolute_path):

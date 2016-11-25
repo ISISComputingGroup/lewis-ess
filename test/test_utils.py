@@ -21,14 +21,17 @@ import os
 import shutil
 import tempfile
 import unittest
+import importlib
 import sys
+from six import string_types
+
 from datetime import datetime
 
 from mock import patch
 from six import iteritems
 
 from plankton.core.utils import dict_strict_update, extract_module_name, \
-    is_module, seconds_since, get_available_submodules, FromOptionalDependency, \
+    get_submodules, get_members, seconds_since, FromOptionalDependency, \
     format_doc_text
 
 from plankton.core.exceptions import PlanktonException
@@ -138,34 +141,38 @@ class TestExtractModuleName(TestWithPackageStructure):
         self.assertEqual(extract_module_name(self._files['valid']), 'some_file')
 
 
-class TestIsModule(TestWithPackageStructure):
-    def test_valid_directory(self):
-        self.assertTrue(is_module(
-            extract_module_name(self._dirs['valid']), [self._tmp_package]), self._tmp_package)
+class TestGetSubmodules(TestWithPackageStructure):
+    def test_non_module_raises_runtimeerror(self):
+        self.assertRaises(RuntimeError, get_submodules, self._tmp_package_name)
 
-    def test_invalid_directory(self):
-        self.assertFalse(is_module(
-            extract_module_name(self._dirs['invalid_underscore']), [self._tmp_package]))
-        self.assertFalse(is_module(
-            extract_module_name(self._dirs['invalid_dot']), [self._tmp_package]))
-
-    def test_invalid_file_name(self):
-        self.assertFalse(is_module(
-            extract_module_name(self._files['invalid_name']), [self._tmp_package]))
-
-    def test_invalid_file_ext(self):
-        self.assertFalse(is_module(
-            extract_module_name(self._files['invalid_ext']), [self._tmp_package]))
-
-    def test_valid_file(self):
-        self.assertTrue(is_module(
-            extract_module_name(self._files['valid']), [self._tmp_package]), self._tmp_package)
-
-
-class TestGetAvailableSubModules(TestWithPackageStructure):
     def test_correct_modules_are_returned(self):
-        self.assertEqual(sorted(get_available_submodules(self._tmp_package_name)),
+        submodules = get_submodules(importlib.import_module(self._tmp_package_name))
+
+        self.assertEqual(sorted(submodules.keys()),
                          sorted(self._expected_modules))
+
+
+class TestGetMembers(unittest.TestCase):
+    def test_returns_all_members_if_predicate_is_missing(self):
+        class Foo(object):
+            bar = 3.0
+            baz = 'test'
+
+        members = get_members(Foo())
+
+        self.assertEqual(len(members), 2)
+        self.assertIn('bar', members)
+        self.assertIn('baz', members)
+
+    def test_predicate(self):
+        class Foo(object):
+            bar = 3.0
+            baz = 'test'
+
+        members = get_members(Foo(), lambda x: isinstance(x, string_types))
+
+        self.assertEqual(len(members), 1)
+        self.assertIn('baz', members)
 
 
 class TestSecondsSince(unittest.TestCase):
