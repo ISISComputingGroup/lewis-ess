@@ -19,12 +19,17 @@
 
 
 import importlib
-import os
 
 from plankton.adapters import is_adapter
-from plankton.devices import DeviceBase
 from plankton.core.exceptions import PlanktonException
-from plankton.core.utils import extract_module_name, get_submodules, get_members
+from plankton.core.utils import get_submodules, get_members
+
+
+class DeviceBase(object):
+    """
+    This class is a common base for :class:`Device` and :class:`StateMachineDevice`. It is
+    mainly used in the device discovery process.
+    """
 
 
 def is_device(obj):

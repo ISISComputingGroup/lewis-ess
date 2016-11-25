@@ -22,8 +22,8 @@ import os
 import sys
 
 from plankton import __version__
-from plankton.core.devices import DeviceRegistry
 
+from plankton.core.devices import DeviceRegistry
 from plankton.core.simulation import Simulation
 from plankton.core.exceptions import PlanktonException
 
