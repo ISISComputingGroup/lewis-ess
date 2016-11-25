@@ -20,7 +20,7 @@
 
 import importlib
 
-from plankton.adapters import is_adapter
+from plankton.adapters import Adapter
 from plankton.core.exceptions import PlanktonException
 from plankton.core.utils import get_submodules, get_members
 
@@ -35,6 +35,11 @@ class DeviceBase(object):
 def is_device(obj):
     return isinstance(obj, type) and issubclass(obj, DeviceBase) \
            and obj.__module__ != 'plankton.devices'
+
+
+def is_adapter(obj):
+    return isinstance(obj, type) and issubclass(obj, Adapter) \
+           and not obj.__module__.startswith('plankton.adapters')
 
 
 class DeviceBuilder(object):

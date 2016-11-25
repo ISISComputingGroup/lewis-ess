@@ -21,9 +21,7 @@
 This module defines a base class for adapters and some supporting infrastructure.
 """
 
-import importlib
 import inspect
-from ..core.exceptions import PlanktonException
 
 
 class Adapter(object):
@@ -83,78 +81,6 @@ class Adapter(object):
         :param cycle_delay: Approximate time spent processing requests.
         """
         pass
-
-
-def is_adapter(obj):
-    try:
-        return issubclass(obj, Adapter) and not obj.__module__.startswith('plankton.adapters')
-    except TypeError:
-        return False
-
-
-def get_available_adapters(device_name, device_package):
-    """
-    This helper function returns a dictionary with name/type pairs. It imports the module
-    ``device_package.device_name.adapters`` and puts those members of the module that inherit
-    from :class:`Adapter` into the dictionary.
-
-    :param device_name: Device name for which to get the adapters.
-    :param device_package: Name of the package where devices are defined.
-    :return: Dictionary of name/type pairs for available adapters for that device.
-    """
-    adapters = dict()
-
-    try:
-        adapter_module = importlib.import_module(
-            '{}.{}.{}'.format(device_package, device_name, 'interfaces'))
-        module_members = {name: getattr(adapter_module, name) for name in dir(adapter_module)}
-
-        for name, member in module_members.items():
-            if is_adapter(member):
-                adapters[name] = member
-    except ImportError:
-        pass
-
-    device_module = importlib.import_module('{}.{}'.format(device_package, device_name))
-
-    for member in dir(device_module):
-        member_object = getattr(device_module, member)
-
-        if is_adapter(member_object):
-            adapters[member] = member_object
-
-    return adapters
-
-
-def import_adapter(device_name, protocol_name, device_package='devices'):
-    """
-    This function tries to import an adapter for the given device that implements
-    the requested protocol. If no adapter for that protocol exists, an exception
-    is raised. If protocol name is None, the function returns an
-    unspecified adapter. If no adapters are found at all, an error is raised.
-
-    :param device_name: Name of device for which an adapter is requested.
-    :param protocol_name: Requested protocol implemented by adapter.
-    :param device_package: Name of the package where devices are defined.
-    :return: Adapter class that implements requested protocol for the specified device.
-    """
-    available_adapters = get_available_adapters(device_name, device_package)
-
-    if not available_adapters:
-        raise PlanktonException(
-            'Could not find any communication interfaces for device \'{}\'.'.format(device_name))
-
-    if not protocol_name:
-        return list(available_adapters.values())[0]
-
-    for adapter in available_adapters.values():
-        if adapter.protocol == protocol_name:
-            return adapter
-
-    raise PlanktonException(
-        'No interface for device \'{}\' implementing protocol \'{}\' '
-        'could be found.\nPlease check the spelling and the '
-        '-k and -a flags of the run script.'.format(device_name, protocol_name))
 
 
 class ForwardProperty(object):
