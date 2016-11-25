@@ -33,11 +33,25 @@ class DeviceBase(object):
 
 
 def is_device(obj):
+    """
+    Returns True if obj is a device type (derived from DeviceBase), but not defined in
+    :mod:`plankton.core.devices` or :mod:`plankton.devices`.
+
+    :param obj: Object to test.
+    :return: True if obj is a device type.
+    """
     return isinstance(obj, type) and issubclass(obj, DeviceBase) \
-           and obj.__module__ != 'plankton.devices'
+           and obj.__module__ not in ('plankton.devices', 'plankton.core.devices')
 
 
 def is_adapter(obj):
+    """
+    Returns True if obj is an interface (derived from Adapter), but not defined in
+    :mod:`plankton.adapters`.
+
+    :param obj: Object to test.
+    :return: True if obj is an interface type.
+    """
     return isinstance(obj, type) and issubclass(obj, Adapter) \
            and not obj.__module__.startswith('plankton.adapters')
 
@@ -54,6 +68,9 @@ class DeviceBuilder(object):
 
     @property
     def name(self):
+        """
+        The name of the device, which is also the name of the device module.
+        """
         return self._module.__name__.split('.')[-1]
 
     @property
@@ -77,6 +94,11 @@ class DeviceBuilder(object):
 
     @property
     def interfaces(self):
+        """
+        This property contains a map with protocols as keys and interface types as values.
+        The types are imported from the ``interfaces`` sub-module and from the device module
+        itself.
+        """
         all_interfaces = []
 
         if self._interfaces_module is not None:
@@ -89,10 +111,12 @@ class DeviceBuilder(object):
 
     @property
     def protocols(self):
+        """All available protocols for this device."""
         return self.interfaces.keys()
 
     @property
     def default_protocol(self):
+        """In case only one protocol exists for the device, this is the default protocol."""
         interfaces = self.interfaces
 
         if len(interfaces) == 1:
@@ -102,6 +126,12 @@ class DeviceBuilder(object):
 
     @property
     def setups(self):
+        """
+        A map with all available setups. Setups are imported from the ``setups`` dictionary
+        in a device module and from the ``setups`` sub-module. If no ``default``-setup exists,
+        one is created using the default_device_type. If there are several device types in
+        the module, the default setup must be provided explicitly.
+        """
         all_setups = {}
 
         if self._setups_module is not None:
@@ -128,6 +158,14 @@ class DeviceBuilder(object):
         return device_type(**kwargs)
 
     def create_device(self, setup=None):
+        """
+        Creates a device object according to the provided setup. If no setup is provided,
+        the default setup is used. If the setup can't be found, a PlanktonException is raised.
+        This can also happen if the device type specified in the setup is invalid.
+
+        :param setup: Name of the setup from which to create device.
+        :return: Device object initialized according to the provided setup.
+        """
         setups = self.setups
 
         setup_name = setup if setup is not None else 'default'
@@ -151,6 +189,17 @@ class DeviceBuilder(object):
                 'default can be deduced.'.format(setup_name, self.name))
 
     def create_interface_type(self, protocol=None):
+        """
+        Returns an interface type that implements the provided protocol. If the protocol is not
+        known, a PlanktonException is raised.
+
+        .. note::
+
+            This method returns an interface *type*. The interface must be constructed explicitly.
+
+        :param protocol: Protocol which the interface must implement.
+        :return: Interface type.
+        """
         protocol = protocol if protocol is not None else self.default_protocol
 
         try:
@@ -163,25 +212,56 @@ class DeviceBuilder(object):
 
 
 class DeviceRegistry(object):
+    """
+    This class takes the name of a module and constructs a :class:`DeviceBuilder` from
+    each sub-module. The available devices can be queried and a DeviceBuilder can be
+    obtained for each device:
+
+    .. sourcecode:: Python
+
+        from plankton.core.devices import DeviceRegistry
+
+        registry = DeviceRegistry('plankton.devices')
+        chopper_builder = registry.device_builder('chopper')
+
+        # construct device, interface, ...
+
+    If the module can not be imported, a PlanktonException is raised.
+
+    :param device_module: Name of device module from which devices are loaded.
+    """
+
     def __init__(self, device_module):
         try:
             self._device_module = importlib.import_module(device_module)
         except ImportError:
             raise PlanktonException(
                 'Failed to import module \'{}\' for device discovery. '
-                'Make sure that it is in the PYTHONPATH.'.format(device_module))
+                'Make sure that it is in the PYTHONPATH.\n'
+                'See also the -a option of plankton.'.format(device_module))
 
         self._devices = {name: DeviceBuilder(module) for name, module in
                          get_submodules(self._device_module).items()}
 
     @property
     def devices(self):
+        """All available device names."""
         return self._devices.keys()
 
     def device_builder(self, name):
+        """
+        Returns a :class:`DeviceBuilder` instance that can be used to create device objects
+        based on setups, as well as device interfaces. If the device name is not stored
+        in the internal map, a PlanktonException is raised.
+
+        :param name: Name of the device.
+        :return: :class:`DeviceBuilder`-object for requested device.
+        """
         try:
             return self._devices[name]
         except KeyError:
             raise PlanktonException(
                 'No device with the name \'{}\' could be found. '
-                'Possible names are:\n    {}'.format(name, '\n    '.join(self.devices)))
+                'Possible names are:\n    {}\n'
+                'See also the -k option to add inspect a different module.'.format(
+                    name, '\n    '.join(self.devices)))
