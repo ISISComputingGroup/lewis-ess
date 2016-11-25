@@ -97,7 +97,8 @@ class TestWithPackageStructure(unittest.TestCase):
         cls._dirs = {k: os.path.join(cls._tmp_package, v) for k, v in iteritems(dict(
             valid='some_dir',
             empty='empty_dir',
-            invalid='_invalid',
+            invalid_underscore='_invalid',
+            invalid_dot='.invalid'
         ))}
 
         for abs_dir_name in cls._dirs.values():
@@ -124,7 +125,8 @@ class TestExtractModuleName(TestWithPackageStructure):
         self.assertEqual(extract_module_name(self._dirs['valid']), 'some_dir')
 
     def test_directory_invalid_name(self):
-        self.assertEqual(extract_module_name(self._dirs['invalid']), None)
+        self.assertEqual(extract_module_name(self._dirs['invalid_underscore']), None)
+        self.assertEqual(extract_module_name(self._dirs['invalid_dot']), None)
 
     def test_file_invalid_name(self):
         self.assertEqual(extract_module_name(self._files['invalid_name']), None)
@@ -143,7 +145,9 @@ class TestIsModule(TestWithPackageStructure):
 
     def test_invalid_directory(self):
         self.assertFalse(is_module(
-            extract_module_name(self._dirs['invalid']), [self._tmp_package]))
+            extract_module_name(self._dirs['invalid_underscore']), [self._tmp_package]))
+        self.assertFalse(is_module(
+            extract_module_name(self._dirs['invalid_dot']), [self._tmp_package]))
 
     def test_invalid_file_name(self):
         self.assertFalse(is_module(

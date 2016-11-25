@@ -57,7 +57,7 @@ def extract_module_name(absolute_path):
     """
     This function tries to extract a valid module name from the basename of the supplied path.
     If it's a directory, the directory name is returned, if it's a file, the file name
-    without extension is returned. If the basename starts with _ or it's a file with an
+    without extension is returned. If the basename starts with _ or . or it's a file with an
     ending different from .py, the function returns None
 
     :param absolute_path: Absolute path of something that might be a module.
@@ -67,7 +67,7 @@ def extract_module_name(absolute_path):
 
     # If the basename starts with _ it's probably __init__.py or __pycache__ or something internal.
     # At the moment there seems to be no use case for those
-    if base_name.startswith('_'):
+    if base_name[0] in ('.', '_'):
         return None
 
     # If it's a directory, there's nothing else to check, so it can be returned directly
