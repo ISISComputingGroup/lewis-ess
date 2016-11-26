@@ -55,7 +55,6 @@ class TestWithPackageStructure(unittest.TestCase):
          |   +- __init__.py
          +- .invalid
          +- _invalid
-         +- empty_dir
          +- some_file.py
          +- some_other_file.pyc
          +- _some_invalid_file.py
@@ -82,7 +81,6 @@ class TestWithPackageStructure(unittest.TestCase):
 
         cls._dirs = {k: os.path.join(cls._tmp_package, v) for k, v in iteritems(dict(
             valid='some_dir',
-            empty='empty_dir',
             invalid_underscore='_invalid',
             invalid_dot='.invalid'
         ))}
