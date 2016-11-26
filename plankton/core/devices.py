@@ -19,6 +19,7 @@
 
 
 import importlib
+import inspect
 
 from plankton.adapters import Adapter
 from plankton.core.exceptions import PlanktonException
@@ -110,6 +111,7 @@ class DeviceBuilder(object):
     Each interface has a protocol, if a protocol occurs more than once in a device module,
     a RuntimeError is raised.
     """
+
     def __init__(self, module):
         self._module = module
 

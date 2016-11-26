@@ -51,19 +51,21 @@ def get_submodules(module):
             'Can only extract submodules from a module object, '
             'for example imported via importlib.import_module')
 
-    submodules = {}
+    submodules = get_members(module, inspect.ismodule)
 
-    module_path = module.__path__[0]
-    for item in listdir(module_path):
-        module_name = extract_module_name(osp.join(module_path, item))
+    module_path = getattr(module, '__path__', [None])[0]
 
-        if module_name is not None:
-            try:
-                submodules[module_name] = importlib.import_module(
-                    '.{}'.format(module_name), package=module.__name__)
-            except ImportError:
-                # This is necessary in case random directories are in the path.
-                pass
+    if module_path is not None:
+        for item in listdir(module_path):
+            module_name = extract_module_name(osp.join(module_path, item))
+
+            if module_name is not None:
+                try:
+                    submodules[module_name] = importlib.import_module(
+                        '.{}'.format(module_name), package=module.__name__)
+                except ImportError:
+                    # This is necessary in case random directories are in the path.
+                    pass
 
     return submodules
 
