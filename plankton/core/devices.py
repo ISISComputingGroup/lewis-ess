@@ -27,8 +27,9 @@ from plankton.core.utils import get_submodules, get_members
 
 class DeviceBase(object):
     """
-    This class is a common base for :class:`Device` and :class:`StateMachineDevice`. It is
-    mainly used in the device discovery process.
+    This class is a common base for :class:`~plankton.devices.Device` and
+    :class:`~plankton.devices.StateMachineDevice`. It is mainly used in the device
+    discovery process.
     """
 
 
@@ -57,6 +58,58 @@ def is_adapter(obj):
 
 
 class DeviceBuilder(object):
+    """
+    This class takes a module object (for example imported via importlib.import_module or via the
+    :class:`DeviceRegistry`) and inspects it so that it's possible to construct devices and
+    interfaces.
+
+    In order for the class to work properly, the device module has to adhere to a few rules.
+    Device types, which means classes inheriting from :class:`DeviceBase`, are imported directly
+    from the device module, equivalent to the following:
+
+    .. sourcecode :: Python
+
+        from device_name import SimulatedDeviceType
+
+    If ``SimulatedDeviceType`` is defined in the ``__init__.py``, there's nothing else to do. If
+    the device class is defined elsewhere, it must be imported in the ``__init__.py`` file as
+    written above. If there is only one device type (which is probably the most common case), it is
+    assumed to be default device type.
+
+    Setups are discovered in two locations, the first one is a dict called ``setups`` in the device
+    module, which must contain setup names as keys and as values again a dict. This inner dict has
+    one mandatory key called ``device_type`` and one optional key ``parameters`` containing the
+    constructor arguments for the specified device type:
+
+    .. sourcecode:: Python
+
+        setups = dict(
+            broken=dict(
+                device_type=SimulatedDeviceType,
+                parameters=dict(
+                    override_initial_state='error',
+                    override_initial_data=dict(
+                        target=-10, position=-20.0))))
+
+    The other location is a sub-package called `setups`, which should in turn contain modules. Each
+    module must contain a variable ``device_type`` and a variable ``parameters`` which are
+    analogous to the keys in the dict described above. This allows for more complex setups which
+    define additional classes and so on.
+
+    The ``default`` setup is special, it is used when no setup is supplied to
+    :meth:`create_device`. If the setup ``default`` is not defined, one is created with the default
+    device type. This has two consequences, no setups need to be defined for very simple devices,
+    but if multiple device types are defined, a ``default`` setup must be defined.
+
+    A setup can be supplied to the :meth:`create_device`.
+
+    Lastly, the builder tries to discover device interfaces, which are currently classes based on
+    :class:`plankton.adapters.Adapter`. These are looked for in the module and in a sub-package
+    called ``interfaces`` (which should contain modules with adapters like the ``setups`` package).
+
+    Each interface has a protocol, if a protocol occurs more than once in a device module,
+    a RuntimeError is raised.
+    """
     def __init__(self, module):
         self._module = module
 
