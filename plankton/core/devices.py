@@ -166,15 +166,15 @@ class DeviceBuilder(object):
     @property
     def protocols(self):
         """All available protocols for this device."""
-        return self.interfaces.keys()
+        return list(self.interfaces.keys())
 
     @property
     def default_protocol(self):
         """In case only one protocol exists for the device, this is the default protocol."""
-        interfaces = self.interfaces
+        protocols = self.protocols
 
-        if len(interfaces) == 1:
-            return interfaces.keys()[0]
+        if len(protocols) == 1:
+            return protocols[0]
 
         return None
 

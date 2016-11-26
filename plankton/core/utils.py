@@ -53,7 +53,7 @@ def get_submodules(module):
 
     submodules = get_members(module, inspect.ismodule)
 
-    module_path = getattr(module, '__path__', [None])[0]
+    module_path = list(getattr(module, '__path__', [None]))[0]
 
     if module_path is not None:
         for item in listdir(module_path):
