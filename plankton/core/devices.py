@@ -19,7 +19,6 @@
 
 
 import importlib
-import inspect
 
 from plankton.adapters import Adapter
 from plankton.core.exceptions import PlanktonException
@@ -42,8 +41,8 @@ def is_device(obj):
     :param obj: Object to test.
     :return: True if obj is a device type.
     """
-    return isinstance(obj, type) and issubclass(obj, DeviceBase) \
-           and obj.__module__ not in ('plankton.devices', 'plankton.core.devices')
+    return isinstance(obj, type) and issubclass(
+        obj, DeviceBase) and obj.__module__ not in ('plankton.devices', 'plankton.core.devices')
 
 
 def is_adapter(obj):
@@ -54,8 +53,8 @@ def is_adapter(obj):
     :param obj: Object to test.
     :return: True if obj is an interface type.
     """
-    return isinstance(obj, type) and issubclass(obj, Adapter) \
-           and not obj.__module__.startswith('plankton.adapters')
+    return isinstance(obj, type) and issubclass(
+        obj, Adapter) and not obj.__module__.startswith('plankton.adapters')
 
 
 class DeviceBuilder(object):
