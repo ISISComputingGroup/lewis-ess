@@ -17,6 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+"""
+This module contains :class:`DeviceBase` as a base class for other device classes and
+infrastructure that can import devices from a module (:class:`DeviceRegistry`). The latter also
+produces factory-like objects that create device instances and interface types based on setups
+(:class:`DeviceBuilder`).
+"""
 
 import importlib
 
