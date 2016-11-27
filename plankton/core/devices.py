@@ -123,8 +123,55 @@ class DeviceBuilder(object):
         self._device_types = list(get_members(self._module, is_device).values())
 
         submodules = get_submodules(self._module)
-        self._setups_module = submodules.get('setups')
-        self._interfaces_module = submodules.get('interfaces')
+
+        self._setups = self._discover_setups(submodules.get('setups'))
+        self._interfaces = self._discover_interfaces(submodules.get('interfaces'))
+
+    def _discover_setups(self, setups_module):
+        all_setups = {}
+
+        if setups_module is not None:
+            for name, setup_module in get_submodules(setups_module).items():
+                all_setups[name] = {
+                    'device_type': getattr(setup_module, 'device_type', self.default_device_type),
+                    'parameters': getattr(setup_module, 'parameters', {})
+                }
+
+        setups = getattr(self._module, 'setups', {})
+
+        if isinstance(setups, dict):
+            all_setups.update(setups)
+
+        if 'default' not in all_setups:
+            all_setups['default'] = {'device_type': self.default_device_type}
+
+        return all_setups
+
+    def _discover_interfaces(self, interfaces_module):
+        all_interfaces = []
+
+        if interfaces_module is not None:
+            for interface_module in get_submodules(interfaces_module).values():
+                all_interfaces += list(get_members(interface_module, is_adapter).values())
+
+        all_interfaces += list(get_members(self._module, is_adapter).values())
+
+        interfaces = {}
+        for interface in all_interfaces:
+            existing_interface = interfaces.get(interface.protocol)
+
+            if existing_interface is not None:
+                raise RuntimeError(
+                    'The protocol \'{}\' is defined in two interfaces:\n'
+                    '    {} (in {})\n'
+                    '    {} (in {})\n'
+                    'One of the protocol names needs to be changed.'.format(
+                        interface.protocol, existing_interface.__name__,
+                        existing_interface.__module__, interface.__name__, interface.__module__))
+
+            interfaces[interface.protocol] = interface
+
+        return interfaces
 
     @property
     def name(self):
@@ -157,17 +204,9 @@ class DeviceBuilder(object):
         """
         This property contains a map with protocols as keys and interface types as values.
         The types are imported from the ``interfaces`` sub-module and from the device module
-        itself.
+        itself. If two interfaces with the same protocol are discovered, a RuntimeError is raiesed.
         """
-        all_interfaces = []
-
-        if self._interfaces_module is not None:
-            for interface_module in get_submodules(self._interfaces_module).values():
-                all_interfaces += list(get_members(interface_module, is_adapter).values())
-
-        all_interfaces += list(get_members(self._module, is_adapter).values())
-
-        return {interface.protocol: interface for interface in all_interfaces}
+        return self._interfaces
 
     @property
     def protocols(self):
@@ -177,10 +216,8 @@ class DeviceBuilder(object):
     @property
     def default_protocol(self):
         """In case only one protocol exists for the device, this is the default protocol."""
-        protocols = self.protocols
-
-        if len(protocols) == 1:
-            return protocols[0]
+        if len(self.protocols) == 1:
+            return self.protocols[0]
 
         return None
 
@@ -192,24 +229,7 @@ class DeviceBuilder(object):
         one is created using the default_device_type. If there are several device types in
         the module, the default setup must be provided explicitly.
         """
-        all_setups = {}
-
-        if self._setups_module is not None:
-            for name, setup_module in get_submodules(self._setups_module).items():
-                all_setups[name] = {
-                    'device_type': getattr(setup_module, 'device_type', self.default_device_type),
-                    'parameters': getattr(setup_module, 'parameters', {})
-                }
-
-        setups = getattr(self._module, 'setups', {})
-
-        if isinstance(setups, dict):
-            all_setups.update(setups)
-
-        if 'default' not in all_setups:
-            all_setups['default'] = {'device_type': self.default_device_type}
-
-        return all_setups
+        return self._setups
 
     def _create_device_instance(self, device_type, **kwargs):
         if device_type not in self.device_types:
@@ -226,17 +246,15 @@ class DeviceBuilder(object):
         :param setup: Name of the setup from which to create device.
         :return: Device object initialized according to the provided setup.
         """
-        setups = self.setups
-
         setup_name = setup if setup is not None else 'default'
 
-        if setup_name not in setups:
+        if setup_name not in self.setups:
             raise PlanktonException(
                 'Failed to find setup \'{}\' for device \'{}\'. '
                 'Available setups are:\n    {}'.format(
-                    setup, self.name, '\n    '.join(setups.keys())))
+                    setup, self.name, '\n    '.join(self.setups.keys())))
 
-        setup_data = setups[setup_name]
+        setup_data = self.setups[setup_name]
         device_type = setup_data.get('device_type') or self.default_device_type
 
         try:

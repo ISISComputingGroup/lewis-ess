@@ -232,6 +232,23 @@ class TestDeviceBuilderComplexModule(unittest.TestCase):
         self.assertIsInstance(builder.create_device('other'), self.module.OtherDummyDevice)
 
 
+class TestDeviceBuilderWithDuplicateProtocols(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        class DummyAdapter(Adapter):
+            protocol = 'dummy'
+
+        class DummyAdapterTwo(Adapter):
+            protocol = 'dummy'
+
+        cls.module = ModuleType('simple_dummy_module')
+        cls.module.DummyAdapter = DummyAdapter
+        cls.module.DummyAdapterTwo = DummyAdapterTwo
+
+    def test_init_fails(self):
+        self.assertRaises(RuntimeError, DeviceBuilder, self.module)
+
+
 class TestDeviceRegistry(TestWithPackageStructure):
     def test_init(self):
         assertRaisesNothing(self, DeviceRegistry, self._tmp_package_name)
