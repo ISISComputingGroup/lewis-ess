@@ -128,19 +128,23 @@ class DeviceBuilder(object):
         self._interfaces = self._discover_interfaces(submodules.get('interfaces'))
 
     def _discover_setups(self, setups_module):
-        all_setups = {}
+        setups = getattr(self._module, 'setups', {})
+
+        all_setups = setups if isinstance(setups, dict) else {}
 
         if setups_module is not None:
             for name, setup_module in get_submodules(setups_module).items():
+                existing_setup = all_setups.get(name)
+
+                if existing_setup is not None:
+                    raise RuntimeError(
+                        'The setup \'{}\' is defined twice in device \'{}\'.'.format(
+                            existing_setup, self.name))
+
                 all_setups[name] = {
                     'device_type': getattr(setup_module, 'device_type', self.default_device_type),
                     'parameters': getattr(setup_module, 'parameters', {})
                 }
-
-        setups = getattr(self._module, 'setups', {})
-
-        if isinstance(setups, dict):
-            all_setups.update(setups)
 
         if 'default' not in all_setups:
             all_setups['default'] = {'device_type': self.default_device_type}
@@ -162,11 +166,11 @@ class DeviceBuilder(object):
 
             if existing_interface is not None:
                 raise RuntimeError(
-                    'The protocol \'{}\' is defined in two interfaces:\n'
+                    'The protocol \'{}\' is defined in two interfaces for device \'{}\':\n'
                     '    {} (in {})\n'
                     '    {} (in {})\n'
                     'One of the protocol names needs to be changed.'.format(
-                        interface.protocol, existing_interface.__name__,
+                        interface.protocol, self.name, existing_interface.__name__,
                         existing_interface.__module__, interface.__name__, interface.__module__))
 
             interfaces[interface.protocol] = interface
