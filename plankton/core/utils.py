@@ -64,7 +64,8 @@ def get_submodules(module):
                     submodules[module_name] = importlib.import_module(
                         '.{}'.format(module_name), package=module.__name__)
                 except ImportError:
-                    # This is necessary in case random directories are in the path.
+                    # This is necessary in case random directories are in the path or things can
+                    # just not be imported due to other ImportErrors.
                     pass
 
     return submodules
@@ -74,7 +75,7 @@ def get_members(obj, predicate=None):
     """
     Returns all members of an object for which the supplied predicate is true and that do not
     begin with __. Keep in mind that the supplied function must accept a potentially very broad
-    range of inputs, because the members of an object can be of any type. The function returns
+    range of inputs, because the members of an object can be of any type. The function puts
     those members into a dict with the member names as keys and returns it. If no predicate is
     supplied, all members are put into the dict.
 

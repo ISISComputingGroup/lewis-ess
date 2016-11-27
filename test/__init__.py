@@ -73,11 +73,15 @@ class TestWithPackageStructure(unittest.TestCase):
             valid='some_file.py',
             invalid_ext='some_other_file.pyc',
             invalid_name='_some_invalid_file.py',
+            failing_module='failing_module.py'
         ))}
 
         for abs_file_name in cls._files.values():
             with open(abs_file_name, mode='w'):
                 pass
+
+        with open(cls._files['failing_module'], mode='w') as fh:
+            fh.write('raise ImportError()\n')
 
         cls._dirs = {k: os.path.join(cls._tmp_package, v) for k, v in iteritems(dict(
             valid='some_dir',
