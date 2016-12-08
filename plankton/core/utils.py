@@ -280,16 +280,20 @@ class check_limits(object):
     This will make sure that the new value is always between ``bar_min`` and ``bar_max``, even
     if they change at runtime.
 
-    If the value is outside the specified limits, an exception of the type
-    :class:`~plankton.core.exceptions.LimitViolationException` is raised.
+    If the value is outside the specified limits, the decorated function is not called and a
+    :class:`~plankton.core.exceptions.LimitViolationException` is raised if the ``silent``-
+    parameter is ``False`` (default). If that option is active, the call is simply silently
+    ignored.
 
     :param low_limit: Numerical lower limit or name of attribute that contains limit.
     :param high_limit: Numerical upper limit or name of attribute that contains limit.
+    :param silent: A limit violation will not raise an exception if this option is ``True``.
     """
 
-    def __init__(self, low_limit, high_limit):
+    def __init__(self, low_limit, high_limit, silent=False):
         self._lower = low_limit
         self._upper = high_limit
+        self._silent = silent
 
     def __call__(self, f):
         def limit_checked(obj, new_value):
@@ -298,10 +302,11 @@ class check_limits(object):
             high = getattr(obj, self._upper) if isinstance(self._upper,
                                                            string_types) else self._upper
 
-            if not (low <= new_value <= high):
+            if low <= new_value <= high:
+                return f(obj, new_value)
+
+            if not self._silent:
                 raise LimitViolationException(
                     '%f is outside limits (%f, %f)' % (new_value, low, high))
-
-            return f(obj, new_value)
 
         return limit_checked

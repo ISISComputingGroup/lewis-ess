@@ -285,3 +285,22 @@ class TestCheckLimits(unittest.TestCase):
 
         assertRaisesNothing(self, f.set_bar, -3)
         assertRaisesNothing(self, f.set_bar, 16)
+
+    def test_silent_mode(self):
+        class Foo(object):
+            bar = 0
+
+            @check_limits(0, 15, silent=True)
+            def set_bar(self, new_bar):
+                self.bar = new_bar
+
+        f = Foo()
+
+        assertRaisesNothing(self, f.set_bar, 0)
+        assertRaisesNothing(self, f.set_bar, 15)
+
+        assertRaisesNothing(self, f.set_bar, -3)
+        assertRaisesNothing(self, f.set_bar, 16)
+
+        # Updates must have been ignored.
+        self.assertEquals(f.bar, 15)
