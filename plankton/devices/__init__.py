@@ -25,15 +25,13 @@ using a state machine.
 
 from __future__ import absolute_import
 
-import importlib
-
 from ..core.statemachine import StateMachine
 from ..core.utils import dict_strict_update
 from ..core.processor import CanProcess, CanProcessComposite
-from ..core.exceptions import PlanktonException
+from ..core.devices import DeviceBase
 
 
-class Device(CanProcess):
+class Device(DeviceBase, CanProcess):
     """
     This class exists mainly for consistency. It is meant to implement very simple devices that
     do not require a state machine for their simulation. For such devices, all that is required
@@ -47,7 +45,7 @@ class Device(CanProcess):
         super(Device, self).__init__()
 
 
-class StateMachineDevice(CanProcessComposite):
+class StateMachineDevice(DeviceBase, CanProcessComposite):
     """
     This class is intended to be sub-classed to implement devices using a finite state machine
     internally.
@@ -95,6 +93,7 @@ class StateMachineDevice(CanProcessComposite):
     :param override_initial_data: A dict that contains data members
                                   that should be overwritten on construction.
     """
+
     def __init__(self, override_states=None, override_transitions=None,
                  override_initial_state=None, override_initial_data=None):
         super(StateMachineDevice, self).__init__()
@@ -187,95 +186,3 @@ class StateMachineDevice(CanProcessComposite):
                         '\'{}\' of class \'{}\'.'.format(name, type(self).__name__))
 
                 setattr(self, name, val)
-
-
-def is_device(obj):
-    return issubclass(obj, CanProcess) and obj.__module__ not in (
-        'plankton.core.processor', 'plankton.devices')
-
-
-def import_device(device, setup=None, device_package='devices'):
-    """
-    This function tries to load a given device with a given setup from the package specified
-    in the device_package parameter. First it checks if there is a module
-
-    .. sourcecode:: Python
-
-        device_package.device.setups.setup
-
-    and tries to import two members from that module `device_type` and `parameters`. The former
-    must be the device class and the latter the parameters that are passed to the
-    class' constructor. The above mentioned module might look like this:
-
-    .. sourcecode:: Python
-
-        from ..device import SomeDeviceClass as device_type
-
-        parameters = dict(device_param1='some_value', device_param2=3.4)
-
-    This allows for a large degree of freedom for specifying setups. If that is not required,
-    and the setup does not exist in that sub-module of the device, this function checks for a
-    dictionary named `setups` directly in the device module (device_package.device).
-    So the device_package.device.__init__.py could contain something like this:
-
-    .. sourcecode:: Python
-
-        from .device import SomeDeviceClass
-
-        setups = dict(
-                     default=dict(
-                         device_type=SomeDeviceClass,
-                         parameters=dict(device_param1='some_value', device_param2=3.4)
-                     )
-                 )
-
-    If that also fails, but no setup was specified in the function's arguments, the function will
-    try to return  the first sub-class of `CanProcess` that it finds in the device module.
-    That means in the simplest case, the __init__.py only needs to declare a class that can be
-    instantiated without parameters.
-
-    If all of that fails, an exception is raised.
-
-    Otherwise, a device type and the parameter-dict for object instantiation are returned.
-
-    :param device: Device to load.
-    :param setup: Setup to load, 'default' will be loaded if parameter is None.
-    :param device_package: Name of the package where devices are defined.
-    :return: Device type and parameter dict.
-    """
-    setup_name = setup if setup is not None else 'default'
-
-    try:
-        setup_module = importlib.import_module(
-            '{}.{}.{}.{}'.format(device_package, device, 'setups', setup_name))
-        device_type = getattr(setup_module, 'device_type')
-        parameters = getattr(setup_module, 'parameters')
-
-        return device_type, parameters
-    except (ImportError, AttributeError):
-        try:
-            device_module = importlib.import_module('{}.{}'.format(device_package, device))
-
-            try:
-                setups = getattr(device_module, 'setups')
-
-                device_type = setups[setup_name]['device_type']
-                parameters = setups[setup_name].get('parameters', {})
-
-                return device_type, parameters
-            except (AttributeError, KeyError):
-                if setup_name == 'default':
-                    for member_name in dir(device_module):
-                        try:
-                            member_object = getattr(device_module, member_name)
-                            if is_device(member_object):
-                                return member_object, dict()
-                        except TypeError:
-                            pass
-                raise
-
-        except (ImportError, AttributeError, KeyError):
-            raise PlanktonException(
-                'Could not find setup \'{}\' for device \'{}\'.\n'
-                'Are you sure the correct device package is used (flag -k) '
-                'and that it is in the path (flag -a)?'.format(setup_name, device))

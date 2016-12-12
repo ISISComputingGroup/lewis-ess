@@ -17,21 +17,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-import os
-import shutil
-import tempfile
+import importlib
 import unittest
-import sys
 from datetime import datetime
 
 from mock import patch
-from six import iteritems
-
-from plankton.core.utils import dict_strict_update, extract_module_name, \
-    is_module, seconds_since, get_available_submodules, FromOptionalDependency, \
-    format_doc_text
+from six import string_types
 
 from plankton.core.exceptions import PlanktonException
+from plankton.core.utils import dict_strict_update, extract_module_name, \
+    get_submodules, get_members, seconds_since, FromOptionalDependency, \
+    format_doc_text
+
+from . import TestWithPackageStructure
 
 
 class TestDictStrictUpdate(unittest.TestCase):
@@ -58,73 +56,13 @@ class TestDictStrictUpdate(unittest.TestCase):
         self.assertRaises(RuntimeError, dict_strict_update, base_dict, update_dict)
 
 
-class TestWithPackageStructure(unittest.TestCase):
-    """
-    This is an intermediate class that creates a package structure in the
-    system's temporary file directory. The structure is as follows:
-
-        tmp_dir (random name)
-         |
-         +- some_dir
-         |   |
-         |   +- __init__.py
-         +- _invalid
-         +- empty_dir
-         +- some_file.py
-         +- some_other_file.pyc
-         +- _some_invalid_file.py
-         +- __init__.py
-
-    All files are empty and the entire structure is deleted in the tearDown.
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        cls._tmp_dir = tempfile.mkdtemp()
-        cls._tmp_package = tempfile.mkdtemp(dir=cls._tmp_dir)
-        cls._tmp_package_name = os.path.basename(cls._tmp_package)
-
-        cls._files = {k: os.path.join(cls._tmp_package, v) for k, v in iteritems(dict(
-            valid='some_file.py',
-            invalid_ext='some_other_file.pyc',
-            invalid_name='_some_invalid_file.py',
-        ))}
-
-        for abs_file_name in cls._files.values():
-            with open(abs_file_name, mode='w'):
-                pass
-
-        cls._dirs = {k: os.path.join(cls._tmp_package, v) for k, v in iteritems(dict(
-            valid='some_dir',
-            empty='empty_dir',
-            invalid='_invalid',
-        ))}
-
-        for abs_dir_name in cls._dirs.values():
-            os.mkdir(abs_dir_name)
-
-        with open(os.path.join(cls._tmp_package, '__init__.py'), 'w'):
-            pass
-
-        with open(os.path.join(cls._tmp_package, 'some_dir', '__init__.py'), 'w'):
-            pass
-
-        cls._expected_modules = ['some_dir', 'some_file']
-
-        sys.path.insert(0, cls._tmp_dir)
-
-    @classmethod
-    def tearDownClass(cls):
-        sys.path.pop(sys.path.index(cls._tmp_dir))
-        shutil.rmtree(cls._tmp_dir)
-
-
 class TestExtractModuleName(TestWithPackageStructure):
     def test_directory_basename_is_returned(self):
         self.assertEqual(extract_module_name(self._dirs['valid']), 'some_dir')
 
     def test_directory_invalid_name(self):
-        self.assertEqual(extract_module_name(self._dirs['invalid']), None)
+        self.assertEqual(extract_module_name(self._dirs['invalid_underscore']), None)
+        self.assertEqual(extract_module_name(self._dirs['invalid_dot']), None)
 
     def test_file_invalid_name(self):
         self.assertEqual(extract_module_name(self._files['invalid_name']), None)
@@ -136,32 +74,38 @@ class TestExtractModuleName(TestWithPackageStructure):
         self.assertEqual(extract_module_name(self._files['valid']), 'some_file')
 
 
-class TestIsModule(TestWithPackageStructure):
-    def test_valid_directory(self):
-        self.assertTrue(is_module(
-            extract_module_name(self._dirs['valid']), [self._tmp_package]), self._tmp_package)
+class TestGetSubmodules(TestWithPackageStructure):
+    def test_non_module_raises_runtimeerror(self):
+        self.assertRaises(RuntimeError, get_submodules, self._tmp_package_name)
 
-    def test_invalid_directory(self):
-        self.assertFalse(is_module(
-            extract_module_name(self._dirs['invalid']), [self._tmp_package]))
-
-    def test_invalid_file_name(self):
-        self.assertFalse(is_module(
-            extract_module_name(self._files['invalid_name']), [self._tmp_package]))
-
-    def test_invalid_file_ext(self):
-        self.assertFalse(is_module(
-            extract_module_name(self._files['invalid_ext']), [self._tmp_package]))
-
-    def test_valid_file(self):
-        self.assertTrue(is_module(
-            extract_module_name(self._files['valid']), [self._tmp_package]), self._tmp_package)
-
-
-class TestGetAvailableSubModules(TestWithPackageStructure):
     def test_correct_modules_are_returned(self):
-        self.assertEqual(sorted(get_available_submodules(self._tmp_package_name)),
+        submodules = get_submodules(importlib.import_module(self._tmp_package_name))
+
+        self.assertEqual(sorted(submodules.keys()),
                          sorted(self._expected_modules))
+
+
+class TestGetMembers(unittest.TestCase):
+    def test_returns_all_members_if_predicate_is_missing(self):
+        class Foo(object):
+            bar = 3.0
+            baz = 'test'
+
+        members = get_members(Foo())
+
+        self.assertEqual(len(members), 2)
+        self.assertIn('bar', members)
+        self.assertIn('baz', members)
+
+    def test_predicate(self):
+        class Foo(object):
+            bar = 3.0
+            baz = 'test'
+
+        members = get_members(Foo(), lambda x: isinstance(x, string_types))
+
+        self.assertEqual(len(members), 1)
+        self.assertIn('baz', members)
 
 
 class TestSecondsSince(unittest.TestCase):

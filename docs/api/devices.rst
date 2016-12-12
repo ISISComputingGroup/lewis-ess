@@ -7,7 +7,7 @@ The Devices Module
 ------------------
 
 .. automodule:: plankton.devices
-    :members: import_device, Device
+    :members: Device
 
 .. autoclass:: plankton.devices.StateMachineDevice
     :members: _get_state_handlers, _get_initial_state, _get_transition_handlers, _initialize_data
