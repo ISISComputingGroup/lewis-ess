@@ -20,7 +20,7 @@
 """
 This module contains :class:`DeviceBase` as a base class for other device classes and
 infrastructure that can import devices from a module (:class:`DeviceRegistry`). The latter also
-produces factory-like objects that create device instances and interface types based on setups
+produces factory-like objects that create device instances and interfaces based on setups
 (:class:`DeviceBuilder`).
 """
 
@@ -270,22 +270,21 @@ class DeviceBuilder(object):
                 'device module \'{}\' provides multiple device types so that no meaningful '
                 'default can be deduced.'.format(setup_name, self.name))
 
-    def create_interface_type(self, protocol=None):
+    def create_interface(self, protocol=None, *args, **kwargs):
         """
-        Returns an interface type that implements the provided protocol. If the protocol is not
-        known, a PlanktonException is raised.
-
-        .. note::
-
-            This method returns an interface *type*. The interface must be constructed explicitly.
+        Returns an interface that implements the provided protocol. If the protocol is not
+        known, a PlanktonException is raised. All additional arguments are forwarded
+        to the interface constructor (see :class:`~plankton.adapters.Adapter` for details).
 
         :param protocol: Protocol which the interface must implement.
-        :return: Interface type.
+        :param args: Positional arguments that are passed on to the interface.
+        :param kwargs: Keyword arguments that are passed on to the interface.
+        :return: Instance of the interface type.
         """
         protocol = protocol if protocol is not None else self.default_protocol
 
         try:
-            return self.interfaces[protocol]
+            return self.interfaces[protocol](*args, **kwargs)
         except KeyError:
             raise PlanktonException(
                 'Failed to find protocol \'{}\' for device \'{}\'. '

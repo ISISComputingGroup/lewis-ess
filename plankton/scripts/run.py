@@ -89,8 +89,8 @@ def do_run_simulation(argument_list=None):
         return
 
     device = device_builder.create_device(arguments.setup)
-    interface = device_builder.create_interface_type(arguments.protocol)(
-        device, arguments.adapter_args)
+    interface = device_builder.create_interface(arguments.protocol,
+                                                device=device, args=arguments.adapter_args)
 
     if arguments.show_interface:
         print(interface.documentation)

@@ -124,12 +124,16 @@ class TestDeviceBuilderSimpleModule(unittest.TestCase):
 
         self.assertRaises(PlanktonException, builder.create_device, 'invalid_setup')
 
-    def test_create_interface_type(self):
+    def test_create_interface(self):
         builder = DeviceBuilder(self.module)
 
-        self.assertIs(builder.create_interface_type(), self.module.DummyAdapter)
-        self.assertIs(builder.create_interface_type('dummy'), self.module.DummyAdapter)
-        self.assertRaises(PlanktonException, builder.create_interface_type, 'invalid_protocol')
+        device = builder.create_device()
+
+        self.assertIsInstance(builder.create_interface(device=device), self.module.DummyAdapter)
+        self.assertIsInstance(
+            builder.create_interface('dummy', device=device), self.module.DummyAdapter)
+
+        self.assertRaises(PlanktonException, builder.create_interface, 'invalid_protocol')
 
 
 class TestDeviceBuilderMultipleDevicesAndProtocols(unittest.TestCase):
