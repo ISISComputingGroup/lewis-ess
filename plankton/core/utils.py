@@ -29,6 +29,7 @@ import imp
 import importlib
 import textwrap
 import inspect
+import functools
 from datetime import datetime
 
 import os.path as osp
@@ -296,6 +297,7 @@ class check_limits(object):
         self._silent = silent
 
     def __call__(self, f):
+        @functools.wraps(f)
         def limit_checked(obj, new_value):
             low = getattr(obj, self._lower) if isinstance(self._lower,
                                                           string_types) else self._lower
