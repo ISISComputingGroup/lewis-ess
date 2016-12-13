@@ -302,36 +302,50 @@ class check_limits(object):
                 self._bar = new_value
 
     This will make sure that the new value is always between ``bar_min`` and ``bar_max``, even
-    if they change at runtime.
+    if they change at runtime. If the limit is ``None`` (default), the value will not be limited
+    in that direction.
+
+    Upper and lower limit can also be used exclusively, for example for a property that has a lower
+    bound but not an upper, say a temperature:
+
+    .. sourcecode:: Python
+
+        class Foo(object):
+            _temp = 273.15
+
+            @check_limits(lower=0)
+            def set_temperature(self, t_in_kelvin):
+                self._temp = t_in_kelvin
+
 
     If the value is outside the specified limits, the decorated function is not called and a
     :class:`~plankton.core.exceptions.LimitViolationException` is raised if the ``silent``-
     parameter is ``False`` (default). If that option is active, the call is simply silently
     ignored.
 
-    :param low_limit: Numerical lower limit or name of attribute that contains limit.
-    :param high_limit: Numerical upper limit or name of attribute that contains limit.
+    :param lower: Numerical lower limit or name of attribute that contains limit.
+    :param upper: Numerical upper limit or name of attribute that contains limit.
     :param silent: A limit violation will not raise an exception if this option is ``True``.
     """
 
-    def __init__(self, low_limit, high_limit, silent=False):
-        self._lower = low_limit
-        self._upper = high_limit
+    def __init__(self, lower=None, upper=None, silent=False):
+        self._lower = lower
+        self._upper = upper
         self._silent = silent
 
     def __call__(self, f):
         @functools.wraps(f)
         def limit_checked(obj, new_value):
-            low = getattr(obj, self._lower) if isinstance(self._lower,
-                                                          string_types) else self._lower
-            high = getattr(obj, self._upper) if isinstance(self._upper,
-                                                           string_types) else self._upper
+            lower = getattr(obj, self._lower) if isinstance(self._lower,
+                                                            string_types) else self._lower
+            upper = getattr(obj, self._upper) if isinstance(self._upper,
+                                                            string_types) else self._upper
 
-            if low <= new_value <= high:
+            if (lower is None or lower <= new_value) and (upper is None or new_value <= upper):
                 return f(obj, new_value)
 
             if not self._silent:
                 raise LimitViolationException(
-                    '%f is outside limits (%f, %f)' % (new_value, low, high))
+                    '%f is outside limits (%r, %r)' % (new_value, lower, upper))
 
         return limit_checked

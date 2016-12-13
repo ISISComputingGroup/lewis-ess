@@ -205,6 +205,31 @@ class TestCheckLimits(unittest.TestCase):
         self.assertRaises(LimitViolationException, f.set_bar, -3)
         self.assertRaises(LimitViolationException, f.set_bar, 16)
 
+    def test_upper_lower_only(self):
+        class Foo(object):
+            bar = 0
+            baz = 1
+
+            @check_limits(upper=15)
+            def set_bar(self, new_bar):
+                self.bar = new_bar
+
+            @check_limits(lower=0)
+            def set_baz(self, new_baz):
+                self.baz = new_baz
+
+        f = Foo()
+
+        assertRaisesNothing(self, f.set_bar, 0)
+        assertRaisesNothing(self, f.set_bar, 15)
+        assertRaisesNothing(self, f.set_bar, -5)
+        self.assertRaises(LimitViolationException, f.set_bar, 16)
+
+        assertRaisesNothing(self, f.set_baz, 0)
+        assertRaisesNothing(self, f.set_baz, 15)
+        assertRaisesNothing(self, f.set_baz, 16)
+        self.assertRaises(LimitViolationException, f.set_baz, -5)
+
     def test_property_limits(self):
         class Foo(object):
             bar = 0
@@ -228,6 +253,12 @@ class TestCheckLimits(unittest.TestCase):
 
         assertRaisesNothing(self, f.set_bar, -3)
         assertRaisesNothing(self, f.set_bar, 16)
+
+        f.bar_min = None
+        f.bar_max = None
+
+        assertRaisesNothing(self, f.set_bar, 123232224)
+        assertRaisesNothing(self, f.set_bar, -352622234)
 
     def test_silent_mode(self):
         class Foo(object):
