@@ -25,10 +25,9 @@ from . import assertRaisesNothing, TestWithPackageStructure
 from mock import patch
 from six import string_types
 
-from plankton.core.exceptions import PlanktonException
 from plankton.core.utils import dict_strict_update, extract_module_name, \
     get_submodules, get_members, seconds_since, FromOptionalDependency, \
-    format_doc_text check_limits
+    format_doc_text, check_limits
 
 from plankton.core.exceptions import PlanktonException, LimitViolationException
 
