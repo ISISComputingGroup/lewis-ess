@@ -13,5 +13,6 @@ state machine, control server and client infrastructure and some utilities.
     core/approaches
     core/control_server
     core/control_client
+    core/devices
     core/simulation
     core/utils

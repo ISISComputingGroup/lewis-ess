@@ -25,40 +25,78 @@ module contained in the Core API.
 from __future__ import absolute_import
 from six import string_types
 
-import imp
 import importlib
 import textwrap
 import inspect
 import functools
 from datetime import datetime
 
-import os.path as osp
+from os import path as osp
 from os import listdir
 
 from .exceptions import PlanktonException, LimitViolationException
 
 
-def get_available_submodules(package):
+def get_submodules(module):
     """
-    This function returns a list of available submodules in a package.
+    This function imports all sub-modules of the supplied module and returns a dictionary
+    with module names as keys and the sub-module objects as values. If the supplied parameter
+    is not a module object, a RuntimeError is raised.
 
-    :param package: Name of the package.
-    :return: Available submodules in package.
+    :param module: Module object from which to import sub-modules.
+    :return: Dict with name-module pairs.
     """
+    if not inspect.ismodule(module):
+        raise RuntimeError(
+            'Can only extract submodules from a module object, '
+            'for example imported via importlib.import_module')
 
-    module = importlib.import_module(package)
-    path = module.__path__[0]
+    submodules = get_members(module, inspect.ismodule)
 
-    submodule_candidates = [extract_module_name(osp.join(path, entry)) for entry in listdir(path)]
+    module_path = list(getattr(module, '__path__', [None]))[0]
 
-    return [submodule for submodule in submodule_candidates if is_module(submodule, [path])]
+    if module_path is not None:
+        for item in listdir(module_path):
+            module_name = extract_module_name(osp.join(module_path, item))
+
+            if module_name is not None:
+                try:
+                    submodules[module_name] = importlib.import_module(
+                        '.{}'.format(module_name), package=module.__name__)
+                except ImportError:
+                    # This is necessary in case random directories are in the path or things can
+                    # just not be imported due to other ImportErrors.
+                    pass
+
+    return submodules
+
+
+def get_members(obj, predicate=None):
+    """
+    Returns all members of an object for which the supplied predicate is true and that do not
+    begin with __. Keep in mind that the supplied function must accept a potentially very broad
+    range of inputs, because the members of an object can be of any type. The function puts
+    those members into a dict with the member names as keys and returns it. If no predicate is
+    supplied, all members are put into the dict.
+
+    :param obj: Object from which to get the members.
+    :param predicate: Filter function for the members, only members for which True is returned are
+                      part of the resulting dict.
+    :return: Dict with name-object pairs of members of obj for which predicate returns true.
+    """
+    members = {member: getattr(obj, member) for member in dir(obj) if not member.startswith('__')}
+
+    if predicate is None:
+        return members
+
+    return {name: member for name, member in members.items() if predicate(member)}
 
 
 def extract_module_name(absolute_path):
     """
     This function tries to extract a valid module name from the basename of the supplied path.
     If it's a directory, the directory name is returned, if it's a file, the file name
-    without extension is returned. If the basename starts with _ or it's a file with an
+    without extension is returned. If the basename starts with _ or . or it's a file with an
     ending different from .py, the function returns None
 
     :param absolute_path: Absolute path of something that might be a module.
@@ -68,7 +106,7 @@ def extract_module_name(absolute_path):
 
     # If the basename starts with _ it's probably __init__.py or __pycache__ or something internal.
     # At the moment there seems to be no use case for those
-    if base_name.startswith('_'):
+    if base_name[0] in ('.', '_'):
         return None
 
     # If it's a directory, there's nothing else to check, so it can be returned directly
@@ -82,21 +120,6 @@ def extract_module_name(absolute_path):
         return module_name
 
     return None
-
-
-def is_module(module, paths):
-    """
-    Small helper function that returns True if module is a sub-module in package.
-
-    :param module: Name of the sub-module to check.
-    :param paths: List of paths where the module is located.
-    :return: True if module is a sub-module of package.
-    """
-    try:
-        imp.find_module(module, paths)
-        return True
-    except (ImportError, TypeError):
-        return False
 
 
 def dict_strict_update(base_dict, update_dict):
