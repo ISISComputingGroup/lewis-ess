@@ -90,7 +90,7 @@ def do_run_simulation(argument_list=None):
 
     device = device_builder.create_device(arguments.setup)
     interface = device_builder.create_interface(arguments.protocol,
-                                                device=device, args=arguments.adapter_args)
+                                                device=device, arguments=arguments.adapter_args)
 
     if arguments.show_interface:
         print(interface.documentation)
