@@ -44,11 +44,11 @@ class SimulatedJulabo(StateMachineDevice):
         # Real device remembers values from last run, we use arbitrary defaults
         self.temperature = 24.0  # Current temperature in C
         self.external_temperature = 26.0  # External temperature in C
-        self.heating_power = 0.0 # The heating power
+        self.heating_power = 5.0 # The heating power
         self.set_point_temperature = 24.0 # Start with the set point being equal to the current temperature
         self.temperature_low_limit = 0.0  # Usually set in the hardware
         self.temperature_high_limit = 100.0  # Usually set in the hardware
-        self.is_circulating = 1  # 0 for off, 1 for on
+        self.is_circulating = 0  # 0 for off, 1 for on
         self.temperature_ramp_rate = 5.0 # Guessed value in C/min
 
         self.internal_p = 0.1 # The proportional
@@ -95,7 +95,7 @@ class SimulatedJulabo(StateMachineDevice):
 
         :return: The heating power.
         """
-        return self.external_temperature
+        return self.heating_power
 
     def get_set_point(self):
         """
@@ -159,25 +159,23 @@ class SimulatedJulabo(StateMachineDevice):
         :param param: The new temperature in C. Must be positive.
         :return: Empty string.
         """
-        sp = int(param)
-        if self.temperature_low_limit <= sp <= self.temperature_high_limit:
-            self.set_point_temperature = sp
+        if self.temperature_low_limit <= param <= self.temperature_high_limit:
+            self.set_point_temperature = param
         return ""
 
-    def set_mode(self, param):
+    def set_circulating(self, param):
         """
         Sets whether to circulate - in effect whether the heater is on.
 
         :param param: The mode to set, must be 0 or 1.
         :return: Empty string.
         """
-        sp = int(param)
-        if sp == 0:
-            self.is_circulating = sp
-            self._devicecirculate_commanded = False
-        elif sp == 1:
-            self.is_circulating = sp
-            self._devicecirculate_commanded = True
+        if param == 0:
+            self.is_circulating = param
+            self.circulate_commanded = False
+        elif param == 1:
+            self.is_circulating = param
+            self.circulate_commanded = True
         return ""
 
     def get_internal_p(self):
@@ -242,9 +240,8 @@ class SimulatedJulabo(StateMachineDevice):
         :param param: The value to set, must be between 0.1 and 99.9
         :return: Empty string.
         """
-        sp = float(param)
-        if 0.1 <= sp <= 99.9:
-            self.internal_p = sp
+        if 0.1 <= param <= 99.9:
+            self.internal_p = param
         return ""
 
     def set_internal_i(self, param):
@@ -255,9 +252,8 @@ class SimulatedJulabo(StateMachineDevice):
         :param param: The value to set, must be an integer between 3 and 9999
         :return: Empty string.
         """
-        sp = int(param)
-        if 3 <= sp <= 9999:
-            self.internal_i = sp
+        if 3 <= param <= 9999:
+            self.internal_i = param
         return ""
 
     def set_internal_d(self, param):
@@ -268,9 +264,8 @@ class SimulatedJulabo(StateMachineDevice):
         :param param: The value to set, must be an integer between 0 and 999
         :return: Empty string.
         """
-        sp = int(param)
-        if 0 <= sp <= 999:
-            self.internal_d = sp
+        if 0 <= param <= 999:
+            self.internal_d = param
         return ""
 
     def set_external_p(self, param):
@@ -281,9 +276,8 @@ class SimulatedJulabo(StateMachineDevice):
         :param param: The value to set, must be between 0.1 and 99.9
         :return: Empty string.
         """
-        sp = float(param)
-        if 0.1 <= sp <= 99.9:
-            self.external_p = sp
+        if 0.1 <= param <= 99.9:
+            self.external_p = param
         return ""
 
     def set_external_i(self, param):
@@ -294,9 +288,8 @@ class SimulatedJulabo(StateMachineDevice):
         :param param: The value to set, must be an integer between 3 and 9999
         :return: Empty string.
         """
-        sp = int(param)
-        if 3 <= sp <= 9999:
-            self.external_i = sp
+        if 3 <= param <= 9999:
+            self.external_i = param
         return ""
 
     def set_external_d(self, param):
@@ -307,7 +300,6 @@ class SimulatedJulabo(StateMachineDevice):
         :param param: The value to set, must be an integer between 0 and 999
         :return: Empty string.
         """
-        sp = int(param)
-        if 0 <= sp <= 999:
-            self.external_d = sp
+        if 0 <= param <= 999:
+            self.external_d = param
         return ""
