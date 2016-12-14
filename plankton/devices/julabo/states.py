@@ -30,5 +30,5 @@ class DefaultCirculatingState(State):
         # Approach target temperature at a set rate
         self._context.temperature = approaches.linear(
             self._context.temperature, self._context.set_point_temperature,
-            self._context.temperature_rate / 60.0, dt)
+            self._context.heating_power / 60.0, dt)
 
