@@ -29,3 +29,10 @@ class PlanktonException(Exception):
     from unexpected ones. This enables better error handling and more importantly
     better presentation of errors to the users.
     """
+
+
+class LimitViolationException(Exception):
+    """
+    An exception that can be raised in a device to indicate a limit violation. It is for example
+    raised by the :class:`~plankton.core.utils.check_limits`.
+    """
