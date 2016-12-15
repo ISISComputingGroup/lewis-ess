@@ -23,7 +23,7 @@ after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == false ]; then
     docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker build -t dmscid/lewis:edge .;
-    docker push dmscid/lewis;
+    docker push dmscid/lewis:edge;
     fi
 
 branches:
