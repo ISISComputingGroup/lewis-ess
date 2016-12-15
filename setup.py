@@ -32,7 +32,7 @@ setup(
     license='GPL v3',
     classifiers=[
         'Development Status :: 4 - Beta',
-        'Environment :: Console'
+        'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering',
