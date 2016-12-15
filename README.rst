@@ -1,7 +1,7 @@
 |Version| |Layers| |Build Status| |Code Climate| |Coverage Status|
 
 Lewis
-========
+=====
 
 Lewis is a Python framework for simulating hardware devices. It is
 compatible with both Python 2 and 3.
@@ -66,7 +66,7 @@ provides a protocol binding to a ``Device``. The ``Device`` and
 "heart beat" and other environmental aspects.
 
 What Can You Do With Lewis?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -  Create new ``Device``\ s to closely imitate the internal behaviour
    and memory of something
