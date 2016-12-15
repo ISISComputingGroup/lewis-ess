@@ -1,4 +1,4 @@
-|Version| |Layers| |Build Status| |Code Climate| |Coverage Status|
+|Version| |Layers| |Build Status| |Code Climate| |Coverage Status| |Documentation|
 
 Lewis
 =====
@@ -88,7 +88,8 @@ What Can You Do With Lewis?
 Additional Documentation
 ------------------------
 
-Documentation can be generated from the sources:
+Documentation can be found at `http://lewis.readthedocs.io/`.
+It can also be generated from the sources:
 
 ::
 
@@ -109,3 +110,5 @@ The ``docs/_build/html`` directory will then contain the full documentation in H
    :target: https://codeclimate.com/github/DMSC-Instrument-Data/lewis
 .. |Coverage Status| image:: https://coveralls.io/repos/github/DMSC-Instrument-Data/lewis/badge.svg?branch=master
    :target: https://coveralls.io/github/DMSC-Instrument-Data/lewis?branch=master
+.. |Documentation| image:: https://readthedocs.org/projects/lewis/badge/?version=latest
+   :target: http://lewis.readthedocs.io/en/latest/?badge=latest
