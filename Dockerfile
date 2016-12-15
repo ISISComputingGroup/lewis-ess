@@ -14,3 +14,4 @@ RUN pip install -r lewis/requirements.txt && \
 COPY . /lewis
 
 ENTRYPOINT ["/init.sh", "/lewis/lewis.py"]
+
