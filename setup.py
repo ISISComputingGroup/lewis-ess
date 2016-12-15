@@ -20,10 +20,17 @@
 
 from setuptools import setup, find_packages
 
+
+def readme():
+    with open('README.rst') as f:
+        return f.read()
+
+
 setup(
     name='lewis',
     version='1.0.1',
-    description='A platform for development of stateful hardware device simulations.',
+    description='LeWIS - Let\'s Write Intricate Simulators!',
+    long_description=readme(),
     url='https://github.com/DMSC-Instrument-Data/lewis',
     author='Michael Hart, Michael Wedel, Owen Arnold',
     author_email='Michael Hart <michael.hart@stfc.ac.uk>, '

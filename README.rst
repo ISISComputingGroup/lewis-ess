@@ -3,6 +3,8 @@
 Lewis
 =====
 
+LeWIS - Let's Write Intricate Simulators.
+
 Lewis is a Python framework for simulating hardware devices. It is
 compatible with both Python 2 and 3.
 
@@ -14,6 +16,9 @@ Resources:
 `GitHub <https://github.com/DMSC-Instrument-Data/lewis>`__ --
 `DockerHub <https://hub.docker.com/r/dmscid/lewis/>`__ --
 `Dockerfile <https://github.com/DMSC-Instrument-Data/lewis/blob/master/Dockerfile>`__
+
+Lewis started out under the name "plankton", but due to a
+package with the same name on PyPI we decided to rename the project.
 
 Purpose and Use Cases
 ---------------------
@@ -71,7 +76,7 @@ What Can You Do With Lewis?
 -  Create new ``Device``\ s to closely imitate the internal behaviour
    and memory of something
 -  Optionally make a ``Device`` work as a ``StateMachine`` via
-   ``StateMachineDevice`` to to give rich behaviours
+   ``StateMachineDevice`` to give rich behaviours
 -  Create one or more ``Interface``\ s over your ``Device`` to expose it
    as an EPICS IOC, a TCP listener, or on any other bespoke protocol you
    like
@@ -83,44 +88,7 @@ What Can You Do With Lewis?
 Additional Documentation
 ------------------------
 
-Details on running Lewis, working with Lewis as a device
-developer, and framework internals are described in the following
-documents:
-
--  Installation and Usage
-
-   -  `Using Lewis with
-      Docker <https://github.com/DMSC-Instrument-Data/lewis/blob/master/docs/user_guide/usage_with_docker.rst>`__:
-      Lewis provides a Docker image that encapsulates all dependencies for ease of use.
-   -  `Using Lewis with
-      Python <https://github.com/DMSC-Instrument-Data/lewis/blob/master/docs/user_guide/usage_with_python.rst>`__:
-      Lewis can be run directly via Python once dependencies are installed.
-   -  `Adapter Specific
-      Parameters <https://github.com/DMSC-Instrument-Data/lewis/blob/master/docs/user_guide/adapter_specifics.rst>`__:
-      Usage details for specific protocol adapters.
-
--  Runtime Control
-
-   -  `Remote Access to
-      Device <https://github.com/DMSC-Instrument-Data/lewis/blob/master/docs/user_guide/remote_access_devices.rst>`__:
-      A simulated device can be inspected and manipulated at runtime.
-   -  `Remote Access to
-      Simulation <https://github.com/DMSC-Instrument-Data/lewis/blob/master/docs/user_guide/remote_access_simulation.rst>`__:
-      Simulation parameters and statistics can be inspected and manipulated at runtime.
-
--  Creating Device Simulators
-
-   -  `Contribution
-      Guidelines <https://github.com/DMSC-Instrument-Data/lewis/blob/master/docs/developer_guide/contributing.rst>`__:
-      New device simulators can be added to Lewis.
-
--  Framework Internals
-
-   -  `Detailed Overview of
-      Framework <https://github.com/DMSC-Instrument-Data/lewis/blob/master/docs/developer_guide/framework_details.rst>`__:
-      Description of framework internals and design decisions.
-
-Until the documentation is available online, it can also be generated from the sources:
+Documentation can be generated from the sources:
 
 ::
 
