@@ -267,7 +267,7 @@ class check_limits(object):
 
     It's possible to set static limits using floats or ints:
 
-    ..sourcecode:: Python
+    .. sourcecode:: Python
 
         class Foo(object):
             _bar = 0
