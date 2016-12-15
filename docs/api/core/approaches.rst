@@ -1,5 +1,5 @@
 Approaches Module
 -----------------
 
-.. automodule:: plankton.core.approaches
+.. automodule:: lewis.core.approaches
     :members:

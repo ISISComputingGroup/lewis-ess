@@ -16,14 +16,14 @@ install:
 
 script:
   - flake8 .
-  - nosetests -w test --with-coverage --cover-package=plankton.core,plankton.devices
+  - nosetests -w test --with-coverage --cover-package=lewis.core,lewis.devices
 
 after_success:
   - coveralls
   - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == false ]; then
     docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker build -t dmscid/plankton:edge .;
-    docker push dmscid/plankton;
+    docker build -t dmscid/lewis:edge .;
+    docker push dmscid/lewis;
     fi
 
 branches:

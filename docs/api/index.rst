@@ -3,7 +3,7 @@
 API Documentation
 #################
 
-This is plankton's API documentation.
+This is lewis' API documentation.
 
 .. toctree::
     :maxdepth: 2

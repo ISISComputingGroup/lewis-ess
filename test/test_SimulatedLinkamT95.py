@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # *********************************************************************
-# plankton - a library for creating hardware device simulators
+# lewis - a library for creating hardware device simulators
 # Copyright (C) 2016 European Spallation Source ERIC
 #
 # This program is free software: you can redistribute it and/or modify
@@ -19,10 +19,10 @@
 
 import unittest
 
-from plankton.devices.linkam_t95 import SimulatedLinkamT95
-from plankton.devices.linkam_t95.states import DefaultStartedState
+from lewis.devices.linkam_t95 import SimulatedLinkamT95
+from lewis.devices.linkam_t95.states import DefaultStartedState
 
-from plankton.devices.linkam_t95.interfaces.stream_interface import LinkamT95StreamInterface
+from lewis.devices.linkam_t95.interfaces.stream_interface import LinkamT95StreamInterface
 from . import assertRaisesNothing
 
 

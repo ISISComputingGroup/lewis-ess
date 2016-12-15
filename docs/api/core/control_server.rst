@@ -1,5 +1,5 @@
 Control Server Module
 ---------------------
 
-.. automodule:: plankton.core.control_server
+.. automodule:: lewis.core.control_server
     :members:

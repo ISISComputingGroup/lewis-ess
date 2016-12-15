@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # *********************************************************************
-# plankton - a library for creating hardware device simulators
+# lewis - a library for creating hardware device simulators
 # Copyright (C) 2016 European Spallation Source ERIC
 #
 # This program is free software: you can redistribute it and/or modify
@@ -23,8 +23,8 @@ from mock import Mock, patch, call
 import zmq
 import socket
 
-from plankton.core.control_server import ExposedObject, ExposedObjectCollection, ControlServer
-from plankton.core.exceptions import PlanktonException
+from lewis.core.control_server import ExposedObject, ExposedObjectCollection, ControlServer
+from lewis.core.exceptions import lewisException
 from . import assertRaisesNothing
 
 
@@ -208,7 +208,7 @@ class TestControlServer(unittest.TestCase):
         server = ControlServer(object_map=mock_collection, connection_string='127.0.0.1:10000')
         self.assertEqual(server.exposed_object, mock_collection)
 
-    @patch('plankton.core.control_server.ExposedObjectCollection')
+    @patch('lewis.core.control_server.ExposedObjectCollection')
     def test_exposed_object_collection_is_constructed(self, exposed_object_mock):
         ControlServer(object_map='test', connection_string='127.0.0.1:10000')
 
@@ -221,15 +221,15 @@ class TestControlServer(unittest.TestCase):
         server.start_server()
         self.assertTrue(server.is_running)
 
-    @patch('plankton.core.control_server.socket.gethostbyname')
-    def test_invalid_hostname_raises_PlanktonException(self, gethostbyname_mock):
+    @patch('lewis.core.control_server.socket.gethostbyname')
+    def test_invalid_hostname_raises_lewisException(self, gethostbyname_mock):
         def raise_exception(self):
             raise socket.gaierror
 
         gethostbyname_mock.side_effect = raise_exception
 
         self.assertRaises(
-            PlanktonException, ControlServer,
+            lewisException, ControlServer,
             object_map=None, connection_string='some_invalid_host.local:10000')
 
         gethostbyname_mock.assert_called_once_with('some_invalid_host.local')

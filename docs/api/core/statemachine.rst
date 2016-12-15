@@ -1,12 +1,12 @@
 Statemachine Module
 -------------------
 
-.. automodule:: plankton.core.statemachine
+.. automodule:: lewis.core.statemachine
     :members: StateMachineException, HasContext, State
 
-.. autoclass:: plankton.core.statemachine.Transition
+.. autoclass:: lewis.core.statemachine.Transition
     :members:
     :special-members:
 
-.. autoclass:: plankton.core.statemachine.StateMachine
+.. autoclass:: lewis.core.statemachine.StateMachine
     :members:

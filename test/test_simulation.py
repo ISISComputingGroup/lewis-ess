@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # *********************************************************************
-# plankton - a library for creating hardware device simulators
+# lewis - a library for creating hardware device simulators
 # Copyright (C) 2016 European Spallation Source ERIC
 #
 # This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@ import unittest
 
 from mock import Mock, patch, call, ANY
 
-from plankton.core.simulation import Simulation
+from lewis.core.simulation import Simulation
 from . import assertRaisesNothing
 
 
@@ -31,7 +31,7 @@ def set_simulation_running(environment):
 
 
 class TestSimulation(unittest.TestCase):
-    @patch('plankton.core.simulation.seconds_since')
+    @patch('lewis.core.simulation.seconds_since')
     def test_process_cycle_returns_elapsed_time(self, elapsed_seconds_mock):
         env = Simulation(device=Mock(), adapter=Mock())
 
@@ -44,7 +44,7 @@ class TestSimulation(unittest.TestCase):
             elapsed_seconds_mock.assert_called_once_with(ANY)
             self.assertEqual(delta, 0.5)
 
-    @patch('plankton.core.simulation.seconds_since')
+    @patch('lewis.core.simulation.seconds_since')
     def test_process_cycle_changes_runtime_status(self, elapsed_seconds_mock):
         env = Simulation(device=Mock(), adapter=Mock())
 
@@ -163,8 +163,8 @@ class TestSimulation(unittest.TestCase):
         self.assertRaises(Exception, Simulation,
                           device=Mock(), adapter=Mock(), control_server='a:b:c')
 
-    @patch('plankton.core.simulation.ExposedObject')
-    @patch('plankton.core.simulation.ControlServer')
+    @patch('lewis.core.simulation.ExposedObject')
+    @patch('lewis.core.simulation.ControlServer')
     def test_construct_control_server(self, mock_control_server_type, exposed_object_mock):
         device = Mock()
         adapter = Mock()
@@ -227,8 +227,8 @@ class TestSimulation(unittest.TestCase):
 
             mock_cycle.assert_has_calls([call(0.0)])
 
-    @patch('plankton.core.simulation.ExposedObject')
-    @patch('plankton.core.simulation.ControlServer')
+    @patch('lewis.core.simulation.ExposedObject')
+    @patch('lewis.core.simulation.ControlServer')
     def test_control_server_setter(self, control_server_mock, exposed_object_mock):
         # The return value (= instance of ControlServer) must be specified
         control_server_mock.return_value = Mock()
@@ -274,7 +274,7 @@ class TestSimulation(unittest.TestCase):
         self.assertTrue(env.device_connected)
         self.assertRaises(RuntimeError, env.connect_device)
 
-    @patch('plankton.core.simulation.sleep')
+    @patch('lewis.core.simulation.sleep')
     def test_disconnect_device(self, sleep_mock):
         adapter_mock = Mock()
         env = Simulation(device=Mock(), adapter=adapter_mock)

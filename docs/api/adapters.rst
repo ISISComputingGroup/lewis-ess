@@ -1,7 +1,7 @@
 Adapter API
 ===========
 
-The Adapter API consists of a general :mod:`~plankton.adapters`-module that defines a base class
+The Adapter API consists of a general :mod:`~lewis.adapters`-module that defines a base class
 for all specific adapters. These specific adapters in turn define slightly different utilities
 for writing device interfaces.
 

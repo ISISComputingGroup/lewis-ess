@@ -10,15 +10,15 @@ the ``-r`` option with a ``host:port`` string to the simulation:
 
 ::
 
-    $ python plankton.py -r 127.0.0.1:10000 chopper -- -p SIM:
+    $ python lewis.py -r 127.0.0.1:10000 chopper -- -p SIM:
 
-Now the device can be controlled via the ``plankton-control.py``-script
+Now the device can be controlled via the ``lewis-control.py``-script
 in a different terminal window. The service can be queried to show the
 available objects by not supplying an object name:
 
 ::
 
-    $ python plankton-control.py -r 127.0.0.1:10000
+    $ python lewis-control.py -r 127.0.0.1:10000
 
 The ``-r`` (or ``--rpc-host``) option defaults to the value shown here,
 so it will be omitted in the following examples. To get information on
@@ -27,7 +27,7 @@ method will list the object's API:
 
 ::
 
-    $ python plankton-control.py device
+    $ python lewis-control.py device
 
 This will output a list of properties and methods which is available for
 remote access. This may not comprise the full interface of the object
@@ -36,35 +36,35 @@ property is done like this:
 
 ::
 
-    $ python plankton-control.py device state
+    $ python lewis-control.py device state
 
 The same syntax is used to call methods without parameters:
 
 ::
 
-    $ python plankton-control.py device initialize
+    $ python lewis-control.py device initialize
 
 To set a property to a new value, the value has to be supplied on the
 command line:
 
 ::
 
-    $ python plankton-control.py device target_speed 100
-    $ python plankton-control.py device start
+    $ python lewis-control.py device target_speed 100
+    $ python lewis-control.py device start
 
 Only numeric types and strings can be used as arguments via the
-``plankton-control.py``-script. The script always tries to convert
+``lewis-control.py``-script. The script always tries to convert
 parameters to ``int`` first, then to ``float`` and leaves it as ``str``
 if both fail. For other types and more control over types, it's advised
 to write a Python script instead using the tools provided in
-``plankton.core.control_client`` which makes it possible to use the
+``lewis.core.control_client`` which makes it possible to use the
 remote objects more or less transparently. An example to control the
 chopper:
 
 .. code:: python
 
     from time import sleep
-    from plankton.core.control_client import ControlClient
+    from lewis.core.control_client import ControlClient
 
     client = ControlClient(host='127.0.0.1', port='10000')
     chopper = client.get_object('device')

@@ -1,5 +1,5 @@
 Utils Module
 ------------
 
-.. automodule:: plankton.core.utils
+.. automodule:: lewis.core.utils
     :members:

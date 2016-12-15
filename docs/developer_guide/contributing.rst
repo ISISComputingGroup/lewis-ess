@@ -1,14 +1,14 @@
-Contributing to Plankton
-========================
+Contributing to Lewis
+=====================
 
 How to contribute
 -----------------
 
-Contributions to Plankton are always welcome and there are different
+Contributions to Lewis are always welcome and there are different
 ways of contributing to the framework. Problems, bugs and questions
 should be opened as
-`issues <https://github.com/DMSC-Instrument-Data/plankton/issues>`__,
-this is a very good way of keeping track of how Plankton has developed
+`issues <https://github.com/DMSC-Instrument-Data/lewis/issues>`__,
+this is a very good way of keeping track of how Lewis has developed
 over time and also for others to see if similar issues have been raised
 in the past.
 
@@ -19,14 +19,14 @@ get the changes upstream.
 Writing a new device simulator
 ------------------------------
 
-The Plankton framework provides all the infrastructure to run device
+The Lewis framework provides all the infrastructure to run device
 simulations so that developing a new simulation requires little more
 than writing code for the actual device. Currently, adding a new device
 requires the code from the github repository:
 
 ::
 
-    git clone https://github.com/DMSC-Instrument-Data/plankton
+    git clone https://github.com/DMSC-Instrument-Data/lewis
 
 The process of writing a new device simulator is best explained using
 the example of a stateful device.
@@ -79,7 +79,7 @@ Between those three states, different transitions exist:
 
 The states and transitions described above form a finite state machine
 with two states and two transitions. This state machine forms the heart
-of the simulated device, so it should be implemented using Plankton's
+of the simulated device, so it should be implemented using Lewis'
 cycle based `finite state
 machine <https://en.wikipedia.org/wiki/Finite-state_machine>`__, which
 will be explained below.
@@ -88,14 +88,14 @@ Implementing the device simulation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Each device resides in the sub-package ``devices`` in the
-``plankton``-package. The first step is to create a new directory in the
-``plankton/devices`` directory called ``example_motor``,
+``lewis``-package. The first step is to create a new directory in the
+``lewis/devices`` directory called ``example_motor``,
 which should contain a single file, ``__init__.py``. For simple devices
 like this it's acceptable to put everything into one file, but for more
 complex simulators it's recommended to follow the structure of the
-devices that are already part of the Plankton distribution.
+devices that are already part of the Lewis distribution.
 
-Conceptually, in Plankton, devices are split in two Parts: a device
+Conceptually, in Lewis, devices are split in two Parts: a device
 model, which contains internal device state, as well as potentially a
 state machine, and an interface that exposes the device to the outside
 world via a communication protocol that is provided by an "adapter". The
@@ -105,29 +105,29 @@ interface specifies the syntax and semantics of the actual command
 language of the device.
 
 For the actual device simulation there are two classes to choose between
-for sub-classing. The class :class:`~plankton.devices.Device` can be used for very simple
+for sub-classing. The class :class:`~lewis.devices.Device` can be used for very simple
 devices that do not require a state machine to represent their
 operation. On each simulation cycle, the method ``doProcess`` is
 executed if it is implemented. This can be used to implement
 time-dependent behavior. For the majority of cases, such as in the
-example, it is more convenient to inherit from :class:`~plankton.devices.StateMachineDevice`.
+example, it is more convenient to inherit from :class:`~lewis.devices.StateMachineDevice`.
 It provides an internal state machine and options to override
 characteristics of the state machine on initialization.
 
-:class:`~plankton.devices.StateMachineDevice` has three methods that must be implemented by
-sub-classes: :meth:`~plankton.devices.StateMachineDevice._get_state_handlers`,
-:meth:`~plankton.devices.StateMachineDevice._get_initial_state` and
-:meth:`~plankton.devices.StateMachineDevice._get_transition_handlers`. They are used to define
+:class:`~lewis.devices.StateMachineDevice` has three methods that must be implemented by
+sub-classes: :meth:`~lewis.devices.StateMachineDevice._get_state_handlers`,
+:meth:`~lewis.devices.StateMachineDevice._get_initial_state` and
+:meth:`~lewis.devices.StateMachineDevice._get_transition_handlers`. They are used to define
 the state machine. A fourth, optional method can be used to initialize internal device
-state, it's calld :meth:`~plankton.devices.StateMachineDevice._initialize_data`. In this case
+state, it's calld :meth:`~lewis.devices.StateMachineDevice._initialize_data`. In this case
 the device implementation should also go into ``__init__.py``:
 
 .. code:: python
 
-    from plankton.devices import StateMachineDevice
+    from lewis.devices import StateMachineDevice
 
-    from plankton.core.statemachine import State
-    from plankton.core import approaches
+    from lewis.core.statemachine import State
+    from lewis.core import approaches
 
     from collections import OrderedDict
 
@@ -185,27 +185,27 @@ of the page and some internal state variables, for example ``target``,
 which has some limits on when and to what values it can be set.
 
 Both states of the motor are described by a state handler. In case of
-the ``idle``-state it is enough to use :class:`~plankton.core.statemachine.State`,
-which simply does nothing. :class:`~plankton.core.statemachine.State` has three methods that
+the ``idle``-state it is enough to use :class:`~lewis.core.statemachine.State`,
+which simply does nothing. :class:`~lewis.core.statemachine.State` has three methods that
 can be overridden:
 
- - :meth:`~plankton.core.statemachine.State.on_entry`
- - :meth:`~plankton.core.statemachine.State.in_state`
- - :meth:`~plankton.core.statemachine.State.on_exit`.
+ - :meth:`~lewis.core.statemachine.State.on_entry`
+ - :meth:`~lewis.core.statemachine.State.in_state`
+ - :meth:`~lewis.core.statemachine.State.on_exit`.
 
 For other ways to specify those state handlers, please consult the documentation of
-:class:`~plankton.core.statemachine.StateMachine`, where this is described in detail.
-The advantage of using the :class:`~plankton.core.statemachine.State`-class is that it
+:class:`~lewis.core.statemachine.StateMachine`, where this is described in detail.
+The advantage of using the :class:`~lewis.core.statemachine.State`-class is that it
 has a so called context, which is stored in the ``_context``-member. In case of
-:class:`~plankton.devices.StateMachineDevice`, this context is the device object.
+:class:`~lewis.devices.StateMachineDevice`, this context is the device object.
 This means that device data can be modified in a state handler.
 
 This is the case for the ``moving``-state, where a state handler has
-been defined by sub-classing :class:`~plankton.core.statemachine.State`.
+been defined by sub-classing :class:`~lewis.core.statemachine.State`.
 In its ``in_state``-method it modifies the ``position`` member of the device until it has reached
 ``target`` with a rate that is stored in the ``speed``-member. This
-linear change behavior is implemented in the :func:`~plankton.core.approaches.linear`-function from
-:mod:`plankton.core.approaches`. It automatically makes sure that the target is
+linear change behavior is implemented in the :func:`~lewis.core.approaches.linear`-function from
+:mod:`lewis.core.approaches`. It automatically makes sure that the target is
 always obtained even for very coarse ``dt``-values.
 
 The transitions between states are defined using lambda-functions in
@@ -215,7 +215,7 @@ with the target or not.
 The device also provides a read-only property ``state``, which forwards
 the state machine's (in the device as member ``_csm``) state. The speed
 of the motor is not part of the device specification, but it is added as
-a member so that it can be changed via the ``plankton-control.py`` script to test
+a member so that it can be changed via the ``lewis-control.py`` script to test
 how the motor behaves at different speeds. The device is now fully
 functional, but it's not possible to interact with it yet, because the
 interface is not specified yet.
@@ -225,16 +225,16 @@ Implementing the device interface
 
 Device interfaces are implemented by sub-classing an appropriate
 pre-written communication adapter base class from the framework's
-:mod:`plankton.adapters`-package and overriding a few members. In this case this
-adapter is called :class:`~plankton.adapters.stream.StreamAdapter`. The first step
+:mod:`lewis.adapters`-package and overriding a few members. In this case this
+adapter is called :class:`~lewis.adapters.stream.StreamAdapter`. The first step
 is to specify the available commands in terms of a collection of
-:class:`~plankton.adapters.stream.Cmd`-objects. These objects effectively bind
+:class:`~lewis.adapters.stream.Cmd`-objects. These objects effectively bind
 commands specified in terms of regular expressions to a the adapter's methods.
 According to the specifications above, the commands are defined like this:
 
 .. code:: python
 
-    from plankton.adapters.stream import StreamAdapter, Cmd
+    from lewis.adapters.stream import StreamAdapter, Cmd
 
     class ExampleMotorStreamInterface(StreamAdapter):
         commands = {
@@ -267,7 +267,7 @@ According to the specifications above, the commands are defined like this:
             except ValueError:
                 return 'err: not 0<=T<=250'
 
-The first argument to :class:`~plankton.adapters.stream.Cmd` specifies the method
+The first argument to :class:`~lewis.adapters.stream.Cmd` specifies the method
 name the command is bound to, whereas the second argument is the regular expression that a
 request coming in over the TCP stream must match. If a method has
 arguments (such as ``set_target``), these need to be defined as capture
@@ -282,7 +282,7 @@ overridden by supplying a callable object to ``return_mapping``, as it
 is the case for the ``stop``-command.
 
 You may have noticed that ``stop`` is not a method of the interface.
-:class:`~plankton.adapters.stream.StreamAdapter` tries to resolve the supplied method
+:class:`~lewis.adapters.stream.StreamAdapter` tries to resolve the supplied method
 names in multiple ways. First it checks its own members, then it checks the members of the
 device it owns (accessible in the interface via the ``_device``-member)
 and adds forwarders to itself if possible. If the method name can not be
@@ -300,24 +300,24 @@ Finally, in- and out-terminators need to be specified. These are
 stripped from and appended to requests and replies respectively.
 
 This entire device can be found in the ``examples`` directory. It can be
-started using the ``-k`` parameter of ``plankton.py``:
+started using the ``-k`` parameter of ``lewis.py``:
 
 ::
 
-    $ ./plankton.py -k plankton.examples example_motor -- -b 127.0.0.1 -p 9999
+    $ ./lewis.py -k lewis.examples example_motor -- -b 127.0.0.1 -p 9999
 
 All functionality described in the
 :ref:`user_guide`, such as accessing the device and the simulation via the
-``plankton-control.py``-script are automatically available.
+``lewis-control.py``-script are automatically available.
 
 User facing documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :class:`~plankton.adapters.stream.StreamAdapter`-class has a property
+The :class:`~lewis.adapters.stream.StreamAdapter`-class has a property
 ``documentation``, which generates user facing documentation from the
-:class:`~plankton.adapters.stream.Cmd`-objects (it can be displayed via the ``-i``-flag of
-``plankton.py`` or as the ``device_documentation``-property of the ``simulation``-object via
-``plankton-control.py``. The regular expression of each command is listed, along
+:class:`~lewis.adapters.stream.Cmd`-objects (it can be displayed via the ``-i``-flag of
+``lewis.py`` or as the ``device_documentation``-property of the ``simulation``-object via
+``lewis-control.py``. The regular expression of each command is listed, along
 with a documentation string. If the ``doc``-parameter is provided to Cmd, it is used,
 otherwise the docstring of the wrapped method is used (it does not matter whether the
 method is part of the device or the interface for feature to work). The latter is the
@@ -340,7 +340,7 @@ Unit tests
 Unit tests should be added to the ``test``-directory. While it would be
 best to have unit tests for device and interface separately, it is most
 important that the tests capture overall device behavior, so that it's
-immediately noticed when a change to Plankton's core parts breaks the
+immediately noticed when a change to Lewis' core parts breaks the
 simulation. It also makes it easier later on to refactor and change the
 device.
 
@@ -376,21 +376,21 @@ Once a device is developed far enough, it's time to submit a pull
 request. As an external contributor, this happens via a fork on github.
 Members of the development team will review the code and may make
 suggestions for changes. Once the code is acceptable, it will be merged
-into Plankton's master branch and become a part of the distribution.
+into Lewis' master branch and become a part of the distribution.
 
 If a second interface is added to a device, either using a different
 adapter or the same adapter but with different commands, the interface
-definitions should be moved out of the ``__init__.py`` file. Plankton
+definitions should be moved out of the ``__init__.py`` file. Lewis
 will continue to work if the interfaces are moved to a sub-folder of the
 device called ``interfaces``. This needs to have its own
 ``__init__.py``, where interface-classes can be imported from other
 files in that module. It's best to look at the chopper and linkam\_t95
-devices that are already in Plankton.
+devices that are already in Lewis.
 
 The same is true for setups. For complex setups, these should be moved
 to a sub-module of the device called ``setups``, where each setup can
 live in its own file. Please see the documentation of
-:func:`plankton.devices.import_device` for reference.
+:func:`lewis.devices.import_device` for reference.
 
 For initial experiments it's also possible to develop a device outside
 of Planton's source tree. Assuming the device package is called
@@ -408,13 +408,13 @@ of Planton's source tree. Assuming the device package is called
             |
             +- __init__.py
 
-These devices can be started from within the Plankton directory by:
+These devices can be started from within the Lewis directory by:
 
 ::
 
-    $ ./plankton.py -a /some/arbitrary/path -k my_devices device_1
+    $ ./lewis.py -a /some/arbitrary/path -k my_devices device_1
 
 More Examples
 -------------
 
-More example devices and interfaces are provided in the ``plankton.examples`` directory.
+More example devices and interfaces are provided in the ``lewis.examples`` directory.

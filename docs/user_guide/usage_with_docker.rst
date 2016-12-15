@@ -1,7 +1,7 @@
 Usage with Docker
 =================
 
-Docker Engine must be installed in order to run the Plankton Docker
+Docker Engine must be installed in order to run the Lewis Docker
 image. Detailed installation instructions for various OSes may be found
 `here <https://docs.docker.com/engine/installation/>`__.
 
@@ -18,19 +18,19 @@ installation script take care of everything for you:
 
     $ curl -fsSL https://get.docker.com/ | sh
 
-Once Docker is installed, Plankton can be run using the following
+Once Docker is installed, Lewis can be run using the following
 general format:
 
 ::
 
-    $ docker run -it [docker args] dmscid/plankton [plankton args] [-- [adapter args]]
+    $ docker run -it [docker args] dmscid/lewis [lewis args] [-- [adapter args]]
 
 For example, to simulate a Linkam T95 **d**\ evice and expose it via the
 TCP Stream **p**\ rotocol:
 
 ::
 
-    $ docker run -it dmscid/plankton -p stream linkam_t95
+    $ docker run -it dmscid/lewis -p stream linkam_t95
 
 To change the rate at which simulation cycles are calculated, increase
 or decrease the cycle delay, via the ``-c`` or ``--cycle-delay`` option.
@@ -39,7 +39,7 @@ speed.
 
 ::
 
-    $ docker run -it dmscid/plankton -p stream -c 0.05 linkam_t95
+    $ docker run -it dmscid/lewis -p stream -c 0.05 linkam_t95
 
 For long running devices it might be useful to speed up the simulation
 using the ``-e`` or ``--speed`` parameter, which is a factor by which
@@ -48,7 +48,7 @@ simulation cycle. To run a simulation 10 times faster:
 
 ::
 
-    $ docker run -it dmscid/plankton -p stream -e 10 linkam_t95
+    $ docker run -it dmscid/lewis -p stream -e 10 linkam_t95
 
 Details about parameters for the various adapters, and differences
 between OSes are covered in the "Adapter Specifics" sections.

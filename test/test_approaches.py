@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # *********************************************************************
-# plankton - a library for creating hardware device simulators
+# lewis - a library for creating hardware device simulators
 # Copyright (C) 2016 European Spallation Source ERIC
 #
 # This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,7 @@
 
 import unittest
 
-from plankton.core.approaches import linear
+from lewis.core.approaches import linear
 
 
 class TestApproachLinear(unittest.TestCase):

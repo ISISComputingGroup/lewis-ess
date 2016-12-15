@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # *********************************************************************
-# plankton - a library for creating hardware device simulators
+# lewis - a library for creating hardware device simulators
 # Copyright (C) 2016 European Spallation Source ERIC
 #
 # This program is free software: you can redistribute it and/or modify
@@ -19,8 +19,8 @@
 
 import unittest
 
-from plankton.devices.chopper.states import DefaultIdleState
-from plankton.devices.chopper import SimulatedChopper
+from lewis.devices.chopper.states import DefaultIdleState
+from lewis.devices.chopper import SimulatedChopper
 
 
 class TestSimulatedChopper(unittest.TestCase):

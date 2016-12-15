@@ -1,5 +1,5 @@
 The Stream-Adapter
 ------------------
 
-.. automodule:: plankton.adapters.stream
+.. automodule:: lewis.adapters.stream
     :members:

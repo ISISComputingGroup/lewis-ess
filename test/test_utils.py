@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # *********************************************************************
-# plankton - a library for creating hardware device simulators
+# lewis - a library for creating hardware device simulators
 # Copyright (C) 2016 European Spallation Source ERIC
 #
 # This program is free software: you can redistribute it and/or modify
@@ -25,11 +25,11 @@ from . import assertRaisesNothing, TestWithPackageStructure
 from mock import patch
 from six import string_types
 
-from plankton.core.utils import dict_strict_update, extract_module_name, \
+from lewis.core.utils import dict_strict_update, extract_module_name, \
     get_submodules, get_members, seconds_since, FromOptionalDependency, \
     format_doc_text, check_limits
 
-from plankton.core.exceptions import PlanktonException, LimitViolationException
+from lewis.core.exceptions import lewisException, LimitViolationException
 
 
 class TestDictStrictUpdate(unittest.TestCase):
@@ -109,19 +109,19 @@ class TestGetMembers(unittest.TestCase):
 
 
 class TestSecondsSince(unittest.TestCase):
-    @patch('plankton.core.utils.datetime')
+    @patch('lewis.core.utils.datetime')
     def test_seconds_since_past(self, datetime_mock):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 
         self.assertEqual(seconds_since(datetime(2016, 9, 1, 1, 0)), 3600.0)
 
-    @patch('plankton.core.utils.datetime')
+    @patch('lewis.core.utils.datetime')
     def test_seconds_since_future(self, datetime_mock):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 
         self.assertEqual(seconds_since(datetime(2016, 9, 1, 3, 0)), -3600.0)
 
-    @patch('plankton.core.utils.datetime')
+    @patch('lewis.core.utils.datetime')
     def test_seconds_since_none(self, datetime_mock):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 
@@ -146,13 +146,13 @@ class TestFromOptionalDependency(unittest.TestCase):
         self.assertEqual(A.__name__, 'A')
         self.assertEqual(B.__name__, 'B')
 
-        self.assertRaises(PlanktonException, A, 'argument_one')
-        self.assertRaises(PlanktonException, B, 'argument_one', 'argument_two')
+        self.assertRaises(lewisException, A, 'argument_one')
+        self.assertRaises(lewisException, B, 'argument_one', 'argument_two')
 
     def test_string_exception_is_raised(self):
         A = FromOptionalDependency('invalid_module', 'test').do_import('A')
 
-        self.assertRaises(PlanktonException, A)
+        self.assertRaises(lewisException, A)
 
     def test_custom_exception_is_raised(self):
         A = FromOptionalDependency('invalid_module', ValueError('test')).do_import('A')

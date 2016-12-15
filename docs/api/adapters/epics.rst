@@ -1,5 +1,5 @@
 The EPICS-Adapter
 -----------------
 
-.. automodule:: plankton.adapters.epics
+.. automodule:: lewis.adapters.epics
     :members:
