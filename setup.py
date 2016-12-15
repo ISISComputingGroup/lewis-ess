@@ -21,6 +21,7 @@
 from setuptools import setup, find_packages
 
 
+# as suggested on http://python-packaging.readthedocs.io/en/latest/metadata.html
 def readme():
     with open('README.rst') as f:
         return f.read()
