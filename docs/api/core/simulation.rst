@@ -1,5 +1,5 @@
 Simulation Module
 -----------------
 
-.. automodule:: plankton.core.simulation
+.. automodule:: lewis.core.simulation
     :members:

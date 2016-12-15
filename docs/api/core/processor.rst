@@ -1,5 +1,5 @@
 Processor Module
 ----------------
 
-.. automodule:: plankton.core.processor
+.. automodule:: lewis.core.processor
     :members:

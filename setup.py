@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # *********************************************************************
-# plankton - a library for creating hardware device simulators
+# lewis - a library for creating hardware device simulators
 # Copyright (C) 2016 European Spallation Source ERIC
 #
 # This program is free software: you can redistribute it and/or modify
@@ -21,10 +21,10 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='plankton',
+    name='lewis',
     version='1.0.1',
     description='A platform for development of stateful hardware device simulations.',
-    url='https://github.com/DMSC-Instrument-Data/plankton',
+    url='https://github.com/DMSC-Instrument-Data/lewis',
     author='Michael Hart, Michael Wedel, Owen Arnold',
     author_email='Michael Hart <michael.hart@stfc.ac.uk>, '
                  'Michael Wedel <michael.wedel@esss.se>, '
@@ -56,8 +56,8 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'plankton=plankton.scripts.run:run_simulation',
-            'plankton-control=plankton.scripts.control:control_simulation'
+            'lewis=lewis.scripts.run:run_simulation',
+            'lewis-control=lewis.scripts.control:control_simulation'
         ],
     },
 )

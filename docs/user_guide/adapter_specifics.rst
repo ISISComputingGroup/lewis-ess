@@ -10,12 +10,12 @@ The EPICS adapter takes only one optional argument:
    Defaults to empty / no prefix.
 
 Arguments meant for the adapter should be separated from general
-Plankton arguments by a free-standing ``--``. For example:
+Lewis arguments by a free-standing ``--``. For example:
 
 ::
 
-    $ docker run -itd dmscid/plankton -p epics chopper -- -p SIM1:
-    $ python plankton.py -p epics chopper -- --prefix SIM2:
+    $ docker run -itd dmscid/lewis -p epics chopper -- -p SIM1:
+    $ python lewis.py -p epics chopper -- --prefix SIM2:
 
 When using the EPICS adapter within a docker container, the PV will be
 served on the docker0 network (172.17.0.0/16).
@@ -47,26 +47,26 @@ The TCP Stream adapter has the following optional arguments:
    9999.
 
 Arguments meant for the adapter should be separated from general
-Plankton arguments by a free-standing ``--``. For example:
+Lewis arguments by a free-standing ``--``. For example:
 
 ::
 
-    $ docker run -itd dmscid/plankton -p stream linkam_t95 -- -p 1234
-    $ python plankton.py -p stream linkam_t95 -- --bind-address localhost
+    $ docker run -itd dmscid/lewis -p stream linkam_t95 -- -p 1234
+    $ python lewis.py -p stream linkam_t95 -- --bind-address localhost
 
-When using Plankton via Docker on Windows and OSX, the container will be
+When using Lewis via Docker on Windows and OSX, the container will be
 running inside a virtual machine, and so the port it is listening on
 will be on a network inside the VM. To connect to it from outside of the
 VM, an additional argument must be passed to Docker to forward the port:
 
 ::
 
-    $ docker run -it -p 1234:4321 dmscid/plankton -p stream linkam_t95 -- -p 4321
+    $ docker run -it -p 1234:4321 dmscid/lewis -p stream linkam_t95 -- -p 4321
     $ telnet 192.168.99.100 1234
 
 This ``-p`` argument links port 4321 on the container to port 1234 on
 the VM network adapter. It must appear after ``docker run`` and before
-``dmscid/plankton``. This allows us to connect to the container from
+``dmscid/lewis``. This allows us to connect to the container from
 outside of the VM, in this case using Telnet. The ``192.168.99.100`` IP
 is the IP of the VM on the bridge network between the host and the VM.
 VirtualBox will typically use this IP when available, but it may be

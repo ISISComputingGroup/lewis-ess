@@ -1,7 +1,7 @@
 Framework Details
 =================
 
-The Plankton framework is built around a cycle-based statemachine that
+The Lewis framework is built around a cycle-based statemachine that
 drives the device simulation, and shared protocol adapters that separate
 the communication layer from the simulated device.
 
@@ -39,7 +39,7 @@ identified.
 Statemachine
 ------------
 
-A :class:`~plankton.core.statemachine.StateMachine`-class designed
+A :class:`~lewis.core.statemachine.StateMachine`-class designed
 for a cycle-based approach is provided to allow modeling complex
 device behaviour in an event-driven fashion.
 
@@ -50,11 +50,11 @@ eligible (exiting current state) transition conditions every cycle and
 perform transitions as necessary, triggering callbacks for any event
 that occurs. The following events are available for every state:
 
- - :meth:`~plankton.core.statemachine.StateMachine.on_exit` is triggered once
+ - :meth:`~lewis.core.statemachine.StateMachine.on_exit` is triggered once
    just before exiting the state
- - :meth:`~plankton.core.statemachine.StateMachine.on_entry` is triggered once
+ - :meth:`~lewis.core.statemachine.StateMachine.on_entry` is triggered once
    when entering the state
- - :meth:`~plankton.core.statemachine.StateMachine.in_state` is triggered
+ - :meth:`~lewis.core.statemachine.StateMachine.in_state` is triggered
    every cycle that ends in the state
 
 Every cycle will trigger exactly one ``in_state`` event. This will
@@ -70,7 +70,7 @@ There are three ways to specify event handlers when initializing the
 statemacine:
 
 -  Object-Oriented: Implement one class per state, derived from
-   :class:`~plankton.core.statemachine.State`, which optionally contains up to
+   :class:`~lewis.core.statemachine.State`, which optionally contains up to
    one of each event handler
 -  Function-Driven: Bind individual functions to individual events that
    need handling

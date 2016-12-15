@@ -1,5 +1,5 @@
 The Adapters Module
 -------------------
 
-.. automodule:: plankton.adapters
+.. automodule:: lewis.adapters
     :members:

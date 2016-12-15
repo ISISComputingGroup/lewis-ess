@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# plankton documentation build configuration file, created by
+# lewis documentation build configuration file, created by
 # sphinx-quickstart on Wed Nov  9 16:42:53 2016.
 import os
 import sys
@@ -22,7 +22,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'plankton'
+project = u'lewis'
 copyright = u'2016, European Spallation Source ERIC'
 author = u'Michael Hart, Michael Wedel, Owen Arnold'
 
@@ -36,7 +36,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 pygments_style = 'sphinx'
 todo_include_todos = False
 
-modindex_common_prefix = ['plankton.']
+modindex_common_prefix = ['lewis.']
 
 # -- Options for HTML output ---------------------------------------------
 
@@ -51,7 +51,7 @@ if not on_rtd:
 
 html_static_path = []
 html_show_sourcelink = True
-htmlhelp_basename = 'planktondoc'
+htmlhelp_basename = 'lewisdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -60,6 +60,6 @@ latex_elements = {
 }
 
 latex_documents = [
-    (master_doc, 'plankton.tex', u'plankton Documentation',
+    (master_doc, 'lewis.tex', u'lewis Documentation',
      u'Michael Hart, Michael Wedel, Owen Arnold', 'manual'),
 ]

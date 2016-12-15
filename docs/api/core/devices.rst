@@ -1,5 +1,5 @@
 Devices Module
 --------------
 
-.. automodule:: plankton.core.devices
+.. automodule:: lewis.core.devices
     :members:

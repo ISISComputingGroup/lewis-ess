@@ -1,5 +1,5 @@
 Exceptions Module
 -----------------
 
-.. automodule:: plankton.core.exceptions
+.. automodule:: lewis.core.exceptions
     :members:

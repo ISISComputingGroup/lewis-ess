@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # *********************************************************************
-# plankton - a library for creating hardware device simulators
+# lewis - a library for creating hardware device simulators
 # Copyright (C) 2016 European Spallation Source ERIC
 #
 # This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@ import unittest
 
 from mock import Mock, patch
 
-from plankton.core.statemachine import StateMachine, State, Transition, StateMachineException
+from lewis.core.statemachine import StateMachine, State, Transition, StateMachineException
 
 
 class TestStateMachine(unittest.TestCase):
