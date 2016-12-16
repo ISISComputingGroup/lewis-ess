@@ -99,7 +99,3 @@ class TestSimulatedJulabo(unittest.TestCase):
 
     def test_setting_internal_d_sets_d(self):
         self.check_setting_values_works('internal_d', 10)
-
-
-
-

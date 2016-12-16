@@ -44,12 +44,12 @@ class SimulatedJulabo(StateMachineDevice):
         # Real device remembers values from last run, we use arbitrary defaults
         self.temperature = 24.0  # Current temperature in C
         self.external_temperature = 26.0  # External temperature in C
-        self.heating_power = 5.0 # The heating power
-        self.set_point_temperature = 24.0 # Start with the set point being equal to the current temperature
+        self.heating_power = 5.0  # The heating power
+        self.set_point_temperature = 24.0  # Set point starts equal to the current temperature
         self.temperature_low_limit = 0.0  # Usually set in the hardware
         self.temperature_high_limit = 100.0  # Usually set in the hardware
         self.is_circulating = 0  # 0 for off, 1 for on
-        self.temperature_ramp_rate = 5.0 # Guessed value in C/min
+        self.temperature_ramp_rate = 5.0  # Guessed value in C/min
 
         self.internal_p = 0.1 # The proportional
         self.internal_i = 3  # The integral

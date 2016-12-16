@@ -31,4 +31,3 @@ class DefaultCirculatingState(State):
         self._context.temperature = approaches.linear(
             self._context.temperature, self._context.set_point_temperature,
             self._context.heating_power / 60.0, dt)
-

@@ -56,5 +56,3 @@ class JulaboStreamInterfaceV1(StreamAdapter):
 
     in_terminator = '\r'
     out_terminator = '\r\n'
-
-
