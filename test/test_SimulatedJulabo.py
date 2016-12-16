@@ -19,7 +19,7 @@
 
 import unittest
 
-from plankton.devices.julabo import SimulatedJulabo
+from lewis.devices.julabo import SimulatedJulabo
 from . import assertRaisesNothing
 
 
