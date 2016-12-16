@@ -48,7 +48,7 @@ class SimulatedJulabo(StateMachineDevice):
         self.is_circulating = 0  # 0 for off, 1 for on
         self.temperature_ramp_rate = 5.0  # Guessed value in C/min
 
-        self.internal_p = 0.1 # The proportional
+        self.internal_p = 0.1  # The proportional
         self.internal_i = 3  # The integral
         self.internal_d = 0  # The derivative
         self.external_p = 0.1  # The proportional
