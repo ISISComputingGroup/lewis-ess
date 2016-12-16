@@ -15,10 +15,11 @@ usage sections for details.
 Resources:
 `GitHub <https://github.com/DMSC-Instrument-Data/lewis>`__ --
 `DockerHub <https://hub.docker.com/r/dmscid/lewis/>`__ --
-`Dockerfile <https://github.com/DMSC-Instrument-Data/lewis/blob/master/Dockerfile>`__
+`Dockerfile <https://github.com/DMSC-Instrument-Data/lewis/blob/master/Dockerfile>`__ --
+`ReadTheDocs <http://lewis.readthedocs.io/>`__
 
-Lewis started out under the name "plankton", but due to a
-package with the same name on PyPI we decided to rename the project.
+Lewis was previously named "Plankton" but, due to a
+package with the same name on PyPI, we decided to rename the project.
 
 Purpose and Use Cases
 ---------------------
@@ -88,7 +89,7 @@ What Can You Do With Lewis?
 Additional Documentation
 ------------------------
 
-Documentation can be found at `http://lewis.readthedocs.io/`.
+Documentation can be found at `ReadTheDocs <http://lewis.readthedocs.io/>`__.
 It can also be generated from the sources:
 
 ::
