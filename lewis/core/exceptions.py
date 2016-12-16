@@ -23,7 +23,7 @@ that they can be caught and meaningful messages can be displayed to the user.
 """
 
 
-class lewisException(Exception):
+class LewisException(Exception):
     """
     This exception type is used to distinguish exceptions that are expected
     from unexpected ones. This enables better error handling and more importantly

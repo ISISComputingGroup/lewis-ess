@@ -34,7 +34,7 @@ from datetime import datetime
 from os import path as osp
 from os import listdir
 
-from .exceptions import lewisException, LimitViolationException
+from .exceptions import LewisException, LimitViolationException
 
 
 def get_submodules(module):
@@ -191,8 +191,8 @@ class FromOptionalDependency(object):
     case an exception is raised.
 
     The exception can be controlled via the exception-parameter. If it is a
-    string, a lewisException is constructed from it. Alternatively it can
-    be an instance of an exception-type. If not provided, a lewisException
+    string, a LewisException is constructed from it. Alternatively it can
+    be an instance of an exception-type. If not provided, a LewisException
     with a standard message is constructed. If it is anything else, a RuntimeError
     is raised.
 
@@ -200,7 +200,7 @@ class FromOptionalDependency(object):
     the module that was attempted to load is actually used.
 
     :param module: Module from that symbols should be imported.
-    :param exception: Text for lewisException or custom exception object.
+    :param exception: Text for LewisException or custom exception object.
     """
 
     def __init__(self, module, exception=None):
@@ -211,7 +211,7 @@ class FromOptionalDependency(object):
                         'functionality you tried to use.'.format(self._module)
 
         if isinstance(exception, string_types):
-            exception = lewisException(exception)
+            exception = LewisException(exception)
 
         if not isinstance(exception, BaseException):
             raise RuntimeError(

@@ -27,7 +27,7 @@ produces factory-like objects that create device instances and interfaces based 
 import importlib
 
 from lewis.adapters import Adapter
-from lewis.core.exceptions import lewisException
+from lewis.core.exceptions import LewisException
 from lewis.core.utils import get_submodules, get_members
 
 
@@ -244,7 +244,7 @@ class DeviceBuilder(object):
     def create_device(self, setup=None):
         """
         Creates a device object according to the provided setup. If no setup is provided,
-        the default setup is used. If the setup can't be found, a lewisException is raised.
+        the default setup is used. If the setup can't be found, a LewisException is raised.
         This can also happen if the device type specified in the setup is invalid.
 
         :param setup: Name of the setup from which to create device.
@@ -253,7 +253,7 @@ class DeviceBuilder(object):
         setup_name = setup if setup is not None else 'default'
 
         if setup_name not in self.setups:
-            raise lewisException(
+            raise LewisException(
                 'Failed to find setup \'{}\' for device \'{}\'. '
                 'Available setups are:\n    {}'.format(
                     setup, self.name, '\n    '.join(self.setups.keys())))
@@ -265,7 +265,7 @@ class DeviceBuilder(object):
             return self._create_device_instance(
                 device_type, **setup_data.get('parameters', {}))
         except RuntimeError:
-            raise lewisException(
+            raise LewisException(
                 'The setup \'{}\' you tried to load does not specify a valid device type, but the '
                 'device module \'{}\' provides multiple device types so that no meaningful '
                 'default can be deduced.'.format(setup_name, self.name))
@@ -273,7 +273,7 @@ class DeviceBuilder(object):
     def create_interface(self, protocol=None, *args, **kwargs):
         """
         Returns an interface that implements the provided protocol. If the protocol is not
-        known, a lewisException is raised. All additional arguments are forwarded
+        known, a LewisException is raised. All additional arguments are forwarded
         to the interface constructor (see :class:`~lewis.adapters.Adapter` for details).
 
         :param protocol: Protocol which the interface must implement.
@@ -286,7 +286,7 @@ class DeviceBuilder(object):
         try:
             return self.interfaces[protocol](*args, **kwargs)
         except KeyError:
-            raise lewisException(
+            raise LewisException(
                 'Failed to find protocol \'{}\' for device \'{}\'. '
                 'Available protocols are: \n    {}'.format(
                     protocol, self.name, '\n    {}'.join(self.interfaces.keys())))
@@ -307,7 +307,7 @@ class DeviceRegistry(object):
 
         # construct device, interface, ...
 
-    If the module can not be imported, a lewisException is raised.
+    If the module can not be imported, a LewisException is raised.
 
     :param device_module: Name of device module from which devices are loaded.
     """
@@ -316,7 +316,7 @@ class DeviceRegistry(object):
         try:
             self._device_module = importlib.import_module(device_module)
         except ImportError:
-            raise lewisException(
+            raise LewisException(
                 'Failed to import module \'{}\' for device discovery. '
                 'Make sure that it is in the PYTHONPATH.\n'
                 'See also the -a option of lewis.'.format(device_module))
@@ -333,7 +333,7 @@ class DeviceRegistry(object):
         """
         Returns a :class:`DeviceBuilder` instance that can be used to create device objects
         based on setups, as well as device interfaces. If the device name is not stored
-        in the internal map, a lewisException is raised.
+        in the internal map, a LewisException is raised.
 
         :param name: Name of the device.
         :return: :class:`DeviceBuilder`-object for requested device.
@@ -341,7 +341,7 @@ class DeviceRegistry(object):
         try:
             return self._devices[name]
         except KeyError:
-            raise lewisException(
+            raise LewisException(
                 'No device with the name \'{}\' could be found. '
                 'Possible names are:\n    {}\n'
                 'See also the -k option to add inspect a different module.'.format(

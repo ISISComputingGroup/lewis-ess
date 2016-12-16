@@ -27,13 +27,13 @@ from . import Adapter, ForwardProperty
 from six import iteritems
 
 from lewis.core.utils import seconds_since, FromOptionalDependency, format_doc_text
-from lewis.core.exceptions import lewisException
+from lewis.core.exceptions import LewisException
 
 # pcaspy might not be available. To make EPICS-based adapters show up
 # in the listed adapters anyway dummy types are created in this case
 # and the failure is postponed to runtime, where a more appropriate
-# lewisException can be raised.
-missing_pcaspy_exception = lewisException(
+# LewisException can be raised.
+missing_pcaspy_exception = LewisException(
     'In order to use EPICS-interfaces, pcaspy must be installed:\n'
     '\tpip install pcaspy\n'
     'A fully working installation of EPICS-base is required for this package. '
