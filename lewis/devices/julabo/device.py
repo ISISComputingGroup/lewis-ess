@@ -18,11 +18,8 @@
 # *********************************************************************
 
 from __future__ import print_function
-
 from collections import OrderedDict
-
-from plankton.devices import StateMachineDevice
-
+from lewis.devices import StateMachineDevice
 from . import states
 
 

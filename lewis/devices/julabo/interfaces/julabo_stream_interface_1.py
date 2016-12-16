@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from plankton.adapters.stream import StreamAdapter, Cmd
+from lewis.adapters.stream import StreamAdapter, Cmd
 
 
 class JulaboStreamInterfaceV1(StreamAdapter):

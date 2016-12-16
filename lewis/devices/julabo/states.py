@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from plankton.core.statemachine import State
-from plankton.core import approaches
+from lewis.core.statemachine import State
+from lewis.core import approaches
 
 
 class DefaultNotCirculatingState(State):
