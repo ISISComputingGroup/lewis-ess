@@ -1,13 +1,100 @@
 Usage with Python
 =================
 
-To use Lewis directly via Python you must first install its
-dependencies:
+To use Lewis directly via Python you must first install its dependencies:
 
 -  Python 2.7+ or 3.4+
 -  PIP 8.1+
 
-Clone the repository in a location of your choice:
+On most linux systems these can be installed via the distribution's package manager.
+
+Virtual environments
+--------------------
+
+The two sections below describe installation and use of Lewis using two different methods,
+installation via pip and from source. For both methods we recommend setting up a virtual
+environment, which provide a great way of keeping packages outside the system directories and
+at the same time have more control over the environment a script is running in.
+
+To setup a virtual environment, you need the ``virtualenv`` package:
+
+::
+
+    $ pip install --user virtualenv
+
+After that it's recommended to create a directory somewhere to hold the environments:
+
+::
+
+    $ mkdir ~/venvs
+
+Then you can create a new environment using the virtualenv command:
+
+::
+
+    $ virtualenv ~/venvs/lewis-env
+
+To actually begin using the environment, a script file containing environment variables and so on
+needs to be sourced:
+
+::
+
+    $ source ~/venvs/lewis-env/bin/activate
+
+By default this modifies the terminal display, showing the name of the environment. To leave the
+environment and go back to the "normal" terminal type the following:
+
+::
+
+    (lewis-env)$ deactivate
+
+The packages that are installed in the virtual environment are only available when it has been
+activated. Inside the virtual environment you do not need the ``--user``-flag of pip, because
+the directories the packages are installed to are in a location that is writable with your
+normal user account.
+
+There are some packages to make managing multiple virtual environments easier and some IDEs also
+have builtin support. A number of guides and documentation pages exist on this topic, the
+documentation of virtualenv is a good starting point (`<https://virtualenv.pypa.io/en/stable/>`__).
+
+
+Installation via pip
+--------------------
+
+Lewis is available on the `Python Package Index <https://pypi.python.org/pypi/lewis>`__. That means
+it can be installed using pip:
+
+::
+
+    $ pip install lewis
+
+This will install lewis along with its dependencies. If you would like to use EPICS based devices
+and have a working EPICS environment on your machine, you can install it like this to get the
+additional required dependencies:
+
+::
+
+    $ pip install lewis[epics]
+
+This will install two scripts in the path, ``lewis`` and ``lewis-control``. Both scripts provide
+command line help:
+
+::
+
+    $ lewis --help
+    $ lewis-control --help
+
+To list available devices, just type ``lewis`` in the command line, a list of devices that are
+available for simulation will be printed.
+
+All following sections of this user manual assume that Lewis has been installed via pip and that
+the ``lewis`` command is available.
+
+Installation from source
+------------------------
+
+Clone the repository in a location of your choice, we recommend that you do it inside a virtual
+environment (see above) so that you can keep track of the dependencies:
 
 ::
 
@@ -27,7 +114,6 @@ out in the ``requirements.txt``-file and have to be explicitly enabled. Currentl
 dependency is ``pcaspy`` for using devices with an EPICS interface, it requires a working
 installation of EPICS base. Please refer to the `installation instructions
 <https://pcaspy.readthedocs.io/en/latest/installation.html>`__ of the module.
-
 
 If you also want to run Lewis' unit tests, you may also install the
 development dependencies:
@@ -64,3 +150,6 @@ directory):
 
 Details about parameters for the various adapters, and differences
 between OSes are covered in the "Adapter Specifics" sections.
+
+If you decided to install Lewis this way, please be aware that the ``lewis`` and ``lewis-control``
+calls in the other parts of the guide have to be replaced with ``python lewis.py``.

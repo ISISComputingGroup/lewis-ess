@@ -10,7 +10,7 @@ the ``-r`` option with a ``host:port`` string to the simulation:
 
 ::
 
-    $ python lewis.py -r 127.0.0.1:10000 chopper -- -p SIM:
+    $ lewis -r 127.0.0.1:10000 chopper -- -p SIM:
 
 Now the device can be controlled via the ``lewis-control.py``-script
 in a different terminal window. The service can be queried to show the
@@ -18,7 +18,7 @@ available objects by not supplying an object name:
 
 ::
 
-    $ python lewis-control.py -r 127.0.0.1:10000
+    $ lewis-control -r 127.0.0.1:10000
 
 The ``-r`` (or ``--rpc-host``) option defaults to the value shown here,
 so it will be omitted in the following examples. To get information on
@@ -27,7 +27,7 @@ method will list the object's API:
 
 ::
 
-    $ python lewis-control.py device
+    $ lewis-control device
 
 This will output a list of properties and methods which is available for
 remote access. This may not comprise the full interface of the object
@@ -36,13 +36,13 @@ property is done like this:
 
 ::
 
-    $ python lewis-control.py device state
+    $ lewis-control device state
 
 The same syntax is used to call methods without parameters:
 
 ::
 
-    $ python lewis-control.py device initialize
+    $ lewis-control device initialize
 
 To set a property to a new value, the value has to be supplied on the
 command line:
@@ -53,7 +53,7 @@ command line:
     $ python lewis-control.py device start
 
 Only numeric types and strings can be used as arguments via the
-``lewis-control.py``-script. The script always tries to convert
+``lewis-control``-script. The script always tries to convert
 parameters to ``int`` first, then to ``float`` and leaves it as ``str``
 if both fail. For other types and more control over types, it's advised
 to write a Python script instead using the tools provided in
