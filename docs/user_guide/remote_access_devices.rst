@@ -53,13 +53,11 @@ command line:
     $ python lewis-control.py device start
 
 Only numeric types and strings can be used as arguments via the
-``lewis-control``-script. The script always tries to convert
-parameters to ``int`` first, then to ``float`` and leaves it as ``str``
-if both fail. For other types and more control over types, it's advised
-to write a Python script instead using the tools provided in
-``lewis.core.control_client`` which makes it possible to use the
-remote objects more or less transparently. An example to control the
-chopper:
+``lewis-control``-script. The script uses the Python rules for parsing literals,
+so ints, floats, tuples, lists, dicts are submitted to the server. For more complex types
+and more control, it's advised to write a Python script instead using
+the tools provided in ``lewis.core.control_client`` which makes it possible to use the
+remote objects more or less transparently. An example to control the chopper:
 
 .. code:: python
 
