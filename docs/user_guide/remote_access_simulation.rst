@@ -1,4 +1,4 @@
-Remote access to simulation parameters
+Remote Access to Simulation Parameters
 ======================================
 
 *Please note that this functionality should only be used on a trusted
