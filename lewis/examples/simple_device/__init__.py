@@ -19,7 +19,7 @@
 
 from lewis.devices import Device
 
-from lewis.adapters.stream import StreamAdapter, Cmd
+from lewis.adapters.stream import StreamAdapter, Var
 
 
 class VerySimpleDevice(Device):
@@ -39,8 +39,7 @@ class VerySimpleInterface(StreamAdapter):
     After that, typing either of the commands and pressing enter sends them to the server.
     """
     commands = {
-        Cmd('get_param', '^P$'),
-        Cmd('set_param', '^P=(.+)$'),
+        Var('param', read_regex='^P$', write_regex='^P=(.+)$')
     }
 
     in_terminator = '\r\n'
