@@ -21,14 +21,14 @@ from __future__ import print_function
 
 import asynchat
 import asyncore
+import inspect
 import re
 import socket
-import inspect
 from argparse import ArgumentParser
 
 from six import b
 
-from lewis.adapters import Adapter, ForwardMethod
+from lewis.adapters import Adapter, ForwardMethod, ForwardProperty
 from lewis.core.utils import format_doc_text
 
 
@@ -50,14 +50,12 @@ class StreamHandler(asynchat.async_chat):
         try:
             match = None
             for cmd in self.target.commands:
-                match = cmd.pattern.match(request)
-                if match:
-                    groups = match.groups()
-                    func = getattr(self.target, cmd.method)
-
-                    args = cmd.map_arguments(groups)
-                    reply = cmd.return_mapping(func(*args))
+                try:
+                    reply = cmd.process_request(request, self.target)
+                    match = True
                     break
+                except CanNotProcessException:
+                    pass
 
             if match is None:
                 raise RuntimeError('None of the device\'s commands matched.')
@@ -86,7 +84,44 @@ class StreamServer(asyncore.dispatcher):
             StreamHandler(sock, self.target)
 
 
-class Cmd(object):
+class CanNotProcessException(Exception):
+    pass
+
+
+class BaseCommand(object):
+    member = None
+    argument_mappings = None
+    return_mapping = None
+    doc = None
+
+    def process_request(self, request, target):
+        raise NotImplementedError('Commands must implement process_request method.')
+
+    @property
+    def patterns(self):
+        raise NotImplementedError('Commands must implement patterns property.')
+
+    def map_arguments(self, arguments):
+        """
+        Returns the mapped function arguments. If no mapping functions are defined, the arguments
+        are returned as they were supplied.
+
+        :param arguments: List of arguments for bound function as strings.
+        :return: Mapped arguments.
+        """
+        if self.argument_mappings is None:
+            return arguments
+
+        return [f(a) for f, a in zip(self.argument_mappings, arguments)]
+
+    def map_return_value(self, return_value):
+        if self.return_mapping is None:
+            return return_value
+
+        return self.return_mapping(return_value)
+
+
+class Cmd(BaseCommand):
     """
     This is a small helper class that makes it easy to define commands that are parsed
     by StreamAdapter and forwarded to the correct methods on the Adapter.
@@ -108,16 +143,15 @@ class Cmd(object):
 
     :param target_method: Method to be called when regex matches.
     :param regex: Regex to match for method call.
-    :param regex_flags: Flags to pass ot re.compile, default is 0.
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
     """
 
-    def __init__(self, target_method, regex, regex_flags=0, argument_mappings=None,
+    def __init__(self, target_method, regex, argument_mappings=None,
                  return_mapping=lambda x: None if x is None else str(x), doc=None):
-        self.method = target_method
-        self.pattern = re.compile(b(regex), regex_flags)
+        self.member = target_method
+        self.pattern = re.compile(b(regex))
 
         if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
             raise RuntimeError(
@@ -128,18 +162,71 @@ class Cmd(object):
         self.return_mapping = return_mapping
         self.doc = doc
 
-    def map_arguments(self, arguments):
-        """
-        Returns the mapped function arguments. If no mapping functions are defined, the arguments
-        are returned as they were supplied.
+    @property
+    def patterns(self):
+        return [self.pattern.pattern]
 
-        :param arguments: List of arguments for bound function as strings.
-        :return: Mapped arguments.
-        """
-        if not self.argument_mappings:
-            return arguments
+    def process_request(self, request, target):
+        match = self.pattern.match(request)
 
-        return [f(a) for f, a in zip(self.argument_mappings, arguments)]
+        if not match:
+            raise CanNotProcessException()
+
+        args = self.map_arguments(match.groups())
+        func = getattr(target, self.member)
+
+        return self.map_return_value(func(*args))
+
+
+class Var(BaseCommand):
+    def __init__(self, target_member, read_regex=None, write_regex=None, argument_mappings=None,
+                 return_mapping=lambda x: None if x is None else str(x), doc=None):
+        self.member = target_member
+
+        self.read_pattern = re.compile(read_regex) if read_regex is not None else None
+        if self.read_pattern.groups != 0:
+            raise RuntimeError(
+                'Command regex for reading member \'{}\' contains '
+                'arguments.'.format(target_member))
+
+        self.write_pattern = re.compile(write_regex) if write_regex is not None else None
+
+        if self.write_pattern.groups != 1:
+            raise RuntimeError(
+                'Command regex for writing member \'{}\' contains more '
+                'than one argument.'.format(target_member))
+
+        self.argument_mappings = argument_mappings
+        self.return_mapping = return_mapping
+        self.doc = doc
+
+    @property
+    def patterns(self):
+        patterns = []
+
+        if self.read_pattern is not None:
+            patterns.append(self.read_pattern)
+
+        if self.write_pattern is not None:
+            patterns.append(self.write_pattern)
+
+        return patterns
+
+    def process_request(self, request, target):
+        if self.read_pattern is not None:
+            match = self.read_pattern.match(request)
+
+            if match:
+                return self.map_return_value(getattr(target, self.member))
+
+        if self.write_pattern is not None:
+            match = self.write_pattern.match(request)
+
+            if match:
+                args = self.map_arguments(match.groups())
+                return self.map_return_value(setattr(target, self.member, *args))
+
+        raise CanNotProcessException()
 
 
 class StreamAdapter(Adapter):
@@ -241,20 +328,26 @@ class StreamAdapter(Adapter):
     def _create_properties(self, cmds):
         patterns = set()
         for cmd in cmds:
-            method = cmd.method
+            member = cmd.member
 
-            if method not in dir(self):
-                if method not in dir(self._device):
-                    raise AttributeError('Can not find method \''
-                                         + method + '\' in device or interface.')
-                setattr(self, method, ForwardMethod(self._device, method))
+            if member not in dir(self):
+                if member not in dir(self._device):
+                    raise AttributeError('Can not find member \''
+                                         + member + '\' in device or interface.')
 
-            if cmd.pattern.pattern in patterns:
+                if callable(getattr(self._device, member)):
+                    setattr(self, member, ForwardMethod(self._device, member))
+                else:
+                    setattr(type(self), member, ForwardProperty('_device', member, instance=self))
+
+            cmd_patterns = set(cmd.patterns)
+
+            if not cmd_patterns.isdisjoint(patterns):
                 raise RuntimeError(
                     'The regular expression \'{}\' is '
-                    'associated with multiple methods.'.format(cmd.pattern.pattern))
+                    'associated with multiple members.'.format(cmd.pattern.pattern))
 
-            patterns.add(cmd.pattern.pattern)
+            patterns.update(cmd_patterns)
 
         if len(patterns) < len(cmds):
             raise RuntimeError('Warning')
