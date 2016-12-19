@@ -184,8 +184,9 @@ class Cmd(BaseCommand):
 
 
 class Var(BaseCommand):
-    def __init__(self, target_member, read_pattern=None, write_pattern=None, argument_mappings=None,
-                 return_mapping=lambda x: None if x is None else str(x), doc=None):
+    def __init__(self, target_member, read_pattern=None, write_pattern=None,
+                 argument_mappings=None, return_mapping=lambda x: None if x is None else str(x),
+                 doc=None):
         self.member = target_member
 
         self._patterns = {key: re.compile(pattern) for key, pattern in
