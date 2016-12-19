@@ -115,10 +115,13 @@ class BaseCommand(object):
         return [f(a) for f, a in zip(self.argument_mappings, arguments)]
 
     def map_return_value(self, return_value):
-        if self.return_mapping is None:
-            return return_value
+        if callable(self.return_mapping):
+            return self.return_mapping(return_value)
 
-        return self.return_mapping(return_value)
+        if self.return_mapping is not None:
+            return self.return_mapping
+
+        return return_value
 
 
 class Cmd(BaseCommand):
@@ -136,7 +139,9 @@ class Cmd(BaseCommand):
 
     The return_mapping argument is similar, it should map the return value of the method
     to a string. The default map function only does that when the supplied value
-    is not None.
+    is not None. It can also be set to a numeric value or a string constant so that the
+    command always returns the same value. If it is ``None``, the return value is not
+    modified at all.
 
     Finally, documentation can be provided by passing the doc-argument. If it is omitted,
     the docstring of the bound method is used and if that is not present, left empty.
@@ -148,10 +153,10 @@ class Cmd(BaseCommand):
     :param doc: Description of the command. If not supplied, the docstring is used.
     """
 
-    def __init__(self, target_method, regex, argument_mappings=None,
+    def __init__(self, target_method, pattern, argument_mappings=None,
                  return_mapping=lambda x: None if x is None else str(x), doc=None):
         self.member = target_method
-        self.pattern = re.compile(b(regex))
+        self.pattern = re.compile(b(pattern))
 
         if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
             raise RuntimeError(
@@ -179,22 +184,24 @@ class Cmd(BaseCommand):
 
 
 class Var(BaseCommand):
-    def __init__(self, target_member, read_regex=None, write_regex=None, argument_mappings=None,
+    def __init__(self, target_member, read_pattern=None, write_pattern=None, argument_mappings=None,
                  return_mapping=lambda x: None if x is None else str(x), doc=None):
         self.member = target_member
 
-        self.read_pattern = re.compile(read_regex) if read_regex is not None else None
-        if self.read_pattern.groups != 0:
+        self._patterns = {key: re.compile(pattern) for key, pattern in
+                          zip(('read', 'write'), (read_pattern, write_pattern)) if
+                          pattern is not None}
+
+        if 'read' in self._patterns and self._patterns['read'].groups != 0:
             raise RuntimeError(
                 'Command regex for reading member \'{}\' contains '
                 'arguments.'.format(target_member))
 
-        self.write_pattern = re.compile(write_regex) if write_regex is not None else None
-
-        if self.write_pattern.groups != 1:
+        if 'write' in self._patterns and self._patterns['write'].groups != 1:
             raise RuntimeError(
-                'Command regex for writing member \'{}\' contains more '
-                'than one argument.'.format(target_member))
+                'Command regex for writing member \'{}\' is expected to contain one '
+                'argument, but it contains {}.'.format(
+                    target_member, self._patterns['write'].groups))
 
         self.argument_mappings = argument_mappings
         self.return_mapping = return_mapping
@@ -202,25 +209,17 @@ class Var(BaseCommand):
 
     @property
     def patterns(self):
-        patterns = []
-
-        if self.read_pattern is not None:
-            patterns.append(self.read_pattern)
-
-        if self.write_pattern is not None:
-            patterns.append(self.write_pattern)
-
-        return patterns
+        return [pattern.pattern for pattern in self._patterns.values()]
 
     def process_request(self, request, target):
-        if self.read_pattern is not None:
-            match = self.read_pattern.match(request)
+        if 'read' in self._patterns:
+            match = self._patterns['read'].match(request)
 
             if match:
                 return self.map_return_value(getattr(target, self.member))
 
-        if self.write_pattern is not None:
-            match = self.write_pattern.match(request)
+        if 'write' in self._patterns:
+            match = self._patterns['write'].match(request)
 
             if match:
                 args = self.map_arguments(match.groups())

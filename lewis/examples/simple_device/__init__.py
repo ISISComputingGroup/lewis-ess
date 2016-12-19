@@ -19,7 +19,7 @@
 
 from lewis.devices import Device
 
-from lewis.adapters.stream import StreamAdapter, Var
+from lewis.adapters.stream import StreamAdapter, Cmd, Var
 
 
 class VerySimpleDevice(Device):
@@ -31,15 +31,25 @@ class VerySimpleInterface(StreamAdapter):
     A very simple device with TCP-stream interface
 
     The device has only one parameter, which can be set to an arbitrary
-    value. The interface consists of two commands which can be invoked via telnet.
+    value. The interface consists of four commands which can be invoked via telnet.
     To connect:
 
         $ telnet host port
 
     After that, typing either of the commands and pressing enter sends them to the server.
+
+    The commands are:
+
+     - ``V``: Returns the parameter as part of a verbose message.
+     - ``V=something``: Sets the parameter to ``something``.
+     - ``P``: Returns the device parameter unmodified.
+     - ``P=something``: Exactly the same as ``V=something``.
+
     """
     commands = {
-        Var('param', read_regex='^P$', write_regex='^P=(.+)$')
+        Cmd('get_param', pattern='^V$', return_mapping=lambda x: 'The value is {}'.format(x)),
+        Cmd('set_param', pattern='^V=(.+)$'),
+        Var('param', read_pattern='^P$', write_pattern='^P=(.+)$')
     }
 
     in_terminator = '\r\n'
