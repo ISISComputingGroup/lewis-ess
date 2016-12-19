@@ -1,4 +1,4 @@
-Remote access to simulation parameters
+Remote Access to Simulation Parameters
 ======================================
 
 *Please note that this functionality should only be used on a trusted
@@ -10,8 +10,8 @@ simulation can be paused and resumed using the control script:
 
 ::
 
-    $ ./lewis-control.py simulation pause
-    $ ./lewis-control.py simulation resume
+    $ lewis-control simulation pause
+    $ lewis-control simulation resume
 
 With these commands, the simulation is paused, while the communication
 with the device remains responsive. The communication channel (for
@@ -21,8 +21,8 @@ loss of connection, another pair of functions is available:
 
 ::
 
-    $ ./lewis-control.py simulation disconnect_device
-    $ ./lewis-control.py simulation connect_device
+    $ lewis-control simulation disconnect_device
+    $ lewis-control simulation connect_device
 
 This basically shows the opposite effect, the device simulation
 continues running, but the communication channel is not processed
@@ -34,8 +34,8 @@ parameter).
 
 ::
 
-    $ ./lewis-control.py simulation speed 10
-    $ ./lewis-control.py simulation cycle_delay 0.05
+    $ lewis-control simulation speed 10
+    $ lewis-control simulation cycle_delay 0.05
 
 This will cause the twice as many cycles per second to be computed
 compared to the default, and the simulation runs ten times faster than
@@ -47,14 +47,14 @@ passed:
 
 ::
 
-    $ ./lewis-control.py simulation uptime
-    $ ./lewis-control.py simulation runtime
+    $ lewis-control simulation uptime
+    $ lewis-control simulation runtime
 
 Finally, the simulation can also be stopped:
 
 ::
 
-    $ ./lewis-control.py simulation stop
+    $ lewis-control simulation stop
 
 It is not possible to recover from that, as the processing of remote
 commands stops as well. The only way to restart the simulation is to run
