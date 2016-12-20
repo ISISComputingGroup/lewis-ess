@@ -48,11 +48,13 @@ class StreamHandler(asynchat.async_chat):
         self.buffer = []
 
         try:
-            try:
-                cmd = next(cmd for cmd in self.target.commands if cmd.can_process(request))
-                reply = cmd.process_request(request, self.target)
-            except StopIteration:
+            cmd = next((cmd for cmd in self.target.commands if cmd.can_process(request)), None)
+
+            if cmd is None:
                 raise RuntimeError('None of the device\'s commands matched.')
+
+            reply = cmd.process_request(request, self.target)
+
         except Exception as error:
             reply = self.target.handle_error(request, error)
 
