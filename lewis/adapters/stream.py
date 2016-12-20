@@ -79,20 +79,56 @@ class StreamServer(asyncore.dispatcher):
             StreamHandler(sock, self.target)
 
 
-class BaseCommand(object):
-    member = None
-    argument_mappings = None
-    return_mapping = None
-    doc = None
+class CommandBase(object):
+    """
+    This is the common base class for :class:`Cmd` and :class:`Var`, both of which provide
+    different ways to expose attributes and methods of an object via :class:`StreamAdapter`
+    while this class is not for direct use.
+
+    CommandBase defines the interface that :class:`StreamAdapter` uses in order to bind commands
+    to device objects and process them. Three members depend on the implementation of the
+    sub-classes, :meth:`can_process`, :meth:`process_request` and :meth:`patterns`.
+
+    :param member: Member that is exposed by this command.
+    :param argument_mappings: Iterable with mapping functions from string to some type.
+    :param return_mapping: Mapping function for return value or a constant.
+    :param doc: Description of the command. If not supplied, the docstring is used.
+    """
+    def __init__(self, member, argument_mappings=None, return_mapping=None, doc=None):
+        self.member = member
+        self.argument_mappings = argument_mappings
+        self.return_mapping = return_mapping
+        self.doc = doc
 
     def can_process(self, request):
+        """
+        This method should return ``True`` if the request can be processed by this object.
+        The default implementation raises a ``NotImplementedError``.
+
+        :param request: Request string to be checked.
+        :return: ``True`` if request can be processed.
+        """
         raise NotImplementedError('Commands must implement can_process method.')
 
     def process_request(self, request, target):
+        """
+        Should process the request, potentially using ``target``, which is the interface object,
+        and return any result.
+        The default implementation raises a ``NotImplementedError``.
+
+        :param request: Request string to be processed.
+        :param target: Interface object.
+        :return: Result of processing.
+        """
         raise NotImplementedError('Commands must implement process_request method.')
 
     @property
     def patterns(self):
+        """
+        This property should return an iterable with all patterns that match processable requests.
+        For :class:`Cmd` and :class:`Var` those are regular expression patterns. The default
+        implementation raises a ``NotImplementedError``.
+        """
         raise NotImplementedError('Commands must implement patterns property.')
 
     def map_arguments(self, arguments):
@@ -109,6 +145,13 @@ class BaseCommand(object):
         return [f(a) for f, a in zip(self.argument_mappings, arguments)]
 
     def map_return_value(self, return_value):
+        """
+        Returns the mapped return_value of a processed request. If no return_mapping has been
+        defined, the value is returned as is.
+
+        :param return_value: Value to map.
+        :return: Mapped return value.
+        """
         if callable(self.return_mapping):
             return self.return_mapping(return_value)
 
@@ -118,7 +161,7 @@ class BaseCommand(object):
         return return_value
 
 
-class Cmd(BaseCommand):
+class Cmd(CommandBase):
     """
     This is a small helper class that makes it easy to define commands that are parsed
     by StreamAdapter and forwarded to the correct methods on the Adapter.
@@ -141,7 +184,7 @@ class Cmd(BaseCommand):
     the docstring of the bound method is used and if that is not present, left empty.
 
     :param target_method: Method to be called when regex matches.
-    :param regex: Regex to match for method call.
+    :param pattern: Regex to match for method call.
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
@@ -149,17 +192,14 @@ class Cmd(BaseCommand):
 
     def __init__(self, target_method, pattern, argument_mappings=None,
                  return_mapping=lambda x: None if x is None else str(x), doc=None):
-        self.member = target_method
+        super(Cmd, self).__init__(target_method, argument_mappings, return_mapping, doc)
+
         self.pattern = re.compile(b(pattern))
 
         if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
             raise RuntimeError(
                 'Expected {} argument mapping(s), got {}'.format(
                     self.pattern.groups, len(argument_mappings)))
-
-        self.argument_mappings = argument_mappings
-        self.return_mapping = return_mapping
-        self.doc = doc
 
     @property
     def patterns(self):
@@ -180,11 +220,14 @@ class Cmd(BaseCommand):
         return self.map_return_value(func(*args))
 
 
-class Var(BaseCommand):
+class Var(CommandBase):
+    """
+
+    """
     def __init__(self, target_member, read_pattern=None, write_pattern=None,
                  argument_mappings=None, return_mapping=lambda x: None if x is None else str(x),
                  doc=None):
-        self.member = target_member
+        super(Var, self).__init__(target_member, argument_mappings, return_mapping, doc)
 
         self._patterns = {key: re.compile(pattern) for key, pattern in
                           zip(('read', 'write'), (read_pattern, write_pattern)) if
@@ -200,10 +243,6 @@ class Var(BaseCommand):
                 'Command regex for writing member \'{}\' is expected to contain one '
                 'argument, but it contains {}.'.format(
                     target_member, self._patterns['write'].groups))
-
-        self.argument_mappings = argument_mappings
-        self.return_mapping = return_mapping
-        self.doc = doc
 
     @property
     def patterns(self):
@@ -241,8 +280,8 @@ class StreamAdapter(Adapter):
      - in_terminator, out_terminator: These define how lines are terminated when transferred
        to and from the device respectively. They are stripped/added automatically.
        The default is ``\\r``.
-     - commands: A list of :class:`~Cmd`-objects that define mappings between protocol
-       and device/interface methods.
+     - commands: A list of :class:`~CommandBase`-objects that define mappings between protocol
+       and device/interface methods/attributes.
 
     Commands are expressed as regular expressions, a simple example may look like this:
 
@@ -252,6 +291,7 @@ class StreamAdapter(Adapter):
             commands = [
                 Cmd('set_speed', r'^S=([0-9]+)$', argument_mappings=[int]),
                 Cmd('get_speed', r'^S\\?$')
+                Var('speed', read_pattern=r'^V\\?$', write_pattern=r'^V=([0-9]+)$')
             ]
 
             def set_speed(self, new_speed):
