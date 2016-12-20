@@ -48,18 +48,11 @@ class StreamHandler(asynchat.async_chat):
         self.buffer = []
 
         try:
-            match = None
-            for cmd in self.target.commands:
-                try:
-                    reply = cmd.process_request(request, self.target)
-                    match = True
-                    break
-                except CanNotProcessException:
-                    pass
-
-            if match is None:
+            try:
+                cmd = next(cmd for cmd in self.target.commands if cmd.can_process(request))
+                reply = cmd.process_request(request, self.target)
+            except StopIteration:
                 raise RuntimeError('None of the device\'s commands matched.')
-
         except Exception as error:
             reply = self.target.handle_error(request, error)
 
@@ -84,15 +77,14 @@ class StreamServer(asyncore.dispatcher):
             StreamHandler(sock, self.target)
 
 
-class CanNotProcessException(Exception):
-    pass
-
-
 class BaseCommand(object):
     member = None
     argument_mappings = None
     return_mapping = None
     doc = None
+
+    def can_process(self, request):
+        raise NotImplementedError('Commands must implement can_process method.')
 
     def process_request(self, request, target):
         raise NotImplementedError('Commands must implement process_request method.')
@@ -171,11 +163,14 @@ class Cmd(BaseCommand):
     def patterns(self):
         return [self.pattern.pattern]
 
+    def can_process(self, request):
+        return self.pattern.match(request) is not None
+
     def process_request(self, request, target):
         match = self.pattern.match(request)
 
         if not match:
-            raise CanNotProcessException()
+            raise RuntimeError('Request can not be processed.')
 
         args = self.map_arguments(match.groups())
         func = getattr(target, self.member)
@@ -212,6 +207,9 @@ class Var(BaseCommand):
     def patterns(self):
         return [pattern.pattern for pattern in self._patterns.values()]
 
+    def can_process(self, request):
+        return any(pattern.match(request) is not None for pattern in self._patterns.values())
+
     def process_request(self, request, target):
         if 'read' in self._patterns:
             match = self._patterns['read'].match(request)
@@ -226,7 +224,7 @@ class Var(BaseCommand):
                 args = self.map_arguments(match.groups())
                 return self.map_return_value(setattr(target, self.member, *args))
 
-        raise CanNotProcessException()
+        raise RuntimeError('Could not process request.')
 
 
 class StreamAdapter(Adapter):
