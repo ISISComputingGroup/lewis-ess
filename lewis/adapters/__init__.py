@@ -164,7 +164,7 @@ class ForwardMethod(object):
         a = Foo()
         b = Bar()  # Bar has method baz(parameter)
 
-        a.forward = ForwardProperty(b, 'baz')
+        a.forward = ForwardMethod(b, 'baz')
         a.forward(10)  # Calls b.baz(10)
 
     .. seealso:: See :class:`ForwardProperty` for forwarding properties.
