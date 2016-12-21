@@ -145,6 +145,8 @@ class ObjectProxy(object):
     class manipulation, this class must never be used directly.
     Instead, it should be used as a base-class for dynamically created types
     that mirror types on the server, like this:
+    
+    .. sourcecode:: Python
 
         proxy = type('SomeClassName', (ObjectProxy, ), {})(connection, methods, prefix)
 
