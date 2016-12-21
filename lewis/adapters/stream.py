@@ -116,8 +116,6 @@ class Cmd(CommandBase):
     .. seealso ::
 
         :class:`Var` exposes attributes and properties of a device object.
-        :class:`Func` exposes free functions
-
 
     :param target_method: Method to be called when regex matches.
     :param pattern: Regex to match for method call.
@@ -212,7 +210,7 @@ class Var(CommandBase):
     def __init__(self, target_member, read_pattern=None, write_pattern=None,
                  argument_mappings=None, return_mapping=lambda x: None if x is None else str(x),
                  doc=None):
-        super(Var, self).__init__(target_member, argument_mappings, return_mapping)
+        super(Var, self).__init__(target_member, argument_mappings, return_mapping, doc)
 
         self.member = target_member
         self.target = None
