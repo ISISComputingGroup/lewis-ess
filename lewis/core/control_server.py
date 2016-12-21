@@ -154,7 +154,7 @@ class ExposedObjectCollection(ExposedObject):
 
     A list of exposed objects can be obtained by calling the following method from the client:
 
-    ..sourcecode:: Python
+    .. sourcecode:: Python
 
         :objects
 
