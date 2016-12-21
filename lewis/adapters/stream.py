@@ -24,11 +24,12 @@ import asyncore
 import inspect
 import re
 import socket
+from itertools import chain
 from argparse import ArgumentParser
 
 from six import b
 
-from lewis.adapters import Adapter, ForwardMethod, ForwardProperty
+from lewis.adapters import Adapter
 from lewis.core.utils import format_doc_text
 
 
@@ -48,7 +49,8 @@ class StreamHandler(asynchat.async_chat):
         self.buffer = []
 
         try:
-            cmd = next((cmd for cmd in self.target.commands if cmd.can_process(request)), None)
+            cmd = next((cmd for cmd in self.target.bound_commands if cmd.can_process(request)),
+                       None)
 
             if cmd is None:
                 raise RuntimeError('None of the device\'s commands matched.')
@@ -79,69 +81,58 @@ class StreamServer(asyncore.dispatcher):
             StreamHandler(sock, self.target)
 
 
-class CommandBase(object):
-    """
-    This is the common base class for :class:`Cmd` and :class:`Var`, both of which provide
-    different ways to expose attributes and methods of an object via :class:`StreamAdapter`
-    while this class is not for direct use.
-
-    CommandBase defines the interface that :class:`StreamAdapter` uses in order to bind commands
-    to device objects and process them. Three members depend on the implementation of the
-    sub-classes, :meth:`can_process`, :meth:`process_request` and :meth:`patterns`.
-
-    :param member: Member that is exposed by this command.
-    :param argument_mappings: Iterable with mapping functions from string to some type.
-    :param return_mapping: Mapping function for return value or a constant.
-    :param doc: Description of the command. If not supplied, the docstring is used.
-    """
-
+class Binder(object):
     def __init__(self, member, argument_mappings=None, return_mapping=None, doc=None):
-        self._target = None
         self.member = member
         self.argument_mappings = argument_mappings
         self.return_mapping = return_mapping
         self.doc = doc
 
-    @property
-    def target(self):
-        """
-        The object in which the member specified in the constructor exists.
-        """
-        return self._target
+    def bind(self, target):
+        raise NotImplementedError('Binders need to implement the bind method.')
 
-    @target.setter
-    def target(self, new_target):
-        self._target = new_target
+
+class Func(Binder):
+    func = None
+
+    def __init__(self, func, pattern, argument_mappings=None, return_mapping=None,
+                 doc=None):
+        super(Func, self).__init__(None, argument_mappings, return_mapping,
+                                   doc or inspect.getdoc(self.func))
+
+        if not callable(func):
+            raise RuntimeError('Passed object is not callable.')
+
+        self.func = func
+        self.pattern = re.compile(b(pattern), 0) if pattern else None
+
+        if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
+            raise RuntimeError(
+                'Expected {} argument mapping(s), got {}'.format(
+                    self.pattern.groups, len(argument_mappings)))
+
+        self.argument_mappings = argument_mappings
+        self.return_mapping = return_mapping
+        self.doc = doc or inspect.getdoc(self.func)
+
+    def bind(self, target):
+        return [self]
 
     def can_process(self, request):
-        """
-        This method should return ``True`` if the request can be processed by this object.
-        The default implementation raises a ``NotImplementedError``.
-
-        :param request: Request string to be checked.
-        :return: ``True`` if request can be processed.
-        """
-        raise NotImplementedError('Commands must implement can_process method.')
+        return self.pattern.match(request) is not None
 
     def process_request(self, request):
-        """
-        Should process the request, potentially using the internally stored target, which is the
-        interface object, and return any result.
-        The default implementation raises a ``NotImplementedError``.
+        if not callable(self.func):
+            raise RuntimeError('Trying to process request on unbound Binder.')
 
-        :param request: Request string to be processed.
-        :return: Result of processing.
-        """
-        raise NotImplementedError('Commands must implement process_request method.')
+        match = self.pattern.match(request)
 
-    @property
-    def patterns(self):
-        """
-        This property should return an iterable with all patterns that match processable requests.
-        For :class:`Cmd` and :class:`Var` those are regular expression patterns. The default
-        implementation raises a ``NotImplementedError``.
-        """
-        raise NotImplementedError('Commands must implement patterns property.')
+        if not match:
+            raise RuntimeError('Request can not be processed.')
+
+        args = self.map_arguments(match.groups())
+
+        return self.map_return_value(self.func(*args))
 
     def map_arguments(self, arguments):
         """
@@ -173,7 +164,7 @@ class CommandBase(object):
         return return_value
 
 
-class Cmd(CommandBase):
+class Cmd(Binder):
     """
     This class is used to define commands in terms of a string pattern that are connected to
     a method of the device object owned by :class:`StreamAdapter`.
@@ -197,7 +188,9 @@ class Cmd(CommandBase):
 
     .. seealso ::
 
-        :class:`Var` exposes attributes and properties.
+        :class:`Var` exposes attributes and properties of a device object.
+        :class:`Func` exposes free functions
+
 
     :param target_method: Method to be called when regex matches.
     :param pattern: Regex to match for method call.
@@ -210,36 +203,19 @@ class Cmd(CommandBase):
                  return_mapping=lambda x: None if x is None else str(x), doc=None):
         super(Cmd, self).__init__(target_method, argument_mappings, return_mapping, doc)
 
-        self.pattern = re.compile(b(pattern))
+        self.member = target_method
+        self.pattern = pattern
 
-        if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
-            raise RuntimeError(
-                'Expected {} argument mapping(s), got {}'.format(
-                    self.pattern.groups, len(argument_mappings)))
+    def bind(self, target):
+        method = getattr(target, self.member, None)
 
-    @property
-    def patterns(self):
-        return [self.pattern.pattern]
+        if method is None:
+            return None
 
-    def can_process(self, request):
-        return self.pattern.match(request) is not None
-
-    def process_request(self, request):
-        if self.target is None:
-            raise RuntimeError('Can not process request without target property set.')
-
-        match = self.pattern.match(request)
-
-        if not match:
-            raise RuntimeError('Request can not be processed.')
-
-        args = self.map_arguments(match.groups())
-        func = getattr(self.target, self.member)
-
-        return self.map_return_value(func(*args))
+        return [Func(method, self.pattern, self.argument_mappings, self.return_mapping, self.doc)]
 
 
-class Var(CommandBase):
+class Var(Binder):
     """
     With this class it's possible to define read and
     """
@@ -247,37 +223,42 @@ class Var(CommandBase):
     def __init__(self, target_member, read_pattern=None, write_pattern=None,
                  argument_mappings=None, return_mapping=lambda x: None if x is None else str(x),
                  doc=None):
-        super(Var, self).__init__(target_member, argument_mappings, return_mapping, doc)
+        super(Var, self).__init__(target_member, argument_mappings, return_mapping)
 
-        self._commands = [
-            Cmd('_get_attribute', pattern=read_pattern,
-                argument_mappings=argument_mappings, return_mapping=return_mapping),
-            Cmd('_set_attribute', pattern=write_pattern,
-                argument_mappings=argument_mappings, return_mapping=return_mapping)]
+        self.member = target_member
+        self.target = None
 
-        for cmd in self._commands:
-            cmd.target = self
+        self.read_pattern = read_pattern
+        self.write_pattern = write_pattern
 
-    @property
-    def patterns(self):
-        return [cmd.pattern for cmd in self._commands]
+    def bind(self, target):
+        if self.member not in dir(target):
+            return None
 
-    def can_process(self, request):
-        return any(cmd.can_process(request) for cmd in self._commands)
+        funcs = []
 
-    def process_request(self, request):
-        cmd = next((cmd for cmd in self._commands if cmd.can_process(request)), None)
+        if self.read_pattern is not None:
+            def getter():
+                return getattr(target, self.member)
 
-        if cmd is not None:
-            return cmd.process_request(request)
+            if inspect.isdatadescriptor(getattr(type(target), self.member)):
+                getter.__doc__ = 'Getter: ' + inspect.getdoc(getattr(type(target), self.member))
 
-        raise RuntimeError('Could not process request.')
+            funcs.append(
+                Func(getter, self.read_pattern, return_mapping=self.return_mapping, doc=self.doc))
 
-    def _get_attribute(self):
-        return getattr(self.target, self.member)
+        if self.write_pattern is not None:
+            def setter(new_value):
+                setattr(target, self.member, new_value)
 
-    def _set_attribute(self, new_value):
-        setattr(self.target, self.member, new_value)
+            if inspect.isdatadescriptor(getattr(type(target), self.member)):
+                setter.__doc__ = 'Setter: ' + inspect.getdoc(getattr(type(target), self.member))
+
+            funcs.append(
+                Func(setter, self.write_pattern, argument_mappings=self.argument_mappings,
+                     return_mapping=self.return_mapping, doc=self.doc))
+
+        return funcs
 
 
 class StreamAdapter(Adapter):
@@ -339,16 +320,15 @@ class StreamAdapter(Adapter):
 
         self._server = None
 
-        self._create_properties(self.commands)
-        self._bind_commands()
+        self.bound_commands = self._bind_commands(self.commands)
 
     @property
     def documentation(self):
 
         commands = ['{}:\n{}'.format(
             cmd.pattern.pattern,
-            format_doc_text(cmd.doc or inspect.getdoc(getattr(self, cmd.method)) or ''))
-                    for cmd in self.commands]
+            format_doc_text(cmd.doc or inspect.getdoc(cmd.func) or ''))
+                    for cmd in self.bound_commands]
 
         options = format_doc_text(
             'Listening on: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}'.format(
@@ -378,36 +358,30 @@ class StreamAdapter(Adapter):
                             help='Port to listen for connections on')
         return parser.parse_args(arguments)
 
-    def _create_properties(self, cmds):
+    def _bind_commands(self, cmds):
         patterns = set()
+
+        bound_commands = []
+
         for cmd in cmds:
-            member = cmd.member
+            bound = cmd.bind(self) or cmd.bind(self._device) or None
 
-            if member not in dir(self):
-                if member not in dir(self._device):
-                    raise AttributeError('Can not find member \''
-                                         + member + '\' in device or interface.')
-
-                if callable(getattr(self._device, member)):
-                    setattr(self, member, ForwardMethod(self._device, member))
-                else:
-                    setattr(type(self), member, ForwardProperty('_device', member, instance=self))
-
-            cmd_patterns = set(cmd.patterns)
-
-            if not cmd_patterns.isdisjoint(patterns):
+            if bound is None:
                 raise RuntimeError(
-                    'The regular expression \'{}\' is '
-                    'associated with multiple members.'.format(cmd.pattern.pattern))
+                    'Unable to produce callable object for non-existing member \'{}\' '
+                    'of device or interface.'.format(cmd.member))
 
-            patterns.update(cmd_patterns)
+            for bound_cmd in bound:
+                if bound_cmd.pattern in patterns:
+                    raise RuntimeError(
+                        'The regular expression {} is '
+                        'associated with multiple commands.'.format(bound_cmd.pattern.pattern))
 
-        if len(patterns) < len(cmds):
-            raise RuntimeError('Warning')
+                patterns.add(bound_cmd.pattern)
 
-    def _bind_commands(self):
-        for cmd in self.commands:
-            cmd.target = self
+                bound_commands.append(bound_cmd)
+
+        return bound_commands
 
     def handle_error(self, request, error):
         """
