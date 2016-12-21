@@ -19,7 +19,7 @@
 
 from lewis.devices import Device
 
-from lewis.adapters.stream import StreamAdapter, Cmd, Var
+from lewis.adapters.stream import StreamAdapter, Var, Cmd
 
 
 class VerySimpleDevice(Device):
@@ -47,9 +47,10 @@ class VerySimpleInterface(StreamAdapter):
 
     """
     commands = {
-        Cmd('get_param', pattern='^V$', return_mapping=lambda x: 'The value is {}'.format(x)),
-        Cmd('set_param', pattern='^V=(.+)$'),
-        Var('param', read_pattern='^P$', write_pattern='^P=(.+)$')
+        Cmd('get_param', pattern='^V$', return_mapping='The value is {}'.format),
+        Cmd('set_param', pattern='^V=(.+)$', argument_mappings=(int,)),
+        Var('param', read_pattern='^P$', write_pattern='^P=(.+)$', doc='Blubb'),
+        Cmd(lambda: 4, pattern='^R$', doc='Random number')
     }
 
     in_terminator = '\r\n'
