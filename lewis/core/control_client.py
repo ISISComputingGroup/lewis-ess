@@ -146,6 +146,8 @@ class ObjectProxy(object):
     Instead, it should be used as a base-class for dynamically created types
     that mirror types on the server, like this:
 
+    .. sourcecode:: Python
+
         proxy = type('SomeClassName', (ObjectProxy, ), {})(connection, methods, prefix)
 
     There is however, the class ControlClient, which automates all that
