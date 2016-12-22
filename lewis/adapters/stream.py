@@ -29,7 +29,7 @@ from argparse import ArgumentParser
 from six import b
 
 from lewis.adapters import Adapter
-from lewis.core.utils import format_doc_text
+from lewis.core.utils import format_doc_text, num_args
 
 
 class StreamHandler(asynchat.async_chat):
@@ -44,7 +44,6 @@ class StreamHandler(asynchat.async_chat):
 
     def found_terminator(self):
         request = b''.join(self.buffer)
-        reply = None
         self.buffer = []
 
         try:
@@ -80,89 +79,66 @@ class StreamServer(asyncore.dispatcher):
             StreamHandler(sock, self.target)
 
 
-class CommandBase(object):
-    def __init__(self, member, argument_mappings=None, return_mapping=None, doc=None):
-        self.member = member
-        self.argument_mappings = argument_mappings
-        self.return_mapping = return_mapping
-        self.doc = doc
-
-    def bind(self, target):
-        raise NotImplementedError('Binders need to implement the bind method.')
-
-
-class Cmd(CommandBase):
+class Func(object):
     """
-    This class is used to define commands in terms of a string pattern that are connected to
-    a method of the device object owned by :class:`StreamAdapter`.
+    Objects of this type connect a callable object to a regular expression. The regular expression
+    must define one group (with the use of parentheses) for each argument of the callable.
 
-    Method arguments are indicated by groups in the regular expression. The number of
-    groups has to match the number of arguments of the method. The optional argument_mappings
+    In general, Func-objects should not be created directly, instead they are created by one of
+    the sub-classes of :class:`CommandBase` using :meth:`~CommandBase.bind`.
+
+    Function arguments are indicated by groups in the regular expression. The number of
+    groups has to match the number of arguments of the function. The optional argument_mappings
     can be an iterable of callables with one parameter of the same length as the
-    number of arguments of the method. The first parameter will be transformed using the
+    number of arguments of the function. The first parameter will be transformed using the
     first function, the second using the second function and so on. This can be useful
     to automatically transform strings provided by the adapter into a proper data type
-    such as ``int`` or ``float`` before they are passed to the method.
+    such as ``int`` or ``float`` before they are passed to the function.
 
-    The return_mapping argument is similar, it should map the return value of the method
+    The return_mapping argument is similar, it should map the return value of the function
     to a string. The default map function only does that when the supplied value
     is not None. It can also be set to a numeric value or a string constant so that the
     command always returns the same value. If it is ``None``, the return value is not
     modified at all.
 
     Finally, documentation can be provided by passing the doc-argument. If it is omitted,
-    the docstring of the bound method is used and if that is not present, left empty.
+    the docstring of the bound function is used and if that is not present, left empty.
 
-    .. seealso ::
-
-        :class:`Var` exposes attributes and properties of a device object.
-
-    :param target_method: Method to be called when regex matches.
-    :param pattern: Regex to match for method call.
+    :param func: Function to be called when pattern matches or member of device/interface.
+    :param pattern: Regex to match for function call.
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
     """
 
-    func = None
-
-    def __init__(self, func, pattern, argument_mappings=None,
-                 return_mapping=lambda x: None if x is None else str(x), doc=None):
-        super(Cmd, self).__init__(None, argument_mappings, return_mapping,
-                                  doc or inspect.getdoc(self.func))
+    def __init__(self, func, pattern, argument_mappings=None, return_mapping=None, doc=None):
+        if not callable(func):
+            raise RuntimeError('Can not construct a Func-object from a non callable object.')
 
         self.func = func
         self.raw_pattern = pattern
         self.pattern = re.compile(b(pattern), 0) if pattern else None
 
+        func_args = num_args(func)
+        if self.pattern.groups != func_args:
+            raise RuntimeError(
+                'Supplied function matched by pattern \'{}\' has {} argument(s), but the regular '
+                'expression defines {} group(s).'.format(pattern, func_args, self.pattern.groups))
+
         if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
             raise RuntimeError(
-                'Expected {} argument mapping(s), got {}'.format(
-                    self.pattern.groups, len(argument_mappings)))
+                'Supplied argument mappings for function matched by pattern \'{}\' specify {} '
+                'argument(s), but the function has {} arguments.'.format(
+                    self.pattern, len(argument_mappings), self.pattern.groups))
 
         self.argument_mappings = argument_mappings
         self.return_mapping = return_mapping
         self.doc = doc or (inspect.getdoc(self.func) if callable(self.func) else None)
 
-    def bind(self, target):
-        if callable(self.func):
-            return [self]
-
-        method = getattr(target, self.func, None)
-
-        if method is None:
-            return None
-
-        return [Cmd(method, self.raw_pattern, self.argument_mappings, self.return_mapping,
-                    self.doc)]
-
     def can_process(self, request):
         return self.pattern.match(request) is not None
 
     def process_request(self, request):
-        if not callable(self.func):
-            raise RuntimeError('Trying to process request on unbound Binder.')
-
         match = self.pattern.match(request)
 
         if not match:
@@ -188,7 +164,8 @@ class Cmd(CommandBase):
     def map_return_value(self, return_value):
         """
         Returns the mapped return_value of a processed request. If no return_mapping has been
-        defined, the value is returned as is.
+        defined, the value is returned as is. If return_mapping is a static value, that value
+        is returned, ignoring return_value completely.
 
         :param return_value: Value to map.
         :return: Mapped return value.
@@ -202,48 +179,190 @@ class Cmd(CommandBase):
         return return_value
 
 
+class CommandBase(object):
+    """
+    This is the common base class of :class:`Cmd` and :class:`Var`. The concept of commands for
+    the stream adapter is based on connecting a callable object to a pattern that matches an
+    inbound request.
+
+    For free function and lambda expressions this is straightforward: the function object can
+    simply be stored together with the regular expression. Most often however, the callable
+    is a method of the device or interface object - these do not exist when the commands are
+    defined.
+
+    This problem is solved by introducing a "bind"-step in :class:`StreamAdapter`. So instead
+    of a function object, both :class:`Cmd` and :class:`Var` store the name of a member of device
+    or interface. At "bind-time", this is translated into the correct callable.
+
+    So instead of using :class:`Cmd` or :class:`Var` directly, both classes' :meth:`bind`-methods
+    return an iterable of :class:`Func`-objects which can be used for processing requests.
+    :class:`StreamAdapter` performs this bind-step when it's constructed. For details regarding
+    the implementations, please see the corresponding classes.
+
+    .. seealso::
+
+        Please take a look at :class:`Cmd` for exposing callable objects or methods of
+        device/interface and :class:`Var` for exposing attributes and properties.
+
+        To see how argument_mappings, return_mapping and doc are applied, please look at
+        :class:`Func`.
+
+    :param func: Function to be called when pattern matches or member of device/interface.
+    :param pattern: Regex to match for function call.
+    :param argument_mappings: Iterable with mapping functions from string to some type.
+    :param return_mapping: Mapping function for return value of method.
+    :param doc: Description of the command. If not supplied, the docstring is used.
+    """
+
+    def __init__(self, func, pattern, argument_mappings=None, return_mapping=None, doc=None):
+        super(CommandBase, self).__init__()
+
+        self.func = func
+        self.pattern = pattern
+        self.argument_mappings = argument_mappings
+        self.return_mapping = return_mapping
+        self.doc = doc
+
+    def bind(self, target):
+        raise NotImplementedError('Binders need to implement the bind method.')
+
+
+class Cmd(CommandBase):
+    """
+    This class is an implementation of :class:`CommandBase` that can expose a callable object
+    or a named method of the device/interface controlled by :class:`StreamAdapter`.
+
+    .. sourcecode:: Python:
+
+        def random():
+            return 6
+
+        SomeInterface(StreamAdapter):
+            commands = {
+                Cmd(lambda: 4, pattern='^R$', doc='Returns a random number.'),
+                Cmd('random', pattern='^RR$', doc='Better random number.'),
+                Cmd(random, pattern='^RRR$', doc='The best random number.'),
+            }
+
+            def random(self):
+                return 5
+
+    The interface defined by the above example has three commands, ``R`` which calls a lambda
+    function that always returns 4, ``RR``, which calls ``SomeInterface.random`` and returns 5 and
+    lastly ``RRR`` which calls the free function defined above and returns the best random number.
+
+    For a detailed explanation of requirements to the constructor arguments, please refer to the
+    documentation of :class:`Func`, to which the arguments are forwarded.
+
+    .. seealso ::
+
+        :class:`Var` exposes attributes and properties of a device object.
+
+    :param func: Function to be called when pattern matches or member of device/interface.
+    :param pattern: Regex to match for function call.
+    :param argument_mappings: Iterable with mapping functions from string to some type.
+    :param return_mapping: Mapping function for return value of method.
+    :param doc: Description of the command. If not supplied, the docstring is used.
+    """
+
+    def __init__(self, func, pattern, argument_mappings=None,
+                 return_mapping=lambda x: None if x is None else str(x), doc=None):
+        super(Cmd, self).__init__(func, pattern, argument_mappings, return_mapping,
+                                  doc)
+
+    def bind(self, target):
+        method = self.func if callable(self.func) else getattr(target, self.func, None)
+
+        if method is None:
+            return None
+
+        return [Func(method, self.pattern, self.argument_mappings, self.return_mapping,
+                     self.doc)]
+
+
 class Var(CommandBase):
     """
-    With this class it's possible to define read and
+    With this implementation of :class:`CommandBase` it's possible to expose plain data attributes
+    or properties of device or interface. Getting and setting a value are separate procedures
+    which both have their own pattern, read_pattern and write_pattern to match a command each.
+    Please note that write_pattern has to have exactly one group defined to match a parameter.
+
+    Due to this separation, parameters can be made read-only, write-only or read-write in the
+    interface:
+
+    .. sourcecode:: Python
+
+        class SomeInterface(StreamAdapter):
+            commands = {
+                Var('foo', read_pattern='^F$', write_pattern=r'^F=(\d+)$',
+                    argument_mappings=(int,), doc='An integer attribute.'),
+                Var('bar' read_pattern='^B$')
+            }
+
+            foo = 10
+
+            @property
+            def bar(self):
+                return self.foo + 5
+
+            @bar.setter
+            def bar(self, new_bar):
+                self.foo = new_bar - 5
+
+    In the above example, the foo attribute can be read and written, it's automatically converted
+    to an integer, while bar is a property that can only be read via the stream protocol.
+
+    .. seealso::
+
+        For exposing methods and free functions, there's the :class:`Cmd`-class.
+
+    :param target_member: Attribute or property of device/interface to expose.
+    :param read_pattern: Regex that matches command for property getter.
+    :param write_pattern: Regex that matches command for property setter.
+    :param argument_mappings: Iterable with mapping functions from string to some type,
+                              only applied to setter.
+    :param return_mapping: Mapping function for return value of method,
+                           applied to getter and setter.
+    :param doc: Description of the command. If not supplied, the docstring is used. For plain data
+                attributes the only way to get docs is to supply this argument.
     """
 
     def __init__(self, target_member, read_pattern=None, write_pattern=None,
                  argument_mappings=None, return_mapping=lambda x: None if x is None else str(x),
                  doc=None):
-        super(Var, self).__init__(target_member, argument_mappings, return_mapping, doc)
+        super(Var, self).__init__(target_member, None, argument_mappings, return_mapping, doc)
 
-        self.member = target_member
         self.target = None
 
         self.read_pattern = read_pattern
         self.write_pattern = write_pattern
 
     def bind(self, target):
-        if self.member not in dir(target):
+        if self.func not in dir(target):
             return None
 
         funcs = []
 
         if self.read_pattern is not None:
             def getter():
-                return getattr(target, self.member)
+                return getattr(target, self.func)
 
-            if inspect.isdatadescriptor(getattr(type(target), self.member)):
-                getter.__doc__ = 'Getter: ' + inspect.getdoc(getattr(type(target), self.member))
+            if inspect.isdatadescriptor(getattr(type(target), self.func)):
+                getter.__doc__ = 'Getter: ' + inspect.getdoc(getattr(type(target), self.func))
 
             funcs.append(
-                Cmd(getter, self.read_pattern, return_mapping=self.return_mapping, doc=self.doc))
+                Func(getter, self.read_pattern, return_mapping=self.return_mapping, doc=self.doc))
 
         if self.write_pattern is not None:
             def setter(new_value):
-                setattr(target, self.member, new_value)
+                setattr(target, self.func, new_value)
 
-            if inspect.isdatadescriptor(getattr(type(target), self.member)):
-                setter.__doc__ = 'Setter: ' + inspect.getdoc(getattr(type(target), self.member))
+            if inspect.isdatadescriptor(getattr(type(target), self.func)):
+                setter.__doc__ = 'Setter: ' + inspect.getdoc(getattr(type(target), self.func))
 
             funcs.append(
-                Cmd(setter, self.write_pattern, argument_mappings=self.argument_mappings,
-                    return_mapping=self.return_mapping, doc=self.doc))
+                Func(setter, self.write_pattern, argument_mappings=self.argument_mappings,
+                     return_mapping=self.return_mapping, doc=self.doc))
 
         return funcs
 
@@ -315,7 +434,7 @@ class StreamAdapter(Adapter):
         commands = ['{}:\n{}'.format(
             cmd.raw_pattern,
             format_doc_text(cmd.doc or inspect.getdoc(cmd.func) or ''))
-                    for cmd in self.bound_commands]
+                    for cmd in sorted(self.bound_commands, key=lambda x: x.raw_pattern)]
 
         options = format_doc_text(
             'Listening on: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}'.format(
