@@ -371,6 +371,9 @@ def num_args(func):
     :param func: Callable object.
     :return: Number of arguments.
     """
+    if not callable(func):
+        raise RuntimeError('The supplied argument is not callable.')
+
     args = len(inspect.getargspec(func).args)
 
     if inspect.ismethod(func) and func.__self__ is not None:
