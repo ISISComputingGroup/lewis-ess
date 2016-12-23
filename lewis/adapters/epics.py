@@ -27,7 +27,7 @@ from . import Adapter, ForwardProperty
 from six import iteritems
 
 from lewis.core.utils import seconds_since, FromOptionalDependency, format_doc_text
-from lewis.core.exceptions import LewisException
+from lewis.core.exceptions import LewisException, LimitViolationException
 
 # pcaspy might not be available. To make EPICS-based adapters show up
 # in the listed adapters anyway dummy types are created in this case
@@ -57,16 +57,40 @@ class PV(object):
     are forwarded to the pcaspy server's `pvdb`, so it's possible to pass on
     limits, types, enum-values and so on.
 
+    In case those arguments change at runtime, it's possible to provide ``meta_data_property``,
+    which should contain the name of a property that returns a dict containing these values.
+    For example if limits change:
+
+    .. sourcecode:: Python
+
+        class Interface(EpicsAdapter):
+            pvs = {
+                'example': PV('example', meta_data_property='example_meta')
+            }
+
+            @property
+            def example_meta(self):
+                return {
+                    'lolim': self._device._example_low_limit,
+                    'hilim': self._device._example_high_limit,
+                }
+
+    The PV infos are then updated together with the value, determined by ``poll_interval``.
+
     :param target_property: Property of the adapter to expose.
     :param poll_interval: Update interval of the PV.
     :param read_only: Should be True if the PV is read only.
+    :param meta_data_property: Property which returns a dict containing PV metadata.
     :param doc: Description of the PV. If not supplied, docstring of mapped property is used.
     :param kwargs: Arguments forwarded into pcaspy pvdb-dict.
     """
-    def __init__(self, target_property, poll_interval=1.0, read_only=False, doc=None, **kwargs):
+
+    def __init__(self, target_property, poll_interval=1.0, read_only=False,
+                 meta_data_property=None, doc=None, **kwargs):
         self.property = target_property
         self.read_only = read_only
         self.poll_interval = poll_interval
+        self.meta_data_property = meta_data_property
         self.doc = doc
         self.config = kwargs
 
@@ -85,11 +109,12 @@ class PropertyExposingDriver(Driver):
         if not pv_object or pv_object.read_only:
             return False
 
-        setattr(self._target, pv_object.property, value)
-
-        self.setParam(pv, getattr(self._target, pv_object.property))
-
-        return True
+        try:
+            setattr(self._target, pv_object.property, value)
+            self.setParam(pv, getattr(self._target, pv_object.property))
+            return True
+        except LimitViolationException:
+            return False
 
     def process_pv_updates(self, dt):
         # Updates bound parameters as needed
@@ -98,6 +123,10 @@ class PropertyExposingDriver(Driver):
             if self._timers[pv] >= pv_object.poll_interval:
                 try:
                     self.setParam(pv, getattr(self._target, pv_object.property))
+
+                    if pv_object.meta_data_property is not None:
+                        self.setParamInfo(pv, getattr(self._target, pv_object.meta_data_property))
+
                     self._timers[pv] = 0.0
                 except (AttributeError, TypeError):
                     pass
@@ -214,13 +243,17 @@ class EpicsAdapter(Adapter):
 
     def _create_properties(self, pvs):
         for pv in pvs:
-            prop = pv.property
+            self._install_property(pv.property)
 
-            if prop not in dir(self):
-                if prop not in dir(self._device):
-                    raise AttributeError('Can not find property \''
-                                         + prop + '\' in device or interface.')
-                setattr(type(self), prop, ForwardProperty('_device', prop, instance=self))
+            if pv.meta_data_property is not None:
+                self._install_property(pv.meta_data_property)
+
+    def _install_property(self, prop):
+        if prop not in dir(self):
+            if prop not in dir(self._device):
+                raise AttributeError('Can not find property \''
+                                     + prop + '\' in device or interface.')
+            setattr(type(self), prop, ForwardProperty('_device', prop, instance=self))
 
     def _parseArguments(self, arguments):
         parser = ArgumentParser(description="Adapter to expose a device via EPICS")
