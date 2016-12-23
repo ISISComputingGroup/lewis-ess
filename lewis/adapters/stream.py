@@ -88,12 +88,19 @@ class Func(object):
     the sub-classes of :class:`CommandBase` using :meth:`~CommandBase.bind`.
 
     Function arguments are indicated by groups in the regular expression. The number of
-    groups has to match the number of arguments of the function. The optional argument_mappings
-    can be an iterable of callables with one parameter of the same length as the
-    number of arguments of the function. The first parameter will be transformed using the
-    first function, the second using the second function and so on. This can be useful
-    to automatically transform strings provided by the adapter into a proper data type
-    such as ``int`` or ``float`` before they are passed to the function.
+    groups has to match the number of arguments of the function. In earlier versions of Lewis it
+    was possible to pass flags to ``re.compile``, this has been removed for consistency issues
+    in :class:`Var`. It is however still possible to use the exact same flags as part of the
+    regular expression. In the documentation of re_, this is outlined, simply add a group to the
+    expression that contains the flags, for example ``(?i)`` to make the expression case
+    insensitive. This special group does not count towards the matching groups used for argument
+    capture.
+
+    The optional argument_mappings can be an iterable of callables with one parameter of the
+    same length as the number of arguments of the function. The first parameter will be
+    transformed using the first function, the second using the second function and so on.
+    This can be useful to automatically transform strings provided by the adapter into a proper
+    data type such as ``int`` or ``float`` before they are passed to the function.
 
     The return_mapping argument is similar, it should map the return value of the function
     to a string. The default map function only does that when the supplied value
@@ -109,6 +116,8 @@ class Func(object):
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
+
+    .. _re: https://docs.python.org/2/library/re.html#regular-expression-syntax
     """
 
     def __init__(self, func, pattern, argument_mappings=None, return_mapping=None, doc=None):
@@ -232,7 +241,7 @@ class Cmd(CommandBase):
     This class is an implementation of :class:`CommandBase` that can expose a callable object
     or a named method of the device/interface controlled by :class:`StreamAdapter`.
 
-    .. sourcecode:: Python:
+    .. sourcecode:: Python
 
         def random():
             return 6
@@ -256,7 +265,8 @@ class Cmd(CommandBase):
 
     .. seealso ::
 
-        :class:`Var` exposes attributes and properties of a device object.
+        :class:`Var` exposes attributes and properties of a device object. The documentation
+        of :class:`Func` provides more information about the common constructor arguments.
 
     :param func: Function to be called when pattern matches or member of device/interface.
     :param pattern: Regex to match for function call.
