@@ -67,8 +67,38 @@ class Adapter(object):
         protocol in question. These startup operations are not supposed to be carried out on
         construction of the adapter in order to preserve control over when services are
         started during a run of a simulation.
+
+        .. note::
+
+            This method may be called multiple times over the lifetime of the Adapter, so it is
+            important to make sure that this does not cause problems.
+
+        .. seealso:: See :meth:`stop_server` for shutting down the adapter.
         """
         pass
+
+    def stop_server(self):
+        """
+        This method should be re-implemented to stop and tear down anything that has been setup
+        in :meth:`start_server`. This method should close all connections to clients that have
+        been established since the adapter has been started.
+
+        .. note::
+
+            This method may be called multiple times over the lifetime of the Adapter, so it is
+            important to make sure that this does not cause problems.
+        """
+        pass
+
+    @property
+    def is_running(self):
+        """
+        This property indicates whether the Adapter's server is running and listening. The result
+        of calls to :meth:`start_server` and :meth:`stop_server` should be reflected as expected.
+        """
+        raise NotImplementedError(
+            'Adapters must implement the is_running property to indicate whether '
+            'a server is currently running and listening for requests.')
 
     def handle(self, cycle_delay=0.1):
         """
