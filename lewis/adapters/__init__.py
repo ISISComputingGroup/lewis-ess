@@ -127,13 +127,13 @@ class ForwardProperty(object):
         self.__doc__ = getattr(type(getattr(instance, self._target_member)),
                                self._prop, None).__doc__
 
-    def __get__(self, instance, type=None):
+    def __get__(self, instance, instance_type=None):
         """
         This method forwards property read access on instance
         to the member of instance that was selected in __init__.
 
         :param instance: Instance of type.
-        :param type: Type.
+        :param instance_type: Type.
         :return: Attribute value of member property.
         """
         if instance is not None:
