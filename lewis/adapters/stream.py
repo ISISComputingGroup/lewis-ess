@@ -33,11 +33,13 @@ from lewis.core.utils import format_doc_text
 
 
 class StreamHandler(asynchat.async_chat):
-    def __init__(self, sock, target):
+    def __init__(self, sock, target, stream_server):
         asynchat.async_chat.__init__(self, sock=sock)
         self.set_terminator(b(target.in_terminator))
         self.target = target
         self.buffer = []
+
+        self._stream_server = stream_server
 
     def collect_incoming_data(self, data):
         self.buffer.append(data)
@@ -61,6 +63,10 @@ class StreamHandler(asynchat.async_chat):
         if reply is not None:
             self.push(b(reply + self.target.out_terminator))
 
+    def handle_close(self):
+        self._stream_server.remove_handler(self)
+        asynchat.async_chat.handle_close(self)
+
 
 class StreamServer(asyncore.dispatcher):
     def __init__(self, host, port, target):
@@ -78,9 +84,12 @@ class StreamServer(asyncore.dispatcher):
         if pair is not None:
             sock, addr = pair
             print("Client connect from %s" % repr(addr))
-            StreamHandler(sock, self.target)
+            handler = StreamHandler(sock, self.target, self)
 
-            self._accepted_connections.append(sock)
+            self._accepted_connections.append(handler)
+
+    def remove_handler(self, handler):
+        self._accepted_connections.remove(handler)
 
     def close(self):
         # As this is an old style class, the base class method must
@@ -89,10 +98,10 @@ class StreamServer(asyncore.dispatcher):
         asyncore.dispatcher.close(self)
 
         # But in addition, close all open sockets and clear the connection list.
-        for conn in self._accepted_connections:
-            conn.close()
+        for handler in self._accepted_connections:
+            handler.close()
 
-        self._accepted_connections.clear()
+        self._accepted_connections = []
 
 
 class Func(object):
