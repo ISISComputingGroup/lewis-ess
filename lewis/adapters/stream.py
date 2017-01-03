@@ -33,11 +33,13 @@ from lewis.core.utils import format_doc_text
 
 
 class StreamHandler(asynchat.async_chat):
-    def __init__(self, sock, target):
+    def __init__(self, sock, target, stream_server):
         asynchat.async_chat.__init__(self, sock=sock)
         self.set_terminator(b(target.in_terminator))
         self.target = target
         self.buffer = []
+
+        self._stream_server = stream_server
 
     def collect_incoming_data(self, data):
         self.buffer.append(data)
@@ -61,6 +63,10 @@ class StreamHandler(asynchat.async_chat):
         if reply is not None:
             self.push(b(reply + self.target.out_terminator))
 
+    def handle_close(self):
+        self._stream_server.remove_handler(self)
+        asynchat.async_chat.handle_close(self)
+
 
 class StreamServer(asyncore.dispatcher):
     def __init__(self, host, port, target):
@@ -71,12 +77,31 @@ class StreamServer(asyncore.dispatcher):
         self.bind((host, port))
         self.listen(5)
 
+        self._accepted_connections = []
+
     def handle_accept(self):
         pair = self.accept()
         if pair is not None:
             sock, addr = pair
             print("Client connect from %s" % repr(addr))
-            StreamHandler(sock, self.target)
+            handler = StreamHandler(sock, self.target, self)
+
+            self._accepted_connections.append(handler)
+
+    def remove_handler(self, handler):
+        self._accepted_connections.remove(handler)
+
+    def close(self):
+        # As this is an old style class, the base class method must
+        # be called directly. This is important to still perform all
+        # the teardown-work that asyncore.dispatcher does.
+        asyncore.dispatcher.close(self)
+
+        # But in addition, close all open sockets and clear the connection list.
+        for handler in self._accepted_connections:
+            handler.close()
+
+        self._accepted_connections = []
 
 
 class Func(object):
@@ -466,7 +491,17 @@ class StreamAdapter(Adapter):
                   :meth:`handle` is called in regular intervals.
 
         """
-        self._server = StreamServer(self._options.bind_address, self._options.port, self)
+        if self._server is None:
+            self._server = StreamServer(self._options.bind_address, self._options.port, self)
+
+    def stop_server(self):
+        if self._server is not None:
+            self._server.close()
+            self._server = None
+
+    @property
+    def is_running(self):
+        return self._server is not None
 
     def _parseArguments(self, arguments):
         parser = ArgumentParser(description='Adapter to expose a device via TCP Stream')
