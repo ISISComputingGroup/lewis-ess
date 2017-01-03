@@ -88,7 +88,6 @@ class Simulation(object):
 
         self._running = False
         self._started = False
-        self._device_connected = True
         self._stop_commanded = False
 
         # Constructing the control server must be deferred until the end,
@@ -128,6 +127,8 @@ class Simulation(object):
         self._running = False
         self._started = False
 
+        self._adapter.stop_server()
+
     def _process_cycle(self, delta):
         """
         Processes one cycle, which consists of one simulation cycle and processing
@@ -158,7 +159,7 @@ class Simulation(object):
 
         :param delta: Time delta passed to simulation.
         """
-        if self._device_connected:
+        if self.device_connected:
             self._adapter.handle(self._cycle_delay)
         else:
             sleep(self._cycle_delay)
@@ -232,29 +233,34 @@ class Simulation(object):
         Indicates whether the adapter is processing, i.e. the device is connected.
         The device simulation can still be running, but if the adapter is not being
         processed, the device appears disconnected.
+
+        .. seealso:: See :meth:`disconnect_device` and :meth:`connect_device` to virtually connect
+                     and disconnect the controlled device.
         """
-        return self._device_connected
+        return self._adapter.is_running
 
     def disconnect_device(self):
         """
         Simulate disconnecting the device. The simulation continues running, but
         the outside communication of the device is suspended, so that it appears
         disconnected.
+
+        .. seealso:: This method directly influences the :attr:`device_connected` property.
         """
-        if not self._device_connected:
+        if not self.device_connected:
             raise RuntimeError('Device is already disconnected.')
 
-        self._device_connected = False
+        self._adapter.stop_server()
 
     def connect_device(self):
         """
         Simulate (re-)connecting the device. This is only possible after the device
-        has been virtually disconnected using disconnect_device.
+        has been virtually disconnected using :meth:`disconnect_device`.
         """
-        if self._device_connected:
+        if self.device_connected:
             raise RuntimeError('Device is already connected.')
 
-        self._device_connected = True
+        self._adapter.start_server()
 
     def pause(self):
         """

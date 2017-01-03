@@ -102,6 +102,7 @@ class PropertyExposingDriver(Driver):
         self._target = target
         self._pv_dict = pv_dict
         self._timers = {k: 0.0 for k in self._pv_dict.keys()}
+        self._last_update_call = None
 
     def write(self, pv, value):
         pv_object = self._pv_dict.get(pv)
@@ -116,11 +117,12 @@ class PropertyExposingDriver(Driver):
         except LimitViolationException:
             return False
 
-    def process_pv_updates(self, dt):
+    def process_pv_updates(self, force=False):
+        dt = seconds_since(self._last_update_call or datetime.now())
         # Updates bound parameters as needed
         for pv, pv_object in iteritems(self._pv_dict):
             self._timers[pv] += dt
-            if self._timers[pv] >= pv_object.poll_interval:
+            if self._timers[pv] >= pv_object.poll_interval or force:
                 try:
                     self.setParam(pv, getattr(self._target, pv_object.property))
 
@@ -132,6 +134,8 @@ class PropertyExposingDriver(Driver):
                     pass
 
         self.updatePVs()
+
+        self._last_update_call = datetime.now()
 
 
 class EpicsAdapter(Adapter):
@@ -234,12 +238,20 @@ class EpicsAdapter(Adapter):
 
             The server does not process requests unless :meth:`handle` is called regularly.
         """
-        self._server = SimpleServer()
-        self._server.createPV(prefix=self._options.prefix,
-                              pvdb={k: v.config for k, v in self.pvs.items()})
-        self._driver = PropertyExposingDriver(target=self, pv_dict=self.pvs)
+        if self._server is None:
+            self._server = SimpleServer()
+            self._server.createPV(prefix=self._options.prefix,
+                                  pvdb={k: v.config for k, v in self.pvs.items()})
+            self._driver = PropertyExposingDriver(target=self, pv_dict=self.pvs)
+            self._driver.process_pv_updates(force=True)
 
-        self._last_update = datetime.now()
+    def stop_server(self):
+        self._driver = None
+        self._server = None
+
+    @property
+    def is_running(self):
+        return self._server is not None
 
     def _create_properties(self, pvs):
         for pv in pvs:
@@ -269,6 +281,6 @@ class EpicsAdapter(Adapter):
 
         :param cycle_delay: Approximate time to be spent processing requests in pcaspy server.
         """
-        self._server.process(cycle_delay)
-        self._driver.process_pv_updates(seconds_since(self._last_update))
-        self._last_update = datetime.now()
+        if self._server is not None:
+            self._server.process(cycle_delay)
+            self._driver.process_pv_updates()

@@ -46,15 +46,15 @@ class RemoteException(Exception):
     To retain as much information as possible, the exception type on the server and
     the message are stored.
 
-    :param type: Type of the exception on the server side.
+    :param exception_type: Type of the exception on the server side.
     :param message: Exception message on the server side.
     """
 
-    def __init__(self, type, message):
+    def __init__(self, exception_type, message):
         super(RemoteException, self).__init__(
-            'Exception on server side of type \'{}\': \'{}\''.format(type, message))
+            'Exception on server side of type \'{}\': \'{}\''.format(exception_type, message))
 
-        self.server_side_type = type
+        self.server_side_type = exception_type
         self.server_side_message = message
 
 
@@ -97,15 +97,15 @@ class ControlClient(object):
         :param args: Arguments to method call.
         :return: JSON result and request id.
         """
-        id = str(uuid.uuid4())
+        request_id = str(uuid.uuid4())
         self._socket.send_json(
             {'method': method,
              'params': args,
              'jsonrpc': '2.0',
-             'id': id
+             'id': request_id
              })
 
-        return self._socket.recv_json(), id
+        return self._socket.recv_json(), request_id
 
     def get_object(self, object_name=''):
         api, request_id = self.json_rpc(object_name + ':api')
@@ -183,7 +183,15 @@ class ObjectProxy(object):
         :param args: Positional arguments to the method call.
         :return: Result of the remote call if successful.
         """
-        response, id = self._connection.json_rpc(self._prefix + method, *args)
+        response, request_id = self._connection.json_rpc(self._prefix + method, *args)
+
+        if 'id' not in response:
+            raise ProtocolException('JSON-RPC response does not contain ID field.')
+
+        if response['id'] != request_id:
+            raise ProtocolException(
+                'ID of JSON-RPC request ({}) did not match response ({}).'.format(
+                    request_id, response['id']))
 
         if 'result' in response:
             return response['result']

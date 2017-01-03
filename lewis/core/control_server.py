@@ -64,15 +64,15 @@ class ExposedObject(object):
     exclude a few members. Both parameters can be used in combination, the exclude-list
     takes precedence.
 
-    :param object: The object to expose.
+    :param obj: The object to expose.
     :param members: If supplied, only this list of methods will be exposed.
     :param exclude: Members in this list will not be exposed.
     """
 
-    def __init__(self, object, members=None, exclude=None):
+    def __init__(self, obj, members=None, exclude=None):
         super(ExposedObject, self).__init__()
 
-        self._object = object
+        self._object = obj
         self._function_map = {}
 
         self._add_function(':api', self.get_api)
@@ -263,8 +263,8 @@ class ControlServer(object):
             self._socket = context.socket(zmq.REP)
             self._socket.bind('tcp://{0}:{1}'.format(self.host, self.port))
 
-    def _unhandled_exception_response(self, id, exception):
-        return {"jsonrpc": "2.0", "id": id,
+    def _unhandled_exception_response(self, request_id, exception):
+        return {"jsonrpc": "2.0", "id": request_id,
                 "error": {"message": "Server error",
                           "code": -32000,
                           "data": {"message": exception.args,

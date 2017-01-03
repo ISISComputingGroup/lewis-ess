@@ -109,9 +109,23 @@ class TestObjectProxy(unittest.TestCase):
 
         request_mock.assert_has_calls([call('a:get'), call('a:set', 4), call('setTest')])
 
-    def test_make_request_with_result(self):
+    def test_response_without_id_raises_exception(self):
         mock_connection = Mock(ControlClient)
         mock_connection.json_rpc.return_value = ({'result': 'test'}, 2)
+        obj = type('TestType', (ObjectProxy,), {})(mock_connection, ['setTest'])
+
+        self.assertRaises(ProtocolException, obj.setTest)
+
+    def test_response_with_id_mismatch_raises_exception(self):
+        mock_connection = Mock(ControlClient)
+        mock_connection.json_rpc.return_value = ({'result': 'test', 'id': 3}, 2)
+        obj = type('TestType', (ObjectProxy,), {})(mock_connection, ['setTest'])
+
+        self.assertRaises(ProtocolException, obj.setTest)
+
+    def test_make_request_with_result(self):
+        mock_connection = Mock(ControlClient)
+        mock_connection.json_rpc.return_value = ({'result': 'test', 'id': 2}, 2)
         obj = type('TestType', (ObjectProxy,), {})(mock_connection, ['setTest'])
 
         result = obj.setTest()
@@ -121,9 +135,12 @@ class TestObjectProxy(unittest.TestCase):
 
     def test_make_request_with_known_exception(self):
         mock_connection = Mock(ControlClient)
-        mock_connection.json_rpc.return_value = ({'error': {
-            'data': {'type': 'AttributeError',
-                     'message': 'Some message'}}}, 2)
+        mock_connection.json_rpc.return_value = (
+            {'error': {
+                'data': {
+                    'type': 'AttributeError',
+                    'message': 'Some message'}},
+                'id': 2}, 2)
 
         obj = type('TestType', (ObjectProxy,), {})(mock_connection, ['setTest'])
 
@@ -132,9 +149,12 @@ class TestObjectProxy(unittest.TestCase):
 
     def test_make_request_with_unknown_exception(self):
         mock_connection = Mock(ControlClient)
-        mock_connection.json_rpc.return_value = ({'error': {
-            'data': {'type': 'NonExistingException',
-                     'message': 'Some message'}}}, 2)
+        mock_connection.json_rpc.return_value = (
+            {'error': {
+                'data': {
+                    'type': 'NonExistingException',
+                    'message': 'Some message'}},
+                'id': 2}, 2)
 
         obj = type('TestType', (ObjectProxy,), {})(mock_connection, ['setTest'])
 

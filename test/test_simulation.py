@@ -19,7 +19,7 @@
 
 import unittest
 
-from mock import Mock, patch, call, ANY
+from mock import Mock, PropertyMock, patch, call, ANY
 
 from lewis.core.simulation import Simulation
 from . import assertRaisesNothing
@@ -262,46 +262,50 @@ class TestSimulation(unittest.TestCase):
         self.assertRaises(RuntimeError, setattr, env, 'control_server', '127.0.0.1:10003')
 
     def test_connect_disconnect_exceptions(self):
-        env = Simulation(device=Mock(), adapter=Mock())
+        with patch('lewis.core.simulation.Simulation.device_connected', new_callable=PropertyMock,
+                   side_effect=[True, True, False, False, False, True, True]):
+            env = Simulation(device=Mock(), adapter=Mock())
 
-        self.assertTrue(env.device_connected)
+            self.assertTrue(env.device_connected)
 
-        assertRaisesNothing(self, env.disconnect_device)
-        self.assertFalse(env.device_connected)
-        self.assertRaises(RuntimeError, env.disconnect_device)
+            assertRaisesNothing(self, env.disconnect_device)
+            self.assertFalse(env.device_connected)
+            self.assertRaises(RuntimeError, env.disconnect_device)
 
-        assertRaisesNothing(self, env.connect_device)
-        self.assertTrue(env.device_connected)
-        self.assertRaises(RuntimeError, env.connect_device)
+            assertRaisesNothing(self, env.connect_device)
+            self.assertTrue(env.device_connected)
+            self.assertRaises(RuntimeError, env.connect_device)
 
     @patch('lewis.core.simulation.sleep')
     def test_disconnect_device(self, sleep_mock):
-        adapter_mock = Mock()
-        env = Simulation(device=Mock(), adapter=adapter_mock)
+        with patch('lewis.core.simulation.Simulation.device_connected', new_callable=PropertyMock,
+                   side_effect=[True, True, False, False, True]):
+            adapter_mock = Mock()
+            env = Simulation(device=Mock(), adapter=adapter_mock)
 
-        # connected device calls adapter_mock
-        env._process_cycle(0.5)
-        adapter_mock.assert_has_calls([call.handle(env.cycle_delay)])
-        sleep_mock.assert_not_called()
+            # connected device calls adapter_mock
+            env._process_cycle(0.5)
+            adapter_mock.assert_has_calls([call.handle(env.cycle_delay)])
+            sleep_mock.assert_not_called()
 
-        adapter_mock.reset_mock()
-        sleep_mock.reset_mock()
+            adapter_mock.reset_mock()
+            sleep_mock.reset_mock()
 
-        # disconnected device calls sleep_mock
-        env.disconnect_device()
-        env._process_cycle(0.5)
+            # disconnected device calls sleep_mock
+            env.disconnect_device()
+            env._process_cycle(0.5)
 
-        sleep_mock.assert_has_calls([call.handle(env.cycle_delay)])
-        adapter_mock.assert_not_called()
+            sleep_mock.assert_has_calls([call.handle(env.cycle_delay)])
+            adapter_mock.assert_not_called()
 
-        adapter_mock.reset_mock()
-        sleep_mock.reset_mock()
+            adapter_mock.reset_mock()
+            sleep_mock.reset_mock()
 
-        # re-connecting returns to previous behavior
-        env.connect_device()
-        env._process_cycle(0.5)
-        adapter_mock.assert_has_calls([call.handle(env.cycle_delay)])
-        sleep_mock.assert_not_called()
+            # re-connecting returns to previous behavior
+            env.connect_device()
+            env._process_cycle(0.5)
+            adapter_mock.assert_has_calls([call.handle(env.cycle_delay)])
+            sleep_mock.assert_not_called()
 
     def test_device_documentation_returns_adapter_documentation(self):
         adapter_mock = Mock()
