@@ -92,11 +92,11 @@ class PropertyExposingDriver(Driver):
 
         return True
 
-    def process_pv_updates(self, dt):
+    def process_pv_updates(self, dt, force=False):
         # Updates bound parameters as needed
         for pv, pv_object in iteritems(self._pv_dict):
             self._timers[pv] += dt
-            if self._timers[pv] >= pv_object.poll_interval:
+            if self._timers[pv] >= pv_object.poll_interval or force:
                 try:
                     self.setParam(pv, getattr(self._target, pv_object.property))
                     self._timers[pv] = 0.0
@@ -179,6 +179,7 @@ class EpicsAdapter(Adapter):
 
         self._server = None
         self._driver = None
+        self._last_update = None
 
     @property
     def documentation(self):
@@ -211,12 +212,17 @@ class EpicsAdapter(Adapter):
             self._server.createPV(prefix=self._options.prefix,
                                   pvdb={k: v.config for k, v in self.pvs.items()})
             self._driver = PropertyExposingDriver(target=self, pv_dict=self.pvs)
+            self._driver.process_pv_updates(0.0, force=True)
 
             self._last_update = datetime.now()
 
     def stop_server(self):
-        self._server = None
         self._driver = None
+        self._server = None
+
+    @property
+    def is_running(self):
+        return self._server is not None
 
     def _create_properties(self, pvs):
         for pv in pvs:

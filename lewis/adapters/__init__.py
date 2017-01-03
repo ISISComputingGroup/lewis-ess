@@ -63,7 +63,7 @@ class Adapter(object):
 
     def start_server(self):
         """
-        This method should be re-implemented to start the infrastructure required for the
+        This method must be re-implemented to start the infrastructure required for the
         protocol in question. These startup operations are not supposed to be carried out on
         construction of the adapter in order to preserve control over when services are
         started during a run of a simulation.
@@ -75,11 +75,13 @@ class Adapter(object):
 
         .. seealso:: See :meth:`stop_server` for shutting down the adapter.
         """
-        pass
+        raise NotImplementedError(
+            'Adapters must implement start_server to construct and setup any servers or mechanism '
+            'required for network communication.')
 
     def stop_server(self):
         """
-        This method should be re-implemented to stop and tear down anything that has been setup
+        This method must be re-implemented to stop and tear down anything that has been setup
         in :meth:`start_server`. This method should close all connections to clients that have
         been established since the adapter has been started.
 
@@ -88,7 +90,9 @@ class Adapter(object):
             This method may be called multiple times over the lifetime of the Adapter, so it is
             important to make sure that this does not cause problems.
         """
-        pass
+        raise NotImplementedError(
+            'Adapters must implement stop_server to tear down anything that has been setup in '
+            'start_server.')
 
     @property
     def is_running(self):
