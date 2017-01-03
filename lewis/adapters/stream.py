@@ -29,7 +29,7 @@ from argparse import ArgumentParser
 from six import b
 
 from lewis.adapters import Adapter
-from lewis.core.utils import format_doc_text, num_args
+from lewis.core.utils import format_doc_text
 
 
 class StreamHandler(asynchat.async_chat):
@@ -128,11 +128,13 @@ class Func(object):
         self.raw_pattern = pattern
         self.pattern = re.compile(b(pattern), 0) if pattern else None
 
-        func_args = num_args(func)
-        if self.pattern.groups != func_args:
+        try:
+            inspect.getcallargs(func, *[None] * self.pattern.groups)
+        except TypeError:
             raise RuntimeError(
-                'Supplied function matched by pattern \'{}\' has {} argument(s), but the regular '
-                'expression defines {} group(s).'.format(pattern, func_args, self.pattern.groups))
+                'The number of arguments for function \'{}\' matched by pattern '
+                '\'{}\' is not compatible with number of defined '
+                'groups in pattern ({}).'.format(func.__name__, pattern, self.pattern.groups))
 
         if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
             raise RuntimeError(

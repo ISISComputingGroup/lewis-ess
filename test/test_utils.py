@@ -27,7 +27,7 @@ from six import string_types
 
 from lewis.core.utils import dict_strict_update, extract_module_name, \
     get_submodules, get_members, seconds_since, FromOptionalDependency, \
-    format_doc_text, check_limits, num_args
+    format_doc_text, check_limits
 
 from lewis.core.exceptions import LewisException, LimitViolationException
 
@@ -278,28 +278,3 @@ class TestCheckLimits(unittest.TestCase):
 
         # Updates must have been ignored.
         self.assertEquals(f.bar, 15)
-
-
-class TestNumArgs(unittest.TestCase):
-    def test_plain_function(self):
-        def foo(bar, baz):
-            pass
-
-        self.assertEquals(num_args(foo), 2)
-
-    def test_lambda(self):
-        self.assertEquals(num_args(lambda x, y: x + y), 2)
-        self.assertEquals(num_args(lambda: 2), 0)
-
-    def test_method(self):
-        class Foo(object):
-            def bar(self, baz):
-                return baz + 3
-
-        self.assertEquals(num_args(Foo.bar), 2)
-        self.assertEquals(num_args(Foo().bar), 1)
-
-    def test_fails_with_non_callable(self):
-        self.assertRaises(RuntimeError, num_args, 2)
-        self.assertRaises(RuntimeError, num_args, 'nonsense')
-        self.assertRaises(RuntimeError, num_args, None)

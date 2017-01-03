@@ -349,34 +349,3 @@ class check_limits(object):
                     '%f is outside limits (%r, %r)' % (new_value, lower, upper))
 
         return limit_checked
-
-
-def num_args(func):
-    """
-    Returns the number of arguments of the passed function or method. The case of bound and
-    unbound methods are distinguished:
-
-    .. sourcecode:: Python
-
-        class Foo(object):
-            def bar(self, baz):
-                return baz + 1
-
-
-        print(num_args(Foo.bar))  # prints 2
-
-        a = Foo()
-        print(a.bar)  # prints 1
-
-    :param func: Callable object.
-    :return: Number of arguments.
-    """
-    if not callable(func):
-        raise RuntimeError('The supplied argument is not callable.')
-
-    args = len(inspect.getargspec(func).args)
-
-    if inspect.ismethod(func) and func.__self__ is not None:
-        return args - 1
-
-    return args
