@@ -116,6 +116,7 @@ class ForwardProperty(object):
 
     .. seealso:: See :class:`ForwardMethod` to forward method calls to another object.
     """
+
     def __init__(self, target_member, property_name, instance=None):
         self._target_member = target_member
         self._prop = property_name
@@ -151,29 +152,3 @@ class ForwardProperty(object):
         """
 
         setattr(getattr(instance, self._target_member), self._prop, value)
-
-
-class ForwardMethod(object):
-    """
-    Small helper to forward calls to another target.
-
-    It can be used like this:
-
-    .. sourcecode:: Python
-
-        a = Foo()
-        b = Bar()  # Bar has method baz(parameter)
-
-        a.forward = ForwardMethod(b, 'baz')
-        a.forward(10)  # Calls b.baz(10)
-
-    .. seealso:: See :class:`ForwardProperty` for forwarding properties.
-    """
-    def __init__(self, target, method):
-        self._target = target
-        self._method = method
-
-        self.__doc__ = getattr(self._target, self._method).__doc__
-
-    def __call__(self, *args, **kwargs):
-        return getattr(self._target, self._method)(*args, **kwargs)
