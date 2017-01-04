@@ -10,7 +10,7 @@ New features
 
  - Exposing devices via TCP Stream has been made easier. It is now possible to define commands
    that expose lambda-functions, named functions and data attributes (with separate read/write
-   patterns).
+   patterns). See the updated documentation of :mod:`lewis.adapters.stream`.
 
 Bug fixes and other improvements
 --------------------------------

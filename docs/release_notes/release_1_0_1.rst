@@ -12,8 +12,10 @@ New features
 
  - It is now possible to obtain device interface documentation via the command line
    and the control server, making it easier to communicate with unfamiliar devices.
+   For command line invocation there is a new flag: ``lewis -i linkam_t95``.
    Thanks to `David Michel`_ for requesting this feature.
- - Lewis is now available as a `PyPI`_-package and can be installed via ``pip``.
+
+ - Lewis is now available as a `PyPI`_-package and can be installed via ``pip install lewis``.
  - Documentation is now generated via Sphinx and has been made available online on `RTD`_.
 
 Bug fixes and other improvements
@@ -30,4 +32,4 @@ Bug fixes and other improvements
 
 .. _David Michel: https://github.com/dmichel76
 .. _PyPI: https://pypi.python.org/pypi/lewis
-.. _RTD: http://lewis.readthedocs.io/en/latest/
+.. _RTD: http://lewis.readthedocs.io/en/v1.0.1/

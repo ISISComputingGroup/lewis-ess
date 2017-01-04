@@ -13,7 +13,7 @@ Features
  - Two ready to use simulated devices using different protocols:
 
     - ESS chopper abstraction (CHIC) using EPICS Channel Access
-    - Linkam T95 temperatur controller using TCP Stream protocol
+    - Linkam T95 temperature controller using TCP Stream protocol
 
  - Docker image available on `docker hub`_ containing all dependencies
  - Documentation in Markdown format for viewing in Github, both for users and developers
