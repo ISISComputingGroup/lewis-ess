@@ -63,12 +63,46 @@ class Adapter(object):
 
     def start_server(self):
         """
-        This method should be re-implemented to start the infrastructure required for the
+        This method must be re-implemented to start the infrastructure required for the
         protocol in question. These startup operations are not supposed to be carried out on
         construction of the adapter in order to preserve control over when services are
         started during a run of a simulation.
+
+        .. note::
+
+            This method may be called multiple times over the lifetime of the Adapter, so it is
+            important to make sure that this does not cause problems.
+
+        .. seealso:: See :meth:`stop_server` for shutting down the adapter.
         """
-        pass
+        raise NotImplementedError(
+            'Adapters must implement start_server to construct and setup any servers or mechanism '
+            'required for network communication.')
+
+    def stop_server(self):
+        """
+        This method must be re-implemented to stop and tear down anything that has been setup
+        in :meth:`start_server`. This method should close all connections to clients that have
+        been established since the adapter has been started.
+
+        .. note::
+
+            This method may be called multiple times over the lifetime of the Adapter, so it is
+            important to make sure that this does not cause problems.
+        """
+        raise NotImplementedError(
+            'Adapters must implement stop_server to tear down anything that has been setup in '
+            'start_server.')
+
+    @property
+    def is_running(self):
+        """
+        This property indicates whether the Adapter's server is running and listening. The result
+        of calls to :meth:`start_server` and :meth:`stop_server` should be reflected as expected.
+        """
+        raise NotImplementedError(
+            'Adapters must implement the is_running property to indicate whether '
+            'a server is currently running and listening for requests.')
 
     def handle(self, cycle_delay=0.1):
         """
@@ -116,6 +150,7 @@ class ForwardProperty(object):
 
     .. seealso:: See :class:`ForwardMethod` to forward method calls to another object.
     """
+
     def __init__(self, target_member, property_name, instance=None):
         self._target_member = target_member
         self._prop = property_name
@@ -127,13 +162,13 @@ class ForwardProperty(object):
         self.__doc__ = getattr(type(getattr(instance, self._target_member)),
                                self._prop, None).__doc__
 
-    def __get__(self, instance, type=None):
+    def __get__(self, instance, instance_type=None):
         """
         This method forwards property read access on instance
         to the member of instance that was selected in __init__.
 
         :param instance: Instance of type.
-        :param type: Type.
+        :param instance_type: Type.
         :return: Attribute value of member property.
         """
         if instance is not None:
@@ -151,29 +186,3 @@ class ForwardProperty(object):
         """
 
         setattr(getattr(instance, self._target_member), self._prop, value)
-
-
-class ForwardMethod(object):
-    """
-    Small helper to forward calls to another target.
-
-    It can be used like this:
-
-    .. sourcecode:: Python
-
-        a = Foo()
-        b = Bar()  # Bar has method baz(parameter)
-
-        a.forward = ForwardProperty(b, 'baz')
-        a.forward(10)  # Calls b.baz(10)
-
-    .. seealso:: See :class:`ForwardProperty` for forwarding properties.
-    """
-    def __init__(self, target, method):
-        self._target = target
-        self._method = method
-
-        self.__doc__ = getattr(self._target, self._method).__doc__
-
-    def __call__(self, *args, **kwargs):
-        return getattr(self._target, self._method)(*args, **kwargs)

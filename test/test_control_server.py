@@ -24,7 +24,7 @@ import zmq
 import socket
 
 from lewis.core.control_server import ExposedObject, ExposedObjectCollection, ControlServer
-from lewis.core.exceptions import lewisException
+from lewis.core.exceptions import LewisException
 from . import assertRaisesNothing
 
 
@@ -222,14 +222,14 @@ class TestControlServer(unittest.TestCase):
         self.assertTrue(server.is_running)
 
     @patch('lewis.core.control_server.socket.gethostbyname')
-    def test_invalid_hostname_raises_lewisException(self, gethostbyname_mock):
+    def test_invalid_hostname_raises_LewisException(self, gethostbyname_mock):
         def raise_exception(self):
             raise socket.gaierror
 
         gethostbyname_mock.side_effect = raise_exception
 
         self.assertRaises(
-            lewisException, ControlServer,
+            LewisException, ControlServer,
             object_map=None, connection_string='some_invalid_host.local:10000')
 
         gethostbyname_mock.assert_called_once_with('some_invalid_host.local')

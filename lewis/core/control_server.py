@@ -18,7 +18,7 @@
 # *********************************************************************
 
 """
-This module contains classes to expose objects via a JSON-RPC over ZMQ server. lewis uses
+This module contains classes to expose objects via a JSON-RPC over ZMQ server. Lewis uses
 this infrastructure in :class:`~lewis.core.simulation.Simulation`.
 
 .. seealso::
@@ -35,7 +35,7 @@ import zmq
 import json
 from jsonrpc import JSONRPCResponseManager
 
-from .exceptions import lewisException
+from .exceptions import LewisException
 
 
 class ExposedObject(object):
@@ -64,15 +64,15 @@ class ExposedObject(object):
     exclude a few members. Both parameters can be used in combination, the exclude-list
     takes precedence.
 
-    :param object: The object to expose.
+    :param obj: The object to expose.
     :param members: If supplied, only this list of methods will be exposed.
     :param exclude: Members in this list will not be exposed.
     """
 
-    def __init__(self, object, members=None, exclude=None):
+    def __init__(self, obj, members=None, exclude=None):
         super(ExposedObject, self).__init__()
 
-        self._object = object
+        self._object = obj
         self._function_map = {}
 
         self._add_function(':api', self.get_api)
@@ -154,7 +154,7 @@ class ExposedObjectCollection(ExposedObject):
 
     A list of exposed objects can be obtained by calling the following method from the client:
 
-    ..sourcecode:: Python
+    .. sourcecode:: Python
 
         :objects
 
@@ -222,14 +222,14 @@ class ControlServer(object):
         try:
             host, port = connection_string.split(':')
         except ValueError:
-            raise lewisException(
+            raise LewisException(
                 '\'{}\' is not a valid control server initialization string. '
                 'A string of the form "host:port" is expected.'.format(connection_string))
 
         try:
             self.host = socket.gethostbyname(host)
         except socket.gaierror:
-            raise lewisException('Could not resolve control server host: {}'.format(host))
+            raise LewisException('Could not resolve control server host: {}'.format(host))
 
         self.port = port
 
@@ -263,8 +263,8 @@ class ControlServer(object):
             self._socket = context.socket(zmq.REP)
             self._socket.bind('tcp://{0}:{1}'.format(self.host, self.port))
 
-    def _unhandled_exception_response(self, id, exception):
-        return {"jsonrpc": "2.0", "id": id,
+    def _unhandled_exception_response(self, request_id, exception):
+        return {"jsonrpc": "2.0", "id": request_id,
                 "error": {"message": "Server error",
                           "code": -32000,
                           "data": {"message": exception.args,
@@ -278,7 +278,7 @@ class ControlServer(object):
         ExposedObjectCollection.
 
         In case no data are available, the method does nothing. This behavior is required for
-        lewis where everything is running in one thread. The central loop can call process
+        Lewis where everything is running in one thread. The central loop can call process
         at some point to process remote calls, so the RPC-server does not introduce its own
         infinite processing loop.
 

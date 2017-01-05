@@ -29,7 +29,7 @@ from lewis.core.utils import dict_strict_update, extract_module_name, \
     get_submodules, get_members, seconds_since, FromOptionalDependency, \
     format_doc_text, check_limits
 
-from lewis.core.exceptions import lewisException, LimitViolationException
+from lewis.core.exceptions import LewisException, LimitViolationException
 
 
 class TestDictStrictUpdate(unittest.TestCase):
@@ -146,13 +146,13 @@ class TestFromOptionalDependency(unittest.TestCase):
         self.assertEqual(A.__name__, 'A')
         self.assertEqual(B.__name__, 'B')
 
-        self.assertRaises(lewisException, A, 'argument_one')
-        self.assertRaises(lewisException, B, 'argument_one', 'argument_two')
+        self.assertRaises(LewisException, A, 'argument_one')
+        self.assertRaises(LewisException, B, 'argument_one', 'argument_two')
 
     def test_string_exception_is_raised(self):
         A = FromOptionalDependency('invalid_module', 'test').do_import('A')
 
-        self.assertRaises(lewisException, A)
+        self.assertRaises(LewisException, A)
 
     def test_custom_exception_is_raised(self):
         A = FromOptionalDependency('invalid_module', ValueError('test')).do_import('A')

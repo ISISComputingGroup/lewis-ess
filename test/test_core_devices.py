@@ -22,7 +22,7 @@ from . import assertRaisesNothing, TestWithPackageStructure
 
 from lewis.core.devices import is_device, is_adapter, \
     DeviceRegistry, DeviceBuilder, DeviceBase
-from lewis.core.exceptions import lewisException
+from lewis.core.exceptions import LewisException
 from lewis.devices import Device, StateMachineDevice
 from lewis.adapters import Adapter
 from lewis.adapters.stream import StreamAdapter
@@ -122,7 +122,7 @@ class TestDeviceBuilderSimpleModule(unittest.TestCase):
         device = builder.create_device()
         self.assertIsInstance(device, self.module.DummyDevice)
 
-        self.assertRaises(lewisException, builder.create_device, 'invalid_setup')
+        self.assertRaises(LewisException, builder.create_device, 'invalid_setup')
 
     def test_create_interface(self):
         builder = DeviceBuilder(self.module)
@@ -133,7 +133,7 @@ class TestDeviceBuilderSimpleModule(unittest.TestCase):
         self.assertIsInstance(
             builder.create_interface('dummy', device=device), self.module.DummyAdapter)
 
-        self.assertRaises(lewisException, builder.create_interface, 'invalid_protocol')
+        self.assertRaises(LewisException, builder.create_interface, 'invalid_protocol')
 
 
 class TestDeviceBuilderMultipleDevicesAndProtocols(unittest.TestCase):
@@ -181,8 +181,8 @@ class TestDeviceBuilderMultipleDevicesAndProtocols(unittest.TestCase):
     def test_create_device(self):
         builder = DeviceBuilder(self.module)
 
-        self.assertRaises(lewisException, builder.create_device)
-        self.assertRaises(lewisException, builder.create_device, 'default')
+        self.assertRaises(LewisException, builder.create_device)
+        self.assertRaises(LewisException, builder.create_device, 'default')
 
 
 class TestDeviceBuilderComplexModule(unittest.TestCase):
@@ -256,7 +256,7 @@ class TestDeviceBuilderWithDuplicateProtocols(unittest.TestCase):
 class TestDeviceRegistry(TestWithPackageStructure):
     def test_init(self):
         assertRaisesNothing(self, DeviceRegistry, self._tmp_package_name)
-        self.assertRaises(lewisException, DeviceRegistry, str(uuid4()))
+        self.assertRaises(LewisException, DeviceRegistry, str(uuid4()))
 
     def test_devices(self):
         registry = DeviceRegistry(self._tmp_package_name)
@@ -272,4 +272,4 @@ class TestDeviceRegistry(TestWithPackageStructure):
         builder = registry.device_builder('some_file')
         self.assertEquals(builder.name, 'some_file')
 
-        self.assertRaises(lewisException, registry.device_builder, 'invalid_device')
+        self.assertRaises(LewisException, registry.device_builder, 'invalid_device')

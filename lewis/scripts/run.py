@@ -25,7 +25,7 @@ from lewis import __version__
 
 from lewis.core.devices import DeviceRegistry
 from lewis.core.simulation import Simulation
-from lewis.core.exceptions import lewisException
+from lewis.core.exceptions import LewisException
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
@@ -110,12 +110,12 @@ def do_run_simulation(argument_list=None):
 def run_simulation(argument_list=None):
     """
     This function is just a very thin wrapper around do_run_simulation to catch expected
-    exceptions that are derived from lewisException.
+    exceptions that are derived from LewisException.
 
     :param argument_list: Argument list to pass to the argument parser declared in this module.
     :return:
     """
     try:
         do_run_simulation(argument_list)
-    except lewisException as e:
+    except LewisException as e:
         print('\n'.join(('An error occurred:', e.message)))
