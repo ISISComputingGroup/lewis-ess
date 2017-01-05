@@ -21,6 +21,8 @@ Resources:
 Lewis was previously named "Plankton" but, due to a
 package with the same name on PyPI, we decided to rename the project.
 
+Lewis is licensed under GPL v3 or later.
+
 Purpose and Use Cases
 ---------------------
 
