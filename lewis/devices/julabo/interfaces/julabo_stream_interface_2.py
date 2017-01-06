@@ -35,9 +35,11 @@ class JulaboStreamInterfaceV2(StreamAdapter):
         Var('set_point_temperature', read_pattern='^IN_SP_00$', doc='The temperature setpoint.'),
         Cmd('set_set_point', '^OUT_SP_00 ([0-9]*\.?[0-9]+)$', argument_mappings=(float,)),
         # Read pattern for high limit is different from version 1
-        Var('temperature_high_limit', read_pattern='^IN_SP_03$', doc='The high limit - usually set in the hardware.'),
+        Var('temperature_high_limit', read_pattern='^IN_SP_03$',
+            doc='The high limit - usually set in the hardware.'),
         # Read pattern for low limit is different from version 1
-        Var('temperature_low_limit', read_pattern='^IN_SP_04$', doc='The low limit - usually set in the hardware.'),
+        Var('temperature_low_limit', read_pattern='^IN_SP_04$',
+            doc='The low limit - usually set in the hardware.'),
         Var('version', read_pattern='^VERSION$', doc='The Julabo version.'),
         Var('status', read_pattern='^STATUS$', doc='The Julabo status.'),
         Var('is_circulating', read_pattern='^IN_MODE_05$', doc='Whether it is circulating.'),
