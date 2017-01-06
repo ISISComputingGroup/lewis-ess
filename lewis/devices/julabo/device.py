@@ -20,10 +20,29 @@
 from __future__ import print_function
 from collections import OrderedDict
 from lewis.devices import StateMachineDevice
+from lewis.core.utils import check_limits
 from . import states
 
 
 class SimulatedJulabo(StateMachineDevice):
+    internal_p = 0.1  # The proportional
+    internal_i = 3  # The integral
+    internal_d = 0  # The derivative
+    external_p = 0.1  # The proportional
+    external_i = 3  # The integral
+    external_d = 0  # The derivative
+    temperature_low_limit = 0.0  # Usually set in the hardware
+    temperature_high_limit = 100.0  # Usually set in the hardware
+    set_point_temperature = 24.0  # Set point starts equal to the current temperature
+    heating_power = 5.0  # The heating power
+    version = "JULABO FP50_MH Simulator, ISIS"
+    status = "Hello from the simulated Julabo"
+    is_circulating = 0  # 0 for off, 1 for on
+    temperature = 24.0  # Current temperature in C
+    external_temperature = 26.0  # External temperature in C
+    circulate_commanded = False
+    temperature_ramp_rate = 5.0  # Guessed value in C/min
+
     def _initialize_data(self):
         """
         This method is called once on construction. After that, it may be
@@ -35,25 +54,7 @@ class SimulatedJulabo(StateMachineDevice):
         raise an exception. This is to prevent typos from inadvertently
         and silently adding new members instead of accessing existing ones.
         """
-
-        self.circulate_commanded = False
-
-        # Real device remembers values from last run, we use arbitrary defaults
-        self.temperature = 24.0  # Current temperature in C
-        self.external_temperature = 26.0  # External temperature in C
-        self.heating_power = 5.0  # The heating power
-        self.set_point_temperature = 24.0  # Set point starts equal to the current temperature
-        self.temperature_low_limit = 0.0  # Usually set in the hardware
-        self.temperature_high_limit = 100.0  # Usually set in the hardware
-        self.is_circulating = 0  # 0 for off, 1 for on
-        self.temperature_ramp_rate = 5.0  # Guessed value in C/min
-
-        self.internal_p = 0.1  # The proportional
-        self.internal_i = 3  # The integral
-        self.internal_d = 0  # The derivative
-        self.external_p = 0.1  # The proportional
-        self.external_i = 3  # The integral
-        self.external_d = 0  # The derivative
+        pass
 
     def _get_state_handlers(self):
         return {
@@ -69,85 +70,6 @@ class SimulatedJulabo(StateMachineDevice):
             (('not_circulate', 'circulate'), lambda: self.circulate_commanded),
             (('circulate', 'not_circulate'), lambda: not self.circulate_commanded),
         ])
-
-    def get_bath_temperature(self):
-        """
-        Gets the external temperature of the bath.
-
-        :return: The external temperature.
-        """
-        return self.temperature
-
-    def get_external_temperature(self):
-        """
-        Gets the temperature of the bath.
-
-        :return: The current bath temperature.
-        """
-        return self.external_temperature
-
-    def get_power(self):
-        """
-        Gets the heating power currently being used.
-
-        :return: The heating power.
-        """
-        return self.heating_power
-
-    def get_set_point(self):
-        """
-        Gets the set point the user requested.
-
-        :return: The set point temperature.
-        """
-        return self.set_point_temperature
-
-    def get_high_limit(self):
-        """
-        Gets the high limit set for the bath.
-
-        These are usually set manually in the hardware.
-
-        :return: The high limit.
-        """
-        return self.temperature_high_limit
-
-    def get_low_limit(self):
-        """
-        Gets the low limit set for the bath.
-
-        These are usually set manually in the hardware.
-
-        :return: The low limit.
-        """
-        return self.temperature_low_limit
-
-    def get_circulating(self):
-        """
-        Gets whether the bath is circulating.
-
-        This means the heater is on?
-
-        :return: O for off, 1 for on.
-        """
-        return self.is_circulating
-
-    def get_version(self):
-        """
-        Gets the Julabo version number.
-
-        :return: Version string.
-        """
-        return "JULABO FP50_MH Simulator, ISIS"
-
-    def get_status(self):
-        """
-        Not sure what a real device returns as the manual is a bit vague.
-        It will return error codes but it is not clear what it returns if everything is okay.
-
-        :return: String
-        """
-        return "Hello from the simulated Julabo"
 
     def set_set_point(self, param):
         """
@@ -175,60 +97,7 @@ class SimulatedJulabo(StateMachineDevice):
             self.circulate_commanded = True
         return ""
 
-    def get_internal_p(self):
-        """
-        Gets the internal proportional.
-        Xp in Julabo speak
-
-        :return: The p.
-        """
-        return self.internal_p
-
-    def get_internal_i(self):
-        """
-        Gets the internal integral.
-        Tn in Julabo speak
-
-        :return: The i.
-        """
-        return self.internal_i
-
-    def get_internal_d(self):
-        """
-        Gets the internal derivative.
-        Tv in Julabo speak
-
-        :return: The p.
-        """
-        return self.internal_d
-
-    def get_external_p(self):
-        """
-        Gets the external proportional.
-        Xp in Julabo speak
-
-        :return: The d.
-        """
-        return self.external_p
-
-    def get_external_i(self):
-        """
-        Gets the external integral.
-        Tn in Julabo speak
-
-        :return: The i.
-        """
-        return self.external_i
-
-    def get_external_d(self):
-        """
-        Gets the external derivative.
-        Tv in Julabo speak
-
-        :return: The d.
-        """
-        return self.external_d
-
+    @check_limits(0.1, 99.9)
     def set_internal_p(self, param):
         """
         Sets the internal proportional.
@@ -237,10 +106,10 @@ class SimulatedJulabo(StateMachineDevice):
         :param param: The value to set, must be between 0.1 and 99.9
         :return: Empty string.
         """
-        if 0.1 <= param <= 99.9:
-            self.internal_p = param
+        self.internal_p = param
         return ""
 
+    @check_limits(3, 9999)
     def set_internal_i(self, param):
         """
         Sets the internal integral.
@@ -249,10 +118,10 @@ class SimulatedJulabo(StateMachineDevice):
         :param param: The value to set, must be an integer between 3 and 9999
         :return: Empty string.
         """
-        if 3 <= param <= 9999:
-            self.internal_i = param
+        self.internal_i = param
         return ""
 
+    @check_limits(0, 999)
     def set_internal_d(self, param):
         """
         Sets the internal derivative.
@@ -261,10 +130,10 @@ class SimulatedJulabo(StateMachineDevice):
         :param param: The value to set, must be an integer between 0 and 999
         :return: Empty string.
         """
-        if 0 <= param <= 999:
-            self.internal_d = param
+        self.internal_d = param
         return ""
 
+    @check_limits(0.1, 99.9)
     def set_external_p(self, param):
         """
         Sets the external proportional.
@@ -273,10 +142,10 @@ class SimulatedJulabo(StateMachineDevice):
         :param param: The value to set, must be between 0.1 and 99.9
         :return: Empty string.
         """
-        if 0.1 <= param <= 99.9:
-            self.external_p = param
+        self.external_p = param
         return ""
 
+    @check_limits(3, 9999)
     def set_external_i(self, param):
         """
         Sets the external integral.
@@ -285,10 +154,10 @@ class SimulatedJulabo(StateMachineDevice):
         :param param: The value to set, must be an integer between 3 and 9999
         :return: Empty string.
         """
-        if 3 <= param <= 9999:
-            self.external_i = param
+        self.external_i = param
         return ""
 
+    @check_limits(0, 999)
     def set_external_d(self, param):
         """
         Sets the external derivative.
@@ -297,6 +166,5 @@ class SimulatedJulabo(StateMachineDevice):
         :param param: The value to set, must be an integer between 0 and 999
         :return: Empty string.
         """
-        if 0 <= param <= 999:
-            self.external_d = param
+        self.external_d = param
         return ""
