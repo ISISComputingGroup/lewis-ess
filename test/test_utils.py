@@ -210,11 +210,11 @@ class TestCheckLimits(unittest.TestCase):
             bar = 0
             baz = 1
 
-            @check_limits(upper=15)
+            @check_limits(None, 15)
             def set_bar(self, new_bar):
                 self.bar = new_bar
 
-            @check_limits(lower=0)
+            @check_limits(0, None)
             def set_baz(self, new_baz):
                 self.baz = new_baz
 
@@ -260,21 +260,27 @@ class TestCheckLimits(unittest.TestCase):
         assertRaisesNothing(self, f.set_bar, 123232224)
         assertRaisesNothing(self, f.set_bar, -352622234)
 
-    def test_silent_mode(self):
-        class Foo(object):
-            bar = 0
+    def test_works_with_lambda(self):
+        foo = check_limits(0, 15)(lambda x: x + 5)
 
-            @check_limits(0, 15, silent=True)
-            def set_bar(self, new_bar):
-                self.bar = new_bar
+        assertRaisesNothing(self, foo, 0)
+        assertRaisesNothing(self, foo, 15)
 
-        f = Foo()
+        self.assertRaises(LimitViolationException, foo, -1)
+        self.assertRaises(LimitViolationException, foo, 16)
 
-        assertRaisesNothing(self, f.set_bar, 0)
-        assertRaisesNothing(self, f.set_bar, 15)
+    def test_works_with_function(self):
+        @check_limits(0, None)
+        def foo(bar):
+            return bar + 2
 
-        assertRaisesNothing(self, f.set_bar, -3)
-        assertRaisesNothing(self, f.set_bar, 16)
+        assertRaisesNothing(self, foo, 0)
+        assertRaisesNothing(self, foo, 23131344411)
 
-        # Updates must have been ignored.
-        self.assertEquals(f.bar, 15)
+        self.assertRaises(LimitViolationException, foo, -1)
+
+    def test_works_with_builtin(self):
+        foo = check_limits(0, None)(int)
+
+        assertRaisesNothing(self, foo, 0)
+        assertRaisesNothing(self, foo, 12221)

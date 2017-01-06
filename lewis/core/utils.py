@@ -319,33 +319,69 @@ class check_limits(object):
 
 
     If the value is outside the specified limits, the decorated function is not called and a
-    :class:`~lewis.core.exceptions.LimitViolationException` is raised if the ``silent``-
-    parameter is ``False`` (default). If that option is active, the call is simply silently
-    ignored.
+    :class:`~lewis.core.exceptions.LimitViolationException` is raised.
 
-    :param lower: Numerical lower limit or name of attribute that contains limit.
-    :param upper: Numerical upper limit or name of attribute that contains limit.
-    :param silent: A limit violation will not raise an exception if this option is ``True``.
+    :param args: Arguments
+    :param kwargs: Keyword Arguments
     """
 
-    def __init__(self, lower=None, upper=None, silent=False):
-        self._lower = lower
-        self._upper = upper
-        self._silent = silent
+    def __init__(self, *args, **kwargs):
+        if len(args) != 0 and kwargs:
+            raise RuntimeError('No no no')
+
+        if len(args) not in (0, 2):
+            raise RuntimeError('No no no!')
+
+        self._positional_limits = (args[0], args[1]) if len(args) == 2 else None
+
+        self._limits = {}
+        for name, limits in kwargs.items():
+            try:
+                lower, upper = limits
+                self._limits[name] = (lower, upper)
+            except TypeError:
+                raise RuntimeError('No no no')
 
     def __call__(self, f):
-        @functools.wraps(f)
-        def limit_checked(obj, new_value):
-            lower = getattr(obj, self._lower) if isinstance(self._lower,
-                                                            string_types) else self._lower
-            upper = getattr(obj, self._upper) if isinstance(self._upper,
-                                                            string_types) else self._upper
+        func = f
+        if not inspect.isfunction(f) and callable(f):
+            if self._positional_limits is None:
+                raise RuntimeError('Nope')
 
-            if (lower is None or lower <= new_value) and (upper is None or new_value <= upper):
-                return f(obj, new_value)
+            func = lambda x: f(x)
 
-            if not self._silent:
-                raise LimitViolationException(
-                    '%f is outside limits (%r, %r)' % (new_value, lower, upper))
+        original_args = inspect.getargspec(func).args
 
-        return limit_checked
+        if self._positional_limits is not None:
+            first_param = original_args[0] if original_args[0] != 'self' else original_args[1]
+            self._limits[first_param] = self._positional_limits
+
+        @functools.wraps(func)
+        def limits_checked(*args, **kwargs):
+            function_args = dict(zip(original_args, args))
+            function_args.update(kwargs)
+
+            print(function_args)
+
+            obj = function_args.get('self')
+
+            for name, value in function_args.items():
+                limits = self._limits.get(name)
+
+                if limits is not None:
+                    lower_lim, upper_lim = limits
+
+                    lower = getattr(obj, lower_lim) \
+                        if obj and isinstance(lower_lim, string_types) else lower_lim
+                    upper = getattr(obj, upper_lim) \
+                        if obj and isinstance(upper_lim, string_types) else upper_lim
+
+                    if (lower is not None and value < lower) \
+                            or (upper is not None and value > upper):
+                        raise LimitViolationException(
+                            'Value %f for parameter %s is outside limits (%r, %r)' % (
+                                value, name, lower, upper))
+
+            return func(*args, **kwargs)
+
+        return limits_checked
