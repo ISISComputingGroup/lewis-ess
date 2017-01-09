@@ -20,6 +20,9 @@
 import argparse
 import os
 import sys
+import logging
+
+logging.basicConfig(level=logging.DEBUG, )
 
 from lewis import __version__
 

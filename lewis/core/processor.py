@@ -24,8 +24,10 @@ composite design pattern so that it's possible to form a tree of objects which c
 calculations based on an elapsed time :math:`\Delta t`.
 """
 
+from .logging import HasLog
 
-class CanProcess(object):
+
+class CanProcess(HasLog):
     """
     The CanProcess class is meant as a base for all things that
     are able to process on the basis of a time delta (dt).
@@ -49,6 +51,7 @@ class CanProcess(object):
         self.process(dt)
 
     def process(self, dt=0):
+        self.log.debug('Processing cycle with dt=%s', dt)
         if hasattr(self, 'doProcess'):
             if hasattr(self, 'doBeforeProcess'):
                 self.doBeforeProcess(dt)

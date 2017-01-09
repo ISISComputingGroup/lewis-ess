@@ -28,8 +28,11 @@ from lewis.adapters.stream import StreamAdapter, Cmd
 
 class DefaultMovingState(State):
     def in_state(self, dt):
-        self._context.position = approaches.linear(self._context.position, self._context.target,
+        old_position = self._context.position
+        self._context.position = approaches.linear(old_position, self._context.target,
                                                    self._context.speed, dt)
+        self.log.info('Moved position (%s -> %s), target=%s, speed=%s, dt=%s', old_position,
+                      self._context.position, self._context.target, self._context.speed, dt)
 
 
 class SimulatedExampleMotor(StateMachineDevice):

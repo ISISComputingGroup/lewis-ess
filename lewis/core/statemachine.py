@@ -28,6 +28,7 @@ to be used directly in client code for device simulations - these should be base
 from six import iteritems
 
 from lewis.core.processor import CanProcess
+from lewis.core.logging import HasLog
 
 
 class StateMachineException(Exception):
@@ -56,8 +57,11 @@ class HasContext(object):
         """Assigns the new context to the member variable ``_context``."""
         self._context = new_context
 
+        if isinstance(self, HasLog):
+            self.attach_log_to_parent(self._context)
 
-class State(HasContext):
+
+class State(HasLog, HasContext):
     """
     StateMachine state handler base class.
 
@@ -101,7 +105,7 @@ class State(HasContext):
         pass
 
 
-class Transition(HasContext):
+class Transition(HasLog, HasContext):
     """
     StateMachine transition condition base class.
 
@@ -170,6 +174,8 @@ class StateMachine(CanProcess):
 
     def __init__(self, cfg, context=None):
         super(StateMachine, self).__init__()
+
+        self.attach_log_to_parent(context)
 
         self._state = None  # We start outside of any state, first cycle enters initial state
         self._handler = {}  # Nested dict mapping [state][event] = handler
@@ -331,6 +337,7 @@ class StateMachine(CanProcess):
         """
         # Initial transition on first cycle / after a reset()
         if self._state is None:
+            self.log.debug('Entering initial state "%s"', self._initial)
             self._state = self._initial
             self._raise_event('on_entry', 0)
             self._raise_event('in_state', 0)
@@ -339,6 +346,7 @@ class StateMachine(CanProcess):
         # General transition
         for target_state, check_func in self._transition.get(self._state, []):
             if check_func():
+                self.log.debug('Transition triggered (%s -> %s)', self._state, target_state)
                 self._raise_event('on_exit', dt)
                 self._state = target_state
                 self._raise_event('on_entry', dt)
@@ -415,6 +423,7 @@ class StateMachine(CanProcess):
         :param dt: Delta T since last cycle.
         """
         # May be None, function reference, or list of function refs
+        self.log.debug('Processing state=%s, handler=%s, dt=%s', self._state, event, dt)
         handlers = self._handler[self._state][event]
 
         if handlers is None:
