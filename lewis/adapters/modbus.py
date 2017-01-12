@@ -190,7 +190,7 @@ class ModbusTCPFrame(object):
         """
         Create a response frame based on this frame.
 
-        :param data: Data section of response as a bytearray. If None, request data section is kept.
+        :param data: Data section of response as bytearray. If None, request data section is kept.
         :return: ModbusTCPFrame instance that represents a response
         """
         frame = deepcopy(self)
@@ -225,10 +225,10 @@ class ModbusProtocol(object):
 
                 (('check_fcode', 'read_bit'),
                  lambda: self._request.fcode in
-                         (MBFC.READ_COILS, MBFC.READ_DISCRETE_INPUTS)),
+                    (MBFC.READ_COILS, MBFC.READ_DISCRETE_INPUTS)),
                 (('check_fcode', 'read_word'),
                  lambda: self._request.fcode in
-                         (MBFC.READ_HOLDING_REGISTERS, MBFC.READ_INPUT_REGISTERS)),
+                    (MBFC.READ_HOLDING_REGISTERS, MBFC.READ_INPUT_REGISTERS)),
                 (('check_fcode', 'write_coil'),
                  lambda: self._request.fcode == MBFC.WRITE_SINGLE_COIL),
                 (('check_fcode', 'write_register'),
