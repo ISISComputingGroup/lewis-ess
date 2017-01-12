@@ -26,6 +26,7 @@ to be used directly in client code for device simulations - these should be base
 """
 
 from six import iteritems
+from inspect import getcallargs
 
 from lewis.core.processor import CanProcess
 
@@ -427,7 +428,12 @@ class StateMachine(CanProcess):
             handlers = [handlers]
 
         for handler in handlers:
+            # See if handler accepts a dt parameter
+            args = [dt]
             try:
-                handler(dt)
+                getcallargs(handler, *args)
             except TypeError:
-                handler()
+                args = []
+
+            # Call handler (with or without dt)
+            handler(*args)
