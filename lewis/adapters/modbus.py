@@ -24,6 +24,8 @@
 # *********************************************************************
 
 
+from __future__ import division
+
 import socket
 import asyncore
 import struct
@@ -300,7 +302,7 @@ class ModbusProtocol(object):
 
         # Get response data
         bits = self.databank.get_bits(addr, count)
-        byte_count = int(ceil(len(bits) / 8.0))
+        byte_count = int(ceil(len(bits) / 8))
         byte_list = bytearray(byte_count)
 
         # Bits to bytes: LSB -> MSB, first byte -> last byte
