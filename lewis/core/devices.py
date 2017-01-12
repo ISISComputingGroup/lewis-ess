@@ -289,7 +289,7 @@ class DeviceBuilder(object):
             raise LewisException(
                 'Failed to find protocol \'{}\' for device \'{}\'. '
                 'Available protocols are: \n    {}'.format(
-                    protocol, self.name, '\n    {}'.join(self.interfaces.keys())))
+                    protocol, self.name, '\n    '.join(self.interfaces.keys())))
 
 
 class DeviceRegistry(object):
