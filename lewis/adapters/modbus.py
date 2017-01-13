@@ -29,7 +29,6 @@ from __future__ import division
 import socket
 import asyncore
 import struct
-import inspect
 
 from copy import deepcopy
 from math import ceil
