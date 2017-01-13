@@ -12,7 +12,7 @@ New features
    communicating through TCP Stream and offers two different protocol versions. The new device
    can be started like the other available devices:
    
-   .. sourcecode::
+   ::
    
       $ lewis -p julabo-version-1 julabo
 
