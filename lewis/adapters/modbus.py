@@ -235,11 +235,14 @@ class ModbusProtocol(object):
                  lambda: self._request.fcode == MBFC.WRITE_SINGLE_COIL),
                 (('check_fcode', 'write_register'),
                  lambda: self._request.fcode == MBFC.WRITE_SINGLE_REGISTER),
+                (('check_fcode', 'write_multi_coil'),
+                 lambda: self._request.fcode == MBFC.WRITE_MULTIPLE_COILS),
 
                 (('read_bit', 'send_response'), lambda: True),
                 (('read_word', 'send_response'), lambda: True),
                 (('write_coil', 'send_response'), lambda: True),
                 (('write_register', 'send_response'), lambda: True),
+                (('write_multi_coil', 'send_response'), lambda: True),
                 (('send_response', 'await_request'), lambda: True),
 
                 # Print unknown packets
@@ -368,9 +371,35 @@ class ModbusProtocol(object):
 
         print("Write WORD request for value {} at address{}".format(value, addr))
 
+    def _on_write_multi_coil(self):
+        """Process Write Multiple Coil request"""
+        addr, bit_count, byte_count = struct.unpack('>HHB', bytes(self._request.data[:5]))
+        data = self._request.data[5:]
+
+        if not 0x0001 <= bit_count <= 0x07B0 or byte_count != ceil(bit_count / 8):
+            self._exception = MBEX.DATA_VALUE
+            return
+
+        if not self.databank.validate_bits(addr, bit_count):
+            self._exception = MBEX.DATA_ADDRESS
+            return
+
+        # Decode bytes into bits
+        bits = [False] * bit_count
+        for i in range(bit_count):
+            byte_index = i // 8
+            bits[i] = bool(data[byte_index] & (1 << i % 8))
+
+        self.databank.set_bits(addr, bits)
+        self._response = self._request.create_response(self._request.data[:4])
+
+        print("Write Multi Coils request for values {} at address {}".format(bits, addr))
+
     def _on_send_response(self):
         if self._exception is not None:
             print("Exception!")
+            from pprint import pprint
+            pprint(vars(self._request))
             self._response = self._request.create_exception(self._exception)
 
         # print("Response!")
