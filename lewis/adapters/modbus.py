@@ -33,9 +33,7 @@ import inspect
 
 from copy import deepcopy
 from math import ceil
-from collections import OrderedDict
 
-from lewis.core.statemachine import StateMachine
 from lewis.adapters import Adapter
 
 
@@ -203,186 +201,139 @@ class ModbusTCPFrame(object):
 
 
 class ModbusProtocol(object):
-    """
-    StateMachine based Modbus Protocol parser.
-    """
+    def __init__(self, sender, databank):
+        self._buffer = bytearray()
+        self._databank = databank
+        self._send = lambda req: sender(req.to_bytearray())
 
-    def _init_state(self):
-        self._request = None
-        self._response = None
-        self._exception = None
+        self._handlermap = {
+            MBFC.READ_COILS: self._handle_read_co,
+            MBFC.READ_DISCRETE_INPUTS: self._handle_read_di,
+            MBFC.READ_HOLDING_REGISTERS: self._handle_read_hr,
+            MBFC.READ_INPUT_REGISTERS: self._handle_read_ir,
+            MBFC.WRITE_SINGLE_COIL: self._handle_write_co,
+            MBFC.WRITE_SINGLE_REGISTER: self._handle_write_hr,
+            MBFC.WRITE_MULTIPLE_COILS: self._handle_write_multi_co,
+        }
 
-    def __init__(self, handler, databank):
-        self._init_state()
-
-        self.handler = handler
-        self.databank = databank
-        self.buffer = bytearray()
-
-        self.protocol = StateMachine({
-            'initial': 'await_request',
-            'transitions': OrderedDict([
-                (('await_request', 'check_fcode'), lambda: self._request is not None),
-                (('check_fcode', 'send_response'), lambda: self._exception is not None),
-
-                (('check_fcode', 'read_bit'),
-                 lambda: self._request.fcode in
-                    (MBFC.READ_COILS, MBFC.READ_DISCRETE_INPUTS)),
-                (('check_fcode', 'read_word'),
-                 lambda: self._request.fcode in
-                    (MBFC.READ_HOLDING_REGISTERS, MBFC.READ_INPUT_REGISTERS)),
-                (('check_fcode', 'write_coil'),
-                 lambda: self._request.fcode == MBFC.WRITE_SINGLE_COIL),
-                (('check_fcode', 'write_register'),
-                 lambda: self._request.fcode == MBFC.WRITE_SINGLE_REGISTER),
-                (('check_fcode', 'write_multi_coil'),
-                 lambda: self._request.fcode == MBFC.WRITE_MULTIPLE_COILS),
-
-                (('read_bit', 'send_response'), lambda: True),
-                (('read_word', 'send_response'), lambda: True),
-                (('write_coil', 'send_response'), lambda: True),
-                (('write_register', 'send_response'), lambda: True),
-                (('write_multi_coil', 'send_response'), lambda: True),
-                (('send_response', 'await_request'), lambda: True),
-
-                # Print unknown packets
-                (('check_fcode', 'print_packet'), lambda: True),
-                (('print_packet', 'await_request'), lambda: True),
-            ])
-        })
-        self.protocol.bind_handlers_by_name(self, prefix=['_on_', '_in_', '_after_'])
-        self.protocol.process()  # Cycle into initial state
-
-    def parse(self, data=None):
+    def process(self, data=None):
         """
-        Parse as much of current buffer as possible.
+        Process as much of current buffer as possible.
 
         :param data: Optionally append given data to buffer prior to parsing
         """
-        self.buffer.extend(bytearray(data or ''))
+        self._buffer.extend(bytearray(data or ''))
 
-        # Process until two or three FSM cycles stay in the same state
-        prevstate = None
-        while prevstate != self.protocol.state:
-            prevstate = self.protocol.state
-            self.protocol.process()
-            self.protocol.process()
+        for request in self._buffered_requests():
+            handler = self._get_handler(request.fcode)
+            response = handler(request)
+            self._send(response)
 
-    def _on_await_request(self):
-        """Re-initialize for a clean start to parsing"""
-        self._init_state()
-
-    def _in_await_request(self):
-        """Try loading a Modbus request from buffer"""
+    def _buffered_requests(self):
+        """Generator to yield all complete modbus requests in the buffer"""
         try:
-            self._request = ModbusTCPFrame(self.buffer)
+            yield ModbusTCPFrame(self._buffer)
         except EOFError:
-            # Buffer doesn't contain enough data
-            # This is fine; we just keep waiting
-            self._request = None
+            pass
 
-    def _on_check_fcode(self):
-        """Validate Modbus Function Code"""
-        if not MBFC.is_valid(self._request.fcode):
-            self._exception = MBEX.ILLEGAL_FUNCTION
+    def _get_handler(self, fcode):
+        """Return handler with signature handler(request) for function code fcode"""
+        return self._handlermap.get(
+            fcode,
+            lambda req: req.create_exception(MBEX.ILLEGAL_FUNCTION)
+        )
 
-    def _on_print_packet(self):
-        print("Unsupported!")
-        # from pprint import pprint
-        # pprint(vars(self._request))
-
-    def _on_read_bit(self):
-        """Process Coil or Discrete Input read request when data arrives"""
-        addr, count = struct.unpack('>HH', bytes(self._request.data))
+    def _handle_read_co(self, request):
+        """Handle a READ_COILS request"""
+        addr, count = struct.unpack('>HH', bytes(request.data))
 
         if not 0x0001 <= count <= 0x07D0:
-            self._exception = MBEX.DATA_VALUE
-            return
+            return request.create_exception(MBEX.DATA_VALUE)
 
-        if not self.databank.validate_bits(addr, count):
-            self._exception = MBEX.DATA_ADDRESS
-            return
+        if not self._databank.validate_bits(addr, count):
+            return request.create_exception(MBEX.DATA_ADDRESS)
 
         # Get response data
-        bits = self.databank.get_bits(addr, count)
+        bits = self._databank.get_bits(addr, count)
         byte_count = int(ceil(len(bits) / 8))
         byte_list = bytearray(byte_count)
 
         # Bits to bytes: LSB -> MSB, first byte -> last byte
         for i, bit in enumerate(bits):
-            byte_list[int(i / 8)] |= (bit << i % 8)
+            byte_list[i // 8] |= (bit << i % 8)
 
         # Construct response
+        print("Read COIL request for {} items at address {}.".format(count, addr))
         data = struct.pack('>B%dB' % byte_count, byte_count, *list(byte_list))
-        self._response = self._request.create_response(data)
+        return request.create_response(data)
 
-        print("Read BIT request for {} items at address {}.".format(count, addr))
+    def _handle_read_di(self, request):
+        """Handle a READ_DISCRETE_INPUTS request"""
+        # TODO: Should not be the same; change once databank upgraded
+        return self._handle_read_co(request)
 
-    def _on_read_word(self):
-        """Process Holding Register or Input Register read request when data arrives"""
-        addr, count = struct.unpack('>HH', bytes(self._request.data))
+    def _handle_read_hr(self, request):
+        """Handle READ_HOLDING_REGISTERS request"""
+        addr, count = struct.unpack('>HH', bytes(request.data))
 
         if not 0x0001 <= count <= 0x007D:
-            self._exception = MBEX.DATA_VALUE
-            return
+            return request.create_exception(MBEX.DATA_VALUE)
 
-        if not self.databank.validate_words(addr, count):
-            self._exception = MBEX.DATA_ADDRESS
-            return
+        if not self._databank.validate_words(addr, count):
+            return request.create_exception(MBEX.DATA_ADDRESS)
 
         # Get response data
-        words = self.databank.get_words(addr, count)
+        words = self._databank.get_words(addr, count)
         byte_count = len(words) * 2
 
         # Construct response
+        print("Read REGISTER request for {} items at address {}.".format(count, addr))
         data = struct.pack('>B%dH' % len(words), byte_count, *list(words))
-        self._response = self._request.create_response(data)
+        return request.create_response(data)
 
-        print("Read WORD request for {} items at address {}.".format(count, addr))
+    def _handle_read_ir(self, request):
+        """Handle READ_INPUT_REGISTERS request"""
+        # TODO: Should not be the same; change once databank upgraded
+        return self._handle_read_hr(request)
 
-    def _on_write_coil(self):
-        """Process Write Single Coil request"""
-        addr, value = struct.unpack('>HH', bytes(self._request.data))
+    def _handle_write_co(self, request):
+        """Handle WRITE_SINGLE_COIL request"""
+        addr, value = struct.unpack('>HH', bytes(request.data))
         value = {0x0000: False, 0xFF00: True}.get(value, None)
 
         if value is None:
-            self._exception = MBEX.DATA_VALUE
-            return
+            return request.create_exception(MBEX.DATA_VALUE)
 
-        if not self.databank.validate_bits(addr):
-            self._exception = MBEX.DATA_ADDRESS
-            return
+        if not self._databank.validate_bits(addr):
+            return request.create_exception(MBEX.DATA_ADDRESS)
 
-        self.databank.set_bits(addr, [value])
-        self._response = self._request.create_response()
+        # Execute and respond
+        print("Write COIL request for value {} at address{}".format(value, addr))
+        self._databank.set_bits(addr, [value])
+        return request.create_response()
 
-        print("Write BIT request for value {} at address{}".format(value, addr))
+    def _handle_write_hr(self, request):
+        """Handle WRITE_SINGLE_REGISTER request"""
+        addr, value = struct.unpack('>HH', bytes(request.data))
 
-    def _on_write_register(self):
-        """Process Write Single Register request"""
-        addr, value = struct.unpack('>HH', bytes(self._request.data))
+        if not self._databank.validate_words(addr):
+            return request.create_exception(MBEX.DATA_ADDRESS)
 
-        if not self.databank.validate_words(addr):
-            self._exception = MBEX.DATA_ADDRESS
-            return
-
-        self.databank.set_words(addr, [value])
-        self._response = self._request.create_response()
-
+        # Execute and respond
         print("Write WORD request for value {} at address{}".format(value, addr))
+        self._databank.set_words(addr, [value])
+        return request.create_response()
 
-    def _on_write_multi_coil(self):
-        """Process Write Multiple Coil request"""
-        addr, bit_count, byte_count = struct.unpack('>HHB', bytes(self._request.data[:5]))
-        data = self._request.data[5:]
+    def _handle_write_multi_co(self, request):
+        """Handle WRITE_MULTIPLE_COILS request"""
+        addr, bit_count, byte_count = struct.unpack('>HHB', bytes(request.data[:5]))
+        data = request.data[5:]
 
         if not 0x0001 <= bit_count <= 0x07B0 or byte_count != ceil(bit_count / 8):
-            self._exception = MBEX.DATA_VALUE
-            return
+            return request.create_exception(MBEX.DATA_VALUE)
 
-        if not self.databank.validate_bits(addr, bit_count):
-            self._exception = MBEX.DATA_ADDRESS
-            return
+        if not self._databank.validate_bits(addr, bit_count):
+            return request.create_exception(MBEX.DATA_ADDRESS)
 
         # Decode bytes into bits
         bits = [False] * bit_count
@@ -390,37 +341,24 @@ class ModbusProtocol(object):
             byte_index = i // 8
             bits[i] = bool(data[byte_index] & (1 << i % 8))
 
-        self.databank.set_bits(addr, bits)
-        self._response = self._request.create_response(self._request.data[:4])
-
+        # Execute and respond
         print("Write Multi Coils request for values {} at address {}".format(bits, addr))
-
-    def _on_send_response(self):
-        if self._exception is not None:
-            print("Exception!")
-            from pprint import pprint
-            pprint(vars(self._request))
-            self._response = self._request.create_exception(self._exception)
-
-        # print("Response!")
-        # from pprint import pprint
-        # pprint(vars(self._response))
-
-        self.handler.send(self._response.to_bytearray())
+        self._databank.set_bits(addr, bits)
+        return request.create_response(request.data[:4])
 
 
 class ModbusHandler(asyncore.dispatcher_with_send):
     def __init__(self, sock, target):
         asyncore.dispatcher_with_send.__init__(self, sock=sock)
         self.databank = target.databank
-        self.parser = ModbusProtocol(self, self.databank)
+        self.modbus = ModbusProtocol(self.send, self.databank)
         self.target = target
 
     def handle_read(self):
         data = self.recv(8192)
         hexdata = str([c.encode('hex') for c in data])
         print(">>> " + hexdata)
-        self.parser.parse(data)
+        self.modbus.process(data)
 
     def handle_close(self):
         print("Client from %s disconnected." % repr(self.addr))
