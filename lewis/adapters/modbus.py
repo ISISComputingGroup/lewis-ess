@@ -37,29 +37,8 @@ from math import ceil
 from lewis.adapters import Adapter
 
 
-class MBFC(object):
-    """Modbus standard function codes"""
-    READ_COILS = 0x01
-    READ_DISCRETE_INPUTS = 0x02
-    READ_HOLDING_REGISTERS = 0x03
-    READ_INPUT_REGISTERS = 0x04
-    WRITE_SINGLE_COIL = 0x05
-    WRITE_SINGLE_REGISTER = 0x06
-    WRITE_MULTIPLE_COILS = 0x0F
-    WRITE_MULTIPLE_REGISTERS = 0x10
-    # MODBUS_ENCAPSULATED_INTERFACE = 0x2B
-
-    @classmethod
-    def is_valid(cls, code):
-        # Adapted from: http://stackoverflow.com/a/4241225/3827434
-        boring = dir(type('dummy', (object,), {}))
-        codes = dict([attr for attr in inspect.getmembers(cls) if attr[0] not in boring])
-        return code in codes.values()
-
-
 class MBEX(object):
     """Modbus standard exception codes"""
-    NONE = 0x00
     ILLEGAL_FUNCTION = 0x01
     DATA_ADDRESS = 0x02
     DATA_VALUE = 0x03
@@ -207,13 +186,14 @@ class ModbusProtocol(object):
         self._send = lambda req: sender(req.to_bytearray())
 
         self._handlermap = {
-            MBFC.READ_COILS: self._handle_read_co,
-            MBFC.READ_DISCRETE_INPUTS: self._handle_read_di,
-            MBFC.READ_HOLDING_REGISTERS: self._handle_read_hr,
-            MBFC.READ_INPUT_REGISTERS: self._handle_read_ir,
-            MBFC.WRITE_SINGLE_COIL: self._handle_write_co,
-            MBFC.WRITE_SINGLE_REGISTER: self._handle_write_hr,
-            MBFC.WRITE_MULTIPLE_COILS: self._handle_write_multi_co,
+            0x01: self._handle_read_coils,
+            0x02: self._handle_read_discrete_inputs,
+            0x03: self._handle_read_holding_registers,
+            0x04: self._handle_read_input_registers,
+            0x05: self._handle_write_single_coil,
+            0x06: self._handle_write_single_register,
+            0x0F: self._handle_write_multiple_coils,
+            # 0x10: self._handle_write_multiple_registers,
         }
 
     def process(self, data=None):
@@ -243,8 +223,14 @@ class ModbusProtocol(object):
             lambda req: req.create_exception(MBEX.ILLEGAL_FUNCTION)
         )
 
-    def _handle_read_co(self, request):
-        """Handle a READ_COILS request"""
+    def _handle_read_coils(self, request):
+        """
+        Handle request as per Modbus Application Protocol v1.1b3:
+        Section 6.1 - (0x01) Read Coils
+
+        :param request: ModbusTCPFrame containing the request
+        :return: ModbusTCPFrame response to the request
+        """
         addr, count = struct.unpack('>HH', bytes(request.data))
 
         if not 0x0001 <= count <= 0x07D0:
@@ -267,12 +253,12 @@ class ModbusProtocol(object):
         data = struct.pack('>B%dB' % byte_count, byte_count, *list(byte_list))
         return request.create_response(data)
 
-    def _handle_read_di(self, request):
+    def _handle_read_discrete_inputs(self, request):
         """Handle a READ_DISCRETE_INPUTS request"""
         # TODO: Should not be the same; change once databank upgraded
-        return self._handle_read_co(request)
+        return self._handle_read_coils(request)
 
-    def _handle_read_hr(self, request):
+    def _handle_read_holding_registers(self, request):
         """Handle READ_HOLDING_REGISTERS request"""
         addr, count = struct.unpack('>HH', bytes(request.data))
 
@@ -291,12 +277,12 @@ class ModbusProtocol(object):
         data = struct.pack('>B%dH' % len(words), byte_count, *list(words))
         return request.create_response(data)
 
-    def _handle_read_ir(self, request):
+    def _handle_read_input_registers(self, request):
         """Handle READ_INPUT_REGISTERS request"""
         # TODO: Should not be the same; change once databank upgraded
-        return self._handle_read_hr(request)
+        return self._handle_read_holding_registers(request)
 
-    def _handle_write_co(self, request):
+    def _handle_write_single_coil(self, request):
         """Handle WRITE_SINGLE_COIL request"""
         addr, value = struct.unpack('>HH', bytes(request.data))
         value = {0x0000: False, 0xFF00: True}.get(value, None)
@@ -312,7 +298,7 @@ class ModbusProtocol(object):
         self._databank.set_bits(addr, [value])
         return request.create_response()
 
-    def _handle_write_hr(self, request):
+    def _handle_write_single_register(self, request):
         """Handle WRITE_SINGLE_REGISTER request"""
         addr, value = struct.unpack('>HH', bytes(request.data))
 
@@ -324,7 +310,7 @@ class ModbusProtocol(object):
         self._databank.set_words(addr, [value])
         return request.create_response()
 
-    def _handle_write_multi_co(self, request):
+    def _handle_write_multiple_coils(self, request):
         """Handle WRITE_MULTIPLE_COILS request"""
         addr, bit_count, byte_count = struct.unpack('>HHB', bytes(request.data[:5]))
         data = request.data[5:]
