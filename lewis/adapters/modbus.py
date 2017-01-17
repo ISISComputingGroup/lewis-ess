@@ -220,8 +220,13 @@ class ModbusProtocol(object):
         """Return handler with signature handler(request) for function code fcode"""
         return self._handlermap.get(
             fcode,
-            lambda req: req.create_exception(MBEX.ILLEGAL_FUNCTION)
+            self._illegal_function_exception
         )
+
+    def _illegal_function_exception(self, request):
+        """Log and return an illegal function code exception"""
+        print("Unsupported Function Code: {0} ({0:#04x})".format(request.fcode))
+        return request.create_exception(MBEX.ILLEGAL_FUNCTION)
 
     def _handle_read_coils(self, request):
         """
