@@ -192,7 +192,7 @@ class ModbusProtocol(object):
             0x05: self._handle_write_single_coil,
             0x06: self._handle_write_single_register,
             0x0F: self._handle_write_multiple_coils,
-            # 0x10: self._handle_write_multiple_registers,
+            0x10: self._handle_write_multiple_registers,
         }
 
     def process(self, data=None):
@@ -320,15 +320,32 @@ class ModbusProtocol(object):
         if not self._databank.validate_bits(addr, bit_count):
             return request.create_exception(MBEX.DATA_ADDRESS)
 
-        # Decode bytes into bits
+        # Decode bytes into bits (order first byte -> last byte, LSB -> MSB)
         bits = [False] * bit_count
         for i in range(bit_count):
-            byte_index = i // 8
-            bits[i] = bool(data[byte_index] & (1 << i % 8))
+            bits[i] = bool(data[i // 8] & (1 << i % 8))
 
         # Execute and respond
         print("Write Multi Coils request for values {} at address {}".format(bits, addr))
         self._databank.set_bits(addr, bits)
+        return request.create_response(request.data[:4])
+
+    def _handle_write_multiple_registers(self, request):
+        """Handle WRITE_MULTIPLE_REGISTERS request"""
+        addr, reg_count, byte_count = struct.unpack('>HHB', bytes(request.data[:5]))
+        data = request.data[5:]
+
+        if not 0x0001 <= reg_count <= 0x007B or byte_count != reg_count * 2:
+            return request.create_exception(MBEX.DATA_VALUE)
+
+        if not self._databank.validate_words(addr, reg_count):
+            return request.create_exception(MBEX.DATA_ADDRESS)
+
+        words = list(struct.unpack('>%dH' % reg_count, data))
+
+        # Execute and respond
+        print("Write Multi Registers request for values {} at address {}".format(words, addr))
+        self._databank.set_words(addr, words)
         return request.create_response(request.data[:4])
 
 
