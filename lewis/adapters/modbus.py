@@ -180,11 +180,15 @@ class ModbusTCPFrame(object):
 
 class ModbusProtocol(object):
     def __init__(self, sender, databank):
+        """
+        :param sender: callable that accepts one bytearray parameter, called to send responses.
+        :param databank: ModbusDatabank instance to reference when processing requests
+        """
         self._buffer = bytearray()
         self._databank = databank
         self._send = lambda req: sender(req.to_bytearray())
 
-        self._handlermap = {
+        self._fcode_handler_map = {
             0x01: self._handle_read_coils,
             0x02: self._handle_read_discrete_inputs,
             0x03: self._handle_read_holding_registers,
@@ -218,7 +222,7 @@ class ModbusProtocol(object):
 
     def _get_handler(self, fcode):
         """Return handler with signature handler(request) for function code fcode"""
-        return self._handlermap.get(
+        return self._fcode_handler_map.get(
             fcode,
             self._illegal_function_exception
         )
@@ -311,7 +315,7 @@ class ModbusProtocol(object):
             return request.create_exception(MBEX.DATA_ADDRESS)
 
         # Execute and respond
-        print("Write WORD request for value {} at address{}".format(value, addr))
+        print("Write WORD request for value {} at address {}".format(value, addr))
         self._databank.set_words(addr, [value])
         return request.create_response()
 
@@ -326,7 +330,7 @@ class ModbusProtocol(object):
         if not self._databank.validate_bits(addr, bit_count):
             return request.create_exception(MBEX.DATA_ADDRESS)
 
-        # Decode bytes into bits (order first byte -> last byte, LSB -> MSB)
+        # Bytes to bits: first byte -> last byte, LSB -> MSB
         bits = [False] * bit_count
         for i in range(bit_count):
             bits[i] = bool(data[i // 8] & (1 << i % 8))
