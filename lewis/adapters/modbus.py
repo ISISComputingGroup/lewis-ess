@@ -211,7 +211,8 @@ class ModbusProtocol(object):
     def _buffered_requests(self):
         """Generator to yield all complete modbus requests in the buffer"""
         try:
-            yield ModbusTCPFrame(self._buffer)
+            while True:
+                yield ModbusTCPFrame(self._buffer)
         except EOFError:
             pass
 
