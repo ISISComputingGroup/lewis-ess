@@ -29,12 +29,14 @@ from argparse import ArgumentParser
 from six import b
 
 from lewis.adapters import Adapter
+from lewis.core.logging import HasLog
 from lewis.core.utils import format_doc_text
 
 
-class StreamHandler(asynchat.async_chat):
+class StreamHandler(HasLog, asynchat.async_chat):
     def __init__(self, sock, target, stream_server):
         asynchat.async_chat.__init__(self, sock=sock)
+        HasLog.__init__(self, target)
         self.set_terminator(b(target.in_terminator))
         self.target = target
         self.buffer = []
@@ -48,6 +50,8 @@ class StreamHandler(asynchat.async_chat):
         request = b''.join(self.buffer)
         self.buffer = []
 
+        self.log.debug('Got request %s', request)
+
         try:
             cmd = next((cmd for cmd in self.target.bound_commands if cmd.can_process(request)),
                        None)
@@ -55,27 +59,35 @@ class StreamHandler(asynchat.async_chat):
             if cmd is None:
                 raise RuntimeError('None of the device\'s commands matched.')
 
+            self.log.info('Processing request %s using command %s', request, cmd.raw_pattern)
+
             reply = cmd.process_request(request)
 
         except Exception as error:
             reply = self.target.handle_error(request, error)
+            self.log.debug('Error while processing request', exc_info=error)
 
         if reply is not None:
+            self.log.debug('Sending reply %s', reply)
             self.push(b(reply + self.target.out_terminator))
 
     def handle_close(self):
+        self.log.info('Closing connection to client %s:%s', *self.socket.getpeername())
         self._stream_server.remove_handler(self)
         asynchat.async_chat.handle_close(self)
 
 
-class StreamServer(asyncore.dispatcher):
+class StreamServer(HasLog, asyncore.dispatcher):
     def __init__(self, host, port, target):
         asyncore.dispatcher.__init__(self)
+        HasLog.__init__(self, target)
         self.target = target
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         self.bind((host, port))
         self.listen(5)
+
+        self.log.info('Listening on %s:%s', host, port)
 
         self._accepted_connections = []
 
@@ -83,7 +95,7 @@ class StreamServer(asyncore.dispatcher):
         pair = self.accept()
         if pair is not None:
             sock, addr = pair
-            print("Client connect from %s" % repr(addr))
+            self.log.info('Client connected from %s:%s', *addr)
             handler = StreamHandler(sock, self.target, self)
 
             self._accepted_connections.append(handler)

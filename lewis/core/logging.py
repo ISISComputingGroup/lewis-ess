@@ -29,13 +29,14 @@ import functools
 
 
 class HasLog(object):
-    def __init__(self):
+    def __init__(self, log=None):
         super(HasLog, self).__init__()
         self.logger_name = self.__class__.__name__
-        self.log = logging.getLogger(self.__class__.__name__)
 
-    def attach_log_to_parent(self, obj):
-        if obj is not None:
-            extension = obj if isinstance(obj, string_types) else obj.__class__.__name__
+        self.attach_log(log if log is not None else self.__class__.__name__)
+
+    def attach_log(self, log):
+        if log is not None:
+            extension = log if isinstance(log, string_types) else log.__class__.__name__
 
             self.log = logging.getLogger('.'.join((extension, self.logger_name)))

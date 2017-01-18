@@ -27,9 +27,10 @@ from time import sleep
 
 from lewis.core.utils import seconds_since
 from lewis.core.control_server import ControlServer, ExposedObject
+from lewis.core.logging import HasLog
 
 
-class Simulation(object):
+class Simulation(HasLog):
     """
     The Simulation class controls certain aspects of a device simulation,
     the most important one being time.
@@ -76,6 +77,8 @@ class Simulation(object):
     """
 
     def __init__(self, device, adapter, control_server=None):
+        super(Simulation, self).__init__()
+
         self._device = device
         self._adapter = adapter
 
@@ -108,6 +111,8 @@ class Simulation(object):
         """
         Starts the simulation.
         """
+        self.log.info('Starting simulation')
+
         self._running = True
         self._started = True
         self._stop_commanded = False
@@ -250,6 +255,8 @@ class Simulation(object):
         if not self.device_connected:
             raise RuntimeError('Device is already disconnected.')
 
+        self.log.info('Disconnecting device')
+
         self._adapter.stop_server()
 
     def connect_device(self):
@@ -260,6 +267,8 @@ class Simulation(object):
         if self.device_connected:
             raise RuntimeError('Device is already connected.')
 
+        self.log.info('Connecting device')
+
         self._adapter.start_server()
 
     def pause(self):
@@ -268,6 +277,8 @@ class Simulation(object):
         """
         if not self._running:
             raise RuntimeError('Can only pause a running simulation.')
+
+        self.log.info('Pausing simulation')
 
         self._running = False
 
@@ -279,12 +290,17 @@ class Simulation(object):
         if not self._started or self._running:
             raise RuntimeError('Can only resume a paused simulation.')
 
+        self.log.info('Resuming simulation')
+
         self._running = True
 
     def stop(self):
         """
         Stops the simulation entirely.
         """
+
+        self.log.warn('Stopping simulation')
+
         self._stop_commanded = True
 
     @property
