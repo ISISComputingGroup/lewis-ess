@@ -35,8 +35,8 @@ from lewis.core.utils import format_doc_text
 
 class StreamHandler(HasLog, asynchat.async_chat):
     def __init__(self, sock, target, stream_server):
-        asynchat.async_chat.__init__(self, sock=sock)
         HasLog.__init__(self, target)
+        asynchat.async_chat.__init__(self, sock=sock)
         self.set_terminator(b(target.in_terminator))
         self.target = target
         self.buffer = []
@@ -79,8 +79,8 @@ class StreamHandler(HasLog, asynchat.async_chat):
 
 class StreamServer(HasLog, asyncore.dispatcher):
     def __init__(self, host, port, target):
-        asyncore.dispatcher.__init__(self)
         HasLog.__init__(self, target)
+        asyncore.dispatcher.__init__(self)
         self.target = target
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
