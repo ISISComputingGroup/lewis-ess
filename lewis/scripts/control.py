@@ -52,7 +52,7 @@ def show_api(remote, object_name):
         try:
             current_value = getattr(obj, prop)
         except Exception as e:
-            current_value = 'Not accessible: {}'.format(e.message)
+            current_value = 'Not accessible: {}'.format(e)
 
         print('    {}    ({})'.format(prop.ljust(maxlen), current_value))
 
