@@ -47,17 +47,18 @@ def show_api(remote, object_name):
     print('Type: {}'.format(type(obj).__name__))
 
     print('Properties (current values):')
+    maxlen = len(max(properties, key=len))
     for prop in sorted(properties):
         try:
             current_value = getattr(obj, prop)
         except Exception as e:
             current_value = 'Not accessible: {}'.format(e.message)
 
-        print('\t{}\t{}'.format(prop, current_value))
+        print('    {}    ({})'.format(prop.ljust(maxlen), current_value))
 
     print('Methods:')
     for method in sorted(methods):
-        print('\t{}'.format(method))
+        print('    {}'.format(method))
 
 
 def convert_type(value):
