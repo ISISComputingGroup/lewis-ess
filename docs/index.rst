@@ -17,6 +17,7 @@ Documentation contents:
    user_guide/index
    developer_guide/index
    api/index
+   release_notes/index
 
 
 Indices and tables

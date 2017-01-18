@@ -1,4 +1,4 @@
-|Version| |Layers| |Build Status| |Code Climate| |Coverage Status| |Documentation|
+|Version| |Layers| |Build Status| |Codacy| |Coverage Status| |Documentation|
 
 Lewis
 =====
@@ -20,6 +20,8 @@ Resources:
 
 Lewis was previously named "Plankton" but, due to a
 package with the same name on PyPI, we decided to rename the project.
+
+Lewis is licensed under GPL v3 or later.
 
 Purpose and Use Cases
 ---------------------
@@ -107,8 +109,8 @@ The ``docs/_build/html`` directory will then contain the full documentation in H
    :target: https://microbadger.com/images/dmscid/lewis
 .. |Build Status| image:: https://travis-ci.org/DMSC-Instrument-Data/lewis.svg?branch=master
    :target: https://travis-ci.org/DMSC-Instrument-Data/lewis
-.. |Code Climate| image:: https://codeclimate.com/github/DMSC-Instrument-Data/lewis/badges/gpa.svg
-   :target: https://codeclimate.com/github/DMSC-Instrument-Data/lewis
+.. |Codacy| image:: https://api.codacy.com/project/badge/Grade/77aef653cf5d42f5a9a8a5a2c929a628
+   :target: https://www.codacy.com/app/DMSC/lewis?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DMSC-Instrument-Data/lewis&amp;utm_campaign=Badge_Grade
 .. |Coverage Status| image:: https://coveralls.io/repos/github/DMSC-Instrument-Data/lewis/badge.svg?branch=master
    :target: https://coveralls.io/github/DMSC-Instrument-Data/lewis?branch=master
 .. |Documentation| image:: https://readthedocs.org/projects/lewis/badge/?version=latest
