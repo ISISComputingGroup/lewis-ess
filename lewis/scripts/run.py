@@ -27,7 +27,7 @@ import argparse
 import os
 import sys
 
-logging.basicConfig(level=logging.DEBUG, )
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')

@@ -29,15 +29,18 @@ import logging
 
 class HasLog(object):
     log = None
+    logger_name = None
 
     def __init__(self, log=None):
         super(HasLog, self).__init__()
         self.logger_name = self.__class__.__name__
 
-        self.attach_log(log if log is not None else self.__class__.__name__)
+        self.attach_log(log)
 
     def attach_log(self, log):
         if log is not None:
             extension = log if isinstance(log, string_types) else log.__class__.__name__
 
             self.log = logging.getLogger('.'.join((extension, self.logger_name)))
+        else:
+            self.log = logging.getLogger(self.logger_name)
