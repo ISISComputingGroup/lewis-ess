@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from lewis.core.logging import logging
+from lewis.core.logging import logging, default_log_format
 from lewis import __version__
 from lewis.core.devices import DeviceRegistry
 from lewis.core.simulation import Simulation
@@ -27,7 +27,8 @@ import argparse
 import os
 import sys
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
+logging.basicConfig(level=logging.DEBUG,
+                    format=default_log_format)
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
@@ -53,6 +54,9 @@ parser.add_argument('-k', '--device-package', default='lewis.devices',
                     help='Name of packages where devices are found.')
 parser.add_argument('-a', '--add-path', default=None,
                     help='Path where the device package exists. Is added to the path.')
+parser.add_argument('-o', '--output-level', default='info',
+                    choices=['critical', 'error', 'warning', 'info', 'debug'],
+                    help='Level of detail for logging.')
 parser.add_argument('-v', '--version', action='store_true',
                     help='Prints the version and exits.')
 
@@ -69,6 +73,8 @@ def do_run_simulation(argument_list=None):
     if arguments.version:
         print(__version__)
         return
+
+    logging.getLogger().setLevel(getattr(logging, arguments.output_level.upper()))
 
     if arguments.add_path is not None:
         sys.path.append(os.path.abspath(arguments.add_path))

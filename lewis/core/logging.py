@@ -27,7 +27,7 @@ from six import string_types
 import logging
 
 root_logger_name = 'lewis'
-root_logger = logging.getLogger(root_logger_name)
+default_log_format = '%(asctime)s %(levelname)s %(name)s: %(message)s'
 
 
 class HasLog(object):
