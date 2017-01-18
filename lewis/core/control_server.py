@@ -36,6 +36,7 @@ import json
 from jsonrpc import JSONRPCResponseManager
 
 from .exceptions import LewisException
+from .logging import HasLog
 
 
 class ExposedObject(object):
@@ -195,7 +196,7 @@ class ExposedObjectCollection(ExposedObject):
         return list(self._object_map.keys())
 
 
-class ControlServer(object):
+class ControlServer(HasLog):
     """
     This server opens a ZMQ REP-socket at the given host and port when start_server
     is called.
@@ -263,6 +264,8 @@ class ControlServer(object):
             self._socket = context.socket(zmq.REP)
             self._socket.bind('tcp://{0}:{1}'.format(self.host, self.port))
 
+            self.log.info('Listening on %s:%s', self.host, self.port)
+
     def _unhandled_exception_response(self, request_id, exception):
         return {"jsonrpc": "2.0", "id": request_id,
                 "error": {"message": "Server error",
@@ -291,9 +294,13 @@ class ControlServer(object):
         try:
             request = self._socket.recv_unicode(flags=zmq.NOBLOCK)
 
+            self.log.debug('Got request %s', request)
+
             try:
                 response = JSONRPCResponseManager.handle(request, self._exposed_object)
                 self._socket.send_unicode(response.json)
+
+                self.log.debug('Sent response %s', response.json)
             except TypeError as e:
                 self._socket.send_json(
                     self._unhandled_exception_response(json.loads(request)['id'], e))

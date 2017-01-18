@@ -58,7 +58,7 @@ class HasContext(object):
         self._context = new_context
 
         if isinstance(self, HasLog):
-            self.attach_log(self._context)
+            self._set_logging_context(self._context)
 
 
 class State(HasLog, HasContext):
@@ -175,7 +175,7 @@ class StateMachine(HasLog, CanProcess):
     def __init__(self, cfg, context=None):
         super(StateMachine, self).__init__()
 
-        self.attach_log(context)
+        self._set_logging_context(context)
 
         self._state = None  # We start outside of any state, first cycle enters initial state
         self._handler = {}  # Nested dict mapping [state][event] = handler

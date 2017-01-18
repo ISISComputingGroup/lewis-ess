@@ -26,6 +26,7 @@ import inspect
 from . import Adapter, ForwardProperty
 from six import iteritems
 
+from lewis.core.logging import HasLog
 from lewis.core.utils import seconds_since, FromOptionalDependency, format_doc_text
 from lewis.core.exceptions import LewisException, LimitViolationException
 
@@ -95,7 +96,7 @@ class PV(object):
         self.config = kwargs
 
 
-class PropertyExposingDriver(Driver):
+class PropertyExposingDriver(HasLog, Driver):
     def __init__(self, target, pv_dict):
         super(PropertyExposingDriver, self).__init__()
 
@@ -105,6 +106,8 @@ class PropertyExposingDriver(Driver):
         self._last_update_call = None
 
     def write(self, pv, value):
+        self.log.debug('PV put request: %s=%s', pv, value)
+
         pv_object = self._pv_dict.get(pv)
 
         if not pv_object or pv_object.read_only:
@@ -120,20 +123,28 @@ class PropertyExposingDriver(Driver):
     def process_pv_updates(self, force=False):
         dt = seconds_since(self._last_update_call or datetime.now())
         # Updates bound parameters as needed
+
+        updates = []
+
         for pv, pv_object in iteritems(self._pv_dict):
             self._timers[pv] += dt
             if self._timers[pv] >= pv_object.poll_interval or force:
                 try:
-                    self.setParam(pv, getattr(self._target, pv_object.property))
+                    new_value = getattr(self._target, pv_object.property)
+                    self.setParam(pv, new_value)
 
                     if pv_object.meta_data_property is not None:
                         self.setParamInfo(pv, getattr(self._target, pv_object.meta_data_property))
 
                     self._timers[pv] = 0.0
+                    updates.append((pv, new_value))
                 except (AttributeError, TypeError):
                     pass
 
         self.updatePVs()
+
+        self.log.debug('Processed PV updates: %s',
+                       ', '.join(('{}={}'.format(pv, val) for pv, val in updates)))
 
         self._last_update_call = datetime.now()
 
@@ -244,6 +255,9 @@ class EpicsAdapter(Adapter):
                                   pvdb={k: v.config for k, v in self.pvs.items()})
             self._driver = PropertyExposingDriver(target=self, pv_dict=self.pvs)
             self._driver.process_pv_updates(force=True)
+
+            self.log.info('Started serving PVs: %s',
+                          ', '.join((self._options.prefix + pv for pv in self.pvs.keys())))
 
     def stop_server(self):
         self._driver = None

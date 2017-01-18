@@ -43,6 +43,8 @@ class StreamHandler(HasLog, asynchat.async_chat):
 
         self._stream_server = stream_server
 
+        self.log.info('Client connected from %s:%s', *sock.getpeername())
+
     def collect_incoming_data(self, data):
         self.buffer.append(data)
 
@@ -95,7 +97,6 @@ class StreamServer(HasLog, asyncore.dispatcher):
         pair = self.accept()
         if pair is not None:
             sock, addr = pair
-            self.log.info('Client connected from %s:%s', *addr)
             handler = StreamHandler(sock, self.target, self)
 
             self._accepted_connections.append(handler)
@@ -107,6 +108,7 @@ class StreamServer(HasLog, asyncore.dispatcher):
         # As this is an old style class, the base class method must
         # be called directly. This is important to still perform all
         # the teardown-work that asyncore.dispatcher does.
+        self.log.info('Shutting down server, closing all remaining client connections.')
         asyncore.dispatcher.close(self)
 
         # But in addition, close all open sockets and clear the connection list.
