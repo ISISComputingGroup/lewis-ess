@@ -64,8 +64,8 @@ class ModbusBasicDatabank(object):
             self.bits[address:end] = values
 
     def get_words(self, address, count=1):
-        bits = self.bits[address:address + count]
-        return bits if len(bits) == count else None
+        words = self.words[address:address + count]
+        return words if len(words) == count else None
 
     def set_words(self, address, values):
         end = address + len(values)
@@ -229,7 +229,7 @@ class ModbusProtocol(object):
 
     def _illegal_function_exception(self, request):
         """Log and return an illegal function code exception"""
-        print("Unsupported Function Code: {0} ({0:#04x})".format(request.fcode))
+        print("Unsupported Function Code: {0} ({0:#04x})\n".format(request.fcode))
         return request.create_exception(MBEX.ILLEGAL_FUNCTION)
 
     def _handle_read_coils(self, request):
@@ -258,7 +258,7 @@ class ModbusProtocol(object):
             byte_list[i // 8] |= (bit << i % 8)
 
         # Construct response
-        print("Read COIL request for {} items at address {}.".format(count, addr))
+        print("Read COILS request for {} items at address {}: {}\n".format(count, addr, bits))
         data = struct.pack('>B%dB' % byte_count, byte_count, *list(byte_list))
         return request.create_response(data)
 
@@ -282,7 +282,7 @@ class ModbusProtocol(object):
         byte_count = len(words) * 2
 
         # Construct response
-        print("Read REGISTER request for {} items at address {}.".format(count, addr))
+        print("Read REGISTER request for {} items at address {}: {}\n".format(count, addr, words))
         data = struct.pack('>B%dH' % len(words), byte_count, *list(words))
         return request.create_response(data)
 
@@ -303,7 +303,7 @@ class ModbusProtocol(object):
             return request.create_exception(MBEX.DATA_ADDRESS)
 
         # Execute and respond
-        print("Write COIL request for value {} at address{}".format(value, addr))
+        print("Write COIL request for value {} at address {}\n".format(value, addr))
         self._databank.set_bits(addr, [value])
         return request.create_response()
 
@@ -315,7 +315,7 @@ class ModbusProtocol(object):
             return request.create_exception(MBEX.DATA_ADDRESS)
 
         # Execute and respond
-        print("Write WORD request for value {} at address {}".format(value, addr))
+        print("Write REGISTER request for value {} at address {}\n".format(value, addr))
         self._databank.set_words(addr, [value])
         return request.create_response()
 
@@ -336,7 +336,7 @@ class ModbusProtocol(object):
             bits[i] = bool(data[i // 8] & (1 << i % 8))
 
         # Execute and respond
-        print("Write Multi Coils request for values {} at address {}".format(bits, addr))
+        print("Write COILS request for values {} at address {}\n".format(bits, addr))
         self._databank.set_bits(addr, bits)
         return request.create_response(request.data[:4])
 
@@ -354,7 +354,7 @@ class ModbusProtocol(object):
         words = list(struct.unpack('>%dH' % reg_count, data))
 
         # Execute and respond
-        print("Write Multi Registers request for values {} at address {}".format(words, addr))
+        print("Write REGISTERS request for values {} at address {}\n".format(words, addr))
         self._databank.set_words(addr, words)
         return request.create_response(request.data[:4])
 
