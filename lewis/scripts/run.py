@@ -17,18 +17,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-import argparse
-import os
-import sys
-import logging
-
-logging.basicConfig(level=logging.DEBUG, )
-
+from lewis.core.logging import logging
 from lewis import __version__
-
 from lewis.core.devices import DeviceRegistry
 from lewis.core.simulation import Simulation
 from lewis.core.exceptions import LewisException
+
+import argparse
+import os
+import sys
+
+logging.basicConfig(level=logging.DEBUG, )
 
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')

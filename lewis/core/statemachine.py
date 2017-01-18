@@ -133,7 +133,7 @@ class Transition(HasLog, HasContext):
         return True
 
 
-class StateMachine(CanProcess):
+class StateMachine(HasLog, CanProcess):
     """
     Cycle based state machine.
 
@@ -423,7 +423,7 @@ class StateMachine(CanProcess):
         :param dt: Delta T since last cycle.
         """
         # May be None, function reference, or list of function refs
-        self.log.debug('Processing state=%s, handler=%s, dt=%s', self._state, event, dt)
+        self.log.debug('Processing state=%s, handler=%s', self._state, event)
         handlers = self._handler[self._state][event]
 
         if handlers is None:

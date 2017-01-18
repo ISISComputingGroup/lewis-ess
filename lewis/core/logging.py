@@ -25,10 +25,11 @@ from __future__ import absolute_import
 from six import string_types
 
 import logging
-import functools
 
 
 class HasLog(object):
+    log = None
+
     def __init__(self, log=None):
         super(HasLog, self).__init__()
         self.logger_name = self.__class__.__name__

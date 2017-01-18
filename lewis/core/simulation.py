@@ -164,6 +164,8 @@ class Simulation(HasLog):
 
         :param delta: Time delta passed to simulation.
         """
+        self.log.debug('Cycle, dt=%s', delta)
+
         if self.device_connected:
             self._adapter.handle(self._cycle_delay)
         else:
@@ -190,6 +192,8 @@ class Simulation(HasLog):
             raise ValueError('Cycle delay can not be negative.')
 
         self._cycle_delay = delay
+
+        self.log.info('Changed cycle delay to %s', self._cycle_delay)
 
     @property
     def cycles(self):
@@ -223,6 +227,8 @@ class Simulation(HasLog):
             raise ValueError('Speed can not be negative.')
 
         self._speed = new_speed
+
+        self.log.info('Changed speed to %s', self._speed)
 
     @property
     def runtime(self):
