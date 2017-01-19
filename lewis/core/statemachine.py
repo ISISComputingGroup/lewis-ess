@@ -71,6 +71,11 @@ class State(HasLog, HasContext):
 
     To use this class, create a derived class and override any events that need
     custom behaviour. Device context is provided via :class:`HasContext` mixin.
+
+    .. note::
+
+        This class inherits logging functionality through the :class:`~lewis.core.logging.HasLog`-
+        mixin, making it available in all sub-classes.
     """
 
     def __init__(self):
@@ -114,6 +119,11 @@ class Transition(HasLog, HasContext):
     accessed as `self._context`.
 
     To use this class, create a derived class and override the :meth:`__call__` attribute.
+
+    .. note::
+
+        This class inherits logging functionality through the :class:`~lewis.core.logging.HasLog`-
+        mixin, making it available in all sub-classes.
     """
 
     def __init__(self):

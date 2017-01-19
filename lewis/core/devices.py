@@ -37,6 +37,11 @@ class DeviceBase(HasLog):
     This class is a common base for :class:`~lewis.devices.Device` and
     :class:`~lewis.devices.StateMachineDevice`. It is mainly used in the device
     discovery process.
+
+    .. note::
+
+        This class inherits logging functionality through the :class:`~lewis.core.logging.HasLog`-
+        mixin, making it available in all sub-classes.
     """
 
 

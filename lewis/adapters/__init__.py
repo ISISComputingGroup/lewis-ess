@@ -47,6 +47,11 @@ class Adapter(HasLog):
 
     :param device: Device that is supposed to be exposed. Available as ``_device``.
     :param arguments: Command line arguments to the adapter, currently ignored.
+
+    .. note::
+
+        This class inherits logging functionality through the :class:`~lewis.core.logging.HasLog`-
+        mixin, making it available in all sub-classes.
     """
     protocol = None
 
