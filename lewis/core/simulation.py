@@ -27,10 +27,11 @@ from time import sleep
 
 from lewis.core.utils import seconds_since
 from lewis.core.control_server import ControlServer, ExposedObject
-from lewis.core.logging import HasLog
+from lewis.core.logging import has_log
 
 
-class Simulation(HasLog):
+@has_log
+class Simulation(object):
     """
     The Simulation class controls certain aspects of a device simulation,
     the most important one being time.

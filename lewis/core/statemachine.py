@@ -28,7 +28,7 @@ to be used directly in client code for device simulations - these should be base
 from six import iteritems
 
 from lewis.core.processor import CanProcess
-from lewis.core.logging import HasLog
+from lewis.core.logging import has_log
 
 
 class StateMachineException(Exception):
@@ -57,11 +57,12 @@ class HasContext(object):
         """Assigns the new context to the member variable ``_context``."""
         self._context = new_context
 
-        if isinstance(self, HasLog):
+        if hasattr(self, '_set_logging_context'):
             self._set_logging_context(self._context)
 
 
-class State(HasLog, HasContext):
+@has_log
+class State(HasContext):
     """
     StateMachine state handler base class.
 
@@ -71,11 +72,6 @@ class State(HasLog, HasContext):
 
     To use this class, create a derived class and override any events that need
     custom behaviour. Device context is provided via :class:`HasContext` mixin.
-
-    .. note::
-
-        This class inherits logging functionality through the :class:`~lewis.core.logging.HasLog`-
-        mixin, making it available in all sub-classes.
     """
 
     def __init__(self):
@@ -110,7 +106,8 @@ class State(HasLog, HasContext):
         pass
 
 
-class Transition(HasLog, HasContext):
+@has_log
+class Transition(HasContext):
     """
     StateMachine transition condition base class.
 
@@ -119,11 +116,6 @@ class Transition(HasLog, HasContext):
     accessed as `self._context`.
 
     To use this class, create a derived class and override the :meth:`__call__` attribute.
-
-    .. note::
-
-        This class inherits logging functionality through the :class:`~lewis.core.logging.HasLog`-
-        mixin, making it available in all sub-classes.
     """
 
     def __init__(self):
@@ -143,7 +135,8 @@ class Transition(HasLog, HasContext):
         return True
 
 
-class StateMachine(HasLog, CanProcess):
+@has_log
+class StateMachine(CanProcess):
     """
     Cycle based state machine.
 

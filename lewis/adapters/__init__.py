@@ -22,10 +22,11 @@ This module defines a base class for adapters and some supporting infrastructure
 """
 
 import inspect
-from lewis.core.logging import HasLog
+from lewis.core.logging import has_log
 
 
-class Adapter(HasLog):
+@has_log
+class Adapter(object):
     """
     Base class for adapters
 
@@ -47,11 +48,6 @@ class Adapter(HasLog):
 
     :param device: Device that is supposed to be exposed. Available as ``_device``.
     :param arguments: Command line arguments to the adapter, currently ignored.
-
-    .. note::
-
-        This class inherits logging functionality through the :class:`~lewis.core.logging.HasLog`-
-        mixin, making it available in all sub-classes.
     """
     protocol = None
 

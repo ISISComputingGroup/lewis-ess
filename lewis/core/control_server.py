@@ -36,7 +36,7 @@ import json
 from jsonrpc import JSONRPCResponseManager
 
 from .exceptions import LewisException
-from .logging import HasLog
+from .logging import has_log
 
 
 class ExposedObject(object):
@@ -196,7 +196,8 @@ class ExposedObjectCollection(ExposedObject):
         return list(self._object_map.keys())
 
 
-class ControlServer(HasLog):
+@has_log
+class ControlServer(object):
     """
     This server opens a ZMQ REP-socket at the given host and port when start_server
     is called.

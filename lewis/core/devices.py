@@ -29,19 +29,15 @@ import importlib
 from lewis.adapters import Adapter
 from lewis.core.exceptions import LewisException
 from lewis.core.utils import get_submodules, get_members
-from lewis.core.logging import HasLog
+from lewis.core.logging import has_log
 
 
-class DeviceBase(HasLog):
+@has_log
+class DeviceBase(object):
     """
     This class is a common base for :class:`~lewis.devices.Device` and
     :class:`~lewis.devices.StateMachineDevice`. It is mainly used in the device
     discovery process.
-
-    .. note::
-
-        This class inherits logging functionality through the :class:`~lewis.core.logging.HasLog`-
-        mixin, making it available in all sub-classes.
     """
 
 

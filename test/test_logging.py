@@ -19,38 +19,22 @@
 
 import unittest
 
-from lewis.core.logging import HasLog, root_logger_name
+from lewis.core.logging import has_log, root_logger_name
 
 
 class TestHasLog(unittest.TestCase):
     def test_logger_name(self):
-        class Foo(HasLog):
+        @has_log
+        class Foo(object):
             pass
 
         a = Foo()
 
         self.assertEquals(a.log.name, '{}.Foo'.format(root_logger_name))
 
-    def test_name_with_context(self):
-        class Foo(HasLog):
-            def __init__(self, context):
-                super(Foo, self).__init__(context)
-
-        str_context = 'string_context'
-
-        a = Foo(str_context)
-        self.assertEquals(a.log.name, '{}.string_context.Foo'.format(root_logger_name))
-
-        class Bar(object):
-            pass
-
-        obj_context = Bar()
-
-        b = Foo(obj_context)
-        self.assertEquals(b.log.name, '{}.Bar.Foo'.format(root_logger_name))
-
     def test_setting_context_changes_name(self):
-        class Foo(HasLog):
+        @has_log
+        class Foo(object):
             pass
 
         a = Foo()
@@ -61,3 +45,18 @@ class TestHasLog(unittest.TestCase):
 
         a._set_logging_context(None)
         self.assertEquals(a.log.name, '{}.Foo'.format(root_logger_name))
+
+    def test_documentation_is_extended(self):
+        @has_log
+        class Foo(object):
+            """Bar"""
+
+        self.assertGreater(len(Foo.__doc__), len('''Bar'''))
+
+    def test_decorate_function(self):
+        @has_log
+        def foo(bar):
+            return bar
+
+        self.assertTrue(hasattr(foo, 'log'))
+        self.assertEquals(foo.log.name, '{}.foo'.format(root_logger_name))

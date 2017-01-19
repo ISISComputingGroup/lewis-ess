@@ -41,20 +41,16 @@ root_logger_name = 'lewis'
 default_log_format = '%(asctime)s %(levelname)s %(name)s: %(message)s'
 
 
-class HasLog(object):
+def has_log(target):
     """
-    This is a mixin for enabling class-level logging.
+    This is a decorator to add logging functionality to a class or function.
 
-    Inheriting from this mixin adds a ``log`` member to the class, which
-    is an instance of ``logging.Logger``. The logger automatically get
-    assigned a name that depends on the contents of the ``context`` parameter.
+    Applying this decorator to a class or function will add two new members:
 
-    In the default case, the name of the logger of class ``Foo`` is ``lewis.Foo``.
-    This naming scheme works for many cases, but for classes that are used in
-    different places, such as :class:`~lewis.core.statemachine.StateMachine`, it
-    would not be clear where exactly the log message originated from. For these
-    cases it is possible to supply a "context" for the log (which can also be set
-    after construction using :meth:`_set_logging_context`).
+     - ``log`` is an instance of ``logging.Logger``. The name of the logger is
+       set to ``lewis.Foo`` for a class named Foo.
+     - ``_set_logging_context`` is a method that modifies the name of the logger
+       when the class is used in a certain context.
 
     If ``context`` is a string, that string is directly inserted between ``lewis``
     and ``Foo``, so that the logger name would be ``lewis.bar.Foo`` if context
@@ -67,13 +63,17 @@ class HasLog(object):
     device appear in the log as originating from ``lewis.DeviceName.StateMachine``, which
     makes it possible to distinguish between messages from different state machines.
 
+    Furthermore this adds a note to the documentation if the target has any, which appears
+    in the automatically generated documentation of that class or function.
+
     Example for how to use logging in a class:
 
     .. sourcecode:: Python
 
-        from lewis.core.logging import HasLog
+        from lewis.core.logging import has_log
 
-        class Foo(HasLog, OtherBase):
+        @has_log
+        class Foo(Base):
             def __init__(self):
                 super(Foo, self).__init__()
 
@@ -81,7 +81,21 @@ class HasLog(object):
                 self.log.debug('Called bar with parameter baz=%s', baz)
                 return baz is not None
 
-    :param context: Context to modify logger name. String or object, defaults to ``None``.
+    It works similarly for free functions, although the actual logging calls are a bit different:
+
+    .. sourcecode:: Python
+
+        from lewis.core.logging import has_log
+
+        @has_log
+        def foo(bar):
+            foo.log.info('Called with argument bar=%s', bar)
+            return bar
+
+    The name of the logger is ``lewis.foo``, the context could also be modified by calling
+    ``foo._set_logging_context``.
+
+    :param target: Target to decorate with logging functionality.
 
     .. seealso::
 
@@ -92,31 +106,36 @@ class HasLog(object):
         and :class:`~lewis.core.statemachine.Transition` also inherit from this, so logging under
         clearly defined names is automatically available in classes inheriting from those as well.
     """
-    log = None
-    _logger_name = None
+    logger_name = target.__name__
 
-    def __init__(self, context=None):
-        super(HasLog, self).__init__()
-        self._logger_name = self.__class__.__name__
-
-        self.log = self.__get_logger(context)
-
-    def _set_logging_context(self, context):
-        """
-        Changes the logger name of this class using the supplied context
-        according to the rules described in the class documentation. To
-        clear the context of a class logger, supply ``None`` as the argument.
-
-        :param context: String or object, ``None`` to clear context.
-        """
-        self.log = self.__get_logger(context)
-
-    def __get_logger(self, context):
-        log_names = [root_logger_name, self._logger_name]
+    def get_logger_name(context=None):
+        log_names = [root_logger_name, logger_name]
 
         if context is not None:
             log_names.insert(1,
                              context if isinstance(context,
                                                    string_types) else context.__class__.__name__)
 
-        return logging.getLogger('.'.join(log_names))
+        return '.'.join(log_names)
+
+    def _set_logging_context(obj, context):
+        """
+        Changes the logger name of this class using the supplied context
+        according to the rules described in the documentation of :func:`has_log`. To
+        clear the context of a class logger, supply ``None`` as the argument.
+
+        :param context: String or object, ``None`` to clear context.
+        """
+        obj.log.name = get_logger_name(context)
+
+    target.log = logging.getLogger(get_logger_name())
+    target._set_logging_context = _set_logging_context
+
+    if target.__doc__ is not None:
+        target.__doc__ += '''
+    .. note::
+
+        This class has logging functionality through the :func:`~lewis.core.logging.has_log`-
+        decorator.'''
+
+    return target

@@ -26,7 +26,7 @@ import inspect
 from . import Adapter, ForwardProperty
 from six import iteritems
 
-from lewis.core.logging import HasLog
+from lewis.core.logging import has_log
 from lewis.core.utils import seconds_since, FromOptionalDependency, format_doc_text
 from lewis.core.exceptions import LewisException, LimitViolationException
 
@@ -96,7 +96,8 @@ class PV(object):
         self.config = kwargs
 
 
-class PropertyExposingDriver(HasLog, Driver):
+@has_log
+class PropertyExposingDriver(Driver):
     def __init__(self, target, pv_dict):
         super(PropertyExposingDriver, self).__init__()
 

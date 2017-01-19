@@ -29,13 +29,13 @@ from argparse import ArgumentParser
 from six import b
 
 from lewis.adapters import Adapter
-from lewis.core.logging import HasLog
+from lewis.core.logging import has_log
 from lewis.core.utils import format_doc_text
 
 
-class StreamHandler(HasLog, asynchat.async_chat):
+@has_log
+class StreamHandler(asynchat.async_chat):
     def __init__(self, sock, target, stream_server):
-        HasLog.__init__(self, target)
         asynchat.async_chat.__init__(self, sock=sock)
         self.set_terminator(b(target.in_terminator))
         self.target = target
@@ -43,6 +43,7 @@ class StreamHandler(HasLog, asynchat.async_chat):
 
         self._stream_server = stream_server
 
+        self._set_logging_context(target)
         self.log.info('Client connected from %s:%s', *sock.getpeername())
 
     def collect_incoming_data(self, data):
@@ -79,9 +80,9 @@ class StreamHandler(HasLog, asynchat.async_chat):
         asynchat.async_chat.handle_close(self)
 
 
-class StreamServer(HasLog, asyncore.dispatcher):
+@has_log
+class StreamServer(asyncore.dispatcher):
     def __init__(self, host, port, target):
-        HasLog.__init__(self, target)
         asyncore.dispatcher.__init__(self)
         self.target = target
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -89,6 +90,7 @@ class StreamServer(HasLog, asyncore.dispatcher):
         self.bind((host, port))
         self.listen(5)
 
+        self._set_logging_context(target)
         self.log.info('Listening on %s:%s', host, port)
 
         self._accepted_connections = []
