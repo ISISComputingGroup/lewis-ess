@@ -349,4 +349,3 @@ class check_limits(object):
                     '%f is outside limits (%r, %r)' % (new_value, lower, upper))
 
         return limit_checked
-

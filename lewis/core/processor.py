@@ -24,6 +24,7 @@ composite design pattern so that it's possible to form a tree of objects which c
 calculations based on an elapsed time :math:`\Delta t`.
 """
 
+
 class CanProcess(object):
     """
     The CanProcess class is meant as a base for all things that
