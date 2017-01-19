@@ -46,13 +46,6 @@ class TestHasLog(unittest.TestCase):
         a._set_logging_context(None)
         self.assertEquals(a.log.name, '{}.Foo'.format(root_logger_name))
 
-    def test_documentation_is_extended(self):
-        @has_log
-        class Foo(object):
-            """Bar"""
-
-        self.assertGreater(len(Foo.__doc__), len('''Bar'''))
-
     def test_decorate_function(self):
         @has_log
         def foo(bar):

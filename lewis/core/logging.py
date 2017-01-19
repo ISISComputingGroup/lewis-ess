@@ -63,9 +63,6 @@ def has_log(target):
     device appear in the log as originating from ``lewis.DeviceName.StateMachine``, which
     makes it possible to distinguish between messages from different state machines.
 
-    Furthermore this adds a note to the documentation if the target has any, which appears
-    in the automatically generated documentation of that class or function.
-
     Example for how to use logging in a class:
 
     .. sourcecode:: Python
@@ -96,15 +93,6 @@ def has_log(target):
     ``foo._set_logging_context``.
 
     :param target: Target to decorate with logging functionality.
-
-    .. seealso::
-
-        Two central classes in Lewis inherit from this mixin, :class:`~lewis.adapters.Adapter`
-        and :class:`~lewis.core.devices.DeviceBase`.
-
-        :class:`~lewis.core.statemachine.StateMachine`, :class:`~lewis.core.statemachine.State`
-        and :class:`~lewis.core.statemachine.Transition` also inherit from this, so logging under
-        clearly defined names is automatically available in classes inheriting from those as well.
     """
     logger_name = target.__name__
 
@@ -130,12 +118,5 @@ def has_log(target):
 
     target.log = logging.getLogger(get_logger_name())
     target._set_logging_context = _set_logging_context
-
-    if target.__doc__ is not None:
-        target.__doc__ += '''
-    .. note::
-
-        This class has logging functionality through the :func:`~lewis.core.logging.has_log`-
-        decorator.'''
 
     return target
