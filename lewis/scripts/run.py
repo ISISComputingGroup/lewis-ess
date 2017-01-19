@@ -27,9 +27,6 @@ import argparse
 import os
 import sys
 
-logging.basicConfig(level=logging.DEBUG,
-                    format=default_log_format)
-
 parser = argparse.ArgumentParser(
     description='Run a simulated device and expose it via a specified communication protocol.')
 
@@ -55,7 +52,7 @@ parser.add_argument('-k', '--device-package', default='lewis.devices',
 parser.add_argument('-a', '--add-path', default=None,
                     help='Path where the device package exists. Is added to the path.')
 parser.add_argument('-o', '--output-level', default='info',
-                    choices=['critical', 'error', 'warning', 'info', 'debug'],
+                    choices=['none', 'critical', 'error', 'warning', 'info', 'debug'],
                     help='Level of detail for logging.')
 parser.add_argument('-v', '--version', action='store_true',
                     help='Prints the version and exits.')
@@ -74,7 +71,9 @@ def do_run_simulation(argument_list=None):
         print(__version__)
         return
 
-    logging.getLogger().setLevel(getattr(logging, arguments.output_level.upper()))
+    if arguments.output_level != 'none':
+        logging.basicConfig(level=getattr(logging, arguments.output_level.upper()),
+                            format=default_log_format)
 
     if arguments.add_path is not None:
         sys.path.append(os.path.abspath(arguments.add_path))
