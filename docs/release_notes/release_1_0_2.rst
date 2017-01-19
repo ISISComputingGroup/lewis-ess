@@ -20,6 +20,10 @@ New features
    that expose lambda-functions, named functions and data attributes (with separate read/write
    patterns). See the updated documentation of :mod:`lewis.adapters.stream`.
 
+ - The :class:`PV`-class has been extended to allow for meta data updates at runtime. A second
+   property can now be specified that returns a dictionary to update the PV's meta data such as
+   limits or alarm states.
+
 Bug fixes and other improvements
 --------------------------------
 
