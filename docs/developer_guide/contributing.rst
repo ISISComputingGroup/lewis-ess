@@ -133,9 +133,11 @@ the device implementation should also go into ``__init__.py``:
 
     class DefaultMovingState(State):
         def in_state(self, dt):
-            self._context.position = approaches.linear(self._context.position, self._context.target,
+            old_position = self._context.position
+            self._context.position = approaches.linear(old_position, self._context.target,
                                                        self._context.speed, dt)
-
+            self.log.info('Moved position (%s -> %s), target=%s, speed=%s', old_position,
+                          self._context.position, self._context.target, self._context.speed)
 
     class SimulatedExampleMotor(StateMachineDevice):
         def _initialize_data(self):
@@ -177,6 +179,8 @@ the device implementation should also go into ``__init__.py``:
 
         def stop(self):
             self._target = self.position
+
+            self.log.info('Stopping movement after user request.')
 
             return self.target, self.position
 
@@ -309,6 +313,28 @@ started using the ``-k`` parameter of ``lewis.py``:
 All functionality described in the
 :ref:`user_guide`, such as accessing the device and the simulation via the
 ``lewis-control.py``-script are automatically available.
+
+Logging
+~~~~~~~
+
+Both device and interface support logging, they supply a ``log`` member which is
+a logger configured with the right name. The adapter already logs all important actions
+that influence the device, so in the interface it should not be necessary to do too much
+logging, but it might be interesting for debugging purposes.
+
+Note that the simulation already produces one debug log message per simulation cycle logging
+the elapsed (real-)time, so it is not necessary to log the ``dt`` parameters in addition.
+:class:`~lewis.core.statemachine.StateMachine` also logs on each cycle which state it is in and
+which transitions are triggered (if any). In the :class:`~lewis.core.statemachine.State`-handlers
+that are device specific, any logging should focus on the behavior in that concrete state, as
+for example demonstrated in the example above.
+
+It is also important to consider the log level. Log messages that occur on each cycle must be
+strictly limited to the ``debug``-level, because they potentially produce a lot of data.
+The ``info``-level and above should be used for information that is relevant to anyone running
+the simulation, such as failures or other "virtual problems" that might otherwise go unnoticed.
+A good example would be a device that ignores faulty commands - a ``warning`` could be logged
+with details about the command and that it was ignored.
 
 User facing documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~

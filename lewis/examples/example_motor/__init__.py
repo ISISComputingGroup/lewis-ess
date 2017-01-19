@@ -78,6 +78,8 @@ class SimulatedExampleMotor(StateMachineDevice):
 
         self._target = self.position
 
+        self.log.info('Stopping movement after user request.')
+
         return self.target, self.position
 
 
