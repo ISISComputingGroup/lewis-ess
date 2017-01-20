@@ -18,7 +18,7 @@
 # *********************************************************************
 
 from lewis.devices import Device
-from lewis.adapters.modbus import ModbusAdapter, ModbusBasicDatabank
+from lewis.adapters.modbus import ModbusAdapter, ModbusDataBank
 
 
 class ModbusDevice(Device):
@@ -26,4 +26,17 @@ class ModbusDevice(Device):
 
 
 class ModbusInterface(ModbusAdapter):
-    databank = ModbusBasicDatabank()
+    """
+    The class attributes di, co, ir and hr represent Discrete Inputs, Coils, Input Registers and
+    Holding Registers, respectively. Each attribute should be assigned a ModbusDataBank instance
+    by the Interface implementation.
+
+    Here, two basic ModbusDataBanks are created and initialized to a default value across the full
+    range of valid addresses. One DataBank is shared by di and co, and the other by ir and hr to
+    demonstrate overlaid memory segments. If you want each segment to have its own memory, just
+    create separate instances for all four.
+    """
+    di = ModbusDataBank.create_basic(False)
+    co = di
+    ir = ModbusDataBank.create_basic(0)
+    hr = ir

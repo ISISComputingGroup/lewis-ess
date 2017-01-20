@@ -36,6 +36,37 @@ from math import ceil
 from lewis.adapters import Adapter
 
 
+class ModbusDataStore(object):
+    def __init__(self, di=None, co=None, ir=None, hr=None):
+        self.di = di
+        self.co = co
+        self.ir = ir
+        self.hr = hr
+
+
+class ModbusDataBank(object):
+    def __init__(self, config):
+        self._data = config
+
+    @classmethod
+    def create_basic(cls, default_value=0, start_addr=0x0000, last_addr=0xFFFF):
+        return cls([default_value] * (last_addr - start_addr + 1))
+
+    def get(self, addr, count):
+        data = self._data[addr:addr+count]
+        if len(data) != count:
+            raise IndexError("Invalid address range [{{0:#06x}} - {{0:#06x}}]"
+                             .format(addr, addr+count))
+        return data
+
+    def set(self, addr, values):
+        end = addr + len(values)
+        if not 0 <= addr <= end <= len(self._data):
+            raise IndexError("Invalid address range [{{0:#06x}} - {{0:#06x}}]"
+                             .format(addr, addr+len(values)))
+        self._data[addr:end] = values
+
+
 class MBEX(object):
     """Modbus standard exception codes"""
     ILLEGAL_FUNCTION = 0x01
@@ -47,36 +78,6 @@ class MBEX(object):
     MEMORY_PARITY_ERROR = 0x08
     GATEWAY_PATH_UNAVAILABLE = 0x0A
     GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND = 0x0B
-
-
-class ModbusBasicDatabank(object):
-    def __init__(self):
-        self.bits = [False] * 0x10000
-        self.words = [0] * 0x10000
-
-    def get_bits(self, address, count=1):
-        bits = self.bits[address:address+count]
-        return bits if len(bits) == count else None
-
-    def set_bits(self, address, values):
-        end = address + len(values)
-        if 0 <= address <= len(self.bits) - end:
-            self.bits[address:end] = values
-
-    def get_words(self, address, count=1):
-        words = self.words[address:address + count]
-        return words if len(words) == count else None
-
-    def set_words(self, address, values):
-        end = address + len(values)
-        if 0 <= address <= len(self.words) - end:
-            self.words[address:end] = values
-
-    def validate_bits(self, address, count=1):
-        return 0 <= address + count <= 0x10000
-
-    def validate_words(self, address, count=1):
-        return 0 <= address + count <= 0x10000
 
 
 class ModbusTCPFrame(object):
@@ -179,13 +180,13 @@ class ModbusTCPFrame(object):
 
 
 class ModbusProtocol(object):
-    def __init__(self, sender, databank):
+    def __init__(self, sender, datastore):
         """
         :param sender: callable that accepts one bytearray parameter, called to send responses.
-        :param databank: ModbusDatabank instance to reference when processing requests
+        :param datastore: ModbusDataStore instance to reference when processing requests
         """
         self._buffer = bytearray()
-        self._databank = databank
+        self._datastore = datastore
         self._send = lambda req: sender(req.to_bytearray())
 
         self._fcode_handler_map = {
@@ -240,20 +241,39 @@ class ModbusProtocol(object):
         :param request: ModbusTCPFrame containing the request
         :return: ModbusTCPFrame response to the request
         """
+        return self._do_read_bits(self._datastore.co, request)
+
+    def _handle_read_discrete_inputs(self, request):
+        """
+        Handle request as per Modbus Application Protocol v1.1b3:
+        Section 6.2 - (0x02) Read Discrete Inputs
+
+        :param request: ModbusTCPFrame containing the request
+        :return: ModbusTCPFrame response to the request
+        """
+        return self._do_read_bits(self._datastore.di, request)
+
+    def _do_read_bits(self, databank, request):
+        """
+        General helper to handle FC 0x01 and FC 0x02.
+
+        :param databank: DataBank to execute against
+        :param request: ModbusTCPFrame containing the request
+        :return: ModbusTCPFrame response to the request
+        """
         addr, count = struct.unpack('>HH', bytes(request.data))
 
         if not 0x0001 <= count <= 0x07D0:
             return request.create_exception(MBEX.DATA_VALUE)
 
-        if not self._databank.validate_bits(addr, count):
+        try:
+            bits = databank.get(addr, count)
+        except IndexError:
             return request.create_exception(MBEX.DATA_ADDRESS)
 
-        # Get response data
-        bits = self._databank.get_bits(addr, count)
+        # Bits to bytes: LSB -> MSB, first byte -> last byte
         byte_count = int(ceil(len(bits) / 8))
         byte_list = bytearray(byte_count)
-
-        # Bits to bytes: LSB -> MSB, first byte -> last byte
         for i, bit in enumerate(bits):
             byte_list[i // 8] |= (bit << i % 8)
 
@@ -262,34 +282,36 @@ class ModbusProtocol(object):
         data = struct.pack('>B%dB' % byte_count, byte_count, *list(byte_list))
         return request.create_response(data)
 
-    def _handle_read_discrete_inputs(self, request):
-        """Handle a READ_DISCRETE_INPUTS request"""
-        # TODO: Should not be the same; change once databank upgraded
-        return self._handle_read_coils(request)
-
     def _handle_read_holding_registers(self, request):
         """Handle READ_HOLDING_REGISTERS request"""
+        return self._do_read_registers(self._datastore.hr, request)
+
+    def _handle_read_input_registers(self, request):
+        """Handle READ_INPUT_REGISTERS request"""
+        return self._do_read_registers(self._datastore.ir, request)
+
+    def _do_read_registers(self, databank, request):
+        """
+        General helper to handle FC 0x03 and FC 0x04.
+
+        :param databank: DataBank to execute against
+        :param request: ModbusTCPFrame containing the request
+        :return: ModbusTCPFrame response to the request
+        """
         addr, count = struct.unpack('>HH', bytes(request.data))
 
         if not 0x0001 <= count <= 0x007D:
             return request.create_exception(MBEX.DATA_VALUE)
 
-        if not self._databank.validate_words(addr, count):
+        try:
+            words = databank.get(addr, count)
+        except IndexError:
             return request.create_exception(MBEX.DATA_ADDRESS)
-
-        # Get response data
-        words = self._databank.get_words(addr, count)
-        byte_count = len(words) * 2
 
         # Construct response
         print("Read REGISTER request for {} items at address {}: {}\n".format(count, addr, words))
-        data = struct.pack('>B%dH' % len(words), byte_count, *list(words))
+        data = struct.pack('>B%dH' % len(words), len(words) * 2, *list(words))
         return request.create_response(data)
-
-    def _handle_read_input_registers(self, request):
-        """Handle READ_INPUT_REGISTERS request"""
-        # TODO: Should not be the same; change once databank upgraded
-        return self._handle_read_holding_registers(request)
 
     def _handle_write_single_coil(self, request):
         """Handle WRITE_SINGLE_COIL request"""
@@ -299,24 +321,26 @@ class ModbusProtocol(object):
         if value is None:
             return request.create_exception(MBEX.DATA_VALUE)
 
-        if not self._databank.validate_bits(addr):
+        try:
+            self._datastore.co.set(addr, [value])
+        except IndexError:
             return request.create_exception(MBEX.DATA_ADDRESS)
 
-        # Execute and respond
+        # Respond to confirm
         print("Write COIL request for value {} at address {}\n".format(value, addr))
-        self._databank.set_bits(addr, [value])
         return request.create_response()
 
     def _handle_write_single_register(self, request):
         """Handle WRITE_SINGLE_REGISTER request"""
         addr, value = struct.unpack('>HH', bytes(request.data))
 
-        if not self._databank.validate_words(addr):
+        try:
+            self._datastore.hr.set(addr, [value])
+        except IndexError:
             return request.create_exception(MBEX.DATA_ADDRESS)
 
-        # Execute and respond
+        # Respond to confirm
         print("Write REGISTER request for value {} at address {}\n".format(value, addr))
-        self._databank.set_words(addr, [value])
         return request.create_response()
 
     def _handle_write_multiple_coils(self, request):
@@ -327,17 +351,18 @@ class ModbusProtocol(object):
         if not 0x0001 <= bit_count <= 0x07B0 or byte_count != ceil(bit_count / 8):
             return request.create_exception(MBEX.DATA_VALUE)
 
-        if not self._databank.validate_bits(addr, bit_count):
-            return request.create_exception(MBEX.DATA_ADDRESS)
-
         # Bytes to bits: first byte -> last byte, LSB -> MSB
         bits = [False] * bit_count
         for i in range(bit_count):
             bits[i] = bool(data[i // 8] & (1 << i % 8))
 
-        # Execute and respond
+        try:
+            self._datastore.co.set(addr, bits)
+        except IndexError:
+            return request.create_exception(MBEX.DATA_ADDRESS)
+
+        # Respond to confirm
         print("Write COILS request for values {} at address {}\n".format(bits, addr))
-        self._databank.set_bits(addr, bits)
         return request.create_response(request.data[:4])
 
     def _handle_write_multiple_registers(self, request):
@@ -348,29 +373,28 @@ class ModbusProtocol(object):
         if not 0x0001 <= reg_count <= 0x007B or byte_count != reg_count * 2:
             return request.create_exception(MBEX.DATA_VALUE)
 
-        if not self._databank.validate_words(addr, reg_count):
+        try:
+            words = list(struct.unpack('>%dH' % reg_count, data))
+            self._datastore.hr.set(addr, words)
+        except IndexError:
             return request.create_exception(MBEX.DATA_ADDRESS)
 
-        words = list(struct.unpack('>%dH' % reg_count, data))
-
-        # Execute and respond
+        # Respond to confirm
         print("Write REGISTERS request for values {} at address {}\n".format(words, addr))
-        self._databank.set_words(addr, words)
         return request.create_response(request.data[:4])
 
 
 class ModbusHandler(asyncore.dispatcher_with_send):
     def __init__(self, sock, target):
         asyncore.dispatcher_with_send.__init__(self, sock=sock)
-        self.databank = target.databank
-        self.modbus = ModbusProtocol(self.send, self.databank)
-        self.target = target
+        self._datastore = ModbusDataStore(target.di, target.co, target.ir, target.hr)
+        self._modbus = ModbusProtocol(self.send, self._datastore)
 
     def handle_read(self):
         data = self.recv(8192)
         hexdata = str([c.encode('hex') for c in data])
         print(">>> " + hexdata)
-        self.modbus.process(data)
+        self._modbus.process(data)
 
     def handle_close(self):
         print("Client from %s disconnected." % repr(self.addr))
@@ -399,7 +423,10 @@ class ModbusServer(asyncore.dispatcher):
 
 class ModbusAdapter(Adapter):
     protocol = 'modbus'
-    databank = None
+    di = None
+    co = None
+    ir = None
+    hr = None
 
     def __init__(self, device, arguments=None):
         super(ModbusAdapter, self).__init__(device, arguments)
@@ -408,9 +435,6 @@ class ModbusAdapter(Adapter):
             self._options = self._parse_arguments(arguments)
 
         self._server = None
-
-        if self.databank is None:
-            raise RuntimeError("Must specify a databank to use ModbusAdapter.")
 
     def _parse_arguments(self, arguments):
         return {}
