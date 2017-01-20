@@ -201,13 +201,16 @@ class ModbusProtocol(object):
             0x10: self._handle_write_multiple_registers,
         }
 
-    def process(self, data=None):
+    def process(self, data):
         """
         Process as much of current buffer as possible.
 
-        :param data: Optionally append given data to buffer prior to parsing
+        Any remainder, in case there is an incomplete frame at the end, is stored so that
+        processing may continue where it left off when more data becomes available.
+
+        :param data: Incoming byte data. Must be compatible with bytearray.
         """
-        self._buffer.extend(bytearray(data or ''))
+        self._buffer.extend(bytearray(data))
 
         for request in self._buffered_requests():
             handler = self._get_handler(request.fcode)
@@ -215,23 +218,29 @@ class ModbusProtocol(object):
             self._send(response)
 
     def _buffered_requests(self):
-        """Generator to yield all complete modbus requests in the buffer"""
+        """Generator to yield all complete modbus requests in the internal buffer"""
         try:
             while True:
+                # ModbusTCPFrame constructor consumes bytes from front of buffer
                 yield ModbusTCPFrame(self._buffer)
         except EOFError:
             pass
 
     def _get_handler(self, fcode):
-        """Return handler with signature handler(request) for function code fcode"""
-        return self._fcode_handler_map.get(
-            fcode,
-            self._illegal_function_exception
-        )
+        """
+        Get an appropriate handler function for given Function Code.
+
+        Will always return a valid handler function. But, if the Function Code is invalid or not
+        supported, the handler function will merely return an ILLEGAL_FUNCTION exception frame.
+
+        :param fcode: int Function Code which needs to be handled
+        :return: callable which takes one request frame parameter and returns a response frame
+        """
+        return self._fcode_handler_map.get(fcode, self._illegal_function_exception)
 
     def _illegal_function_exception(self, request):
         """Log and return an illegal function code exception"""
-        print("Unsupported Function Code: {0} ({0:#04x})\n".format(request.fcode))
+        # TODO: Log this with appropriately high severity
         return request.create_exception(MBEX.ILLEGAL_FUNCTION)
 
     def _handle_read_coils(self, request):
@@ -279,7 +288,6 @@ class ModbusProtocol(object):
             byte_list[i // 8] |= (bit << i % 8)
 
         # Construct response
-        print("Read COILS request for {} items at address {}: {}\n".format(count, addr, bits))
         data = struct.pack('>B%dB' % byte_count, byte_count, *list(byte_list))
         return request.create_response(data)
 
@@ -310,7 +318,6 @@ class ModbusProtocol(object):
             return request.create_exception(MBEX.DATA_ADDRESS)
 
         # Construct response
-        print("Read REGISTER request for {} items at address {}: {}\n".format(count, addr, words))
         data = struct.pack('>B%dH' % len(words), len(words) * 2, *list(words))
         return request.create_response(data)
 
@@ -328,7 +335,6 @@ class ModbusProtocol(object):
             return request.create_exception(MBEX.DATA_ADDRESS)
 
         # Respond to confirm
-        print("Write COIL request for value {} at address {}\n".format(value, addr))
         return request.create_response()
 
     def _handle_write_single_register(self, request):
@@ -341,7 +347,6 @@ class ModbusProtocol(object):
             return request.create_exception(MBEX.DATA_ADDRESS)
 
         # Respond to confirm
-        print("Write REGISTER request for value {} at address {}\n".format(value, addr))
         return request.create_response()
 
     def _handle_write_multiple_coils(self, request):
@@ -363,7 +368,6 @@ class ModbusProtocol(object):
             return request.create_exception(MBEX.DATA_ADDRESS)
 
         # Respond to confirm
-        print("Write COILS request for values {} at address {}\n".format(bits, addr))
         return request.create_response(request.data[:4])
 
     def _handle_write_multiple_registers(self, request):
@@ -381,7 +385,6 @@ class ModbusProtocol(object):
             return request.create_exception(MBEX.DATA_ADDRESS)
 
         # Respond to confirm
-        print("Write REGISTERS request for values {} at address {}\n".format(words, addr))
         return request.create_response(request.data[:4])
 
 
@@ -394,12 +397,9 @@ class ModbusHandler(asyncore.dispatcher_with_send):
 
     def handle_read(self):
         data = self.recv(8192)
-        hexdata = str([c.encode('hex') for c in data])
-        print(">>> " + hexdata)
         self._modbus.process(data)
 
     def handle_close(self):
-        print("Client from %s disconnected." % repr(self.addr))
         self._server.remove_handler(self)
         self.close()
 
@@ -418,7 +418,6 @@ class ModbusServer(asyncore.dispatcher):
         pair = self.accept()
         if pair is not None:
             sock, addr = pair
-            print("Client connect from %s" % repr(addr))
             handler = ModbusHandler(sock, self.adapter, self)
             self._accepted_connections.append(handler)
 
