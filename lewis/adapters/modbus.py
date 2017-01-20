@@ -183,6 +183,18 @@ class ModbusTCPFrame(object):
 class ModbusProtocol(object):
     def __init__(self, sender, datastore):
         """
+        This class implements the Modbus TCP Protocol.
+
+        The user of this class should provide a ModbusDataStore instance that will be used to
+        fulfill read and write requests, and a callable `sender` which accepts one bytearray
+        parameter. The `sender` will be called whenever a response frame is generated, with a
+        bytearray containing the response frame as the parameter.
+
+        Processing occurs when the user calls ModbusProtocol.process(), passing in the raw frame
+        data to process as a bytearray. The data may include multiple frames and partial frame
+        fragments. Any data that could not be processed (due to incomplete frames) is buffered for
+        the next call to process.
+
         :param sender: callable that accepts one bytearray parameter, called to send responses.
         :param datastore: ModbusDataStore instance to reference when processing requests
         """
@@ -190,6 +202,7 @@ class ModbusProtocol(object):
         self._datastore = datastore
         self._send = lambda req: sender(req.to_bytearray())
 
+        # Lookup table to handle requests as per Modbus Application Protocol v1.1b3, Section 6.
         self._fcode_handler_map = {
             0x01: self._handle_read_coils,
             0x02: self._handle_read_discrete_inputs,
@@ -203,10 +216,10 @@ class ModbusProtocol(object):
 
     def process(self, data):
         """
-        Process as much of current buffer as possible.
+        Process as much of given data as possible.
 
         Any remainder, in case there is an incomplete frame at the end, is stored so that
-        processing may continue where it left off when more data becomes available.
+        processing may continue where it left off when more data is provided.
 
         :param data: Incoming byte data. Must be compatible with bytearray.
         """
@@ -265,7 +278,7 @@ class ModbusProtocol(object):
 
     def _do_read_bits(self, databank, request):
         """
-        General helper to handle FC 0x01 and FC 0x02.
+        Shared handler to handle FC 0x01 and FC 0x02.
 
         :param databank: DataBank to execute against
         :param request: ModbusTCPFrame containing the request
@@ -292,16 +305,28 @@ class ModbusProtocol(object):
         return request.create_response(data)
 
     def _handle_read_holding_registers(self, request):
-        """Handle READ_HOLDING_REGISTERS request"""
+        """
+        Handle request as per Modbus Application Protocol v1.1b3:
+        Section 6.3 - (0x03) Read Holding Registers
+
+        :param request: ModbusTCPFrame containing the request
+        :return: ModbusTCPFrame response to the request
+        """
         return self._do_read_registers(self._datastore.hr, request)
 
     def _handle_read_input_registers(self, request):
-        """Handle READ_INPUT_REGISTERS request"""
+        """
+        Handle request as per Modbus Application Protocol v1.1b3:
+        Section 6.4 - (0x04) Read Input Registers
+
+        :param request: ModbusTCPFrame containing the request
+        :return: ModbusTCPFrame response to the request
+        """
         return self._do_read_registers(self._datastore.ir, request)
 
     def _do_read_registers(self, databank, request):
         """
-        General helper to handle FC 0x03 and FC 0x04.
+        Shared handler to handle FC 0x03 and FC 0x04.
 
         :param databank: DataBank to execute against
         :param request: ModbusTCPFrame containing the request
@@ -322,7 +347,13 @@ class ModbusProtocol(object):
         return request.create_response(data)
 
     def _handle_write_single_coil(self, request):
-        """Handle WRITE_SINGLE_COIL request"""
+        """
+        Handle request as per Modbus Application Protocol v1.1b3:
+        Section 6.5 - (0x05) Write Single Coil
+
+        :param request: ModbusTCPFrame containing the request
+        :return: ModbusTCPFrame response to the request
+        """
         addr, value = struct.unpack('>HH', bytes(request.data))
         value = {0x0000: False, 0xFF00: True}.get(value, None)
 
@@ -338,7 +369,13 @@ class ModbusProtocol(object):
         return request.create_response()
 
     def _handle_write_single_register(self, request):
-        """Handle WRITE_SINGLE_REGISTER request"""
+        """
+        Handle request as per Modbus Application Protocol v1.1b3:
+        Section 6.6 - (0x06) Write Single Register
+
+        :param request: ModbusTCPFrame containing the request
+        :return: ModbusTCPFrame response to the request
+        """
         addr, value = struct.unpack('>HH', bytes(request.data))
 
         try:
@@ -350,7 +387,13 @@ class ModbusProtocol(object):
         return request.create_response()
 
     def _handle_write_multiple_coils(self, request):
-        """Handle WRITE_MULTIPLE_COILS request"""
+        """
+        Handle request as per Modbus Application Protocol v1.1b3:
+        Section 6.11 - (0x0F) Write Multiple Coils
+
+        :param request: ModbusTCPFrame containing the request
+        :return: ModbusTCPFrame response to the request
+        """
         addr, bit_count, byte_count = struct.unpack('>HHB', bytes(request.data[:5]))
         data = request.data[5:]
 
@@ -371,7 +414,13 @@ class ModbusProtocol(object):
         return request.create_response(request.data[:4])
 
     def _handle_write_multiple_registers(self, request):
-        """Handle WRITE_MULTIPLE_REGISTERS request"""
+        """
+        Handle request as per Modbus Application Protocol v1.1b3:
+        Section 6.12 - (0x10) Write Multiple registers
+
+        :param request: ModbusTCPFrame containing the request
+        :return: ModbusTCPFrame response to the request
+        """
         addr, reg_count, byte_count = struct.unpack('>HHB', bytes(request.data[:5]))
         data = request.data[5:]
 
