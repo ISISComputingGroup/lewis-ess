@@ -32,6 +32,7 @@ import struct
 
 from copy import deepcopy
 from math import ceil
+from argparse import ArgumentParser
 
 from lewis.adapters import Adapter
 
@@ -385,10 +386,11 @@ class ModbusProtocol(object):
 
 
 class ModbusHandler(asyncore.dispatcher_with_send):
-    def __init__(self, sock, target):
+    def __init__(self, sock, adapter, server):
         asyncore.dispatcher_with_send.__init__(self, sock=sock)
-        self._datastore = ModbusDataStore(target.di, target.co, target.ir, target.hr)
+        self._datastore = ModbusDataStore(adapter.di, adapter.co, adapter.ir, adapter.hr)
         self._modbus = ModbusProtocol(self.send, self._datastore)
+        self._server = server
 
     def handle_read(self):
         data = self.recv(8192)
@@ -398,27 +400,36 @@ class ModbusHandler(asyncore.dispatcher_with_send):
 
     def handle_close(self):
         print("Client from %s disconnected." % repr(self.addr))
+        self._server.remove_handler(self)
         self.close()
 
 
 class ModbusServer(asyncore.dispatcher):
-    def __init__(self, host, port, target=None):
+    def __init__(self, host, port, adapter=None):
         asyncore.dispatcher.__init__(self)
-        self.target = target
+        self.adapter = adapter
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         self.bind((host, port))
         self.listen(5)
+        self._accepted_connections = []
 
     def handle_accept(self):
         pair = self.accept()
         if pair is not None:
             sock, addr = pair
             print("Client connect from %s" % repr(addr))
-            ModbusHandler(sock, self.target)
+            handler = ModbusHandler(sock, self.adapter, self)
+            self._accepted_connections.append(handler)
+
+    def remove_handler(self, handler):
+        self._accepted_connections.remove(handler)
 
     def handle_close(self):
-        pass
+        for handler in self._accepted_connections:
+            handler.close()
+        self._accepted_connections = []
+        self.close()
 
 
 class ModbusAdapter(Adapter):
@@ -437,10 +448,15 @@ class ModbusAdapter(Adapter):
         self._server = None
 
     def _parse_arguments(self, arguments):
-        return {}
+        parser = ArgumentParser(description='Adapter to expose a device via Modbus TCP')
+        parser.add_argument('-b', '--bind-address', default='0.0.0.0',
+                            help='IP Address to bind and listen for connections on')
+        parser.add_argument('-p', '--port', type=int, default=502,
+                            help='Port to listen for connections on')
+        return parser.parse_args(arguments)
 
     def start_server(self):
-        self._server = ModbusServer('localhost', 5020, self)
+        self._server = ModbusServer(self._options.bind_address, self._options.port, self)
 
     def stop_server(self):
         if self._server is not None:
