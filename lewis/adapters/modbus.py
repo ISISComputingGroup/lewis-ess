@@ -56,14 +56,14 @@ class ModbusDataBank(object):
     def get(self, addr, count):
         data = self._data[addr:addr+count]
         if len(data) != count:
-            raise IndexError("Invalid address range [{{0:#06x}} - {{0:#06x}}]"
+            raise IndexError("Invalid address range [{:#06x} - {:#06x}]"
                              .format(addr, addr+count))
         return data
 
     def set(self, addr, values):
         end = addr + len(values)
         if not 0 <= addr <= end <= len(self._data):
-            raise IndexError("Invalid address range [{{0:#06x}} - {{0:#06x}}]"
+            raise IndexError("Invalid address range [{:#06x} - {:#06x}]"
                              .format(addr, addr+len(values)))
         self._data[addr:end] = values
 
@@ -468,7 +468,7 @@ class ModbusServer(asyncore.dispatcher):
     def handle_accept(self):
         pair = self.accept()
         if pair is not None:
-            sock, addr = pair
+            sock, _ = pair
             handler = ModbusHandler(sock, self.adapter, self)
             self._accepted_connections.append(handler)
 
