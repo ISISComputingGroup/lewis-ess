@@ -339,7 +339,7 @@ class ModbusProtocol(object):
 
         try:
             bits = databank.get(addr, count)
-            bits = map(bool, bits)
+            bits = [bool(bit) for bit in bits]
         except IndexError:
             return request.create_exception(MBEX.DATA_ADDRESS)
 
@@ -388,7 +388,7 @@ class ModbusProtocol(object):
 
         try:
             words = databank.get(addr, count)
-            words = map(lambda word: word & 0xFFFF, words)
+            words = [word & 0xFFFF for word in words]
         except IndexError:
             return request.create_exception(MBEX.DATA_ADDRESS)
 
