@@ -278,9 +278,9 @@ class ModbusProtocol(object):
 
     def _do_read_bits(self, databank, request):
         """
-        Shared handler to handle FC 0x01 and FC 0x02.
+        Shared handler for FC 0x01 and FC 0x02.
 
-        :param databank: DataBank to execute against
+        :param databank: DataBank to execute against (di or co)
         :param request: ModbusTCPFrame containing the request
         :return: ModbusTCPFrame response to the request
         """
@@ -291,6 +291,7 @@ class ModbusProtocol(object):
 
         try:
             bits = databank.get(addr, count)
+            bits = map(bool, bits)
         except IndexError:
             return request.create_exception(MBEX.DATA_ADDRESS)
 
@@ -326,9 +327,9 @@ class ModbusProtocol(object):
 
     def _do_read_registers(self, databank, request):
         """
-        Shared handler to handle FC 0x03 and FC 0x04.
+        Shared handler for FC 0x03 and FC 0x04.
 
-        :param databank: DataBank to execute against
+        :param databank: DataBank to execute against (ir or hr)
         :param request: ModbusTCPFrame containing the request
         :return: ModbusTCPFrame response to the request
         """
@@ -339,11 +340,12 @@ class ModbusProtocol(object):
 
         try:
             words = databank.get(addr, count)
+            words = map(lambda word: word & 0xFFFF, words)
         except IndexError:
             return request.create_exception(MBEX.DATA_ADDRESS)
 
         # Construct response
-        data = struct.pack('>B%dH' % len(words), len(words) * 2, *list(words))
+        data = struct.pack('>B%dH' % len(words), len(words) * 2, *words)
         return request.create_response(data)
 
     def _handle_write_single_coil(self, request):
