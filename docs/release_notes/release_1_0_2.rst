@@ -7,6 +7,20 @@ This release is work in progress.
 
 New features
 ------------
+ - Logging capabilities have been added to the framework through the standard Python `logging`_
+   module. The ``lewis``-script logs messages to stderr, the level can be set using a new flag
+   ``-o/--output-level``.
+
+   All devices have a new member ``log``, which can be used like this:
+
+   .. sourcecode:: Python
+
+       class SomeDevice(Device):
+           def some_method(self, param):
+               self.log.debug('some_method called with param=%s', param)
+
+   This new behavior is also supported by :class:`~lewis.core.statemachine.State`,
+   so that changes in device state can be logged as well.
 
  - A simulation for a Julabo FP50 waterbath was kindly contributed by `Matt Clarke`_. It is
    communicating through TCP Stream and offers two different protocol versions. The new device
@@ -37,3 +51,4 @@ Bug fixes and other improvements
 
 .. _Matt Clarke: https://github.com/mattclarke
 .. _Adrian Potter: https://github.com/AdrianPotter
+.. _logging: https://docs.python.org/2/library/logging.html

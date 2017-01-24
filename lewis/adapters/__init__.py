@@ -22,8 +22,10 @@ This module defines a base class for adapters and some supporting infrastructure
 """
 
 import inspect
+from lewis.core.logging import has_log
 
 
+@has_log
 class Adapter(object):
     """
     Base class for adapters
