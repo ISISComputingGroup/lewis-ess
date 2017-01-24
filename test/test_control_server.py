@@ -168,6 +168,25 @@ class TestExposedObjectCollection(unittest.TestCase):
         exposed_objects['container.test.getTest'](454, 43)
         obj.getTest.assert_called_once_with(454, 43)
 
+    def test_duplicate_name_raises(self):
+        exposed_objects = ExposedObjectCollection({})
+        exposed_objects.add_object(TestObject(), 'testObject')
+
+        self.assertRaises(RuntimeError, exposed_objects.add_object, TestObject(), 'testObject')
+
+    def test_remove_object(self):
+        exposed_objects = ExposedObjectCollection({})
+        own_functions_count = len(exposed_objects)
+
+        obj = TestObject()
+        exposed_objects.add_object(obj, 'testObject')
+
+        self.assertListEqual(exposed_objects.get_objects(), ['testObject'])
+        assertRaisesNothing(self, exposed_objects.remove_object, 'testObject')
+        self.assertEquals(len(exposed_objects), own_functions_count)
+
+        self.assertRaises(RuntimeError, exposed_objects.remove_object, 'does_not_exist')
+
 
 class TestControlServer(unittest.TestCase):
     @patch('zmq.Context')
