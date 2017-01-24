@@ -100,6 +100,8 @@ class PropertyExposingDriver(Driver):
         super(PropertyExposingDriver, self).__init__()
 
         self._target = target
+        self._set_logging_context(target)
+        
         self._pv_dict = pv_dict
         self._timers = {k: 0.0 for k in self._pv_dict.keys()}
         self._last_update_call = None
