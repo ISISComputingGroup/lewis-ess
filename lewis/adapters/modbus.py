@@ -38,20 +38,16 @@ from lewis.adapters import Adapter
 
 
 class ModbusDataBank(object):
+    """
+    Preliminary DataBank implementation for Modbus.
+
+    This is a very generic implementation of a databank for Modbus. It's meant to set the
+    groundwork for future implementations. Only derived classes should be instantiated, not
+    this class directly. The signature of this __init__ method is subject to change.
+
+    :param kwargs: Configuration
+    """
     def __init__(self, **kwargs):
-        """
-        Preliminary DataBank implementation for Modbus.
-
-        This is a very generic implementation of a databank for Modbus. It's meant to set the
-        groundwork for future implementations. Only derived classes should be instantiated, not
-        this class directly. The signature of this __init__ method is subject to change.
-
-        .. sourcecode:: Python
-
-            di = ModbusDataBank.create_basic(False, 0x1000, 0x1FFF)
-
-        :param config: dict containing configuration
-        """
         self._data = kwargs['data']
         self._start_addr = kwargs['start_addr']
 
@@ -90,18 +86,22 @@ class ModbusDataBank(object):
 
 
 class ModbusBasicDataBank(ModbusDataBank):
+    """
+    A basic ModbusDataBank instance.
+
+    This type of DataBank simply serves as a memory space for Modbus requests to read from and
+    write to. It does not support binding addresses to attributes or functions of the device
+    or interface. Example usage:
+
+    .. sourcecode:: Python
+
+        di = ModbusBasicDataBank(False, 0x1000, 0x1FFF)
+
+    :param default_value: Value to initialize memory with
+    :param start_addr: First valid address
+    :param last_addr: Last valid address
+    """
     def __init__(self, default_value=0, start_addr=0x0000, last_addr=0xFFFF):
-        """
-        A basic ModbusDataBank instance.
-
-        This type of DataBank simply serves as a memory space for Modbus requests to read from and
-        write to. It does not support binding addresses to attributes or functions of the device
-        or interface.
-
-        :param default_value: Value to initialize memory with
-        :param start_addr: First valid address
-        :param last_addr: Last valid address
-        """
         super(ModbusBasicDataBank, self).__init__(
             start_addr=start_addr,
             data=[default_value] * (last_addr - start_addr + 1)
@@ -131,6 +131,19 @@ class MBEX(object):
 
 
 class ModbusTCPFrame(object):
+    """
+    This class models a frame of the Modbus TCP protocol.
+
+    It may be a request, a response or an exception. Typically, requests are constructed using the
+    init method, while responses and exceptions are constructed by called create_request or
+    create_exception on an instance that is a request.
+
+    Note that data from the passed in bytearray stream is consumed. That is, bytes will be removed
+    from the front of the bytearray if construction is successful.
+
+    :param stream: bytearray to consume data from to construct this frame.
+    :except EOFError: Not enough data for complete frame; no data consumed.
+    """
     def __init__(self, stream=None):
         self.transaction_id = 0
         self.protocol_id = 0
@@ -151,7 +164,7 @@ class ModbusTCPFrame(object):
         is raised and no data is consumed.
 
         :param stream: bytearray to consume data from to construct this frame.
-        :except EOFError Not enough data for complete frame; no data consumed.
+        :except EOFError: Not enough data for complete frame; no data consumed.
         """
         fmt = '>HHHBB'
         size_header = struct.calcsize(fmt)
@@ -230,23 +243,23 @@ class ModbusTCPFrame(object):
 
 
 class ModbusProtocol(object):
+    """
+    This class implements the Modbus TCP Protocol.
+
+    The user of this class should provide a ModbusDataStore instance that will be used to
+    fulfill read and write requests, and a callable `sender` which accepts one bytearray
+    parameter. The `sender` will be called whenever a response frame is generated, with a
+    bytearray containing the response frame as the parameter.
+
+    Processing occurs when the user calls ModbusProtocol.process(), passing in the raw frame
+    data to process as a bytearray. The data may include multiple frames and partial frame
+    fragments. Any data that could not be processed (due to incomplete frames) is buffered for
+    the next call to process.
+
+    :param sender: callable that accepts one bytearray parameter, called to send responses.
+    :param datastore: ModbusDataStore instance to reference when processing requests
+    """
     def __init__(self, sender, datastore):
-        """
-        This class implements the Modbus TCP Protocol.
-
-        The user of this class should provide a ModbusDataStore instance that will be used to
-        fulfill read and write requests, and a callable `sender` which accepts one bytearray
-        parameter. The `sender` will be called whenever a response frame is generated, with a
-        bytearray containing the response frame as the parameter.
-
-        Processing occurs when the user calls ModbusProtocol.process(), passing in the raw frame
-        data to process as a bytearray. The data may include multiple frames and partial frame
-        fragments. Any data that could not be processed (due to incomplete frames) is buffered for
-        the next call to process.
-
-        :param sender: callable that accepts one bytearray parameter, called to send responses.
-        :param datastore: ModbusDataStore instance to reference when processing requests
-        """
         self._buffer = bytearray()
         self._datastore = datastore
         self._send = lambda req: sender(req.to_bytearray())
