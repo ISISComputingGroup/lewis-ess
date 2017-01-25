@@ -126,3 +126,5 @@ def run_simulation(argument_list=None):
         do_run_simulation(argument_list)
     except LewisException as e:
         print('\n'.join(('An error occurred:', e.message)))
+    except KeyboardInterrupt:
+        print('\nInterrupt received; shutting down. Goodbye, cruel world!')
