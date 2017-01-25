@@ -38,14 +38,13 @@ from lewis.adapters import Adapter
 
 
 class ModbusDataBank(object):
-    def __init__(self, config):
+    def __init__(self, **kwargs):
         """
         Preliminary DataBank implementation for Modbus.
 
         This is a very generic implementation of a databank for Modbus. It's meant to set the
-        groundwork for future implementations. The create_basic method should be used for
-        construction, rather than this initializer. The signature of this __init__ method is
-        subject to change.
+        groundwork for future implementations. Only derived classes should be instantiated, not
+        this class directly. The signature of this __init__ method is subject to change.
 
         .. sourcecode:: Python
 
@@ -53,25 +52,8 @@ class ModbusDataBank(object):
 
         :param config: dict containing configuration
         """
-        self._data = config['data']
-        self._start_addr = config['start_addr']
-
-    @classmethod
-    def create_basic(cls, default_value=0, start_addr=0x0000, last_addr=0xFFFF):
-        """
-        Create a basic ModbusDataBank instance.
-
-        This type of DataBank simply serves as a memory space for Modbus requests to read from and
-        write to. It does not support binding addresses to attributes or functions of the device
-        or interface.
-
-        :param default_value: Value to initialize memory with
-        :param start_addr: First valid address
-        :param last_addr: Last valid address
-        :return: ModbusDataBank instance with specified configuration
-        """
-        return cls({'start_addr': start_addr,
-                    'data': [default_value] * (last_addr - start_addr + 1)})
+        self._data = kwargs['data']
+        self._start_addr = kwargs['start_addr']
 
     def get(self, addr, count):
         """
@@ -105,6 +87,25 @@ class ModbusDataBank(object):
             raise IndexError("Invalid address range [{:#06x} - {:#06x}]"
                              .format(addr, addr+len(values)))
         self._data[addr:end] = values
+
+
+class ModbusBasicDataBank(ModbusDataBank):
+    def __init__(self, default_value=0, start_addr=0x0000, last_addr=0xFFFF):
+        """
+        A basic ModbusDataBank instance.
+
+        This type of DataBank simply serves as a memory space for Modbus requests to read from and
+        write to. It does not support binding addresses to attributes or functions of the device
+        or interface.
+
+        :param default_value: Value to initialize memory with
+        :param start_addr: First valid address
+        :param last_addr: Last valid address
+        """
+        super(ModbusBasicDataBank, self).__init__(
+            start_addr=start_addr,
+            data=[default_value] * (last_addr - start_addr + 1)
+        )
 
 
 class ModbusDataStore(object):

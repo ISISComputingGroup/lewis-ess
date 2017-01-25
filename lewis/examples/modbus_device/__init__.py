@@ -18,7 +18,7 @@
 # *********************************************************************
 
 from lewis.devices import Device
-from lewis.adapters.modbus import ModbusAdapter, ModbusDataBank
+from lewis.adapters.modbus import ModbusAdapter, ModbusBasicDataBank
 
 
 class ModbusDevice(Device):
@@ -36,7 +36,7 @@ class ModbusInterface(ModbusAdapter):
     demonstrate overlaid memory segments. If you want each segment to have its own memory, just
     create separate instances for all four.
     """
-    di = ModbusDataBank.create_basic(False)
+    di = ModbusBasicDataBank(False)
     co = di
-    ir = ModbusDataBank.create_basic(0)
+    ir = ModbusBasicDataBank(0)
     hr = ir
