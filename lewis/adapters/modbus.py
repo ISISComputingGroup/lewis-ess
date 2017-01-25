@@ -567,9 +567,7 @@ class ModbusAdapter(Adapter):
     def __init__(self, device, arguments=None):
         super(ModbusAdapter, self).__init__(device, arguments)
 
-        if arguments is not None:
-            self._options = self._parse_arguments(arguments)
-
+        self._options = self._parse_arguments(arguments or [])
         self._server = None
 
     def _parse_arguments(self, arguments):

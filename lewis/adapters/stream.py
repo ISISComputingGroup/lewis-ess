@@ -472,8 +472,11 @@ class StreamAdapter(Adapter):
     def __init__(self, device, arguments=None):
         super(StreamAdapter, self).__init__(device, arguments)
 
-        if arguments is not None:
-            self._options = self._parseArguments(arguments)
+        self._options = self._parse_arguments(arguments or [])
+
+        if self._options.telnet_mode:
+            self.in_terminator = '\r\n'
+            self.out_terminator = '\r\n'
 
         self._server = None
 
@@ -517,12 +520,14 @@ class StreamAdapter(Adapter):
     def is_running(self):
         return self._server is not None
 
-    def _parseArguments(self, arguments):
+    def _parse_arguments(self, arguments):
         parser = ArgumentParser(description='Adapter to expose a device via TCP Stream')
         parser.add_argument('-b', '--bind-address', default='0.0.0.0',
                             help='IP Address to bind and listen for connections on')
         parser.add_argument('-p', '--port', type=int, default=9999,
                             help='Port to listen for connections on')
+        parser.add_argument('-t', '--telnet-mode', action='store_true',
+                            help='Override terminators to be telnet compatible')
         return parser.parse_args(arguments)
 
     def _bind_commands(self, cmds):
