@@ -32,26 +32,6 @@ from uuid import uuid4
 from types import ModuleType
 
 
-class TestDeviceBase(unittest.TestCase):
-    def test_set_parameters(self):
-        class TestDevice(DeviceBase):
-            foo = 10
-            bar = 'str'
-
-            def baz(self):
-                pass
-
-        dev = TestDevice()
-
-        assertRaisesNothing(self, dev.set_parameters, {'foo': 5, 'bar': 'test'})
-
-        self.assertEqual(dev.foo, 5)
-        self.assertEqual(dev.bar, 'test')
-
-        self.assertRaises(RuntimeError, dev.set_parameters, {'not_existing': 45})
-        self.assertRaises(RuntimeError, dev.set_parameters, {'baz': 4})
-
-
 class TestIsDevice(unittest.TestCase):
     def test_not_a_type_returns_false(self):
         self.assertFalse(is_device(0.0))

@@ -278,6 +278,29 @@ class Simulation(object):
 
         self._adapter.start_server()
 
+    def set_device_parameters(self, parameters):
+        """
+        Set multiple parameters of the simulated device "simultaneously". The passed
+        parameter is assumed to be device parameter/value dict.
+        The method only allows to set existing attributes. If there are invalid
+        attribute names, the attributes are not updated, instead a RuntimeError
+        is raised. The same happens if any of the parameters are methods, which
+        can not be updated with this mechanisms.
+
+        :param parameters: Dict of device attribute/values to update the device.
+        """
+        invalid_parameters = set(parameters.keys()) - set(
+            x for x in dir(self._device) if not callable(getattr(self._device, x)))
+        if invalid_parameters:
+            raise RuntimeError(
+                'The following parameters do not exist in the device or are methods: {}.'
+                'Parameters not updated.'.format(invalid_parameters))
+
+        for name, value in parameters.items():
+            setattr(self._device, name, value)
+
+        self.log.debug('Updated device parameters: %s', parameters)
+
     def pause(self):
         """
         Pause the simulation. Can only be called after start has been called.

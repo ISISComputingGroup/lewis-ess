@@ -56,7 +56,7 @@ New features
 
    ::
 
-      $ lewis-control device set_parameters "{'target_speed': 1, 'target_phase': 20}"
+      $ lewis-control simulation set_device_parameters "{'target_speed': 1, 'target_phase': 20}"
 
    Thanks to the IBEX team for requesting this.
 

@@ -315,3 +315,23 @@ class TestSimulation(unittest.TestCase):
         doc = env.device_documentation
 
         self.assertEqual(doc, 'test')
+
+    def test_set_parameters(self):
+        class TestDevice(object):
+            foo = 10
+            bar = 'str'
+
+            def baz(self):
+                pass
+
+        dev = TestDevice()
+
+        sim = Simulation(device=dev, adapter=Mock())
+
+        assertRaisesNothing(self, sim.set_device_parameters, {'foo': 5, 'bar': 'test'})
+
+        self.assertEqual(dev.foo, 5)
+        self.assertEqual(dev.bar, 'test')
+
+        self.assertRaises(RuntimeError, sim.set_device_parameters, {'not_existing': 45})
+        self.assertRaises(RuntimeError, sim.set_device_parameters, {'baz': 4})
