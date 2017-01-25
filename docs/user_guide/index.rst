@@ -15,3 +15,4 @@ the remote control of device and simulation environment are introduced.
     adapter_specifics
     remote_access_devices
     remote_access_simulation
+    command_line_tools
