@@ -277,7 +277,8 @@ class StateMachine(CanProcess):
         :param instance: Target object instance to search for handlers and bind events to.
         :param override: If set to True, matching handlers will replace
                          previously registered handlers.
-        :param prefix: Dict of prefixes to override defaults (keys: on_entry, in_state, on_exit)
+        :param prefix: Dict or list of prefixes to override defaults
+                       (keys: on_entry, in_state, on_exit)
 
         This function enables automatically binding state handlers to events without having to
         specify them in the constructor. When called, this function searches `instance` for
@@ -303,6 +304,8 @@ class StateMachine(CanProcess):
         """
         if prefix is None:
             prefix = {}
+        if not isinstance(prefix, dict) and hasattr(prefix, '__iter__'):
+            prefix = dict(zip(['on_entry', 'in_state', 'on_exit'], prefix))
 
         # Merge prefix defaults with any provided prefixes
         prefix = dict(list(self._prefix.items()) + list(prefix.items()))

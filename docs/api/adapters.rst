@@ -10,4 +10,5 @@ for writing device interfaces.
 
     adapters/adapters
     adapters/epics
+    adapters/modbus
     adapters/stream
