@@ -16,13 +16,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
-# References Used:
-#   http://www.modbus.org/docs/Modbus_Application_Protocol_V1_1b3.pdf
-#   http://www.modbus.org/docs/Modbus_Messaging_Implementation_Guide_V1_0b.pdf
-#   https://github.com/sourceperl/pyModbusTCP
-#   https://github.com/bashwork/pymodbus
-# *********************************************************************
 
+"""
+This module provides components to expose a Device via a Modbus-interface. The following resources
+were used as guidelines and references for implementing the protocol:
+
+ - http://www.modbus.org/docs/Modbus_Application_Protocol_V1_1b3.pdf
+ - http://www.modbus.org/docs/Modbus_Messaging_Implementation_Guide_V1_0b.pdf
+ - https://github.com/sourceperl/pyModbusTCP
+ - https://github.com/bashwork/pymodbus
+
+.. note::
+
+    For an example how Modbus can be used in the current implementation, please look
+    at lewis/examples/modbus_device.
+"""
 
 from __future__ import division
 
@@ -47,6 +55,7 @@ class ModbusDataBank(object):
 
     :param kwargs: Configuration
     """
+
     def __init__(self, **kwargs):
         self._data = kwargs['data']
         self._start_addr = kwargs['start_addr']
@@ -61,11 +70,11 @@ class ModbusDataBank(object):
         :except IndexError: Raised if address range falls outside valid range
         """
         addr -= self._start_addr
-        data = self._data[addr:addr+count]
+        data = self._data[addr:addr + count]
         if len(data) != count:
             addr += self._start_addr
             raise IndexError("Invalid address range [{:#06x} - {:#06x}]"
-                             .format(addr, addr+count))
+                             .format(addr, addr + count))
         return data
 
     def set(self, addr, values):
@@ -81,7 +90,7 @@ class ModbusDataBank(object):
         if not 0 <= addr <= end <= len(self._data):
             addr += self._start_addr
             raise IndexError("Invalid address range [{:#06x} - {:#06x}]"
-                             .format(addr, addr+len(values)))
+                             .format(addr, addr + len(values)))
         self._data[addr:end] = values
 
 
@@ -101,6 +110,7 @@ class ModbusBasicDataBank(ModbusDataBank):
     :param start_addr: First valid address
     :param last_addr: Last valid address
     """
+
     def __init__(self, default_value=0, start_addr=0x0000, last_addr=0xFFFF):
         super(ModbusBasicDataBank, self).__init__(
             start_addr=start_addr,
@@ -110,6 +120,7 @@ class ModbusBasicDataBank(ModbusDataBank):
 
 class ModbusDataStore(object):
     """Convenience struct to hold the four types of DataBanks in Modbus"""
+
     def __init__(self, di=None, co=None, ir=None, hr=None):
         self.di = di
         self.co = co
@@ -144,6 +155,7 @@ class ModbusTCPFrame(object):
     :param stream: bytearray to consume data from to construct this frame.
     :except EOFError: Not enough data for complete frame; no data consumed.
     """
+
     def __init__(self, stream=None):
         self.transaction_id = 0
         self.protocol_id = 0
@@ -259,6 +271,7 @@ class ModbusProtocol(object):
     :param sender: callable that accepts one bytearray parameter, called to send responses.
     :param datastore: ModbusDataStore instance to reference when processing requests
     """
+
     def __init__(self, sender, datastore):
         self._buffer = bytearray()
         self._datastore = datastore
