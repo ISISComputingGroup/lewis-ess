@@ -7,6 +7,20 @@ This release is work in progress.
 
 New features
 ------------
+ - A preliminary Modbus Adapter has been added. The current version is mainly aimed at what is
+   currently required by the IBEX team for the ``nanodac``. Since all that is needed is writing
+   and reading back from memory via the Modbus protocol, bindings to ``Device`` attributes or
+   functions have not been implemented yet. We will add these in a future version.
+   
+   The current version supports:
+   
+    - Eight common Function Codes (0x01 through 0x06, 0x0F and 0x10)
+    - Overlaid memory segments (using the same databank for ``di`` and ``co`` for example)
+    - Modbus Exceptions for invalid Function Codes, bad memory addresses, invalid data, etc
+    - Request frames may arrive in arbitrary chunks of multiple or partial frames
+    
+   For a usage example, see ``examples/modbus_device``.
+    
  - Logging capabilities have been added to the framework through the standard Python `logging`_
    module. The ``lewis``-script logs messages to stderr, the level can be set using a new flag
    ``-o/--output-level``.
