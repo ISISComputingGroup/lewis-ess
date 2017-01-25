@@ -64,7 +64,7 @@ parser.add_argument('adapter_args', nargs='*',
                     help='Arguments for the adapter.')
 
 
-def do_run_simulation(argument_list=None):
+def do_run_simulation(argument_list=None):  # noqa: C901
     arguments = parser.parse_args(argument_list or sys.argv[1:])
 
     if arguments.version:
