@@ -52,6 +52,13 @@ command line:
     $ lewis-control device target_speed 100
     $ lewis-control device start
 
+It is possible to set multiple device parameters at once:
+
+::
+
+    $ lewis-control device set_parameters "{'target_speed': 1, 'target_phase': 20}"
+
+
 Value Interpretation and Syntax
 -------------------------------
 

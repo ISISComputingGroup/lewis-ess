@@ -28,7 +28,7 @@ import importlib
 
 from lewis.adapters import Adapter
 from lewis.core.exceptions import LewisException
-from lewis.core.utils import get_submodules, get_members
+from lewis.core.utils import get_submodules, get_members, dict_strict_update
 from lewis.core.logging import has_log
 
 
@@ -37,8 +37,33 @@ class DeviceBase(object):
     """
     This class is a common base for :class:`~lewis.devices.Device` and
     :class:`~lewis.devices.StateMachineDevice`. It is mainly used in the device
-    discovery process.
+    discovery process, but for convenience it defines :meth:`set_parameters` which
+    lets users set multiple device parameters simultaneously via
+    :class:`lewis.core.control_server.ControlServer`.
     """
+
+    def set_parameters(self, parameters):
+        """
+        Set multiple parameters of the device "simultaneously". The passed
+        parameter is assumed to be device parameter/value dict.
+        The method only allows to set existing attributes. If there are invalid
+        attribute names, the attributes are not updated, instead a RuntimeError
+        is raised. The same happens if any of the parameters are methods, which
+        can not be updated with this mechanisms.
+
+        :param parameters: Dict of device attribute/values to update the device.
+        """
+        invalid_parameters = set(parameters.keys()) - set(
+            x for x in dir(self) if not callable(getattr(self, x)))
+        if invalid_parameters:
+            raise RuntimeError(
+                'The following parameters do not exist in the device or are methods: {}.'
+                'Parameters not updated.'.format(invalid_parameters))
+
+        for name, value in parameters.items():
+            setattr(self, name, value)
+
+        self.log.debug('Updated device parameters: %s', parameters)
 
 
 def is_device(obj):

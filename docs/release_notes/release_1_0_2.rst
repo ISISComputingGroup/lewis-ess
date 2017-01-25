@@ -48,9 +48,17 @@ New features
    that expose lambda-functions, named functions and data attributes (with separate read/write
    patterns). See the updated documentation of :mod:`lewis.adapters.stream`.
 
- - The :class:`PV`-class has been extended to allow for meta data updates at runtime. A second
-   property can now be specified that returns a dictionary to update the PV's meta data such as
-   limits or alarm states.
+ - The :class:`~lewis.adapters.epics.PV`-class has been extended to allow for meta data updates
+   at runtime. A second property can now be specified that returns a dictionary to update the
+   PV's meta data such as limits or alarm states.
+
+ - It is now possible to change multiple device parameters through lewis-control:
+
+   ::
+
+      $ lewis-control device set_parameters "{'target_speed': 1, 'target_phase': 20}"
+
+   Thanks to the IBEX team for requesting this.
 
 Bug fixes and other improvements
 --------------------------------
