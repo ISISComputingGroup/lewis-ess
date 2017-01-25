@@ -474,6 +474,10 @@ class StreamAdapter(Adapter):
 
         self._options = self._parse_arguments(arguments or [])
 
+        if self._options.telnet_mode:
+            self.in_terminator = '\r\n'
+            self.out_terminator = '\r\n'
+
         self._server = None
 
         self.bound_commands = self._bind_commands(self.commands)
@@ -522,6 +526,8 @@ class StreamAdapter(Adapter):
                             help='IP Address to bind and listen for connections on')
         parser.add_argument('-p', '--port', type=int, default=9999,
                             help='Port to listen for connections on')
+        parser.add_argument('-t', '--telnet-mode', action='store_true',
+                            help='Override terminators to be telnet compatible')
         return parser.parse_args(arguments)
 
     def _bind_commands(self, cmds):
