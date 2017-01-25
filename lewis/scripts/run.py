@@ -111,7 +111,11 @@ def do_run_simulation(argument_list=None):
     simulation.cycle_delay = arguments.cycle_delay
     simulation.speed = arguments.speed
 
-    simulation.start()
+    try:
+        simulation.start()
+    except KeyboardInterrupt:
+        print('\nInterrupt received; shutting down. Goodbye, cruel world!')
+        simulation.log.critical('Simulation aborted by user interaction')
 
 
 def run_simulation(argument_list=None):
@@ -126,5 +130,3 @@ def run_simulation(argument_list=None):
         do_run_simulation(argument_list)
     except LewisException as e:
         print('\n'.join(('An error occurred:', e.message)))
-    except KeyboardInterrupt:
-        print('\nInterrupt received; shutting down. Goodbye, cruel world!')
