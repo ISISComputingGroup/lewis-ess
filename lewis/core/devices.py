@@ -29,8 +29,10 @@ import importlib
 from lewis.adapters import Adapter
 from lewis.core.exceptions import LewisException
 from lewis.core.utils import get_submodules, get_members
+from lewis.core.logging import has_log
 
 
+@has_log
 class DeviceBase(object):
     """
     This class is a common base for :class:`~lewis.devices.Device` and
@@ -121,6 +123,14 @@ class DeviceBuilder(object):
         self._module = module
 
         self._device_types = list(get_members(self._module, is_device).values())
+
+        if not self._device_types:
+            # syslog.warning('No devices discovered in module {}.'.format(module.__name__))
+            pass
+        else:
+            pass
+            # syslog.info('Discovered devices in module {}: {}'.format(
+            #    module.__name__, ','.join([x.__name__ for x in self._device_types])))
 
         submodules = get_submodules(self._module)
 
@@ -289,7 +299,7 @@ class DeviceBuilder(object):
             raise LewisException(
                 'Failed to find protocol \'{}\' for device \'{}\'. '
                 'Available protocols are: \n    {}'.format(
-                    protocol, self.name, '\n    {}'.join(self.interfaces.keys())))
+                    protocol, self.name, '\n    '.join(self.interfaces.keys())))
 
 
 class DeviceRegistry(object):

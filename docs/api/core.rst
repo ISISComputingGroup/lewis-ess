@@ -8,6 +8,7 @@ state machine, control server and client infrastructure and some utilities.
     :maxdepth: 2
 
     core/exceptions
+    core/logging
     core/processor
     core/statemachine
     core/approaches

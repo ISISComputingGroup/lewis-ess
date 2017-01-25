@@ -41,19 +41,24 @@ def show_api(remote, object_name):
     methods = []
 
     for member_name in dir(obj):
-        if not member_name[0] in ('_', ':'):
-            member = getattr(obj, member_name)
-
-            if callable(member):
-                methods.append(member_name)
+        if member_name[0] not in ('_', ':') and member_name not in dir(type(obj)):
+            methods.append(member_name)
 
     print('Type: {}'.format(type(obj).__name__))
-    print('Properties:')
+
+    print('Properties (current values):')
+    maxlen = len(max(properties, key=len))
     for prop in sorted(properties):
-        print('\t{}'.format(prop))
+        try:
+            current_value = getattr(obj, prop)
+        except Exception as e:
+            current_value = 'Not accessible: {}'.format(e)
+
+        print('    {}    ({})'.format(prop.ljust(maxlen), current_value))
+
     print('Methods:')
     for method in sorted(methods):
-        print('\t{}'.format(method))
+        print('    {}'.format(method))
 
 
 def convert_type(value):

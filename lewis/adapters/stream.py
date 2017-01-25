@@ -17,8 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from __future__ import print_function
-
 import asynchat
 import asyncore
 import inspect
@@ -29,9 +27,11 @@ from argparse import ArgumentParser
 from six import b
 
 from lewis.adapters import Adapter
+from lewis.core.logging import has_log
 from lewis.core.utils import format_doc_text
 
 
+@has_log
 class StreamHandler(asynchat.async_chat):
     def __init__(self, sock, target, stream_server):
         asynchat.async_chat.__init__(self, sock=sock)
@@ -41,12 +41,17 @@ class StreamHandler(asynchat.async_chat):
 
         self._stream_server = stream_server
 
+        self._set_logging_context(target)
+        self.log.info('Client connected from %s:%s', *sock.getpeername())
+
     def collect_incoming_data(self, data):
         self.buffer.append(data)
 
     def found_terminator(self):
         request = b''.join(self.buffer)
         self.buffer = []
+
+        self.log.debug('Got request %s', request)
 
         try:
             cmd = next((cmd for cmd in self.target.bound_commands if cmd.can_process(request)),
@@ -55,19 +60,25 @@ class StreamHandler(asynchat.async_chat):
             if cmd is None:
                 raise RuntimeError('None of the device\'s commands matched.')
 
+            self.log.info('Processing request %s using command %s', request, cmd.raw_pattern)
+
             reply = cmd.process_request(request)
 
         except Exception as error:
             reply = self.target.handle_error(request, error)
+            self.log.debug('Error while processing request', exc_info=error)
 
         if reply is not None:
+            self.log.debug('Sending reply %s', reply)
             self.push(b(reply + self.target.out_terminator))
 
     def handle_close(self):
+        self.log.info('Closing connection to client %s:%s', *self.socket.getpeername())
         self._stream_server.remove_handler(self)
         asynchat.async_chat.handle_close(self)
 
 
+@has_log
 class StreamServer(asyncore.dispatcher):
     def __init__(self, host, port, target):
         asyncore.dispatcher.__init__(self)
@@ -77,13 +88,15 @@ class StreamServer(asyncore.dispatcher):
         self.bind((host, port))
         self.listen(5)
 
+        self._set_logging_context(target)
+        self.log.info('Listening on %s:%s', host, port)
+
         self._accepted_connections = []
 
     def handle_accept(self):
         pair = self.accept()
         if pair is not None:
             sock, addr = pair
-            print("Client connect from %s" % repr(addr))
             handler = StreamHandler(sock, self.target, self)
 
             self._accepted_connections.append(handler)
@@ -95,6 +108,7 @@ class StreamServer(asyncore.dispatcher):
         # As this is an old style class, the base class method must
         # be called directly. This is important to still perform all
         # the teardown-work that asyncore.dispatcher does.
+        self.log.info('Shutting down server, closing all remaining client connections.')
         asyncore.dispatcher.close(self)
 
         # But in addition, close all open sockets and clear the connection list.

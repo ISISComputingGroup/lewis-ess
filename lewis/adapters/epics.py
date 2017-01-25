@@ -17,8 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from __future__ import print_function
-
 from argparse import ArgumentParser
 from datetime import datetime
 import inspect
@@ -26,8 +24,9 @@ import inspect
 from . import Adapter, ForwardProperty
 from six import iteritems
 
+from lewis.core.logging import has_log
 from lewis.core.utils import seconds_since, FromOptionalDependency, format_doc_text
-from lewis.core.exceptions import LewisException
+from lewis.core.exceptions import LewisException, LimitViolationException
 
 # pcaspy might not be available. To make EPICS-based adapters show up
 # in the listed adapters anyway dummy types are created in this case
@@ -57,55 +56,96 @@ class PV(object):
     are forwarded to the pcaspy server's `pvdb`, so it's possible to pass on
     limits, types, enum-values and so on.
 
+    In case those arguments change at runtime, it's possible to provide ``meta_data_property``,
+    which should contain the name of a property that returns a dict containing these values.
+    For example if limits change:
+
+    .. sourcecode:: Python
+
+        class Interface(EpicsAdapter):
+            pvs = {
+                'example': PV('example', meta_data_property='example_meta')
+            }
+
+            @property
+            def example_meta(self):
+                return {
+                    'lolim': self._device._example_low_limit,
+                    'hilim': self._device._example_high_limit,
+                }
+
+    The PV infos are then updated together with the value, determined by ``poll_interval``.
+
     :param target_property: Property of the adapter to expose.
     :param poll_interval: Update interval of the PV.
     :param read_only: Should be True if the PV is read only.
+    :param meta_data_property: Property which returns a dict containing PV metadata.
     :param doc: Description of the PV. If not supplied, docstring of mapped property is used.
     :param kwargs: Arguments forwarded into pcaspy pvdb-dict.
     """
 
-    def __init__(self, target_property, poll_interval=1.0, read_only=False, doc=None, **kwargs):
+    def __init__(self, target_property, poll_interval=1.0, read_only=False,
+                 meta_data_property=None, doc=None, **kwargs):
         self.property = target_property
         self.read_only = read_only
         self.poll_interval = poll_interval
+        self.meta_data_property = meta_data_property
         self.doc = doc
         self.config = kwargs
 
 
+@has_log
 class PropertyExposingDriver(Driver):
     def __init__(self, target, pv_dict):
         super(PropertyExposingDriver, self).__init__()
 
         self._target = target
+        self._set_logging_context(target)
+
         self._pv_dict = pv_dict
         self._timers = {k: 0.0 for k in self._pv_dict.keys()}
         self._last_update_call = None
 
     def write(self, pv, value):
+        self.log.debug('PV put request: %s=%s', pv, value)
+
         pv_object = self._pv_dict.get(pv)
 
         if not pv_object or pv_object.read_only:
             return False
 
-        setattr(self._target, pv_object.property, value)
-
-        self.setParam(pv, getattr(self._target, pv_object.property))
-
-        return True
+        try:
+            setattr(self._target, pv_object.property, value)
+            self.setParam(pv, getattr(self._target, pv_object.property))
+            return True
+        except LimitViolationException:
+            return False
 
     def process_pv_updates(self, force=False):
         dt = seconds_since(self._last_update_call or datetime.now())
         # Updates bound parameters as needed
+
+        updates = []
+
         for pv, pv_object in iteritems(self._pv_dict):
             self._timers[pv] += dt
             if self._timers[pv] >= pv_object.poll_interval or force:
                 try:
-                    self.setParam(pv, getattr(self._target, pv_object.property))
+                    new_value = getattr(self._target, pv_object.property)
+                    self.setParam(pv, new_value)
+
+                    if pv_object.meta_data_property is not None:
+                        self.setParamInfo(pv, getattr(self._target, pv_object.meta_data_property))
+
                     self._timers[pv] = 0.0
+                    updates.append((pv, new_value))
                 except (AttributeError, TypeError):
                     pass
 
         self.updatePVs()
+
+        self.log.debug('Processed PV updates: %s',
+                       ', '.join(('{}={}'.format(pv, val) for pv, val in updates)))
 
         self._last_update_call = datetime.now()
 
@@ -217,6 +257,9 @@ class EpicsAdapter(Adapter):
             self._driver = PropertyExposingDriver(target=self, pv_dict=self.pvs)
             self._driver.process_pv_updates(force=True)
 
+            self.log.info('Started serving PVs: %s',
+                          ', '.join((self._options.prefix + pv for pv in self.pvs.keys())))
+
     def stop_server(self):
         self._driver = None
         self._server = None
@@ -227,13 +270,17 @@ class EpicsAdapter(Adapter):
 
     def _create_properties(self, pvs):
         for pv in pvs:
-            prop = pv.property
+            self._install_property(pv.property)
 
-            if prop not in dir(self):
-                if prop not in dir(self._device):
-                    raise AttributeError('Can not find property \''
-                                         + prop + '\' in device or interface.')
-                setattr(type(self), prop, ForwardProperty('_device', prop, instance=self))
+            if pv.meta_data_property is not None:
+                self._install_property(pv.meta_data_property)
+
+    def _install_property(self, prop):
+        if prop not in dir(self):
+            if prop not in dir(self._device):
+                raise AttributeError('Can not find property \''
+                                     + prop + '\' in device or interface.')
+            setattr(type(self), prop, ForwardProperty('_device', prop, instance=self))
 
     def _parseArguments(self, arguments):
         parser = ArgumentParser(description="Adapter to expose a device via EPICS")

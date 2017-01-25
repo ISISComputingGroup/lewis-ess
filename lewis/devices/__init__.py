@@ -98,6 +98,8 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
                  override_initial_state=None, override_initial_data=None):
         super(StateMachineDevice, self).__init__()
 
+        self.log.info('Creating device, setting up state machine')
+
         self._initialize_data()
         self._override_data(override_initial_data)
 
@@ -180,6 +182,7 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
         """
         if overrides is not None:
             for name, val in overrides.items():
+                self.log.debug('Trying to override initial data (%s=%s)', name, val)
                 if name not in dir(self):
                     raise AttributeError(
                         'Can not override non-existing attribute'

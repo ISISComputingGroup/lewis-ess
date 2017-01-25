@@ -28,6 +28,7 @@ to be used directly in client code for device simulations - these should be base
 from six import iteritems
 
 from lewis.core.processor import CanProcess
+from lewis.core.logging import has_log
 
 
 class StateMachineException(Exception):
@@ -56,7 +57,11 @@ class HasContext(object):
         """Assigns the new context to the member variable ``_context``."""
         self._context = new_context
 
+        if hasattr(self, '_set_logging_context'):
+            self._set_logging_context(self._context)
 
+
+@has_log
 class State(HasContext):
     """
     StateMachine state handler base class.
@@ -101,6 +106,7 @@ class State(HasContext):
         pass
 
 
+@has_log
 class Transition(HasContext):
     """
     StateMachine transition condition base class.
@@ -129,6 +135,7 @@ class Transition(HasContext):
         return True
 
 
+@has_log
 class StateMachine(CanProcess):
     """
     Cycle based state machine.
@@ -170,6 +177,8 @@ class StateMachine(CanProcess):
 
     def __init__(self, cfg, context=None):
         super(StateMachine, self).__init__()
+
+        self._set_logging_context(context)
 
         self._state = None  # We start outside of any state, first cycle enters initial state
         self._handler = {}  # Nested dict mapping [state][event] = handler
@@ -334,6 +343,7 @@ class StateMachine(CanProcess):
         """
         # Initial transition on first cycle / after a reset()
         if self._state is None:
+            self.log.debug('Entering initial state "%s"', self._initial)
             self._state = self._initial
             self._raise_event('on_entry', 0)
             self._raise_event('in_state', 0)
@@ -342,6 +352,7 @@ class StateMachine(CanProcess):
         # General transition
         for target_state, check_func in self._transition.get(self._state, []):
             if check_func():
+                self.log.debug('Transition triggered (%s -> %s)', self._state, target_state)
                 self._raise_event('on_exit', dt)
                 self._state = target_state
                 self._raise_event('on_entry', dt)
@@ -418,6 +429,7 @@ class StateMachine(CanProcess):
         :param dt: Delta T since last cycle.
         """
         # May be None, function reference, or list of function refs
+        self.log.debug('Processing state=%s, handler=%s', self._state, event)
         handlers = self._handler[self._state][event]
 
         if handlers is None:
