@@ -64,7 +64,7 @@ parser.add_argument('adapter_args', nargs='*',
                     help='Arguments for the adapter.')
 
 
-def do_run_simulation(argument_list=None):
+def do_run_simulation(argument_list=None):  # noqa: C901
     arguments = parser.parse_args(argument_list or sys.argv[1:])
 
     if arguments.version:
@@ -111,7 +111,11 @@ def do_run_simulation(argument_list=None):
     simulation.cycle_delay = arguments.cycle_delay
     simulation.speed = arguments.speed
 
-    simulation.start()
+    try:
+        simulation.start()
+    except KeyboardInterrupt:
+        print('\nInterrupt received; shutting down. Goodbye, cruel world!')
+        simulation.log.critical('Simulation aborted by user interaction')
 
 
 def run_simulation(argument_list=None):
