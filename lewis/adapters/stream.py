@@ -472,8 +472,7 @@ class StreamAdapter(Adapter):
     def __init__(self, device, arguments=None):
         super(StreamAdapter, self).__init__(device, arguments)
 
-        if arguments is not None:
-            self._options = self._parseArguments(arguments)
+        self._options = self._parse_arguments(arguments or [])
 
         self._server = None
 
@@ -517,7 +516,7 @@ class StreamAdapter(Adapter):
     def is_running(self):
         return self._server is not None
 
-    def _parseArguments(self, arguments):
+    def _parse_arguments(self, arguments):
         parser = ArgumentParser(description='Adapter to expose a device via TCP Stream')
         parser.add_argument('-b', '--bind-address', default='0.0.0.0',
                             help='IP Address to bind and listen for connections on')

@@ -216,8 +216,7 @@ class EpicsAdapter(Adapter):
     def __init__(self, device, arguments=None):
         super(EpicsAdapter, self).__init__(device, arguments)
 
-        if arguments is not None:
-            self._options = self._parseArguments(arguments)
+        self._options = self._parse_arguments(arguments or [])
 
         self._create_properties(self.pvs.values())
 
@@ -282,7 +281,7 @@ class EpicsAdapter(Adapter):
                                      + prop + '\' in device or interface.')
             setattr(type(self), prop, ForwardProperty('_device', prop, instance=self))
 
-    def _parseArguments(self, arguments):
+    def _parse_arguments(self, arguments):
         parser = ArgumentParser(description="Adapter to expose a device via EPICS")
         parser.add_argument('-p', '--prefix', help='Prefix to use for all PVs', default='')
         return parser.parse_args(arguments)
