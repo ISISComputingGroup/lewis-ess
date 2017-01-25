@@ -48,6 +48,15 @@ New features
    that expose lambda-functions, named functions and data attributes (with separate read/write
    patterns). See the updated documentation of :mod:`lewis.adapters.stream`.
 
+ - TCP Stream based devices are now easier to test with telnet due to a new adapter argument.
+   The new ``-t``-flag makes the device interface "telnet compatible":
+   
+   ::
+   
+      $ lewis linkam_t95 -- -t
+   
+   Instead of the native in- and out-terminator of the device, the interface now looks for ``\r\n``.
+
  - The :class:`~lewis.adapters.epics.PV`-class has been extended to allow for meta data updates
    at runtime. A second property can now be specified that returns a dictionary to update the
    PV's meta data such as limits or alarm states.
