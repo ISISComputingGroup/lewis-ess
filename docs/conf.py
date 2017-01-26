@@ -23,7 +23,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'lewis'
-copyright = u'2016, European Spallation Source ERIC'
+copyright = u'2016-2017, European Spallation Source ERIC'
 author = u'Michael Hart, Michael Wedel, Owen Arnold'
 
 version = u'1.0'
