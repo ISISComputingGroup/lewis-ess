@@ -304,13 +304,13 @@ class ModbusProtocol(object):
 
         for request in self._buffered_requests():
             self.log.debug(
-                'Request: %s', str('{:#04x}'.format(c) for c in request.to_bytearray()))
+                'Request: %s', str(['{:#04x}'.format(c) for c in request.to_bytearray()]))
 
             handler = self._get_handler(request.fcode)
             response = handler(request)
 
             self.log.debug(
-                'Request: %s', str('{:#04x}'.format(c) for c in response.to_bytearray()))
+                'Request: %s', str(['{:#04x}'.format(c) for c in response.to_bytearray()]))
 
             self._send(response)
 
@@ -337,7 +337,7 @@ class ModbusProtocol(object):
 
     def _illegal_function_exception(self, request):
         """Log and return an illegal function code exception"""
-        self.log.error("Unsupported Function Code: {0} ({0:#04x})\n".format(request.fcode))
+        self.log.error("Unsupported Function Code: {0} ({0:#04x})".format(request.fcode))
         return request.create_exception(MBEX.ILLEGAL_FUNCTION)
 
     def _handle_read_coils(self, request):
