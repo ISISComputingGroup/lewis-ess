@@ -1,23 +1,11 @@
-Contributing to Lewis
-=====================
+Writing Device Simulators
+=========================
 
-How to contribute
------------------
+The following section describes how to write a new device simulator, what to 
+consider, and how to get the changes upstream.
 
-Contributions to Lewis are always welcome and there are different
-ways of contributing to the framework. Problems, bugs and questions
-should be opened as
-`issues <https://github.com/DMSC-Instrument-Data/lewis/issues>`__,
-this is a very good way of keeping track of how Lewis has developed
-over time and also for others to see if similar issues have been raised
-in the past.
-
-Another way to contribute is by writing a new device simulator. The
-following section describes how to do that, what to consider, and how to
-get the changes upstream.
-
-Writing a new device simulator
-------------------------------
+Getting Lewis Source Code
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Lewis framework provides all the infrastructure to run device
 simulations so that developing a new simulation requires little more
