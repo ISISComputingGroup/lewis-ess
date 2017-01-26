@@ -1,9 +1,9 @@
-:orphan:
-
 Release 1.0.2
 =============
 
-This release is work in progress.
+This version of Lewis was released on January 26th, 2017. A few bugs have been fixed and a lot
+of functionality has been added. The most notable changes are preliminary Modbus protocol support
+and logging capabilities which make debugging easier.
 
 New features
 ------------
