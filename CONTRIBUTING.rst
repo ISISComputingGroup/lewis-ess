@@ -40,7 +40,7 @@ If your Pull Request addresses any open Issues, please reference them with a
 line that reads:
 
     Closes #123.
-    
+
 Or similar, so that GitHub can link the Issue to the Pull Request.
 
 The Pull Request description should detail the purpose of the Pull Request, and
@@ -54,6 +54,7 @@ Submitting Devices
 ------------------
 
 If you have a device you would like to contribute to the main repository, we
-are happy to accept these as a Pull Request as well. Please see the 
-documentation for details on `how to write a device simulator <http://lewis.readthedocs.io/en/latest/developer_guide/writing_devices.html>`__.
+are happy to accept these as a Pull Request as well. Please see the
+documentation for details on 
+`how to write a device simulator <http://lewis.readthedocs.io/en/latest/developer_guide/writing_devices.html>`__.
 
