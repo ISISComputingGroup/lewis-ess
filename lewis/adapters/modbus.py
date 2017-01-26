@@ -43,6 +43,7 @@ from math import ceil
 from argparse import ArgumentParser
 
 from lewis.adapters import Adapter
+from lewis.core.logging import has_log
 
 
 class ModbusDataBank(object):
@@ -254,6 +255,7 @@ class ModbusTCPFrame(object):
         return frame
 
 
+@has_log
 class ModbusProtocol(object):
     """
     This class implements the Modbus TCP Protocol.
@@ -301,8 +303,15 @@ class ModbusProtocol(object):
         self._buffer.extend(bytearray(data))
 
         for request in self._buffered_requests():
+            self.log.debug(
+                'Request: %s', str(['{:#04x}'.format(c) for c in request.to_bytearray()]))
+
             handler = self._get_handler(request.fcode)
             response = handler(request)
+
+            self.log.debug(
+                'Request: %s', str(['{:#04x}'.format(c) for c in response.to_bytearray()]))
+
             self._send(response)
 
     def _buffered_requests(self):
@@ -328,7 +337,7 @@ class ModbusProtocol(object):
 
     def _illegal_function_exception(self, request):
         """Log and return an illegal function code exception"""
-        # TODO: Log this with appropriately high severity
+        self.log.error("Unsupported Function Code: {0} ({0:#04x})".format(request.fcode))
         return request.create_exception(MBEX.ILLEGAL_FUNCTION)
 
     def _handle_read_coils(self, request):
@@ -514,6 +523,7 @@ class ModbusProtocol(object):
         return request.create_response(request.data[:4])
 
 
+@has_log
 class ModbusHandler(asyncore.dispatcher_with_send):
     def __init__(self, sock, adapter, server):
         asyncore.dispatcher_with_send.__init__(self, sock=sock)
@@ -521,15 +531,20 @@ class ModbusHandler(asyncore.dispatcher_with_send):
         self._modbus = ModbusProtocol(self.send, self._datastore)
         self._server = server
 
+        self._set_logging_context(adapter)
+        self.log.info('Client connected from %s:%s', *sock.getpeername())
+
     def handle_read(self):
         data = self.recv(8192)
         self._modbus.process(data)
 
     def handle_close(self):
+        self.log.info('Closing connection to client %s:%s', *self.socket.getpeername())
         self._server.remove_handler(self)
         self.close()
 
 
+@has_log
 class ModbusServer(asyncore.dispatcher):
     def __init__(self, host, port, adapter=None):
         asyncore.dispatcher.__init__(self)
@@ -538,6 +553,10 @@ class ModbusServer(asyncore.dispatcher):
         self.set_reuse_addr()
         self.bind((host, port))
         self.listen(5)
+
+        self._set_logging_context(adapter)
+        self.log.info('Listening on %s:%s', host, port)
+
         self._accepted_connections = []
 
     def handle_accept(self):
@@ -551,6 +570,8 @@ class ModbusServer(asyncore.dispatcher):
         self._accepted_connections.remove(handler)
 
     def handle_close(self):
+        self.log.info('Shutting down server, closing all remaining client connections.')
+
         for handler in self._accepted_connections:
             handler.close()
         self._accepted_connections = []
