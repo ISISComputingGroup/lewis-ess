@@ -22,46 +22,87 @@ from lewis import __version__
 from lewis.core.devices import DeviceRegistry
 from lewis.core.simulation import Simulation
 from lewis.core.exceptions import LewisException
+from lewis.scripts import get_usage_text
 
 import argparse
 import os
 import sys
 
 parser = argparse.ArgumentParser(
-    description='Run a simulated device and expose it via a specified communication protocol.')
+    description='This script starts a simulated device that is exposed via the specified '
+                'communication protocol. Complete documentation of Lewis is available in '
+                'the online documentation: '
+                'https://lewis.readthedocs.io/en/v{}/'.format(__version__),
+    add_help=False, prog='lewis')
 
-parser.add_argument('-r', '--rpc-host', default=None,
-                    help='HOST:PORT format string for exposing the device via '
-                         'JSON-RPC over ZMQ.')
-parser.add_argument('-s', '--setup', default=None,
-                    help='Name of the setup to load.')
-parser.add_argument('-l', '--list-protocols',
-                    help='List available protocols for selected device.', action='store_true')
-parser.add_argument('-i', '--show-interface', action='store_true',
-                    help='Show command interface of device interface.')
-parser.add_argument('-p', '--protocol', default=None,
-                    help='Communication protocol to expose devices.')
-parser.add_argument('-c', '--cycle-delay', type=float, default=0.1,
-                    help='Approximate time to spend in each cycle of the simulation. '
-                         '0 for maximum simulation rate.')
-parser.add_argument('-e', '--speed', type=float, default=1.0,
-                    help='Simulation speed. The actually elapsed time between two cycles is '
-                         'multiplied with this speed to determine the simulated time.')
-parser.add_argument('-k', '--device-package', default='lewis.devices',
-                    help='Name of packages where devices are found.')
-parser.add_argument('-a', '--add-path', default=None,
-                    help='Path where the device package exists. Is added to the path.')
-parser.add_argument('-o', '--output-level', default='info',
-                    choices=['none', 'critical', 'error', 'warning', 'info', 'debug'],
-                    help='Level of detail for logging.')
-parser.add_argument('-v', '--version', action='store_true',
-                    help='Prints the version and exits.')
+positional_args = parser.add_argument_group('Positional arguments')
 
-parser.add_argument('device', nargs='?',
-                    help='Name of the device to simulate, '
-                         'omitting prints list of available devices.')
-parser.add_argument('adapter_args', nargs='*',
-                    help='Arguments for the adapter.')
+positional_args.add_argument(
+    'device', nargs='?',
+    help='Name of the device to simulate, omitting this argument prints out a list '
+         'of available devices.')
+positional_args.add_argument(
+    'adapter_args', nargs='*',
+    help='Arguments for the adapter. Must be separated from the device by a '
+         'double dash. Use lewis device -- -h to display parameter options.')
+
+device_args = parser.add_argument_group(
+    'Device related parameters',
+    'Parameters that influence the selected device, such as setup or protocol.')
+
+device_args.add_argument(
+    '-s', '--setup', default=None,
+    help='Name of the setup to load. If not provided, the default setup is selected. If there'
+         'is no default, a list of setups is printed.')
+device_args.add_argument(
+    '-p', '--protocol', default=None,
+    help='Communication protocol to expose device. Use the --l flag to see which protocols are '
+         'available for the selected device.')
+device_args.add_argument(
+    '-l', '--list-protocols', action='store_true',
+    help='List available protocols for selected device.')
+device_args.add_argument(
+    '-i', '--show-interface', action='store_true',
+    help='Show command interface of device interface.')
+device_args.add_argument(
+    '-k', '--device-package', default='lewis.devices',
+    help='Name of packages where devices are found.')
+device_args.add_argument(
+    '-a', '--add-path', default=None,
+    help='Path where the device package exists. Is added to the path.')
+
+simulation_args = parser.add_argument_group(
+    'Simulation related parameters',
+    'Parameters that influence the simulation itself, such as timing and speed.')
+
+simulation_args.add_argument(
+    '-c', '--cycle-delay', type=float, default=0.1,
+    help='Approximate time to spend in each cycle of the simulation. '
+         '0 for maximum simulation rate.')
+simulation_args.add_argument(
+    '-e', '--speed', type=float, default=1.0,
+    help='Simulation speed. The actually elapsed time between two cycles is '
+         'multiplied with this speed to determine the simulated time.')
+simulation_args.add_argument(
+    '-r', '--rpc-host', default=None,
+    help='HOST:PORT format string for exposing the device and the simulation via '
+         'JSON-RPC over ZMQ. Use lewis-control to access this service from the command line.')
+
+other_args = parser.add_argument_group('Other arguments')
+
+other_args.add_argument(
+    '-o', '--output-level', default='info',
+    choices=['none', 'critical', 'error', 'warning', 'info', 'debug'],
+    help='Level of detail for logging to stderr.')
+other_args.add_argument(
+    '-v', '--version', action='store_true',
+    help='Prints the version and exits.')
+other_args.add_argument(
+    '-h', '--h', action='help',
+    help='Shows this help message and exits.')
+
+__doc__ = 'This script is the main interaction point of the user with Lewis. The usage ' \
+          'is as follows:\n\n.. code-block:: none\n\n{}'.format(get_usage_text(parser, indent=4))
 
 
 def do_run_simulation(argument_list=None):  # noqa: C901

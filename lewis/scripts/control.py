@@ -23,6 +23,7 @@ import ast
 import sys
 
 from lewis.core.control_client import ControlClient
+from lewis.scripts import get_usage_text
 
 
 def list_objects(remote):
@@ -86,18 +87,36 @@ def call_method(remote, object_name, method, arguments):
 
 parser = argparse.ArgumentParser(
     description='A client to manipulate the simulated device remotely through a separate '
-                'channel. The simulation must be started with the --rpc-host option.')
-parser.add_argument('-r', '--rpc-host', default='127.0.0.1:10000',
-                    help='HOST:PORT string specifying control server to connect to.')
-parser.add_argument('-n', '--print-none', action='store_true',
-                    help='Print None return value.')
-parser.add_argument('object', nargs='?', default=None,
-                    help='Object to control. If left out, all objects are listed.')
-parser.add_argument('member', nargs='?', default=None,
-                    help='Object-member to access. If omitted, API of the object is listed.')
-parser.add_argument('arguments', nargs='*',
-                    help='Arguments to method call. For setting a property, '
-                         'supply the property value. ')
+                'channel. For this tool to be of any use, lewis must be invoked with the '
+                '-r/--rpc-host option.',
+    add_help=False, prog='lewis-control')
+
+positional_args = parser.add_argument_group('Positional arguments')
+positional_args.add_argument(
+    'object', nargs='?', default=None,
+    help='Object to control. If left out, all objects are listed.')
+positional_args.add_argument(
+    'member', nargs='?', default=None,
+    help='Object-member to access. If omitted, API of the object is listed.')
+positional_args.add_argument(
+    'arguments', nargs='*',
+    help='Arguments to method call. For setting a property, '
+         'supply the property value. ')
+
+optional_args = parser.add_argument_group('Optional arguments')
+optional_args.add_argument(
+    '-r', '--rpc-host', default='127.0.0.1:10000',
+    help='HOST:PORT string specifying control server to connect to.')
+optional_args.add_argument(
+    '-n', '--print-none', action='store_true',
+    help='By default, no output is generated if the remote function returns None. '
+         'Specifying this flag will force the client to print those None-values.')
+optional_args.add_argument(
+    '-h', '--h', action='help',
+    help='Shows this help message and exits.')
+
+__doc__ = 'To interact with the control server of a running simulation, use this script. ' \
+          'Usage:\n\n.. code-block:: none\n\n{}'.format(get_usage_text(parser, indent=4))
 
 
 def control_simulation(argument_list=None):
