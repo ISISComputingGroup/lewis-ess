@@ -10,10 +10,13 @@ Reporting Issues
 ----------------
 
 If you run into any issues or bugs while using Lewis, you can help us improve
-Lewis by opening an Issue here on GitHub. Please be sure to include enough 
-information to reproduce the issue.
+Lewis by
+`opening an Issue <https://github.com/DMSC-Instrument-Data/lewis/issues/new>`__
+here on GitHub. Please be sure to include enough information to reproduce the
+issue.
 
-If you've already created a fix, you can also directly submit a Pull Request.
+If you've already created a fix, you can also directly
+`submit a Pull Request <#submitting-pull-request>`__.
 
 
 Requesting Features
@@ -52,5 +55,5 @@ Submitting Devices
 
 If you have a device you would like to contribute to the main repository, we
 are happy to accept these as a Pull Request as well. Please see the 
-documentation for details on how to write a device simulator.
+documentation for details on `how to write a device simulator <http://lewis.readthedocs.io/en/latest/developer_guide/writing_devices.html/>`__.
 
