@@ -11,7 +11,7 @@ device from start to finish.
     :maxdepth: 2
 
     framework_details
-    contributing
+    writing_devices
 
 .. seealso::
 
