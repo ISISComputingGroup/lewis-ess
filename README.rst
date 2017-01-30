@@ -39,7 +39,7 @@ conditions.
 
 The purpose of Lewis is to provide a common framework to facilitate
 the development of such simulators. The framework provides a common set
-of tools and abstracts away protocol adapters, which helps minimize code
+of tools, including communication protocol services, which helps minimize code
 replication and allows the developer of a simulated device to focus on
 capturing device behaviour.
 
@@ -69,7 +69,7 @@ Lewis. The ``Device`` is model for the device behaviour and internal
 memory. A ``Device`` can be represented using a ``StateMachine``, but it
 does not have to be. A ``Device`` does not include anything specific to
 the communication protocol with the ``Device``. An ``Interface``
-provides a protocol binding to a ``Device``. The ``Device`` and
+provides a protocol binding to a ``Device``, such as TCP stream or EPICS. The ``Device`` and
 ``Interface`` are created as part of a ``Simulation`` that provides a
 "heart beat" and other environmental aspects.
 
