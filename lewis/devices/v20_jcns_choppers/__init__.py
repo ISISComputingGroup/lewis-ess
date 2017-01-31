@@ -140,7 +140,7 @@ class JCNSChopperEpicsInterface(object):
 
     @property
     def direction(self):
-        return self._get_device_state('RODI')
+        return 0 if self._get_device_state('RODI') == 'CLOCK' else 1
 
     @property
     def speed(self):
