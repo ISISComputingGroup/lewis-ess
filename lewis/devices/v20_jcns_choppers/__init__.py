@@ -18,7 +18,6 @@
 # *********************************************************************
 
 from lewis.core.utils import check_limits
-from lewis.core.logging import has_log
 from lewis.devices.socket_device import SocketDevice
 from lewis.adapters.epics import EpicsAdapter, PV
 from lewis.adapters import ForwardProperty
@@ -64,22 +63,24 @@ class JCNSChopperCascade(SocketDevice):
     in_terminator = '\r\n'
     out_terminator = '\r\n'
 
-    def _initialize_data(self):
-        pass
-
     @property
     def _asta(self):
         return ''
 
     @_asta.setter
     def _asta(self, new_asta):
-        elements = new_asta.strip().split(';')[2:]
+        try:
+            elements = new_asta.strip().split(';')[2:]
 
-        for i, name in enumerate(self.state.keys()):
-            start_idx = i * (len(self.fields) + 1) + 1
-            end_idx = start_idx + len(self.fields)
-            self.state[name] = {field[0]: field[1](val) for field, val in
-                                zip(self.fields, elements[start_idx:end_idx])}
+            for i, name in enumerate(self.state.keys()):
+                start_idx = i * (len(self.fields) + 1) + 1
+                end_idx = start_idx + len(self.fields)
+                self.state[name] = {field[0]: field[1](val) for field, val in
+                                    zip(self.fields, elements[start_idx:end_idx])}
+        except Exception:
+            self.log.critical("ASTA Failure. Disconnecting. Last ASTA string: %s" % new_asta)
+            self.sock.close()
+            self.sock = None
 
 
 class JCNSChopperEpicsInterface(object):
