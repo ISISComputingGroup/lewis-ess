@@ -29,6 +29,14 @@ def ok_nok(str_val):
     return 0 if str_val.upper() == 'OK' else 1
 
 
+class zero_if_match(object):
+    def __init__(self, matches):
+        self.matches = matches
+
+    def __call__(self, str_val):
+        return 0 if str_val.upper() == self.matches else 1
+
+
 class JCNSChopperCascade(SocketDevice):
     poll_map = {
         '_asta': ('C01?;ASTA?', str),
@@ -43,9 +51,12 @@ class JCNSChopperCascade(SocketDevice):
 
     fields = [('RSPE', float), ('SSPE', float), ('FACT', int), ('SPEE', float), ('SPHA', float),
               ('PHAS', float), ('PHOK', ok_nok), ('MBON', str), ('MBOK', ok_nok),
-              ('MBIN', float), ('DRON', str), ('SDRI', str), ('DRL1', float), ('DRL2', float),
-              ('DRL3', float), ('RODI', str), ('PPOS', ok_nok), ('DRIT', float), ('INCL', float),
-              ('SYCL', float), ('OUPH', float), ('MACH', str), ('LOON', str), ('LMSR', ok_nok),
+              ('MBIN', float), ('DRON', zero_if_match('ON')), ('SDRI', zero_if_match('START')),
+              ('DRL1', float), ('DRL2', float),
+              ('DRL3', float), ('RODI', zero_if_match('CLOCK')), ('PPOS', ok_nok), ('DRIT', float),
+              ('INCL', float),
+              ('SYCL', float), ('OUPH', float), ('MACH', str), ('LOON', str),
+              ('LMSR', zero_if_match('OK')),
               ('DSPM', ok_nok), ('EROK', ok_nok), ('VAOK', ok_nok), ('SMOK', ok_nok),
               ('MBAT', ok_nok), ('MBAC', ok_nok), ('DRAT', ok_nok), ('DRAC', ok_nok),
               ('PSOK', ok_nok)]
@@ -82,7 +93,9 @@ class JCNSChopperEpicsInterface(object):
         ('Direction', PV('direction', type='enum', enums=['CLOCK', 'ANTICLOCK'], read_only=True)),
         ('Speed', PV('speed', read_only=True)),
         ('Speed-SP', PV('speed_setpoint', read_only=True)),
-        ('Status', PV('status', type='int', read_only=True))
+        ('Status', PV('status', type='int', read_only=True)),
+        ('MotionStage',
+         PV('motion_stage_status', type='enum', enums=['RELEASED', 'LOCKED'], read_only=True))
     ])
 
     def _get_device_state(self, key):
@@ -108,7 +121,7 @@ class JCNSChopperEpicsInterface(object):
 
     @property
     def drive(self):
-        return 0 if self._get_device_state('SDRI') == 'START' else 1
+        return self._get_device_state('SDRI')
 
     @drive.setter
     def drive(self, new_state):
@@ -119,7 +132,7 @@ class JCNSChopperEpicsInterface(object):
 
     @property
     def drive_power(self):
-        return 0 if self._get_device_state('DRON') == 'ON' else 1
+        return self._get_device_state('DRON')
 
     @property
     def phase(self):
@@ -141,7 +154,7 @@ class JCNSChopperEpicsInterface(object):
 
     @property
     def direction(self):
-        return 0 if self._get_device_state('RODI') == 'CLOCK' else 1
+        return self._get_device_state('RODI')
 
     @property
     def speed(self):
@@ -159,6 +172,10 @@ class JCNSChopperEpicsInterface(object):
                 ret = (ret << 1) | (self._get_device_state(field[0]) or 0)
 
         return ret
+
+    @property
+    def motion_stage_status(self):
+        return self._get_device_state('LMSR')
 
 
 class JCNSChopperCascadeEpicsInterface(EpicsAdapter):
