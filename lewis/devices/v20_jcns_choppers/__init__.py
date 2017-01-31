@@ -102,7 +102,7 @@ class JCNSChopperEpicsInterface(object):
     @factor.setter
     @check_limits(1, 5)
     def factor(self, new_factor):
-        self._device.write('%s!;FACT!;%.2f' % (self.pv_prefix, new_factor))
+        self._device.write('%s!;FACT!;%d' % (self.pv_prefix, new_factor))
         self._set_device_state('FACT', new_factor)
 
     @property
