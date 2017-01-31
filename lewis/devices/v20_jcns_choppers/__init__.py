@@ -84,6 +84,9 @@ class JCNSChopperEpicsInterface(object):
         ('Status', PV('status', type='int', read_only=True))
     ])
 
+    def _get_device_state(self, key):
+        return self._device.state[self.pv_prefix].get(key)
+
     pv_prefix = None
 
     def __init__(self, device):
@@ -91,7 +94,7 @@ class JCNSChopperEpicsInterface(object):
 
     @property
     def factor(self):
-        return self._device.state[self.pv_prefix]['FACT']
+        return self._get_device_state('FACT')
 
     @factor.setter
     @check_limits(1, 5)
@@ -100,7 +103,7 @@ class JCNSChopperEpicsInterface(object):
 
     @property
     def drive(self):
-        return self._device.state[self.pv_prefix]['SDRI']
+        return self._get_device_state('SDRI')
 
     @drive.setter
     def drive(self, new_state):
@@ -109,15 +112,15 @@ class JCNSChopperEpicsInterface(object):
 
     @property
     def drive_power(self):
-        return self._device.state[self.pv_prefix]['DRON']
+        return self._get_device_state('DRON')
 
     @property
     def phase(self):
-        return self._device.state[self.pv_prefix]['PHAS']
+        return self._get_device_state('PHAS')
 
     @property
     def phase_setpoint(self):
-        return self._device.state[self.pv_prefix]['SPHA']
+        return self._get_device_state('SPHA')
 
     @phase_setpoint.setter
     @check_limits(0, 360)
@@ -126,19 +129,19 @@ class JCNSChopperEpicsInterface(object):
 
     @property
     def drive_temperature(self):
-        return self._device.state[self.pv_prefix]['DRIT']
+        return self._get_device_state('DRIT')
 
     @property
     def direction(self):
-        return self._device.state[self.pv_prefix]['RODI']
+        return self._get_device_state('RODI')
 
     @property
     def speed(self):
-        return self._device.state[self.pv_prefix]['SPEE']
+        return self._get_device_state('SPEE')
 
     @property
     def speed_setpoint(self):
-        return self._device.state[self.pv_prefix]['SSPE']
+        return self._get_device_state('SSPE')
 
     @property
     def status(self):
