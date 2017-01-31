@@ -128,7 +128,7 @@ class JCNSChopperEpicsInterface(object):
         new_state_cmd = 'START' if new_state == 0 else 'STOP'
         self._device.write(
             '%s!;DRIV!;%s' % (self.pv_prefix, new_state_cmd))
-        self._set_device_state('SDRI', new_state_cmd)
+        self._set_device_state('SDRI', new_state)
 
     @property
     def drive_power(self):
