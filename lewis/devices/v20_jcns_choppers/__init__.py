@@ -61,7 +61,7 @@ class JCNSChopperCascade(SocketDevice):
 
     @_asta.setter
     def _asta(self, new_asta):
-        elements = new_asta.trim().split(';')[2:]
+        elements = new_asta.strip().split(';')[2:]
 
         for i, name in enumerate(self.state.keys()):
             start_idx = i * (len(self.fields) + 1) + 1
