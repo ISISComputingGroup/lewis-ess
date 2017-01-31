@@ -107,7 +107,7 @@ class JCNSChopperEpicsInterface(object):
 
     @property
     def drive(self):
-        return self._get_device_state('SDRI')
+        return 0 if self._get_device_state('SDRI') == 'START' else 1
 
     @drive.setter
     def drive(self, new_state):
@@ -118,7 +118,7 @@ class JCNSChopperEpicsInterface(object):
 
     @property
     def drive_power(self):
-        return self._get_device_state('DRON')
+        return 0 if self._get_device_state('DRON') == 'ON' else 1
 
     @property
     def phase(self):
