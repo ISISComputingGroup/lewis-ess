@@ -148,7 +148,7 @@ class JCNSChopperEpicsInterface(object):
         ret = 0
         for field in self._device.fields:
             if field[1] == ok_nok:
-                ret = (ret << 1) | self._device.state[self.pv_prefix][field]
+                ret = (ret << 1) | (self._get_device_state(field) or 0)
 
         return ret
 
