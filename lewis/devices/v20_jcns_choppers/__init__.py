@@ -87,6 +87,9 @@ class JCNSChopperEpicsInterface(object):
     def _get_device_state(self, key):
         return self._device.state[self.pv_prefix].get(key)
 
+    def _set_device_state(self, key, value):
+        self._device.state[self.pv_prefix][key] = value
+
     pv_prefix = None
 
     def __init__(self, device):
@@ -100,6 +103,7 @@ class JCNSChopperEpicsInterface(object):
     @check_limits(1, 5)
     def factor(self, new_factor):
         self._device.write('%s!;FACT!;%.2f' % (self.pv_prefix, new_factor))
+        self._set_device_state('FACT', new_factor)
 
     @property
     def drive(self):
@@ -107,8 +111,10 @@ class JCNSChopperEpicsInterface(object):
 
     @drive.setter
     def drive(self, new_state):
+        new_state_cmd = 'START' if new_state == 0 else 'STOP'
         self._device.write(
-            '%s!;DRIV!;%s' % (self.pv_prefix, 'START' if new_state == 0 else 'STOP'))
+            '%s!;DRIV!;%s' % (self.pv_prefix, new_state_cmd))
+        self._set_device_state('SDRI', new_state_cmd)
 
     @property
     def drive_power(self):
@@ -126,6 +132,7 @@ class JCNSChopperEpicsInterface(object):
     @check_limits(0, 360)
     def phase_setpoint(self, new_setpoint):
         self._device.write('%s!;PHAS!;%.2f' % (self.pv_prefix, new_setpoint))
+        self._set_device_state('SPHA', new_setpoint)
 
     @property
     def drive_temperature(self):
