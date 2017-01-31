@@ -51,8 +51,14 @@ class ConnectedState(State):
     def _req_rep(self, request):
         try:
             if self._context.sock is not None:
+                self.log.info('Sending request: %r', request)
+
                 self._context.sock.sendall(request + self._context.out_terminator)
-                return self._context.sock.recv(1024)
+                reply = self._context.sock.recv(1024)
+
+                self.log.info('Got reply: %r', reply)
+
+                return reply
         except socket.timeout:
             pass
         except socket.error:
@@ -71,6 +77,8 @@ class ConnectedState(State):
 
     def in_state(self, dt):
         if self._context._write_queue:
+            self.log.info('Processing write queue.')
+
             while self._context._write_queue:
                 self._req_rep(self._context._write_queue.pop())
 
