@@ -18,6 +18,7 @@
 # *********************************************************************
 
 from lewis.core.utils import check_limits
+from lewis.core.logging import has_log
 from lewis.devices.socket_device import SocketDevice
 from lewis.adapters.epics import EpicsAdapter, PV
 from lewis.adapters import ForwardProperty
@@ -155,7 +156,7 @@ class JCNSChopperEpicsInterface(object):
         ret = 0
         for field in self._device.fields:
             if field[1] == ok_nok:
-                ret = (ret << 1) | (self._get_device_state(field) or 0)
+                ret = (ret << 1) | (self._get_device_state(field[0]) or 0)
 
         return ret
 
