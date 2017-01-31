@@ -125,7 +125,7 @@ class JCNSChopperEpicsInterface(object):
     @phase_setpoint.setter
     @check_limits(0, 360)
     def phase_setpoint(self, new_setpoint):
-        self._device.write('%s!;SPHA!;%.2f' % (self.pv_prefix, new_setpoint))
+        self._device.write('%s!;PHAS!;%.2f' % (self.pv_prefix, new_setpoint))
 
     @property
     def drive_temperature(self):
