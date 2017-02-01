@@ -28,12 +28,12 @@ def ok_nok(str_val):
     return 0 if str_val.upper() == 'OK' else 1
 
 
-class zero_if_match(object):
+class one_if_match(object):
     def __init__(self, matches):
         self.matches = matches
 
     def __call__(self, str_val):
-        return 0 if str_val.upper() == self.matches else 1
+        return 1 if str_val.upper() == self.matches else 0
 
 
 class JCNSChopperCascade(SocketDevice):
@@ -49,16 +49,13 @@ class JCNSChopperCascade(SocketDevice):
     }
 
     fields = [('RSPE', float), ('SSPE', float), ('FACT', int), ('SPEE', float), ('SPHA', float),
-              ('PHAS', float), ('PHOK', ok_nok), ('MBON', str), ('MBOK', ok_nok),
-              ('MBIN', float), ('DRON', zero_if_match('ON')), ('SDRI', zero_if_match('START')),
-              ('DRL1', float), ('DRL2', float),
-              ('DRL3', float), ('RODI', zero_if_match('CLOCK')), ('PPOS', ok_nok), ('DRIT', float),
-              ('INCL', float),
-              ('SYCL', float), ('OUPH', float), ('MACH', str), ('LOON', str),
-              ('LMSR', zero_if_match('OK')),
-              ('DSPM', ok_nok), ('EROK', ok_nok), ('VAOK', ok_nok), ('SMOK', ok_nok),
-              ('MBAT', ok_nok), ('MBAC', ok_nok), ('DRAT', ok_nok), ('DRAC', ok_nok),
-              ('PSOK', ok_nok)]
+              ('PHAS', float), ('PHOK', ok_nok), ('MBON', str), ('MBOK', ok_nok), ('MBIN', float),
+              ('DRON', one_if_match('ON')), ('SDRI', one_if_match('START')), ('DRL1', float),
+              ('DRL2', float), ('DRL3', float), ('RODI', one_if_match('CLOCK')), ('PPOS', ok_nok),
+              ('DRIT', float), ('INCL', float), ('SYCL', float), ('OUPH', float), ('MACH', str),
+              ('LOON', str), ('LMSR', one_if_match('OK')), ('DSPM', ok_nok), ('EROK', ok_nok),
+              ('VAOK', ok_nok), ('SMOK', ok_nok), ('MBAT', ok_nok), ('MBAC', ok_nok),
+              ('DRAT', ok_nok), ('DRAC', ok_nok), ('PSOK', ok_nok)]
 
     in_terminator = '\r\n'
     out_terminator = '\r\n'
@@ -86,17 +83,17 @@ class JCNSChopperCascade(SocketDevice):
 class JCNSChopperEpicsInterface(object):
     pvs = OrderedDict([
         ('Factor', PV('factor', type='int', lolim=1, hilim=5)),
-        ('Drive', PV('drive', type='enum', enums=['START', 'STOP'])),
-        ('DrivePower', PV('drive_power', type='enum', enums=['ON', 'OFF'], read_only=True)),
+        ('Drive', PV('drive', type='enum', enums=['STOP', 'START'])),
+        ('DrivePower', PV('drive_power', type='enum', enums=['OFF', 'ON'], read_only=True)),
         ('DriveTemp', PV('drive_temperature', read_only=True)),
         ('Phase', PV('phase', read_only=True)),
         ('Phase-SP', PV('phase_setpoint', lolim=0.0, hilim=359.99)),
-        ('Direction', PV('direction', type='enum', enums=['CLOCK', 'ANTICLOCK'], read_only=True)),
+        ('Direction', PV('direction', type='enum', enums=['ANTICLOCK', 'CLOCK'], read_only=True)),
         ('Speed', PV('speed', read_only=True)),
         ('Speed-SP', PV('speed_setpoint', read_only=True)),
         ('Status', PV('status', type='int', read_only=True)),
         ('MotionStage',
-         PV('motion_stage_status', type='enum', enums=['RELEASED', 'LOCKED'], read_only=True))
+         PV('motion_stage_status', type='enum', enums=['LOCKED', 'RELEASED'], read_only=True))
     ])
 
     def _get_device_state(self, key):
@@ -126,7 +123,7 @@ class JCNSChopperEpicsInterface(object):
 
     @drive.setter
     def drive(self, new_state):
-        new_state_cmd = 'START' if new_state == 0 else 'STOP'
+        new_state_cmd = 'START' if new_state == 1 else 'STOP'
         self._device.write(
             '%s!;DRIV!;%s' % (self.pv_prefix, new_state_cmd))
         self._set_device_state('SDRI', new_state)
