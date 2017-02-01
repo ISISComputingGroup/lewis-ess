@@ -208,7 +208,7 @@ setups = dict(
         parameters=dict(
             override_initial_data=dict(
                 connection_string='',
-                retry_wait=10.0, max_retries=5, poll_interval=2.0, timeout=0.5,
+                retry_wait=10.0, max_retries=5, poll_interval=1.0, timeout=0.5,
             ),
         )
     )
