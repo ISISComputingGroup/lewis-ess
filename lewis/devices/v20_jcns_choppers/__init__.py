@@ -85,12 +85,12 @@ class JCNSChopperCascade(SocketDevice):
 
 class JCNSChopperEpicsInterface(object):
     pvs = OrderedDict([
-        ('Factor', PV('factor', type='int')),
+        ('Factor', PV('factor', type='int', lolim=1, hilim=5)),
         ('Drive', PV('drive', type='enum', enums=['START', 'STOP'])),
         ('DrivePower', PV('drive_power', type='enum', enums=['ON', 'OFF'], read_only=True)),
         ('DriveTemp', PV('drive_temperature', read_only=True)),
         ('Phase', PV('phase', read_only=True)),
-        ('Phase-SP', PV('phase_setpoint')),
+        ('Phase-SP', PV('phase_setpoint', lolim=0.0, hilim=359.99)),
         ('Direction', PV('direction', type='enum', enums=['CLOCK', 'ANTICLOCK'], read_only=True)),
         ('Speed', PV('speed', read_only=True)),
         ('Speed-SP', PV('speed_setpoint', read_only=True)),
