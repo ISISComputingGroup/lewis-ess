@@ -23,12 +23,37 @@ from mock import Mock, patch, call
 
 from lewis.core.control_client import ObjectProxy, ControlClient, \
     ProtocolException, RemoteException
+import zmq
 
 
 class TestControlClient(unittest.TestCase):
+    @patch('zmq.Context')
+    def test_zmq_socket_uses_timeout(self, mock_zmq_context):
+        timeout = 100
+        ControlClient(host='127.0.0.1', port='10002', timeout=timeout)
+
+        mock_zmq_context.assert_has_calls(
+            [call().setsockopt(zmq.SNDTIMEO, timeout), call().setsockopt(zmq.RCVTIMEO, timeout)])
+
     @patch('uuid.uuid4')
     @patch('lewis.core.control_client.ControlClient._get_zmq_req_socket')
-    def testjson_rpc(self, mock_socket, mock_uuid):
+    def test_json_rpc_timeout_raises(self, mock_socket, mock_uuid):
+        def zmq_again(self):
+            raise zmq.error.Again()
+
+        raising_send = Mock(side_effect=zmq_again)
+        mock_uuid.return_value = '2'
+
+        connection = ControlClient(host='127.0.0.1', port='10001')
+        connection._socket.send_json = raising_send
+        self.assertRaises(ProtocolException, connection.json_rpc, 'foo')
+
+        raising_send.assert_called_once_with(
+            {'method': 'foo', 'params': (), 'jsonrpc': '2.0', 'id': '2'})
+
+    @patch('uuid.uuid4')
+    @patch('lewis.core.control_client.ControlClient._get_zmq_req_socket')
+    def test_json_rpc(self, mock_socket, mock_uuid):
         mock_uuid.return_value = '2'
 
         connection = ControlClient(host='127.0.0.1', port='10001')
