@@ -37,17 +37,11 @@ def show_api(remote, object_name):
             'Object \'{}\' is not exposed by remote.'.format(object_name))
 
     obj = remote[object_name]
-
-    properties = list(obj._properties)
-    methods = []
-
-    for member_name in dir(obj):
-        if member_name[0] not in ('_', ':') and member_name not in dir(type(obj)):
-            methods.append(member_name)
-
     print('Type: {}'.format(type(obj).__name__))
 
     print('Properties (current values):')
+
+    properties = list(obj._properties)
     maxlen = len(max(properties, key=len))
     for prop in sorted(properties):
         try:
@@ -60,8 +54,12 @@ def show_api(remote, object_name):
         print('    {}    ({})'.format(prop.ljust(maxlen), current_value))
 
     print('Methods:')
-    for method in sorted(methods):
-        print('    {}'.format(method))
+    print('\n'.join(
+        sorted('    {}'.format(member) for member in dir(obj) if is_remote_method(obj, member))))
+
+
+def is_remote_method(obj, member):
+    return member[0] not in ('_', ':') and member not in dir(type(obj))
 
 
 def convert_type(value):
