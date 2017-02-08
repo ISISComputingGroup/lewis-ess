@@ -98,17 +98,13 @@ class ExposedObject(object):
 
         :param member: The member of the wrapped object to expose
         """
-        method_object = getattr(self._object, member)
+
+        method_object = getattr(type(self._object), member, None) or getattr(self._object, member)
 
         if callable(method_object):
-            self._add_function(member, method_object)
+            self._add_function(member, getattr(self._object, member))
         else:
-            self._add_function('{}:get'.format(member), lambda: getattr(self._object, member))
-
-            def setter(arg):
-                return setattr(self._object, member, arg)
-
-            self._add_function('{}:set'.format(member), setter)
+            self._add_property(member)
 
     def get_api(self):
         """
@@ -131,11 +127,18 @@ class ExposedObject(object):
     def __contains__(self, item):
         return item in self._function_map
 
+    def _add_property(self, name):
+        self._add_function('{}:get'.format(name), lambda: getattr(self._object, name))
+        self._add_function('{}:set'.format(name), lambda value: setattr(self._object, name, value))
+
     def _add_function(self, name, function):
         if not callable(function):
             raise TypeError('Only callable objects can be exposed.')
 
         self._function_map[name] = function
+
+    def _remove_function(self, name):
+        del self._function_map[name]
 
 
 class ExposedObjectCollection(ExposedObject):
@@ -190,6 +193,22 @@ class ExposedObjectCollection(ExposedObject):
         for method_name in exposed_object:
             glue = '.' if not method_name.startswith(':') else ''
             self._add_function(name + glue + method_name, exposed_object[method_name])
+
+    def remove_object(self, name):
+        """
+        Remove the object exposed under that name. If no object is registered under the supplied
+        name, a RuntimeError is raised.
+
+        :param name: Name of object to be removed.
+        """
+        if name not in self._object_map:
+            raise RuntimeError('No object with name {} is registered.'.format(name))
+
+        for fn_name in list(self._function_map.keys()):
+            if fn_name.startswith(name + '.') or fn_name.startswith(name + ':'):
+                self._remove_function(fn_name)
+
+        del self._object_map[name]
 
     def get_objects(self):
         """Returns the names of the exposed objects."""

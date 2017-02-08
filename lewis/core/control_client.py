@@ -26,7 +26,7 @@ This module provides client code for objects exposed via JSON-RPC over ZMQ.
     in the module :mod:`~lewis.core.control_server`.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import zmq
 import uuid
@@ -73,16 +73,29 @@ class ControlClient(object):
     of objects at the top level, a dictionary of named objects can be
     obtained via get_object_collection.
 
-    :param host: Host the control server is running on
-    :param port: Port on which the control server is listening
+    If a timeout is supplied, all underlying network operations time out
+    after the specified time (in milliseconds), for no timeout specify ``None``.
+
+    :param host: Host the control server is running on.
+    :param port: Port on which the control server is listening.
+    :param timeout: Timeout in milliseconds for ZMQ operations.
     """
 
-    def __init__(self, host='127.0.0.1', port='10000'):
+    def __init__(self, host='127.0.0.1', port='10000', timeout=3000):
+        self.timeout = timeout if timeout is not None else -1
+
         self._socket = self._get_zmq_req_socket()
-        self._socket.connect('tcp://{0}:{1}'.format(host, port))
+
+        self._connection_string = 'tcp://{0}:{1}'.format(host, port)
+        self._socket.connect(self._connection_string)
 
     def _get_zmq_req_socket(self):
         context = zmq.Context()
+        context.setsockopt(zmq.REQ_CORRELATE, 1)
+        context.setsockopt(zmq.REQ_RELAXED, 1)
+        context.setsockopt(zmq.SNDTIMEO, self.timeout)
+        context.setsockopt(zmq.RCVTIMEO, self.timeout)
+        context.setsockopt(zmq.LINGER, 0)
         return context.socket(zmq.REQ)
 
     def json_rpc(self, method, *args):
@@ -98,14 +111,20 @@ class ControlClient(object):
         :return: JSON result and request id.
         """
         request_id = str(uuid.uuid4())
-        self._socket.send_json(
-            {'method': method,
-             'params': args,
-             'jsonrpc': '2.0',
-             'id': request_id
-             })
 
-        return self._socket.recv_json(), request_id
+        try:
+            self._socket.send_json(
+                {'method': method,
+                 'params': args,
+                 'jsonrpc': '2.0',
+                 'id': request_id
+                 })
+
+            return self._socket.recv_json(), request_id
+        except zmq.error.Again:
+            raise ProtocolException(
+                'The ZMQ connection to {} timed out after {:.2f}s.'.format(
+                    self._connection_string, self.timeout / 1000))
 
     def get_object(self, object_name=''):
         api, request_id = self.json_rpc(object_name + ':api')

@@ -22,7 +22,7 @@ import argparse
 import ast
 import sys
 
-from lewis.core.control_client import ControlClient
+from lewis.core.control_client import ControlClient, ProtocolException
 from lewis.scripts import get_usage_text
 
 
@@ -37,29 +37,29 @@ def show_api(remote, object_name):
             'Object \'{}\' is not exposed by remote.'.format(object_name))
 
     obj = remote[object_name]
-
-    properties = list(obj._properties)
-    methods = []
-
-    for member_name in dir(obj):
-        if member_name[0] not in ('_', ':') and member_name not in dir(type(obj)):
-            methods.append(member_name)
-
     print('Type: {}'.format(type(obj).__name__))
 
     print('Properties (current values):')
+
+    properties = list(obj._properties)
     maxlen = len(max(properties, key=len))
     for prop in sorted(properties):
         try:
             current_value = getattr(obj, prop)
+        except ProtocolException:
+            raise
         except Exception as e:
             current_value = 'Not accessible: {}'.format(e)
 
         print('    {}    ({})'.format(prop.ljust(maxlen), current_value))
 
     print('Methods:')
-    for method in sorted(methods):
-        print('    {}'.format(method))
+    print('\n'.join(
+        sorted('    {}'.format(member) for member in dir(obj) if is_remote_method(obj, member))))
+
+
+def is_remote_method(obj, member):
+    return member[0] not in ('_', ':') and member not in dir(type(obj))
 
 
 def convert_type(value):
@@ -108,6 +108,10 @@ optional_args.add_argument(
     '-r', '--rpc-host', default='127.0.0.1:10000',
     help='HOST:PORT string specifying control server to connect to.')
 optional_args.add_argument(
+    '-t', '--timeout', default=3000, type=int,
+    help='Timeout after which the control client exits. Must be at least as long as '
+         'one simulation cycle.')
+optional_args.add_argument(
     '-n', '--print-none', action='store_true',
     help='By default, no output is generated if the remote function returns None. '
          'Specifying this flag will force the client to print those None-values.')
@@ -122,15 +126,19 @@ __doc__ = 'To interact with the control server of a running simulation, use this
 def control_simulation(argument_list=None):
     args = parser.parse_args(argument_list or sys.argv[1:])
 
-    remote = ControlClient(*args.rpc_host.split(':')).get_object_collection()
+    try:
+        remote = ControlClient(*args.rpc_host.split(':'),
+                               timeout=args.timeout).get_object_collection()
 
-    if not args.object:
-        list_objects(remote)
-    else:
-        if not args.member:
-            show_api(remote, args.object)
+        if not args.object:
+            list_objects(remote)
         else:
-            response = call_method(remote, args.object, args.member, args.arguments)
+            if not args.member:
+                show_api(remote, args.object)
+            else:
+                response = call_method(remote, args.object, args.member, args.arguments)
 
-            if response is not None or args.print_none:
-                print(response)
+                if response is not None or args.print_none:
+                    print(response)
+    except ProtocolException as e:
+        print('\n'.join(('An error occurred:', str(e))))
