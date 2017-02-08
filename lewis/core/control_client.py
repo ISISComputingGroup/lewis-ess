@@ -74,15 +74,14 @@ class ControlClient(object):
     obtained via get_object_collection.
 
     If a timeout is supplied, all underlying network operations time out
-    after the specified time (in milliseconds). The default is 1000 ms,
-    for no timeout specify ``None``.
+    after the specified time (in milliseconds), for no timeout specify ``None``.
 
     :param host: Host the control server is running on.
     :param port: Port on which the control server is listening.
     :param timeout: Timeout in milliseconds for ZMQ operations.
     """
 
-    def __init__(self, host='127.0.0.1', port='10000', timeout=1000):
+    def __init__(self, host='127.0.0.1', port='10000', timeout=3000):
         self.timeout = timeout if timeout is not None else -1
 
         self._socket = self._get_zmq_req_socket()

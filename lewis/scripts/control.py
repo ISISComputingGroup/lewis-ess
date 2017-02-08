@@ -52,6 +52,8 @@ def show_api(remote, object_name):
     for prop in sorted(properties):
         try:
             current_value = getattr(obj, prop)
+        except ProtocolException:
+            raise
         except Exception as e:
             current_value = 'Not accessible: {}'.format(e)
 
@@ -108,7 +110,7 @@ optional_args.add_argument(
     '-r', '--rpc-host', default='127.0.0.1:10000',
     help='HOST:PORT string specifying control server to connect to.')
 optional_args.add_argument(
-    '-t', '--timeout', default='1000', type=int,
+    '-t', '--timeout', default=3000, type=int,
     help='Timeout after which the control client exits. Must be at least as long as '
          'one simulation cycle.')
 optional_args.add_argument(
@@ -141,4 +143,4 @@ def control_simulation(argument_list=None):
                 if response is not None or args.print_none:
                     print(response)
     except ProtocolException as e:
-        print('\n'.join(('An error occured:', str(e))))
+        print('\n'.join(('An error occurred:', str(e))))
