@@ -30,6 +30,62 @@ from lewis.core.control_server import ControlServer, ExposedObject
 from lewis.core.logging import has_log
 
 
+class AdapterContainer(object):
+    def __init__(self, adapters=None):
+        self._adapters = {}
+
+        if adapters:
+            for adapter in adapters:
+                self.add_adapter(adapter)
+
+    def add_adapter(self, adapter):
+        if adapter.protocol in self._adapters:
+            raise RuntimeError('Adapter for protocol \'{}\' is already registered.'.format(adapter))
+
+        self._adapters[adapter.protocol] = adapter
+
+    def remove_adapter(self, protocol):
+        if protocol not in self._adapters:
+            raise RuntimeError(
+                'Can not remove adapter for protocol \'{}\', none registered.'.format(protocol))
+
+        del self._adapters[protocol]
+
+    def handle(self, cycle_delay):
+        for adapter in self._adapters.values():
+            if adapter.is_running:
+                adapter.handle(cycle_delay)
+            else:
+                sleep(self._cycle_delay)
+
+    @property
+    def protocols(self):
+        return list(self._adapters.keys())
+
+    def connect(self, protocol=None):
+        for adapter in self._get_adapters(protocol):
+            adapter.start_server()
+
+    def disconnect(self, protocol=None):
+        for adapter in self._get_adapters(protocol):
+            adapter.stop_server()
+
+    def connected(self, protocol=None):
+        return all(adapter.is_running for adapter in self._get_adapters(protocol))
+
+    def documentation(self, protocol=None):
+        return '\n\n'.join(adapter.documentation for adapter in self._get_adapters(protocol))
+
+    def _get_adapters(self, protocol):
+        if protocol is not None and protocol not in self._adapters:
+            raise RuntimeError(
+                'No adapter registered for protocol \'{}\''.format(protocol))
+
+        protocols = [protocol] if protocol is not None else self.protocols
+
+        return [self._adapters[proto] for proto in protocols]
+
+
 @has_log
 class Simulation(object):
     """
@@ -81,7 +137,7 @@ class Simulation(object):
         super(Simulation, self).__init__()
 
         self._device = device
-        self._adapter = adapter
+        self._adapters = AdapterContainer((adapter,))
 
         self._speed = 1.0  # Multiplier for delta t
         self._cycle_delay = 0.1  # Target time between cycles
@@ -105,7 +161,9 @@ class Simulation(object):
 
         return ControlServer(
             {'device': self._device,
-             'simulation': ExposedObject(self, exclude=('start', 'control_server'))},
+             'simulation': ExposedObject(self, exclude=('start', 'control_server')),
+             'interface': ExposedObject(self._adapters,
+                                        exclude=('add_adapter', 'remove_adapter', 'handle'))},
             control_server)
 
     def start(self):
@@ -121,7 +179,7 @@ class Simulation(object):
         if self._control_server is not None:
             self._control_server.start_server()
 
-        self._adapter.start_server()
+        self._adapters.connect()
 
         self._start_time = datetime.now()
 
@@ -133,7 +191,7 @@ class Simulation(object):
         self._running = False
         self._started = False
 
-        self._adapter.stop_server()
+        self._adapters.disconnect()
 
     def _process_cycle(self, delta):
         """
@@ -167,10 +225,7 @@ class Simulation(object):
         """
         self.log.debug('Cycle, dt=%s', delta)
 
-        if self.device_connected:
-            self._adapter.handle(self._cycle_delay)
-        else:
-            sleep(self._cycle_delay)
+        self._adapters.handle(self._cycle_delay)
 
         if self._running:
             delta_simulation = delta * self._speed
@@ -238,45 +293,6 @@ class Simulation(object):
         progresses at a different rate than uptime.
         """
         return self._runtime
-
-    @property
-    def device_connected(self):
-        """
-        Indicates whether the adapter is processing, i.e. the device is connected.
-        The device simulation can still be running, but if the adapter is not being
-        processed, the device appears disconnected.
-
-        .. seealso:: See :meth:`disconnect_device` and :meth:`connect_device` to virtually connect
-                     and disconnect the controlled device.
-        """
-        return self._adapter.is_running
-
-    def disconnect_device(self):
-        """
-        Simulate disconnecting the device. The simulation continues running, but
-        the outside communication of the device is suspended, so that it appears
-        disconnected.
-
-        .. seealso:: This method directly influences the :attr:`device_connected` property.
-        """
-        if not self.device_connected:
-            raise RuntimeError('Device is already disconnected.')
-
-        self.log.info('Disconnecting device')
-
-        self._adapter.stop_server()
-
-    def connect_device(self):
-        """
-        Simulate (re-)connecting the device. This is only possible after the device
-        has been virtually disconnected using :meth:`disconnect_device`.
-        """
-        if self.device_connected:
-            raise RuntimeError('Device is already connected.')
-
-        self.log.info('Connecting device')
-
-        self._adapter.start_server()
 
     def set_device_parameters(self, parameters):
         """
@@ -374,4 +390,4 @@ class Simulation(object):
         information contained in the documentation it should be obvious to users how to operate
         the exposed device via its native protocol.
         """
-        return self._adapter.documentation
+        return self._adapters.documentation()
