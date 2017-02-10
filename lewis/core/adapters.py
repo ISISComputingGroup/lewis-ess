@@ -174,7 +174,8 @@ class AdapterContainer(object):
         :param adapter: Adapter to add to the container
         """
         if adapter.protocol in self._adapters:
-            raise RuntimeError('Adapter for protocol \'{}\' is already registered.'.format(adapter))
+            raise RuntimeError(
+                'Adapter for protocol \'{}\' is already registered.'.format(adapter))
 
         self._adapters[adapter.protocol] = adapter
 
@@ -240,7 +241,8 @@ class AdapterContainer(object):
         :param args: List of protocols for which to start adapters or empty for all.
         :return: Boolean for single adapter or dict of statuses for multiple.
         """
-        status_dict = {adapter.protocol: adapter.is_running for adapter in self._get_adapters(args)}
+        status_dict = {adapter.protocol: adapter.is_running
+                       for adapter in self._get_adapters(args)}
 
         if len(args) == 1:
             return list(status_dict.values())[0]
@@ -260,9 +262,11 @@ class AdapterContainer(object):
     def _get_adapters(self, protocols):
         """
         Internal method to map protocols back to adapters. If the list of protocols contains an
-        invalid entry (e.g. a protocol for which there is no adapter), a ``RuntimeError`` is raised.
-        :param protocols:
-        :return:
+        invalid entry (e.g. a protocol for which there is no adapter), a ``RuntimeError``
+        is raised.
+
+        :param protocols: List of protocols, can be empty to return all adapters.
+        :return: Adapters according to the rules described above.
         """
         invalid_protocols = set(protocols) - set(self.protocols)
 
