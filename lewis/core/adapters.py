@@ -138,6 +138,28 @@ def is_adapter(obj):
 
 @has_log
 class AdapterContainer(object):
+    """
+    A container to manage the adapters of a device
+
+    This container is designed to keep all adapters that expose a device in one place and interact
+    with them in a uniform way.
+
+    Adapters can be passed as arguments upon construction or added later on using
+    :meth:`add_adapter` (and removed using :meth:`remove_adapter`). The available protocols can be
+    queried using the :meth:`protocols` property.
+
+    Each adapter can be started and stopped separately by supplying protocol names to
+    :meth:`connect` and :meth:`disconnect`, both methods accept an arbitrary number of arguments,
+    so that any subset of the stored protocols can be handled at any time. Supplying no protocol
+    names at all will start/stop all adapters. These semantics also apply for :meth:`is_connected`
+    and `documentation`.
+
+    The :meth:`handle` implementation will call all the stored adapters' ``handle`` methods if they
+    are running, otherwise ``time.sleep`` is called.
+
+    :param args: List of adapters to add to the container
+    """
+
     def __init__(self, *args):
         self._adapters = {}
 
@@ -145,12 +167,24 @@ class AdapterContainer(object):
             self.add_adapter(adapter)
 
     def add_adapter(self, adapter):
+        """
+        Adds the supplied adapter to the container but raises a ``RuntimeError`` if there's
+        already an adapter registered for the same protocol.
+
+        :param adapter: Adapter to add to the container
+        """
         if adapter.protocol in self._adapters:
             raise RuntimeError('Adapter for protocol \'{}\' is already registered.'.format(adapter))
 
         self._adapters[adapter.protocol] = adapter
 
     def remove_adapter(self, protocol):
+        """
+        Tries to remove the adapter for the specified protocol, raises a ``RuntimeError`` if there
+        is no adapter registered for that particular protocol.
+
+        :param protocol: Protocol to remove from container
+        """
         if protocol not in self._adapters:
             raise RuntimeError(
                 'Can not remove adapter for protocol \'{}\', none registered.'.format(protocol))
@@ -158,6 +192,12 @@ class AdapterContainer(object):
         del self._adapters[protocol]
 
     def handle(self, cycle_delay):
+        """
+        Calls all stored and running adapters' ``handle``-methods or sleeps for the specified
+        amount in the rest of the cases.
+
+        :param cycle_delay: Approximate time to spend processing adapters.
+        """
         for adapter in self._adapters.values():
             if adapter.is_running:
                 adapter.handle(cycle_delay)
@@ -166,25 +206,64 @@ class AdapterContainer(object):
 
     @property
     def protocols(self):
+        """List of protocols for which adapters are registered."""
         return list(self._adapters.keys())
 
     def connect(self, *args):
+        """
+        Calls :meth:`~Adapter.start_server` on each adapter that correspond to the supplied
+        protocols. If no arguments are supplied, all adapters are started.
+
+        :param args: List of protocols for which to start adapters or empty for all.
+        """
         for adapter in self._get_adapters(args):
             self.log.info('Connecting device interface for protocol \'%s\'', adapter.protocol)
             adapter.start_server()
 
     def disconnect(self, *args):
+        """
+        Calls :meth:`~Adapter.stop_server` on each adapter that correspond to the supplied
+        protocols. If no arguments are supplied, all adapters are stopped.
+
+        :param args: List of protocols for which to stop adapters or empty for all.
+        """
         for adapter in self._get_adapters(args):
             self.log.info('Disonnecting device interface for protocol \'%s\'', adapter.protocol)
             adapter.stop_server()
 
-    def connected(self, *args):
-        return all(adapter.is_running for adapter in self._get_adapters(args))
+    def is_connected(self, *args):
+        """
+        If only one protocol is supplied, a single bool is returned with the connection status.
+        Otherwise, this method returns a dictionary of adapter connection statuses for the supplied
+        protocols. If no protocols are supplied, all adapter statuses are returned.
+
+        :param args: List of protocols for which to start adapters or empty for all.
+        :return: Boolean for single adapter or dict of statuses for multiple.
+        """
+        status_dict = {adapter.protocol: adapter.is_running for adapter in self._get_adapters(args)}
+
+        if len(args) == 1:
+            return list(status_dict.values())[0]
+
+        return status_dict
 
     def documentation(self, *args):
+        """
+        Returns the concatenated documentation for the adapters specified by the supplied
+        protocols or all of them if no arguments are provided.
+
+        :param args: List of protocols for which to get documentation or empty for all.
+        :return: Documentation for all selected adapters.
+        """
         return '\n\n'.join(adapter.documentation for adapter in self._get_adapters(args))
 
     def _get_adapters(self, protocols):
+        """
+        Internal method to map protocols back to adapters. If the list of protocols contains an
+        invalid entry (e.g. a protocol for which there is no adapter), a ``RuntimeError`` is raised.
+        :param protocols:
+        :return:
+        """
         invalid_protocols = set(protocols) - set(self.protocols)
 
         if invalid_protocols:

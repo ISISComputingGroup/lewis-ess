@@ -21,12 +21,12 @@ from argparse import ArgumentParser
 from datetime import datetime
 import inspect
 
-from . import ForwardProperty
+from lewis.core.utils import ForwardProperty
 from lewis.core.adapters import Adapter
 from six import iteritems
 
 from lewis.core.logging import has_log
-from lewis.core.utils import seconds_since, FromOptionalDependency, format_doc_text
+from lewis.core.utils import seconds_since, FromOptionalDependency, format_doc_text, ForwardProperty
 from lewis.core.exceptions import LewisException, LimitViolationException
 
 # pcaspy might not be available. To make EPICS-based adapters show up

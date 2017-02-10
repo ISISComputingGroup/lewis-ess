@@ -1,6 +1,7 @@
 import unittest
 
 from mock import patch, call
+import inspect
 
 from lewis.adapters.stream import StreamAdapter
 from lewis.core.adapters import is_adapter, Adapter, AdapterContainer
@@ -28,6 +29,10 @@ class TestIsAdapter(unittest.TestCase):
 
 
 class DummyAdapter(Adapter):
+    """
+    A dummy adapter for tests.
+    """
+
     def __init__(self, protocol, running=False):
         super(DummyAdapter, self).__init__(None)
         self.protocol = protocol
@@ -42,6 +47,13 @@ class DummyAdapter(Adapter):
     @property
     def is_running(self):
         return self._running
+
+
+class TestAdapter(unittest.TestCase):
+    def test_documentation(self):
+        adapter = DummyAdapter('foo')
+
+        self.assertEqual(inspect.cleandoc(adapter.__doc__), adapter.documentation)
 
 
 class TestAdapterContainer(unittest.TestCase):
@@ -78,20 +90,20 @@ class TestAdapterContainer(unittest.TestCase):
         # no arguments connects everything
         container.connect()
 
-        self.assertTrue(container.connected())
-        self.assertTrue(container.connected('bar'))
-        self.assertTrue(container.connected('foo'))
+        self.assertDictEqual(container.is_connected(), {'bar': True, 'foo': True})
+        self.assertTrue(container.is_connected('bar'))
+        self.assertTrue(container.is_connected('foo'))
 
         container.disconnect()
 
-        self.assertFalse(container.connected())
-        self.assertFalse(container.connected('bar'))
-        self.assertFalse(container.connected('foo'))
+        self.assertDictEqual(container.is_connected(), {'bar': False, 'foo': False})
+        self.assertFalse(container.is_connected('bar'))
+        self.assertFalse(container.is_connected('foo'))
 
         container.connect('foo')
-        self.assertFalse(container.connected())
-        self.assertFalse(container.connected('bar'))
-        self.assertTrue(container.connected('foo'))
+        self.assertDictEqual(container.is_connected(), {'bar': False, 'foo': True})
+        self.assertFalse(container.is_connected('bar'))
+        self.assertTrue(container.is_connected('foo'))
 
         self.assertRaises(RuntimeError, container.connect, 'baz')
         self.assertRaises(RuntimeError, container.disconnect, 'baz')
