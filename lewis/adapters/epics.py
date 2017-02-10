@@ -21,7 +21,8 @@ from argparse import ArgumentParser
 from datetime import datetime
 import inspect
 
-from . import Adapter, ForwardProperty
+from . import ForwardProperty
+from lewis.core.adapters import Adapter
 from six import iteritems
 
 from lewis.core.logging import has_log

@@ -26,7 +26,7 @@ from argparse import ArgumentParser
 
 from six import b
 
-from lewis.adapters import Adapter
+from lewis.core.adapters import Adapter
 from lewis.core.logging import has_log
 from lewis.core.utils import format_doc_text
 

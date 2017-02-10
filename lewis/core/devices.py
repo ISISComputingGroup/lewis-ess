@@ -26,10 +26,10 @@ produces factory-like objects that create device instances and interfaces based 
 
 import importlib
 
-from lewis.adapters import Adapter
+from lewis.core.adapters import is_adapter
 from lewis.core.exceptions import LewisException
-from lewis.core.utils import get_submodules, get_members
 from lewis.core.logging import has_log
+from lewis.core.utils import get_submodules, get_members
 
 
 @has_log
@@ -51,18 +51,6 @@ def is_device(obj):
     """
     return isinstance(obj, type) and issubclass(
         obj, DeviceBase) and obj.__module__ not in ('lewis.devices', 'lewis.core.devices')
-
-
-def is_adapter(obj):
-    """
-    Returns True if obj is an interface (derived from Adapter), but not defined in
-    :mod:`lewis.adapters`.
-
-    :param obj: Object to test.
-    :return: True if obj is an interface type.
-    """
-    return isinstance(obj, type) and issubclass(
-        obj, Adapter) and not obj.__module__.startswith('lewis.adapters')
 
 
 class DeviceBuilder(object):
