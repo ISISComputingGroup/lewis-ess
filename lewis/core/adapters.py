@@ -136,13 +136,13 @@ def is_adapter(obj):
             'lewis.adapters'))
 
 
+@has_log
 class AdapterContainer(object):
-    def __init__(self, adapters=None):
+    def __init__(self, *args):
         self._adapters = {}
 
-        if adapters:
-            for adapter in adapters:
-                self.add_adapter(adapter)
+        for adapter in args:
+            self.add_adapter(adapter)
 
     def add_adapter(self, adapter):
         if adapter.protocol in self._adapters:
@@ -168,25 +168,27 @@ class AdapterContainer(object):
     def protocols(self):
         return list(self._adapters.keys())
 
-    def connect(self, protocol=None):
-        for adapter in self._get_adapters(protocol):
+    def connect(self, *args):
+        for adapter in self._get_adapters(args):
+            self.log.info('Connecting device interface for protocol \'%s\'', adapter.protocol)
             adapter.start_server()
 
-    def disconnect(self, protocol=None):
-        for adapter in self._get_adapters(protocol):
+    def disconnect(self, *args):
+        for adapter in self._get_adapters(args):
+            self.log.info('Disonnecting device interface for protocol \'%s\'', adapter.protocol)
             adapter.stop_server()
 
-    def connected(self, protocol=None):
-        return all(adapter.is_running for adapter in self._get_adapters(protocol))
+    def connected(self, *args):
+        return all(adapter.is_running for adapter in self._get_adapters(args))
 
-    def documentation(self, protocol=None):
-        return '\n\n'.join(adapter.documentation for adapter in self._get_adapters(protocol))
+    def documentation(self, *args):
+        return '\n\n'.join(adapter.documentation for adapter in self._get_adapters(args))
 
-    def _get_adapters(self, protocol):
-        if protocol is not None and protocol not in self._adapters:
+    def _get_adapters(self, protocols):
+        invalid_protocols = set(protocols) - set(self.protocols)
+
+        if invalid_protocols:
             raise RuntimeError(
-                'No adapter registered for protocol \'{}\''.format(protocol))
+                'No adapter registered for protocols: {}'.format(', '.join(invalid_protocols)))
 
-        protocols = [protocol] if protocol is not None else self.protocols
-
-        return [self._adapters[proto] for proto in protocols]
+        return [self._adapters[proto] for proto in protocols or self.protocols]

@@ -81,7 +81,7 @@ class Simulation(object):
         super(Simulation, self).__init__()
 
         self._device = device
-        self._adapters = AdapterContainer((adapter,))
+        self._adapters = AdapterContainer(adapter)
 
         self._speed = 1.0  # Multiplier for delta t
         self._cycle_delay = 0.1  # Target time between cycles
