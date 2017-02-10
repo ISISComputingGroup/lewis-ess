@@ -19,7 +19,7 @@
 
 import unittest
 
-from mock import Mock, PropertyMock, patch, call, ANY
+from mock import Mock, patch, call, ANY
 
 from lewis.core.simulation import Simulation
 from . import assertRaisesNothing

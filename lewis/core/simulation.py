@@ -56,7 +56,7 @@ class AdapterContainer(object):
             if adapter.is_running:
                 adapter.handle(cycle_delay)
             else:
-                sleep(self._cycle_delay)
+                sleep(cycle_delay)
 
     @property
     def protocols(self):
@@ -386,8 +386,8 @@ class Simulation(object):
     @property
     def device_documentation(self):
         """
-        This property returns the dynamically created device interface documentation. With the
-        information contained in the documentation it should be obvious to users how to operate
-        the exposed device via its native protocol.
+        This property returns the dynamically created device interface documentation of all
+        interfaces. With the information contained in the documentation it should be obvious
+        to users how to operate the exposed device via its native protocol(s).
         """
         return self._adapters.documentation()
