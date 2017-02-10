@@ -23,6 +23,7 @@ implementations in :mod:`lewis.adapters`. It also contains :class:`AdapterContai
 be used to store multiple adapters and manage them together.
 """
 import inspect
+from time import sleep
 
 from lewis.core.logging import has_log
 
@@ -131,4 +132,61 @@ def is_adapter(obj):
     """
     return isinstance(obj, type) and issubclass(
         obj, Adapter) and not (
-    obj.__module__.startswith('lewis.core.adapters') or obj.__module__.startswith('lewis.adapters'))
+        obj.__module__.startswith('lewis.core.adapters') or obj.__module__.startswith(
+            'lewis.adapters'))
+
+
+class AdapterContainer(object):
+    def __init__(self, adapters=None):
+        self._adapters = {}
+
+        if adapters:
+            for adapter in adapters:
+                self.add_adapter(adapter)
+
+    def add_adapter(self, adapter):
+        if adapter.protocol in self._adapters:
+            raise RuntimeError('Adapter for protocol \'{}\' is already registered.'.format(adapter))
+
+        self._adapters[adapter.protocol] = adapter
+
+    def remove_adapter(self, protocol):
+        if protocol not in self._adapters:
+            raise RuntimeError(
+                'Can not remove adapter for protocol \'{}\', none registered.'.format(protocol))
+
+        del self._adapters[protocol]
+
+    def handle(self, cycle_delay):
+        for adapter in self._adapters.values():
+            if adapter.is_running:
+                adapter.handle(cycle_delay)
+            else:
+                sleep(cycle_delay)
+
+    @property
+    def protocols(self):
+        return list(self._adapters.keys())
+
+    def connect(self, protocol=None):
+        for adapter in self._get_adapters(protocol):
+            adapter.start_server()
+
+    def disconnect(self, protocol=None):
+        for adapter in self._get_adapters(protocol):
+            adapter.stop_server()
+
+    def connected(self, protocol=None):
+        return all(adapter.is_running for adapter in self._get_adapters(protocol))
+
+    def documentation(self, protocol=None):
+        return '\n\n'.join(adapter.documentation for adapter in self._get_adapters(protocol))
+
+    def _get_adapters(self, protocol):
+        if protocol is not None and protocol not in self._adapters:
+            raise RuntimeError(
+                'No adapter registered for protocol \'{}\''.format(protocol))
+
+        protocols = [protocol] if protocol is not None else self.protocols
+
+        return [self._adapters[proto] for proto in protocols]
