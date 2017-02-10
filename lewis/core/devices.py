@@ -297,7 +297,7 @@ class DeviceBuilder(object):
             return self.interfaces[protocol](*args, **kwargs)
         except KeyError:
             raise LewisException(
-                'Failed to find protocol \'{}\' for device \'{}\'. '
+                '\'{}\' is not a valid protocol for device \'{}\', select one via the -p option.\n'
                 'Available protocols are: \n    {}'.format(
                     protocol, self.name, '\n    '.join(self.interfaces.keys())))
 
