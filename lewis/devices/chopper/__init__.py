@@ -19,4 +19,5 @@
 
 from .device import SimulatedChopper
 
-__all__ = ['SimulatedChopper']
+framework_version = '>=1.0.3'
+__all__ = ['SimulatedChopper', 'framework_version']

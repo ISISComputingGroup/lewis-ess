@@ -19,4 +19,5 @@
 
 from .device import SimulatedLinkamT95
 
-__all__ = ['SimulatedLinkamT95']
+framework_version = '>=1.0.3'
+__all__ = ['SimulatedLinkamT95', 'framework_version']

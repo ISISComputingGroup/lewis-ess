@@ -40,3 +40,6 @@ class ModbusInterface(ModbusAdapter):
     co = di
     ir = ModbusBasicDataBank(0)
     hr = ir
+
+
+framework_version = '>=1.0.3'
