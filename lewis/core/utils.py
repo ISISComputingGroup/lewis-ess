@@ -354,6 +354,22 @@ class check_limits(object):
 
 
 def is_compatible_with_framework(version_spec):
+    """
+    Returns True if the supplied version spec is compatible with the current framework version
+    or None, otherwise the function returns False. Evaluation of versions and specs is performed
+    using the `semantic_version`_-package,  formulating complex specs is possible:
+
+    .. sourcecode:: Python
+
+        is_compatible_with_framework('>=1.0.3,<2.0.0')
+
+    All whitespace is stripped from the string prior to evaluation.
+
+    :param version_spec: A version specification to validate agains the framework version.
+    :return: True if framework version is compatible with specification or None, False otherwise.
+
+    .. _semantic_version: https://pypi.python.org/pypi/semantic_version/
+    """
     if version_spec is None:
         return True
 
