@@ -26,9 +26,10 @@ produces factory-like objects that create device instances and interfaces based 
 
 import importlib
 
+from lewis import __version__
 from lewis.adapters import Adapter
-from lewis.core.exceptions import LewisException
-from lewis.core.utils import get_submodules, get_members
+from lewis.core.exceptions import LewisException, VersionMismatchException
+from lewis.core.utils import get_submodules, get_members, is_compatible_with_framework
 from lewis.core.logging import has_log
 
 
@@ -70,6 +71,16 @@ class DeviceBuilder(object):
     This class takes a module object (for example imported via importlib.import_module or via the
     :class:`DeviceRegistry`) and inspects it so that it's possible to construct devices and
     interfaces.
+
+    Before loading anything, version compatibility between the device module and the framework is
+    verified. If the module contains a ``framework_version`` variable at the top level holding a
+    version spec (for example ``framework_version='>=1.0.0'`` or
+    ``framework_version='>=1.0.1,<1.0.3'``), this spec is checked against the current version of
+    Lewis. If the device module is incompatible, a
+    :class:`~lewis.core.exceptions.VersionMismatchException` is raised. If the
+    ``framework_version`` variable is missing, the device module will appear to be working with any
+    version of the framework, but best practice is to specify a version number to avoid users from
+    being faced with odd error messages or non-functioning devices.
 
     In order for the class to work properly, the device module has to adhere to a few rules.
     Device types, which means classes inheriting from :class:`DeviceBase`, are imported directly
@@ -120,6 +131,13 @@ class DeviceBuilder(object):
     """
 
     def __init__(self, module):
+        required_version_spec = getattr(module, 'framework_version', None)
+        if not is_compatible_with_framework(required_version_spec):
+            raise VersionMismatchException(
+                'Device-module \'{}\' is not compatible with framework '
+                'version (current: {}, required: {})'.format(
+                    module.__name__, __version__, required_version_spec))
+
         self._module = module
 
         self._device_types = list(get_members(self._module, is_device).values())
@@ -302,6 +320,7 @@ class DeviceBuilder(object):
                     protocol, self.name, '\n    '.join(self.interfaces.keys())))
 
 
+@has_log
 class DeviceRegistry(object):
     """
     This class takes the name of a module and constructs a :class:`DeviceBuilder` from
@@ -331,8 +350,13 @@ class DeviceRegistry(object):
                 'Make sure that it is in the PYTHONPATH.\n'
                 'See also the -a option of lewis.'.format(device_module))
 
-        self._devices = {name: DeviceBuilder(module) for name, module in
-                         get_submodules(self._device_module).items()}
+        self._devices = {}
+
+        for name, module in get_submodules(self._device_module).items():
+            try:
+                self._devices[name] = DeviceBuilder(module)
+            except VersionMismatchException as e:
+                self.log.error(*e.args)
 
     @property
     def devices(self):

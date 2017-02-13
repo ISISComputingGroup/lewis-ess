@@ -27,7 +27,7 @@ from six import string_types
 
 from lewis.core.utils import dict_strict_update, extract_module_name, \
     get_submodules, get_members, seconds_since, FromOptionalDependency, \
-    format_doc_text, check_limits
+    format_doc_text, check_limits, is_compatible_with_framework
 
 from lewis.core.exceptions import LewisException, LimitViolationException
 
@@ -278,3 +278,23 @@ class TestCheckLimits(unittest.TestCase):
 
         # Updates must have been ignored.
         self.assertEquals(f.bar, 15)
+
+
+class TestCompatibleWithFramework(unittest.TestCase):
+    def test_invalid_version_spec(self):
+        self.assertRaises(ValueError, is_compatible_with_framework, 'gsdf')
+
+    def test_none_is_compatible_with_all(self):
+        with patch('lewis.core.utils.__version__', '10.0.0'):
+            self.assertTrue(is_compatible_with_framework(None))
+
+    def test_specs(self):
+        with patch('lewis.core.utils.__version__', '10.5.2'):
+            self.assertTrue(is_compatible_with_framework('>1.0'))
+            self.assertTrue(is_compatible_with_framework('> 1.0'))
+            self.assertTrue(is_compatible_with_framework('>1.0,<=10.5.3'))
+            self.assertTrue(is_compatible_with_framework('10.5.2'))
+            self.assertTrue(is_compatible_with_framework('==10.5.2'))
+            self.assertFalse(is_compatible_with_framework('>1.0,<=10.5.1'))
+            self.assertFalse(is_compatible_with_framework('==10.5.3'))
+            self.assertFalse(is_compatible_with_framework('!=10.5.2'))

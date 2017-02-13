@@ -30,11 +30,13 @@ import textwrap
 import inspect
 import functools
 from datetime import datetime
+from semantic_version import Version, Spec
 
 from os import path as osp
 from os import listdir
 
 from .exceptions import LewisException, LimitViolationException
+from lewis import __version__
 
 
 def get_submodules(module):
@@ -349,3 +351,12 @@ class check_limits(object):
                     '%f is outside limits (%r, %r)' % (new_value, lower, upper))
 
         return limit_checked
+
+
+def is_compatible_with_framework(version_spec):
+    if version_spec is None:
+        return True
+
+    lewis_version = Version(__version__)
+
+    return lewis_version in Spec(''.join(version_spec.split()))

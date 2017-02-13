@@ -1,6 +1,7 @@
 six
 pyzmq
 json-rpc
+semantic_version
 
 # If you want to use EPICS based devices, uncomment the pcaspy-line.
 # It requires a working EPICS installation, please refer to the
