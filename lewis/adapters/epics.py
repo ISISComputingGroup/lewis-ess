@@ -160,8 +160,8 @@ class BoundPV(object):
     @property
     def doc(self):
         """Docstring of property on target or override specified on PV-object."""
-        return self._pv.doc or \
-               inspect.getdoc(getattr(type(self._target), self._pv.property, None)) or ''
+        return self._pv.doc or inspect.getdoc(
+            getattr(type(self._target), self._pv.property, None)) or ''
 
 
 @has_log
