@@ -59,6 +59,56 @@ itself, so that it is generic to all devices:
 
     $ lewis-control simulation set_device_parameters "{'target_speed': 1, 'target_phase': 20}"
 
+.. _remote-interface-access:
+
+Accessing the Device Communication Interface
+--------------------------------------------
+
+Just as device model and communication are separate concepts in Lewis, these interfaces
+can be controlled separately as well.
+
+To query the available communication protocols, the following command is available:
+
+::
+
+    $ lewis-control interface protocols
+
+This will list all communication protocols that are currently exposing device behavior.
+The following methods are available for interacting with the communication interfaces:
+
+::
+
+    $ lewis-control interface disconnect
+    $ lewis-control interface connect
+    $ lewis-control interface is_connected
+    $ lewis-control interface documentation
+
+Without any arguments, these methods will affect all of the device's interfaces, but specifying
+any number of valid protocol names will limit the method to those protocols. Assuming a device
+has two interfaces, one for the ``stream`` protocol and one for ``epics``, the following sequence
+would disconnect both, but then only reconnect the ``stream``-adapter:
+
+::
+
+    $ lewis-control interface disconnect
+    $ lewis-control interface connect stream
+    $ lewis-control interface is_connected stream
+    True
+    $ lewis-control interface is_connected
+    {'stream': True, 'epics': False}
+
+Disconnecting is essentially the equivalent of pulling "cutting the cable", no new connections
+will be accepted and existing ones will be terminated.
+
+To find out how to interact with any device via its usual communication channels a way would be:
+
+::
+
+    $ lewis-control interface protocol
+    ['stream', 'epics']
+    $ lewis-control interface documentation epics
+    [ ... long description of protocol ... ]
+
 
 Value Interpretation and Syntax
 -------------------------------

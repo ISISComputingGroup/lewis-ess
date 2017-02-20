@@ -4,7 +4,7 @@ from mock import patch, call
 import inspect
 
 from lewis.adapters.stream import StreamAdapter
-from lewis.core.adapters import is_adapter, Adapter, AdapterContainer
+from lewis.core.adapters import is_adapter, Adapter, AdapterCollection
 from . import assertRaisesNothing
 
 
@@ -22,9 +22,6 @@ class TestIsAdapter(unittest.TestCase):
         self.assertFalse(is_adapter(StreamAdapter))
 
     def test_adapter_types_work(self):
-        class DummyAdapter(Adapter):
-            pass
-
         self.assertTrue(is_adapter(DummyAdapter))
 
 
@@ -58,68 +55,68 @@ class TestAdapter(unittest.TestCase):
 
 class TestAdapterContainer(unittest.TestCase):
     def test_add_adapter(self):
-        container = AdapterContainer()
-        self.assertEquals(len(container.protocols), 0)
+        collection = AdapterCollection()
+        self.assertEquals(len(collection.protocols), 0)
 
-        assertRaisesNothing(self, container.add_adapter, DummyAdapter('foo'))
+        assertRaisesNothing(self, collection.add_adapter, DummyAdapter('foo'))
 
-        self.assertEqual(len(container.protocols), 1)
-        self.assertSetEqual(set(container.protocols), {'foo'})
+        self.assertEqual(len(collection.protocols), 1)
+        self.assertSetEqual(set(collection.protocols), {'foo'})
 
-        assertRaisesNothing(self, container.add_adapter, DummyAdapter('bar'))
+        assertRaisesNothing(self, collection.add_adapter, DummyAdapter('bar'))
 
-        self.assertEqual(len(container.protocols), 2)
-        self.assertSetEqual(set(container.protocols), {'foo', 'bar'})
+        self.assertEqual(len(collection.protocols), 2)
+        self.assertSetEqual(set(collection.protocols), {'foo', 'bar'})
 
-        self.assertRaises(RuntimeError, container.add_adapter, DummyAdapter('bar'))
+        self.assertRaises(RuntimeError, collection.add_adapter, DummyAdapter('bar'))
 
     def test_remove_adapter(self):
-        container = AdapterContainer(DummyAdapter('foo'))
+        collection = AdapterCollection(DummyAdapter('foo'))
 
-        self.assertSetEqual(set(container.protocols), {'foo'})
-        self.assertRaises(RuntimeError, container.remove_adapter, 'bar')
+        self.assertSetEqual(set(collection.protocols), {'foo'})
+        self.assertRaises(RuntimeError, collection.remove_adapter, 'bar')
 
-        assertRaisesNothing(self, container.remove_adapter, 'foo')
+        assertRaisesNothing(self, collection.remove_adapter, 'foo')
 
-        self.assertEqual(len(container.protocols), 0)
+        self.assertEqual(len(collection.protocols), 0)
 
     def test_connect_disconnect_connected(self):
-        container = AdapterContainer(
+        collection = AdapterCollection(
             DummyAdapter('foo', running=False), DummyAdapter('bar', running=False))
 
         # no arguments connects everything
-        container.connect()
+        collection.connect()
 
-        self.assertDictEqual(container.is_connected(), {'bar': True, 'foo': True})
-        self.assertTrue(container.is_connected('bar'))
-        self.assertTrue(container.is_connected('foo'))
+        self.assertDictEqual(collection.is_connected(), {'bar': True, 'foo': True})
+        self.assertTrue(collection.is_connected('bar'))
+        self.assertTrue(collection.is_connected('foo'))
 
-        container.disconnect()
+        collection.disconnect()
 
-        self.assertDictEqual(container.is_connected(), {'bar': False, 'foo': False})
-        self.assertFalse(container.is_connected('bar'))
-        self.assertFalse(container.is_connected('foo'))
+        self.assertDictEqual(collection.is_connected(), {'bar': False, 'foo': False})
+        self.assertFalse(collection.is_connected('bar'))
+        self.assertFalse(collection.is_connected('foo'))
 
-        container.connect('foo')
-        self.assertDictEqual(container.is_connected(), {'bar': False, 'foo': True})
-        self.assertFalse(container.is_connected('bar'))
-        self.assertTrue(container.is_connected('foo'))
+        collection.connect('foo')
+        self.assertDictEqual(collection.is_connected(), {'bar': False, 'foo': True})
+        self.assertFalse(collection.is_connected('bar'))
+        self.assertTrue(collection.is_connected('foo'))
 
-        self.assertRaises(RuntimeError, container.connect, 'baz')
-        self.assertRaises(RuntimeError, container.disconnect, 'baz')
+        self.assertRaises(RuntimeError, collection.connect, 'baz')
+        self.assertRaises(RuntimeError, collection.disconnect, 'baz')
 
     @patch.object(DummyAdapter, 'handle')
     @patch('lewis.core.adapters.sleep')
     def test_handle_calls_all_adapters_or_sleeps(self, sleep_mock, adapter_mock):
-        container = AdapterContainer(DummyAdapter('foo', running=False),
-                                     DummyAdapter('bar', running=False))
-        container.handle(0.1)
+        collection = AdapterCollection(DummyAdapter('foo', running=False),
+                                       DummyAdapter('bar', running=False))
+        collection.handle(0.1)
 
-        sleep_mock.assert_has_calls([call(0.1), call(0.1)])
+        sleep_mock.assert_has_calls([call(0.05), call(0.05)])
         sleep_mock.reset_mock()
 
-        container.connect('foo')
+        collection.connect('foo')
 
-        container.handle(0.1)
-        sleep_mock.assert_has_calls([call(0.1)])
-        adapter_mock.assert_has_calls([call(0.1)])
+        collection.handle(0.1)
+        sleep_mock.assert_has_calls([call(0.05)])
+        adapter_mock.assert_has_calls([call(0.05)])

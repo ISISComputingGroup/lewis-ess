@@ -261,15 +261,6 @@ class TestSimulation(unittest.TestCase):
         # Can not replace control server when simulation is running
         self.assertRaises(RuntimeError, setattr, env, 'control_server', '127.0.0.1:10003')
 
-    def test_device_documentation_returns_adapter_documentation(self):
-        adapter_mock = Mock()
-        adapter_mock.documentation = 'test'
-
-        env = Simulation(device=Mock(), adapter=adapter_mock)
-        doc = env.device_documentation
-
-        self.assertEqual(doc, 'test')
-
     def test_set_parameters(self):
         class TestDevice(object):
             foo = 10

@@ -19,7 +19,7 @@
 
 """
 This module contains :class:`Adapter`, which serves as a base class for concrete adapter
-implementations in :mod:`lewis.adapters`. It also contains :class:`AdapterContainer` which can
+implementations in :mod:`lewis.adapters`. It also contains :class:`AdapterCollection` which can
 be used to store multiple adapters and manage them together.
 """
 import inspect
@@ -137,7 +137,7 @@ def is_adapter(obj):
 
 
 @has_log
-class AdapterContainer(object):
+class AdapterCollection(object):
     """
     A container to manage the adapters of a device
 
@@ -199,11 +199,13 @@ class AdapterContainer(object):
 
         :param cycle_delay: Approximate time to spend processing adapters.
         """
+        delay_per_adapter = cycle_delay / len(self._adapters)
+
         for adapter in self._adapters.values():
             if adapter.is_running:
-                adapter.handle(cycle_delay)
+                adapter.handle(delay_per_adapter)
             else:
-                sleep(cycle_delay)
+                sleep(delay_per_adapter)
 
     @property
     def protocols(self):

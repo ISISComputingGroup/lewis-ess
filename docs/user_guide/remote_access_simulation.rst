@@ -16,17 +16,7 @@ simulation can be paused and resumed using the control script:
 With these commands, the simulation is paused, while the communication
 with the device remains responsive. The communication channel (for
 example TCP stream server) would still respond to queries and commands,
-but they would not be processed by the device. To simulate a complete
-loss of connection, another pair of functions is available:
-
-::
-
-    $ lewis-control simulation disconnect_device
-    $ lewis-control simulation connect_device
-
-This basically shows the opposite effect, the device simulation
-continues running, but the communication channel is not processed
-anymore and the device appears disconnected.
+but they would not be processed by the device.
 
 The speed of the simulation can be adjusted as well, along with the
 number of cycles that are processed per second (via the ``cycle_delay``

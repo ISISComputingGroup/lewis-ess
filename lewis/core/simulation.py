@@ -24,7 +24,7 @@ an :mod:`Adapter <lewis.adapters>`).
 
 from datetime import datetime
 
-from lewis.core.adapters import AdapterContainer
+from lewis.core.adapters import AdapterCollection
 from lewis.core.control_server import ControlServer, ExposedObject
 from lewis.core.logging import has_log
 from lewis.core.utils import seconds_since
@@ -81,7 +81,7 @@ class Simulation(object):
         super(Simulation, self).__init__()
 
         self._device = device
-        self._adapters = AdapterContainer(adapter)
+        self._adapters = AdapterCollection(adapter)
 
         self._speed = 1.0  # Multiplier for delta t
         self._cycle_delay = 0.1  # Target time between cycles
@@ -326,12 +326,3 @@ class Simulation(object):
 
         if self.is_started and self._control_server is not None:
             self._control_server.start_server()
-
-    @property
-    def device_documentation(self):
-        """
-        This property returns the dynamically created device interface documentation of all
-        interfaces. With the information contained in the documentation it should be obvious
-        to users how to operate the exposed device via its native protocol(s).
-        """
-        return self._adapters.documentation()
