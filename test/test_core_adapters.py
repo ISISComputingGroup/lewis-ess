@@ -53,7 +53,7 @@ class TestAdapter(unittest.TestCase):
         self.assertEqual(inspect.cleandoc(adapter.__doc__), adapter.documentation)
 
 
-class TestAdapterContainer(unittest.TestCase):
+class TestAdapterCollection(unittest.TestCase):
     def test_add_adapter(self):
         collection = AdapterCollection()
         self.assertEquals(len(collection.protocols), 0)
