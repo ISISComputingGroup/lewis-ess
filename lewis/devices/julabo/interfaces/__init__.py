@@ -16,8 +16,3 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
-
-from .julabo_stream_interface_1 import JulaboStreamInterfaceV1
-from .julabo_stream_interface_2 import JulaboStreamInterfaceV2
-
-__all__ = ['JulaboStreamInterfaceV1', "JulaboStreamInterfaceV2"]
