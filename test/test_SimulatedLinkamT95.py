@@ -19,7 +19,7 @@
 
 import unittest
 
-from lewis.devices.linkam_t95 import SimulatedLinkamT95
+from lewis.devices.linkam_t95.device import SimulatedLinkamT95
 from lewis.devices.linkam_t95.states import DefaultStartedState
 
 from lewis.devices.linkam_t95.interfaces.stream_interface import LinkamT95StreamInterface
