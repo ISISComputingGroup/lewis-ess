@@ -122,6 +122,7 @@ class DeviceBuilder(object):
 
         submodules = get_submodules(self._module)
 
+        self._device_types += list(get_members(submodules.get('device'), is_device).values())
         self._setups = self._discover_setups(submodules.get('setups'))
         self._interfaces = self._discover_interfaces(submodules.get('interfaces'))
 
