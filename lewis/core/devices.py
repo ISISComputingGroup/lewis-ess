@@ -112,14 +112,6 @@ class DeviceBuilder(object):
 
         self._device_types = list(get_members(self._module, is_device).values())
 
-        if not self._device_types:
-            # syslog.warning('No devices discovered in module {}.'.format(module.__name__))
-            pass
-        else:
-            pass
-            # syslog.info('Discovered devices in module {}: {}'.format(
-            #    module.__name__, ','.join([x.__name__ for x in self._device_types])))
-
         submodules = get_submodules(self._module)
 
         self._device_types += list(get_members(submodules.get('device'), is_device).values())
