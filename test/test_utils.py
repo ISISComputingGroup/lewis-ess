@@ -290,11 +290,6 @@ class TestCompatibleWithFramework(unittest.TestCase):
 
     def test_specs(self):
         with patch('lewis.core.utils.__version__', '10.5.2'):
-            self.assertTrue(is_compatible_with_framework('>1.0'))
-            self.assertTrue(is_compatible_with_framework('> 1.0'))
-            self.assertTrue(is_compatible_with_framework('>1.0,<=10.5.3'))
             self.assertTrue(is_compatible_with_framework('10.5.2'))
-            self.assertTrue(is_compatible_with_framework('==10.5.2'))
-            self.assertFalse(is_compatible_with_framework('>1.0,<=10.5.1'))
-            self.assertFalse(is_compatible_with_framework('==10.5.3'))
-            self.assertFalse(is_compatible_with_framework('!=10.5.2'))
+            self.assertFalse(is_compatible_with_framework('1.0.3'))
+            self.assertFalse(is_compatible_with_framework('10.5.1'))

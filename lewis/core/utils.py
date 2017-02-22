@@ -375,4 +375,4 @@ def is_compatible_with_framework(version_spec):
 
     lewis_version = Version(__version__)
 
-    return lewis_version in Spec(''.join(version_spec.split()))
+    return lewis_version == Version(''.join(version_spec.split()))
