@@ -27,7 +27,7 @@ from six import string_types
 
 from lewis.core.utils import dict_strict_update, extract_module_name, \
     get_submodules, get_members, seconds_since, FromOptionalDependency, \
-    format_doc_text, check_limits, ForwardProperty
+    format_doc_text, check_limits
 
 from lewis.core.exceptions import LewisException, LimitViolationException
 
@@ -278,29 +278,3 @@ class TestCheckLimits(unittest.TestCase):
 
         # Updates must have been ignored.
         self.assertEquals(f.bar, 15)
-
-
-class TestForwardMethod(unittest.TestCase):
-    def test_getter_setter_forwards(self):
-        class Foo(object):
-            _bar = 0
-
-            @property
-            def bar(self):
-                return self._bar
-
-            @bar.setter
-            def bar(self, new_bar):
-                self._bar = new_bar
-
-        class Bar(object):
-            _baz = Foo()
-
-        a = Bar()
-        type(a).forward = ForwardProperty('_baz', 'bar', instance=a)
-
-        self.assertTrue(hasattr(a, 'forward'))
-        self.assertEqual(a.forward, 0)
-
-        a.forward = 56
-        self.assertEqual(a._baz.bar, 56)

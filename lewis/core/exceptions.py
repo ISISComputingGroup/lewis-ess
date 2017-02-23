@@ -36,3 +36,11 @@ class LimitViolationException(Exception):
     An exception that can be raised in a device to indicate a limit violation. It is for example
     raised by the :class:`~lewis.core.utils.check_limits`.
     """
+
+
+class AccessViolationException(Exception):
+    """
+    This exception can be raised in situation where the performed action (accessing a property or
+    similar) is not allowed. An example is :class:`~lewis.adapters.epics.BoundPV` for enforcing
+    read-only PVs.
+    """
