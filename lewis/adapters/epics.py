@@ -26,7 +26,7 @@ from six import iteritems
 
 from lewis.core.logging import has_log
 from lewis.core.utils import seconds_since, FromOptionalDependency, format_doc_text
-from lewis.core.exceptions import LewisException, LimitViolationException
+from lewis.core.exceptions import LewisException, LimitViolationException, AccessViolationException
 
 # pcaspy might not be available. To make EPICS-based adapters show up
 # in the listed adapters anyway dummy types are created in this case
@@ -131,8 +131,11 @@ class BoundPV(object):
 
     @value.setter
     def value(self, new_value):
-        if not self.read_only:
-            setattr(self._target, self._pv.property, new_value)
+        if self.read_only:
+            raise AccessViolationException(
+                'The property {} is read only.'.format(self._pv.property))
+
+        setattr(self._target, self._pv.property, new_value)
 
     @property
     def meta(self):
@@ -181,14 +184,14 @@ class PropertyExposingDriver(Driver):
 
         pv_object = self._pv_dict.get(pv)
 
-        if not pv_object or pv_object.read_only:
+        if not pv_object:
             return False
 
         try:
             pv_object.value = value
             self.setParam(pv, pv_object.value)
             return True
-        except LimitViolationException:
+        except (LimitViolationException, AccessViolationException):
             return False
 
     def process_pv_updates(self, force=False):
@@ -292,6 +295,18 @@ class EpicsAdapter(Adapter):
         self._driver = None
 
     def _bind_properties(self, pvs):
+        """
+        This method transforms a dict of :class:`PV` objects to a dict of :class:`BoundPV` objects,
+        the keys are always the PV-names that are exposed via ChannelAccess.
+
+        In the transformation process, the method tries to find whether the attribute specified by
+        PV's ``property`` (and ``meta_data_property``) is part of the internally stored device
+        or the interface and constructs a BoundPV, which acts as a forwarder to the appropriate
+        objects.
+
+        :param pvs: Dict of PV-name/:class:`PV`-objects.
+        :return: Dict of PV-name/:class:`BoundPV`-objects.
+        """
         bound_pvs = {}
         for pv_name, pv in pvs.items():
             value_target = self._get_target(pv.property)
