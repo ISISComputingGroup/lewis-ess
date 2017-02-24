@@ -19,5 +19,6 @@
 
 from .device import SimulatedJulabo
 
-framework_version = '>=1.0.3'
-__all__ = ['SimulatedJulabo', 'framework_version']
+framework_version = '1.0.2'
+
+__all__ = ['SimulatedJulabo']

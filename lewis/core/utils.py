@@ -30,7 +30,7 @@ import textwrap
 import inspect
 import functools
 from datetime import datetime
-from semantic_version import Version, Spec
+from semantic_version import Version
 
 from os import path as osp
 from os import listdir
@@ -353,26 +353,26 @@ class check_limits(object):
         return limit_checked
 
 
-def is_compatible_with_framework(version_spec):
+def is_compatible_with_framework(version):
     """
-    Returns True if the supplied version spec is compatible with the current framework version
-    or None, otherwise the function returns False. Evaluation of versions and specs is performed
-    using the `semantic_version`_-package,  formulating complex specs is possible:
+    Returns ``True`` if the supplied version is compatible with the current framework version,
+    otherwise the function returns ``False``. Evaluation of versions is performed
+    using the `semantic_version`_-package:
 
     .. sourcecode:: Python
 
-        is_compatible_with_framework('>=1.0.3,<2.0.0')
+        is_compatible_with_framework('2.0.0')
 
     All whitespace is stripped from the string prior to evaluation.
 
-    :param version_spec: A version specification to validate agains the framework version.
-    :return: True if framework version is compatible with specification or None, False otherwise.
+    :param version: A version to validate against the framework version.
+    :return: True if framework version is compatible with specification, False otherwise.
 
     .. _semantic_version: https://pypi.python.org/pypi/semantic_version/
     """
-    if version_spec is None:
-        return True
+    if version is None:
+        return False
 
     lewis_version = Version(__version__)
 
-    return lewis_version == Version(''.join(version_spec.split()))
+    return lewis_version == Version(''.join(version.split()))

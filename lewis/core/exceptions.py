@@ -36,10 +36,3 @@ class LimitViolationException(Exception):
     An exception that can be raised in a device to indicate a limit violation. It is for example
     raised by the :class:`~lewis.core.utils.check_limits`.
     """
-
-
-class VersionMismatchException(Exception):
-    """
-    An exception that is raised when a device module or some other dynamically loaded code is not
-    compatible with the current framework version.
-    """

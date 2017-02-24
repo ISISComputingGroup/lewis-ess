@@ -284,9 +284,9 @@ class TestCompatibleWithFramework(unittest.TestCase):
     def test_invalid_version_spec(self):
         self.assertRaises(ValueError, is_compatible_with_framework, 'gsdf')
 
-    def test_none_is_compatible_with_all(self):
+    def test_none_is_compatible_with_nothing(self):
         with patch('lewis.core.utils.__version__', '10.0.0'):
-            self.assertTrue(is_compatible_with_framework(None))
+            self.assertFalse(is_compatible_with_framework(None))
 
     def test_specs(self):
         with patch('lewis.core.utils.__version__', '10.5.2'):

@@ -400,8 +400,7 @@ or error messages to users trying to start the device. If Lewis detects a mismat
 between the required version and the existing version, an error message is logged
 so that users know where the problem comes from. In the ideal case this variable
 would be updated with each release of Lewis after it has been made sure that the
-device is compatible, for example from ``1.0.1`` to ``>=1.0.1,<1.0.3`` to indicate
-that this device works with Lewis versions ``1.0.1`` and ``1.0.2``.
+device is compatible.
 
 Further steps
 -------------

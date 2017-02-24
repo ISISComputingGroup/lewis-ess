@@ -28,7 +28,7 @@ import importlib
 
 from lewis import __version__
 from lewis.adapters import Adapter
-from lewis.core.exceptions import LewisException, VersionMismatchException
+from lewis.core.exceptions import LewisException
 from lewis.core.utils import get_submodules, get_members, is_compatible_with_framework
 from lewis.core.logging import has_log
 
@@ -131,13 +131,6 @@ class DeviceBuilder(object):
     """
 
     def __init__(self, module):
-        required_version_spec = getattr(module, 'framework_version', None)
-        if not is_compatible_with_framework(required_version_spec):
-            raise VersionMismatchException(
-                'Device-module \'{}\' is not compatible with framework '
-                'version (current: {}, required: {})'.format(
-                    module.__name__, __version__, required_version_spec))
-
         self._module = module
 
         self._device_types = list(get_members(self._module, is_device).values())
@@ -204,6 +197,10 @@ class DeviceBuilder(object):
             interfaces[interface.protocol] = interface
 
         return interfaces
+
+    @property
+    def framework_version(self):
+        return getattr(self._module, 'framework_version', None)
 
     @property
     def name(self):
@@ -350,30 +347,52 @@ class DeviceRegistry(object):
                 'Make sure that it is in the PYTHONPATH.\n'
                 'See also the -a option of lewis.'.format(device_module))
 
-        self._devices = {}
-
-        for name, module in get_submodules(self._device_module).items():
-            try:
-                self._devices[name] = DeviceBuilder(module)
-            except VersionMismatchException as e:
-                self.log.error(*e.args)
+        self._devices = {name: DeviceBuilder(module) for name, module in
+                         get_submodules(self._device_module).items()}
 
     @property
     def devices(self):
         """All available device names."""
         return self._devices.keys()
 
-    def device_builder(self, name):
+    def device_builder(self, name, relaxed_versions=False):
         """
         Returns a :class:`DeviceBuilder` instance that can be used to create device objects
         based on setups, as well as device interfaces. If the device name is not stored
         in the internal map, a LewisException is raised.
 
+        Each DeviceBuilder has a ``framework_version``-member, which specifies the version
+        of Lewis the device has been written for. If the version does not match the current
+        framework version, it is only possible to obtain those device builders calling the
+        method with ``strict_versions`` set to ``False``, otherwise a
+        :class:`~lewis.core.exceptions.LewisException` is raised. A warning message is logged
+        in all cases.
+
         :param name: Name of the device.
+        :param relaxed_versions: If ``False``, raise an exception when version of device does
+                                not match framework version.
         :return: :class:`DeviceBuilder`-object for requested device.
         """
         try:
-            return self._devices[name]
+            builder = self._devices[name]
+
+            if not is_compatible_with_framework(builder.framework_version):
+                self.log.warn(
+                    'Device \'%s\' is specified for a different framework version '
+                    '(required: %s, current: %s). This means that the device might not work '
+                    'as expected. Contact the device author about updating the device or use a '
+                    'different version of lewis to run this device.',
+                    builder.name, builder.framework_version, __version__)
+
+                if not relaxed_versions:
+                    raise LewisException(
+                        'Not loading device \'{}\' with different framework version '
+                        '(required: {}, current: {}) in strict mode. Use the --relaxed-versions '
+                        'option of lewis to load the device anyway.'.format(
+                            builder.name, builder.framework_version, __version__))
+
+            return builder
+
         except KeyError:
             raise LewisException(
                 'No device with the name \'{}\' could be found. '

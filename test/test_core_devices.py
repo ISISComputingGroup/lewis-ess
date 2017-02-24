@@ -23,7 +23,7 @@ from . import assertRaisesNothing, TestWithPackageStructure
 
 from lewis.core.devices import is_device, is_adapter, \
     DeviceRegistry, DeviceBuilder, DeviceBase
-from lewis.core.exceptions import LewisException, VersionMismatchException
+from lewis.core.exceptions import LewisException
 from lewis.devices import Device, StateMachineDevice
 from lewis.adapters import Adapter
 from lewis.adapters.stream import StreamAdapter
@@ -135,40 +135,6 @@ class TestDeviceBuilderSimpleModule(unittest.TestCase):
             builder.create_interface('dummy', device=device), self.module.DummyAdapter)
 
         self.assertRaises(LewisException, builder.create_interface, 'invalid_protocol')
-
-
-class TestDeviceBuilderFrameworkVersion(unittest.TestCase):
-    def test_no_version_spec(self):
-        module = ModuleType('no_version')
-        module.framework_version = None
-
-        with patch('lewis.__version__', '10.0.0'):
-            assertRaisesNothing(self, DeviceBuilder, module)
-
-        with patch('lewis.__version__', '0.0.1'):
-            assertRaisesNothing(self, DeviceBuilder, module)
-
-    def test_version_spec(self):
-        module = ModuleType('with_version')
-        module.framework_version = '>1.0.0,<=1.0.3'
-
-        with patch('lewis.core.utils.__version__', '1.0.0'):
-            self.assertRaises(VersionMismatchException, DeviceBuilder, module)
-
-        with patch('lewis.core.utils.__version__', '1.0.1'):
-            assertRaisesNothing(self, DeviceBuilder, module)
-
-        with patch('lewis.core.utils.__version__', '1.0.2'):
-            assertRaisesNothing(self, DeviceBuilder, module)
-
-        with patch('lewis.core.utils.__version__', '1.0.3'):
-            assertRaisesNothing(self, DeviceBuilder, module)
-
-        with patch('lewis.core.utils.__version__', '1.0.4'):
-            self.assertRaises(VersionMismatchException, DeviceBuilder, module)
-
-        with patch('lewis.core.utils.__version__', '10.0.0'):
-            self.assertRaises(VersionMismatchException, DeviceBuilder, module)
 
 
 class TestDeviceBuilderMultipleDevicesAndProtocols(unittest.TestCase):
@@ -304,7 +270,15 @@ class TestDeviceRegistry(TestWithPackageStructure):
     def test_device_builder(self):
         registry = DeviceRegistry(self._tmp_package_name)
 
-        builder = registry.device_builder('some_file')
-        self.assertEquals(builder.name, 'some_file')
+        with patch('lewis.core.devices.is_compatible_with_framework', return_value=True):
+            builder = registry.device_builder('some_file')
+            self.assertEquals(builder.name, 'some_file')
+
+        with patch('lewis.core.devices.is_compatible_with_framework', return_value=False):
+            builder = registry.device_builder('some_file', relaxed_versions=True)
+            self.assertEquals(builder.name, 'some_file')
+
+            self.assertRaises(LewisException, registry.device_builder, 'some_file',
+                              relaxed_versions=False)
 
         self.assertRaises(LewisException, registry.device_builder, 'invalid_device')
