@@ -60,16 +60,6 @@ class DeviceBuilder(object):
     :class:`DeviceRegistry`) and inspects it so that it's possible to construct devices and
     interfaces.
 
-    Before loading anything, version compatibility between the device module and the framework is
-    verified. If the module contains a ``framework_version`` variable at the top level holding a
-    version spec (for example ``framework_version='>=1.0.0'`` or
-    ``framework_version='>=1.0.1,<1.0.3'``), this spec is checked against the current version of
-    Lewis. If the device module is incompatible, a
-    :class:`~lewis.core.exceptions.VersionMismatchException` is raised. If the
-    ``framework_version`` variable is missing, the device module will appear to be working with any
-    version of the framework, but best practice is to specify a version number to avoid users from
-    being faced with odd error messages or non-functioning devices.
-
     In order for the class to work properly, the device module has to adhere to a few rules.
     Device types, which means classes inheriting from :class:`DeviceBase`, are imported directly
     from the device module, equivalent to the following:
@@ -352,7 +342,7 @@ class DeviceRegistry(object):
         Each DeviceBuilder has a ``framework_version``-member, which specifies the version
         of Lewis the device has been written for. If the version does not match the current
         framework version, it is only possible to obtain those device builders calling the
-        method with ``strict_versions`` set to ``False``, otherwise a
+        method with ``relaxed_versions`` set to ``True``, otherwise a
         :class:`~lewis.core.exceptions.LewisException` is raised. A warning message is logged
         in all cases.
 

@@ -69,4 +69,4 @@ class VerySimpleInterface(StreamAdapter):
         return 'An error occurred: ' + repr(error)
 
 
-framework_version = '>=1.0.3'
+framework_version = '1.0.2'

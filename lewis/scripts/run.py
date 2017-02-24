@@ -99,8 +99,7 @@ other_args.add_argument(
     help='Prints the version and exits.')
 other_args.add_argument(
     '-R', '--relaxed-versions', action='store_true',
-    help='Allow devices with different framework version to be used.'
-)
+    help='Allow devices with different framework version to be used.')
 other_args.add_argument(
     '-h', '--h', action='help',
     help='Shows this help message and exits.')
