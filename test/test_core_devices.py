@@ -20,17 +20,13 @@
 import unittest
 from mock import patch
 from . import assertRaisesNothing, TestWithPackageStructure
-
-from lewis.core.devices import is_device, is_adapter, \
-    DeviceRegistry, DeviceBuilder, DeviceBase
-from lewis.core.exceptions import LewisException
-from lewis.devices import Device, StateMachineDevice
-from lewis.adapters import Adapter
-from lewis.adapters.stream import StreamAdapter
-
+from types import ModuleType
 from uuid import uuid4
 
-from types import ModuleType
+from lewis.core.adapters import Adapter
+from lewis.core.devices import is_device, DeviceRegistry, DeviceBuilder, DeviceBase
+from lewis.core.exceptions import LewisException
+from lewis.devices import Device, StateMachineDevice
 
 
 class TestIsDevice(unittest.TestCase):
@@ -56,26 +52,6 @@ class TestIsDevice(unittest.TestCase):
 
         self.assertTrue(is_device(DummyDevice))
         self.assertTrue(is_device(DummyStatemachineDevice))
-
-
-class TestIsAdapter(unittest.TestCase):
-    def test_not_a_type_returns_false(self):
-        self.assertFalse(is_adapter(0.0))
-        self.assertFalse(is_adapter(None))
-
-    def test_arbitrary_types_fail(self):
-        self.assertFalse(is_adapter(type(3.0)))
-        self.assertFalse(is_adapter(DeviceBuilder))
-
-    def test_adapter_base_is_ignored(self):
-        self.assertFalse(is_adapter(Adapter))
-        self.assertFalse(is_adapter(StreamAdapter))
-
-    def test_adapter_types_work(self):
-        class DummyAdapter(Adapter):
-            pass
-
-        self.assertTrue(is_adapter(DummyAdapter))
 
 
 class TestDeviceBuilderSimpleModule(unittest.TestCase):

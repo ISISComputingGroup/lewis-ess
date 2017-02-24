@@ -16,7 +16,8 @@ Resources:
 `GitHub <https://github.com/DMSC-Instrument-Data/lewis>`__ --
 `DockerHub <https://hub.docker.com/r/dmscid/lewis/>`__ --
 `Dockerfile <https://github.com/DMSC-Instrument-Data/lewis/blob/master/Dockerfile>`__ --
-`ReadTheDocs <http://lewis.readthedocs.io/>`__
+`ReadTheDocs <http://lewis.readthedocs.io/>`__ --
+`PyPI <https://pypi.python.org/pypi/lewis>`__
 
 Lewis was previously named "Plankton" but, due to a
 package with the same name on PyPI, we decided to rename the project.
@@ -115,3 +116,5 @@ The ``docs/_build/html`` directory will then contain the full documentation in H
    :target: https://coveralls.io/github/DMSC-Instrument-Data/lewis?branch=master
 .. |Documentation| image:: https://readthedocs.org/projects/lewis/badge/?version=latest
    :target: http://lewis.readthedocs.io/en/latest/?badge=latest
+   
+.. _PyPI: 

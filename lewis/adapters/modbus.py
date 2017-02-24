@@ -42,7 +42,7 @@ from copy import deepcopy
 from math import ceil
 from argparse import ArgumentParser
 
-from lewis.adapters import Adapter
+from lewis.core.adapters import Adapter
 from lewis.core.logging import has_log
 
 
