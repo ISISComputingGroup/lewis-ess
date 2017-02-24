@@ -17,13 +17,6 @@ New features
 
       framework_version = '1.0.3'
 
-   It is also possible to indicate ranges or multiple conditions (like in requirements
-   files for pip):
-
-   .. code:: python
-
-      framework_version = '>=1.0.3,<2.0.0'
-
    This way using devices from different sources becomes more reliable for users with different
    versions of Lewis, or hint them to update.
 
