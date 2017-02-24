@@ -19,7 +19,7 @@
 
 import unittest
 
-from mock import Mock, call
+from mock import Mock, call, patch
 
 from lewis.devices import StateMachineDevice
 from . import assertRaisesNothing
@@ -35,6 +35,17 @@ class MockStateMachineDevice(StateMachineDevice):
 
 
 class TestStateMachineDevice(unittest.TestCase):
+    def test_not_implemented_errors(self):
+        self.assertRaises(NotImplementedError, StateMachineDevice)
+
+        with patch('lewis.devices.StateMachineDevice._get_state_handlers',
+                   return_value={'test': Mock()}):
+            self.assertRaises(NotImplementedError, StateMachineDevice)
+
+            with patch('lewis.devices.StateMachineDevice._get_initial_state',
+                       return_value='test'):
+                self.assertRaises(NotImplementedError, StateMachineDevice)
+
     def test_init_calls_appropriate_methods(self):
         smd = MockStateMachineDevice()
 
