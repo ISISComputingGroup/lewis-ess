@@ -98,6 +98,9 @@ other_args.add_argument(
     '-v', '--version', action='store_true',
     help='Prints the version and exits.')
 other_args.add_argument(
+    '-R', '--relaxed-versions', action='store_true',
+    help='Allow devices with different framework version to be used.')
+other_args.add_argument(
     '-h', '--h', action='help',
     help='Shows this help message and exits.')
 
@@ -130,7 +133,8 @@ def do_run_simulation(argument_list=None):  # noqa: C901
         print('\n'.join(devices))
         return
 
-    device_builder = device_registry.device_builder(arguments.device)
+    device_builder = device_registry.device_builder(
+        arguments.device, arguments.relaxed_versions)
 
     if arguments.list_protocols:
         print('\n'.join(device_builder.protocols))

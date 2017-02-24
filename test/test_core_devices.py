@@ -18,6 +18,8 @@
 # *********************************************************************
 
 import unittest
+from mock import patch
+from . import assertRaisesNothing, TestWithPackageStructure
 from types import ModuleType
 from uuid import uuid4
 
@@ -25,7 +27,6 @@ from lewis.core.adapters import Adapter
 from lewis.core.devices import is_device, DeviceRegistry, DeviceBuilder, DeviceBase
 from lewis.core.exceptions import LewisException
 from lewis.devices import Device, StateMachineDevice
-from . import assertRaisesNothing, TestWithPackageStructure
 
 
 class TestIsDevice(unittest.TestCase):
@@ -245,7 +246,15 @@ class TestDeviceRegistry(TestWithPackageStructure):
     def test_device_builder(self):
         registry = DeviceRegistry(self._tmp_package_name)
 
-        builder = registry.device_builder('some_file')
-        self.assertEquals(builder.name, 'some_file')
+        with patch('lewis.core.devices.is_compatible_with_framework', return_value=True):
+            builder = registry.device_builder('some_file')
+            self.assertEquals(builder.name, 'some_file')
+
+        with patch('lewis.core.devices.is_compatible_with_framework', return_value=False):
+            builder = registry.device_builder('some_file', relaxed_versions=True)
+            self.assertEquals(builder.name, 'some_file')
+
+            self.assertRaises(LewisException, registry.device_builder, 'some_file',
+                              relaxed_versions=False)
 
         self.assertRaises(LewisException, registry.device_builder, 'invalid_device')
