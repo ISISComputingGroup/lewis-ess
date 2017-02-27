@@ -1,6 +1,6 @@
 import unittest
 
-from mock import patch, call
+from mock import patch, call, Mock
 import inspect
 
 from lewis.adapters.stream import StreamAdapter
@@ -51,6 +51,14 @@ class TestAdapter(unittest.TestCase):
         adapter = DummyAdapter('foo')
 
         self.assertEqual(inspect.cleandoc(adapter.__doc__), adapter.documentation)
+
+    def test_not_implemented_errors(self):
+        adapter = Adapter(Mock())
+
+        self.assertRaises(NotImplementedError, adapter.start_server)
+        self.assertRaises(NotImplementedError, adapter.stop_server)
+        self.assertRaises(NotImplementedError, getattr, adapter, 'is_running')
+        assertRaisesNothing(self, adapter.handle, 0)
 
 
 class TestAdapterCollection(unittest.TestCase):
