@@ -114,8 +114,8 @@ class DeviceBuilder(object):
         submodules = get_submodules(self._module)
 
         # Devices can be in __init__.py, device.py, or any devices/*.py
-        self._device_types = get_members(self._module, is_device).values()
-        self._device_types += get_members(submodules.get('device'), is_device).values()
+        self._device_types = list(get_members(self._module, is_device).values())
+        self._device_types += list(get_members(submodules.get('device'), is_device).values())
         self._device_types += self._discover_devices(submodules.get('devices'))
 
         self._setups = self._discover_setups(submodules.get('setups'))
@@ -127,7 +127,7 @@ class DeviceBuilder(object):
 
         devices = []
         for module in get_submodules(devices_module).values():
-            devices += get_members(module, is_device).values()
+            devices += list(get_members(module, is_device).values())
         return devices
 
     def _discover_setups(self, setups_module):
