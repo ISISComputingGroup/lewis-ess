@@ -30,11 +30,13 @@ import textwrap
 import inspect
 import functools
 from datetime import datetime
+from semantic_version import Version
 
 from os import path as osp
 from os import listdir
 
 from .exceptions import LewisException, LimitViolationException
+from lewis import __version__
 
 
 def get_submodules(module):
@@ -351,72 +353,26 @@ class check_limits(object):
         return limit_checked
 
 
-class ForwardProperty(object):
+def is_compatible_with_framework(version):
     """
-    This is a small helper class that can be used to act as
-    a forwarding property to relay property setting/getting
-    to a member of the class it's installed on.
-
-    This is a small helper class that can be used to act as
-    a forwarding property to relay property setting/getting
-    to a member of the class it's installed on.
-
-    Typical use would be:
+    Returns ``True`` if the supplied version is compatible with the current framework version,
+    otherwise the function returns ``False``. Evaluation of versions is performed
+    using the `semantic_version`_-package:
 
     .. sourcecode:: Python
 
-        a = Foo()
-        a._b = Bar() # Bar has property baz
+        is_compatible_with_framework('2.0.0')
 
-        type(a).forward = ForwardProperty('_b', 'baz')
+    All whitespace is stripped from the string prior to evaluation.
 
-        a.forward = 10 # equivalent to a._b.baz = 10
+    :param version: A version to validate against the framework version.
+    :return: True if framework version is compatible with specification, False otherwise.
 
-    Note that this modifies the type ``Foo``. Usage must thus be
-    limited to cases where this type modification is
-    acceptable.
-
-    :param target_member: Target member to forward to.
-    :param property_name: Property of target to access.
-    :param instance: Object from which to obtain target_member for the purpose of extracting
-                     the docstring of the property identified by property_name. If it doesn't
-                     exist on the type, of target_member, the docstring is not copied.
-
-    .. seealso:: See :class:`ForwardMethod` to forward method calls to another object.
+    .. _semantic_version: https://pypi.python.org/pypi/semantic_version/
     """
+    if version is None:
+        return False
 
-    def __init__(self, target_member, property_name, instance=None):
-        self._target_member = target_member
-        self._prop = property_name
+    lewis_version = Version(__version__)
 
-        # Extract docstring from the property that's being forwarded.
-        # The property exists in the type of the specified target_member of instance,
-        # so getattr must be called on the type, not object, otherwise the
-        # docstring of the returned value would be stored.
-        self.__doc__ = getattr(type(getattr(instance, self._target_member)),
-                               self._prop, None).__doc__
-
-    def __get__(self, instance, instance_type=None):
-        """
-        This method forwards property read access on instance
-        to the member of instance that was selected in __init__.
-
-        :param instance: Instance of type.
-        :param instance_type: Type.
-        :return: Attribute value of member property.
-        """
-        if instance is not None:
-            return getattr(getattr(instance, self._target_member), self._prop)
-
-        return self
-
-    def __set__(self, instance, value):
-        """
-        This method forwards property write access on instance
-        to the member of instance that was selected in __init__.
-
-        :param instance: Instance of type.
-        :param value: Value of property.
-        """
-
-        setattr(getattr(instance, self._target_member), self._prop, value)
+    return lewis_version == Version(''.join(version.split()))

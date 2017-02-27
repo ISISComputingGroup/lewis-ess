@@ -383,6 +383,25 @@ type and initialization parameters:
 In this case a ``moving``-scenario is defined where the motor is already
 moving to a target when the simulation is started.
 
+Compatibility with framework versions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To make sure that users have a good experience using the newly added device,
+it should specify what version of Lewis it works with. This is achieved by
+adding another variable to the top level of the device module which contains
+a version specification:
+
+.. code:: python
+
+    framework_version = '1.0.1'
+
+This will make sure that older or newer versions of Lewis do not present odd exceptions
+or error messages to users trying to start the device. If Lewis detects a mismatch
+between the required version and the existing version, an error message is logged
+so that users know where the problem comes from. In the ideal case this variable
+would be updated with each release of Lewis after it has been made sure that the
+device is compatible.
+
 Further steps
 -------------
 
