@@ -76,7 +76,6 @@ class TestAdapter(unittest.TestCase):
             self.assertEqual(adapter.device, None)
 
 
-
 class TestAdapterCollection(unittest.TestCase):
     def test_add_adapter(self):
         collection = AdapterCollection()
