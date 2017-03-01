@@ -59,11 +59,11 @@ class VerySimpleInterface(StreamAdapter):
 
     def get_param(self):
         """Returns the device parameter."""
-        return self._device.param
+        return self.device.param
 
     def set_param(self, new_param):
         """Set the device parameter, does not return anything."""
-        self._device.param = new_param
+        self.device.param = new_param
 
     def handle_error(self, request, error):
         return 'An error occurred: ' + repr(error)

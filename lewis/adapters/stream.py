@@ -445,10 +445,10 @@ class StreamAdapter(Adapter):
             ]
 
             def set_speed(self, new_speed):
-                self._device.speed = new_speed
+                self.device.speed = new_speed
 
             def get_speed(self):
-                return self._device.speed
+                return self.device.speed
 
     The interface has two commands, ``S?`` to return the speed and ``S=10`` to set the speed
     to an integer value.
@@ -496,7 +496,7 @@ class StreamAdapter(Adapter):
         bound_commands = []
 
         for cmd in cmds:
-            bound = cmd.bind(self) or cmd.bind(self._device) or None
+            bound = cmd.bind(self) or cmd.bind(self.device) or None
 
             if bound is None:
                 raise RuntimeError(

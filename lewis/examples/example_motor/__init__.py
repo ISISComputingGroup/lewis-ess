@@ -111,15 +111,15 @@ class ExampleMotorStreamInterface(StreamAdapter):
 
     def get_status(self):
         """Returns the status of the device, which is one of 'idle' or 'moving'."""
-        return self._device.state
+        return self.device.state
 
     def get_position(self):
         """Returns the current position in mm."""
-        return self._device.position
+        return self.device.position
 
     def get_target(self):
         """Returns the current target in mm."""
-        return self._device.target
+        return self.device.target
 
     def set_target(self, new_target):
         """
@@ -127,7 +127,7 @@ class ExampleMotorStreamInterface(StreamAdapter):
         the interval [0, 250] or the motor is already moving, an error is returned, otherwise
         the new target is returned."""
         try:
-            self._device.target = new_target
+            self.device.target = new_target
             return 'T={}'.format(new_target)
         except RuntimeError:
             return 'err: not idle'

@@ -70,8 +70,8 @@ class PV(object):
             @property
             def example_meta(self):
                 return {
-                    'lolim': self._device._example_low_limit,
-                    'hilim': self._device._example_high_limit,
+                    'lolim': self.device._example_low_limit,
+                    'hilim': self.device._example_high_limit,
                 }
 
     The PV infos are then updated together with the value, determined by ``poll_interval``.
@@ -261,7 +261,7 @@ class EpicsAdapter(Adapter):
             @stop.setter
             def stop(self, value):
                 if value == 1:
-                    self._device.halt()
+                    self.device.halt()
 
     Even though the device does *not* have a property called ``stop`` (but a method called
     ``halt``), issuing the command
@@ -330,8 +330,8 @@ class EpicsAdapter(Adapter):
         if prop in dir(self):
             return self
 
-        if prop in dir(self._device):
-            return self._device
+        if prop in dir(self.device):
+            return self.device
 
         raise AttributeError('Can not find property \''
                              + prop + '\' in device or interface.')

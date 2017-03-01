@@ -108,7 +108,7 @@ class ChopperEpicsInterface(EpicsAdapter):
     def execute_command(self, value):
         command = self._commands.get(value)
 
-        getattr(self._device, command)()
+        getattr(self.device, command)()
         self._last_command = command
 
     @property

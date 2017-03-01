@@ -56,7 +56,7 @@ class LinkamT95StreamInterface(StreamAdapter):
         """
 
         # "The first command sent must be a 'T' command" from T95 manual
-        self._device.serial_command_mode = True
+        self.device.serial_command_mode = True
 
         Tarray = [0x80] * 10
 
@@ -66,21 +66,21 @@ class LinkamT95StreamInterface(StreamAdapter):
             'heat': 0x10,
             'cool': 0x20,
             'hold': 0x30,
-        }.get(self._device._csm.state, 0x01)
+        }.get(self.device._csm.state, 0x01)
 
-        if Tarray[0] == 0x30 and self._device.hold_commanded:
+        if Tarray[0] == 0x30 and self.device.hold_commanded:
             Tarray[0] = 0x50
 
         # Error status byte (EB1)
-        if self._device.pump_overspeed:
+        if self.device.pump_overspeed:
             Tarray[1] |= 0x01
         # TODO: Add support for other error conditions?
 
         # Pump status byte (PB1)
-        Tarray[2] = 0x80 + self._device.pump_speed
+        Tarray[2] = 0x80 + self.device.pump_speed
 
         # Temperature
-        Tarray[6:10] = [ord(x) for x in "%04x" % (int(self._device.temperature * 10) & 0xFFFF)]
+        Tarray[6:10] = [ord(x) for x in "%04x" % (int(self.device.temperature * 10) & 0xFFFF)]
 
         return ''.join(chr(c) for c in Tarray)
 
@@ -97,7 +97,7 @@ class LinkamT95StreamInterface(StreamAdapter):
         # TODO: Is not having leading zeroes / 4 digits an error?
         rate = int(param)
         if 1 <= rate <= 15000:
-            self._device.temperature_rate = rate / 100.0
+            self.device.temperature_rate = rate / 100.0
         return ""
 
     def set_limit(self, param):
@@ -112,7 +112,7 @@ class LinkamT95StreamInterface(StreamAdapter):
         # TODO: Is not having leading zeroes / 4 digits an error?
         limit = int(param)
         if -2000 <= limit <= 6000:
-            self._device.temperature_limit = limit / 10.0
+            self.device.temperature_limit = limit / 10.0
         return ""
 
     def start(self):
@@ -124,7 +124,7 @@ class LinkamT95StreamInterface(StreamAdapter):
 
         :return: Empty string.
         """
-        self._device.start_commanded = True
+        self.device.start_commanded = True
         return ""
 
     def stop(self):
@@ -135,7 +135,7 @@ class LinkamT95StreamInterface(StreamAdapter):
 
         :return: Empty string.
         """
-        self._device.stop_commanded = True
+        self.device.stop_commanded = True
         return ""
 
     def hold(self):
@@ -146,7 +146,7 @@ class LinkamT95StreamInterface(StreamAdapter):
 
         :return: Empty string.
         """
-        self._device.hold_commanded = True
+        self.device.hold_commanded = True
         return ""
 
     def heat(self):
@@ -156,7 +156,7 @@ class LinkamT95StreamInterface(StreamAdapter):
         :return: Empty string.
         """
         # TODO: Is this really all it does?
-        self._device.hold_commanded = False
+        self.device.hold_commanded = False
         return ""
 
     def cool(self):
@@ -166,7 +166,7 @@ class LinkamT95StreamInterface(StreamAdapter):
         :return: Empty string.
         """
         # TODO: Is this really all it does?
-        self._device.hold_commanded = False
+        self.device.hold_commanded = False
         return ""
 
     def pump_command(self, param):
@@ -181,10 +181,10 @@ class LinkamT95StreamInterface(StreamAdapter):
         lookup = [c for c in "0123456789:;<=>?@ABCDEFGHIJKLMN"]
 
         if param == "a0":
-            self._device.pump_manual_mode = False
+            self.device.pump_manual_mode = False
         elif param == "m0":
-            self._device.pump_manual_mode = True
+            self.device.pump_manual_mode = True
         elif param in lookup:
-            self._device.manual_target_speed = lookup.index(param)
+            self.device.manual_target_speed = lookup.index(param)
 
         return ""

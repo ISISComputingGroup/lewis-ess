@@ -242,17 +242,17 @@ According to the specifications above, the commands are defined like this:
         out_terminator = '\r\n'
 
         def get_status(self):
-            return self._device.state
+            return self.device.state
 
         def get_position(self):
-            return self._device.position
+            return self.device.position
 
         def get_target(self):
-            return self._device.target
+            return self.device.target
 
         def set_target(self, new_target):
             try:
-                self._device.target = new_target
+                self.device.target = new_target
                 return 'T={}'.format(new_target)
             except RuntimeError:
                 return 'err: not idle'
@@ -276,7 +276,7 @@ is the case for the ``stop``-command.
 You may have noticed that ``stop`` is not a method of the interface.
 :class:`~lewis.adapters.stream.StreamAdapter` tries to resolve the supplied method
 names in multiple ways. First it checks its own members, then it checks the members of the
-device it owns (accessible in the interface via the ``_device``-member)
+device it owns (accessible in the interface via the ``device``-member)
 and adds forwarders to itself if possible. If the method name can not be
 found in either the device or the adapter, an error is produced, which
 minimizes the likelihood of typos. The definitions in the interface
