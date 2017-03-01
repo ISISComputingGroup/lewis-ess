@@ -18,6 +18,7 @@
 # *********************************************************************
 
 """
-This module contains concrete implementations of :class:`~lewis.core.adapters.Adapter` in its
-submodules.
+The core Adapter API is located in :mod:`lewis.core.adapters`. This module on the contains
+concrete implementations of :class:`~lewis.core.adapters.Adapter` in its submodules, along with
+specific tools for each adapter.
 """

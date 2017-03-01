@@ -7,13 +7,14 @@ state machine, control server and client infrastructure and some utilities.
 .. toctree::
     :maxdepth: 2
 
+    core/adapters
+    core/approaches
+    core/control_client
+    core/control_server
+    core/devices
     core/exceptions
     core/logging
     core/processor
-    core/statemachine
-    core/approaches
-    core/control_server
-    core/control_client
-    core/devices
     core/simulation
+    core/statemachine
     core/utils
