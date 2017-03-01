@@ -454,12 +454,12 @@ class StreamAdapter(Adapter):
     to an integer value.
 
     As in the :class:`lewis.adapters.epics.EpicsAdapter`, it does not matter whether the
-    wrapped method is a part of the device or of the interface, this is handled automatically.
+    wrapped method is a part of the device or of the interface, this is handled automatically when
+    a new device is assigned to the ``device``-property.
 
     In addition, the :meth:`handle_error`-method can be overridden. It is called when an exception
     is raised while handling commands.
 
-    :param device: The exposed device.
     :param arguments: Command line arguments.
     """
     protocol = 'stream'
@@ -469,8 +469,8 @@ class StreamAdapter(Adapter):
 
     commands = None
 
-    def __init__(self, device, arguments=None):
-        super(StreamAdapter, self).__init__(device, arguments)
+    def __init__(self, arguments=None):
+        super(StreamAdapter, self).__init__(arguments)
 
         self._options = self._parse_arguments(arguments or [])
 
@@ -479,7 +479,9 @@ class StreamAdapter(Adapter):
             self.out_terminator = '\r\n'
 
         self._server = None
+        self._bound_commands = []
 
+    def _bind_device(self):
         self.bound_commands = self._bind_commands(self.commands)
 
     @property

@@ -141,8 +141,9 @@ def do_run_simulation(argument_list=None):  # noqa: C901
         return
 
     device = device_builder.create_device(arguments.setup)
-    interface = device_builder.create_interface(arguments.protocol,
-                                                device=device, arguments=arguments.adapter_args)
+    interface = device_builder.create_interface(
+        arguments.protocol, arguments=arguments.adapter_args)
+    interface.device = device
 
     if arguments.show_interface:
         print(interface.documentation)

@@ -53,12 +53,28 @@ class TestAdapter(unittest.TestCase):
         self.assertEqual(inspect.cleandoc(adapter.__doc__), adapter.documentation)
 
     def test_not_implemented_errors(self):
-        adapter = Adapter(Mock())
+        adapter = Adapter()
 
         self.assertRaises(NotImplementedError, adapter.start_server)
         self.assertRaises(NotImplementedError, adapter.stop_server)
         self.assertRaises(NotImplementedError, getattr, adapter, 'is_running')
         assertRaisesNothing(self, adapter.handle, 0)
+
+    def test_device_property(self):
+        adapter = Adapter()
+        mock_device = Mock()
+
+        # Make sure that the default implementation works (for adapters that do
+        # not have binding behavior).
+        adapter.device = mock_device
+        self.assertEqual(adapter.device, mock_device)
+
+        with patch('lewis.core.adapters.Adapter._bind_device') as bind_mock:
+            adapter.device = None
+
+            bind_mock.assert_called_once()
+            self.assertEqual(adapter.device, None)
+
 
 
 class TestAdapterCollection(unittest.TestCase):

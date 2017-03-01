@@ -285,14 +285,18 @@ class EpicsAdapter(Adapter):
     protocol = 'epics'
     pvs = None
 
-    def __init__(self, device, arguments=None):
-        super(EpicsAdapter, self).__init__(device, arguments)
+    def __init__(self, arguments=None):
+        super(EpicsAdapter, self).__init__(arguments)
 
         self._options = self._parse_arguments(arguments or [])
-        self._bound_pvs = self._bind_properties(self.pvs)
 
         self._server = None
         self._driver = None
+
+        self._bound_pvs = {}
+
+    def _bind_device(self):
+        self._bound_pvs = self._bind_properties(self.pvs)
 
     def _bind_properties(self, pvs):
         """
