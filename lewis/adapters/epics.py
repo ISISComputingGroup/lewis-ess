@@ -279,7 +279,6 @@ class EpicsAdapter(Adapter):
     via EPICS might involve writing a value to a PV, whereas other protocols may
     offer an RPC-way of achieving the same thing.
 
-    :param device: The device that is exposed by the adapter.
     :param arguments: Command line arguments to parse.
     """
     protocol = 'epics'
