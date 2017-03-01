@@ -1,4 +1,4 @@
-The Stream-Adapter
+The Stream Adapter
 ------------------
 
 .. automodule:: lewis.adapters.stream
