@@ -296,6 +296,10 @@ class EpicsAdapter(Adapter):
         self._bound_pvs = {}
 
     def _bind_device(self):
+        """
+        This method is re-implemented from :class:`~lewis.core.adapters.Adapter`. It uses
+        :meth:`_bind_properties` to generate a dict of bound PVs.
+        """
         self._bound_pvs = self._bind_properties(self.pvs)
 
     def _bind_properties(self, pvs):

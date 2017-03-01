@@ -482,7 +482,38 @@ class StreamAdapter(Adapter):
         self._bound_commands = []
 
     def _bind_device(self):
+        """
+        This method is re-implemented from :class:`~lewis.core.adapters.Adapter`. It uses
+        :meth:`_bind_commands` to bind the defined :class:`Cmd` and :class:`Var`-objects
+        to the proper objects and make them usable.
+        """
+
         self.bound_commands = self._bind_commands(self.commands)
+
+    def _bind_commands(self, cmds):
+        patterns = set()
+
+        bound_commands = []
+
+        for cmd in cmds:
+            bound = cmd.bind(self) or cmd.bind(self._device) or None
+
+            if bound is None:
+                raise RuntimeError(
+                    'Unable to produce callable object for non-existing member \'{}\' '
+                    'of device or interface.'.format(cmd.member))
+
+            for bound_cmd in bound:
+                if bound_cmd.pattern in patterns:
+                    raise RuntimeError(
+                        'The regular expression {} is '
+                        'associated with multiple commands.'.format(bound_cmd.pattern.pattern))
+
+                patterns.add(bound_cmd.pattern)
+
+                bound_commands.append(bound_cmd)
+
+        return bound_commands
 
     @property
     def documentation(self):
@@ -531,31 +562,6 @@ class StreamAdapter(Adapter):
         parser.add_argument('-t', '--telnet-mode', action='store_true',
                             help='Override terminators to be telnet compatible')
         return parser.parse_args(arguments)
-
-    def _bind_commands(self, cmds):
-        patterns = set()
-
-        bound_commands = []
-
-        for cmd in cmds:
-            bound = cmd.bind(self) or cmd.bind(self._device) or None
-
-            if bound is None:
-                raise RuntimeError(
-                    'Unable to produce callable object for non-existing member \'{}\' '
-                    'of device or interface.'.format(cmd.member))
-
-            for bound_cmd in bound:
-                if bound_cmd.pattern in patterns:
-                    raise RuntimeError(
-                        'The regular expression {} is '
-                        'associated with multiple commands.'.format(bound_cmd.pattern.pattern))
-
-                patterns.add(bound_cmd.pattern)
-
-                bound_commands.append(bound_cmd)
-
-        return bound_commands
 
     def handle_error(self, request, error):
         """
