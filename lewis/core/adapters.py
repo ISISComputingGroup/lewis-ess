@@ -49,14 +49,48 @@ class Adapter(object):
     implementations of existing adapters (:class:`~lewis.adapters.epics.EpicsAdapter`,
     :class:`~lewis.adapters.stream.StreamAdapter`),to get some examples.
 
-    :param device: Device that is supposed to be exposed. Available as ``_device``.
+    In principle, an adapter can exist on its own, but it only really becomes useful when a device
+    is bound to it. To do this, assign an object derived from
+    :class:`lewis.core.devices.DeviceBase` to the ``device``-property. Sub-classes have to
+    implement :meth:`_bind_device` to achieve actual binding behavior.
+
     :param arguments: Command line arguments to the adapter, currently ignored.
     """
     protocol = None
 
-    def __init__(self, device, arguments=None):
+    def __init__(self, arguments=None):
         super(Adapter, self).__init__()
-        self._device = device
+        self._device = None
+
+    @property
+    def device(self):
+        """
+        The device property contains the device-object exposed by the adapter.
+
+        The property can be set from the outside, at that point the adapter will
+        call :meth:`_bind_device` (which is implemented in each adapter sub-class)
+        and thus re-bind its commands etc. to call the new device.
+        """
+        return self._device
+
+    @device.setter
+    def device(self, new_device):
+        self._device = new_device
+        self._bind_device()
+
+    def _bind_device(self):
+        """
+        This method is called in the setter of the ``device`` property after the device
+        has been set. Implementations should do whatever is necessary to actually expose
+        any methods that are part of the device and not the interface.
+
+        .. seealso:
+
+            Some concrete implementations in the framework:
+             - :meth:`lewis.adapters.epics.EpicsAdapter._bind_device`
+             - :meth:`lewis.adapters.stream.StreamAdapter._bind_device`
+        """
+        pass
 
     @property
     def documentation(self):

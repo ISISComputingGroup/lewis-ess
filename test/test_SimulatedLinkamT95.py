@@ -39,8 +39,9 @@ class TestSimulatedLinkamT95(unittest.TestCase):
             self, SimulatedLinkamT95, override_transitions={('init', 'stopped'): lambda: True})
 
     def test_default_status(self):
-        linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamInterface(linkam_device, None)
+        linkam = LinkamT95StreamInterface()
+        linkam.device = SimulatedLinkamT95()
+
         status_bytes = linkam.get_status()
 
         self.assertEqual(len(status_bytes), 10)     # Byte array should always be 10 bytes
@@ -51,8 +52,11 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         self.assertEqual(status_bytes[6:10], '00f0')  # Starting temperature 24C
 
     def test_simple_heat(self):
+        linkam = LinkamT95StreamInterface()
+
         linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamInterface(linkam_device, None)
+        linkam.device = linkam_device
+
         linkam_device.process()  # Initialize
 
         # Issue T command to get into stopped state
@@ -83,8 +87,10 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         self.assertEqual(status_bytes[6:10], '01b8')    # Temp == 44.0 C
 
     def test_simple_cool(self):
+        linkam = LinkamT95StreamInterface()
         linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamInterface(linkam_device, None)
+        linkam.device = linkam_device
+
         linkam_device.process()  # Initialize
 
         # Issue T command to get into stopped state
@@ -115,8 +121,10 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         self.assertEqual(status_bytes[6:10], '0028')    # Temp == 4.0 C
 
     def test_error_flag_overcool(self):
+        linkam = LinkamT95StreamInterface()
         linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamInterface(linkam_device, None)
+        linkam.device = linkam_device
+
         linkam_device.process()  # Initialize
 
         # Issue T command to get into stopped state
@@ -139,8 +147,10 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         self.assertTrue(ord(status_bytes[1]) & 0x01)
 
     def test_stop_command(self):
+        linkam = LinkamT95StreamInterface()
         linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamInterface(linkam_device, None)
+        linkam.device = linkam_device
+
         linkam_device.process()  # Initialize
 
         # Issue T command to get into stopped state
@@ -163,8 +173,10 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         self.assertEqual(ord(status_bytes[0]), 0x01)
 
     def test_hold_and_resume(self):
+        linkam = LinkamT95StreamInterface()
         linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamInterface(linkam_device, None)
+        linkam.device = linkam_device
+
         linkam_device.process()  # Initialize
 
         # Issue T command to get into stopped state
@@ -215,8 +227,10 @@ class TestSimulatedLinkamT95(unittest.TestCase):
         self.assertEqual(status_bytes[0], '\x30')  # Auto-holding at limit
 
     def test_pump_command(self):
+        linkam = LinkamT95StreamInterface()
         linkam_device = SimulatedLinkamT95()
-        linkam = LinkamT95StreamInterface(linkam_device, None)
+        linkam.device = linkam_device
+
         linkam_device.process()  # Initialize
 
         # Issue T command to get into stopped state

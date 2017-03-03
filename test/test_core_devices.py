@@ -104,11 +104,9 @@ class TestDeviceBuilderSimpleModule(unittest.TestCase):
     def test_create_interface(self):
         builder = DeviceBuilder(self.module)
 
-        device = builder.create_device()
-
-        self.assertIsInstance(builder.create_interface(device=device), self.module.DummyAdapter)
+        self.assertIsInstance(builder.create_interface(), self.module.DummyAdapter)
         self.assertIsInstance(
-            builder.create_interface('dummy', device=device), self.module.DummyAdapter)
+            builder.create_interface('dummy'), self.module.DummyAdapter)
 
         self.assertRaises(LewisException, builder.create_interface, 'invalid_protocol')
 
