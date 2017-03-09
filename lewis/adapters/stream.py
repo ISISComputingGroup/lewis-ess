@@ -501,7 +501,7 @@ class StreamAdapter(Adapter):
             if bound is None:
                 raise RuntimeError(
                     'Unable to produce callable object for non-existing member \'{}\' '
-                    'of device or interface.'.format(cmd.member))
+                    'of device or interface.'.format(cmd.func))
 
             for bound_cmd in bound:
                 if bound_cmd.pattern in patterns:
