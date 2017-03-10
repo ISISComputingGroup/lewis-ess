@@ -152,6 +152,7 @@ def do_run_simulation(argument_list=None):  # noqa: C901
     simulation = Simulation(
         device=device,
         adapter=interface,
+        device_builder=device_builder,
         control_server=arguments.rpc_host)
 
     simulation.cycle_delay = arguments.cycle_delay

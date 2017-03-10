@@ -19,7 +19,7 @@
 
 import unittest
 
-from mock import Mock, patch, call, ANY
+from mock import Mock, MagicMock, patch, call, ANY
 
 from lewis.core.simulation import Simulation
 from . import assertRaisesNothing
@@ -280,3 +280,42 @@ class TestSimulation(unittest.TestCase):
 
         self.assertRaises(RuntimeError, sim.set_device_parameters, {'not_existing': 45})
         self.assertRaises(RuntimeError, sim.set_device_parameters, {'baz': 4})
+
+    def test_setups_empty(self):
+        sim = Simulation(device=Mock(), adapter=Mock(), device_builder=None)
+
+        self.assertEqual(sim.setups, [])
+
+    def test_setups(self):
+        class MockBuilder(object):
+            setups = {'foo': 1, 'bar': 2}
+
+        sim = Simulation(device=Mock(), adapter=Mock(), device_builder=MockBuilder())
+
+        self.assertEqual(sim.setups, ['foo', 'bar'])
+
+    def test_switch_setup(self):
+        class MockBuilder(object):
+            def create_device(self, setup):
+                if setup == 'foo':
+                    return setup
+
+                raise RuntimeError('Error')
+
+        adapter_mock = MagicMock()
+        sim = Simulation(device=Mock(), adapter=adapter_mock, device_builder=MockBuilder())
+
+        set_simulation_running(sim)
+        sim._process_cycle(0.5)
+
+        self.assertNotEqual(sim.cycles, 0)
+        self.assertNotEqual(sim.runtime, 0)
+
+        sim.switch_setup('foo')
+
+        self.assertEqual(sim.cycles, 0)
+        self.assertEqual(sim.runtime, 0)
+
+        self.assertEqual(adapter_mock.device, 'foo')
+
+        self.assertRaises(RuntimeError, sim.switch_setup, 'bar')

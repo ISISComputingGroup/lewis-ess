@@ -1,6 +1,6 @@
 import unittest
 
-from mock import patch, call, Mock
+from mock import patch, call, Mock, MagicMock
 import inspect
 
 from lewis.adapters.stream import StreamAdapter
@@ -92,6 +92,33 @@ class TestAdapterCollection(unittest.TestCase):
         self.assertSetEqual(set(collection.protocols), {'foo', 'bar'})
 
         self.assertRaises(RuntimeError, collection.add_adapter, DummyAdapter('bar'))
+
+    def test_set_device(self):
+        mock_adapter1 = MagicMock()
+        mock_adapter2 = MagicMock()
+
+        collection = AdapterCollection(mock_adapter1, mock_adapter2)
+        collection.device = 'foo'
+
+        self.assertEqual(mock_adapter1.device, 'foo')
+        self.assertEqual(mock_adapter1.device, 'foo')
+
+        mock_adapter3 = MagicMock()
+        mock_adapter3.device = 'other'
+
+        collection.add_adapter(mock_adapter3)
+
+        self.assertEqual(mock_adapter3.device, 'foo')
+        collection.device = None
+
+        self.assertEqual(mock_adapter1.device, None)
+
+        mock_adapter4 = MagicMock()
+        mock_adapter4.device = 'bar'
+
+        collection.add_adapter(mock_adapter4)
+
+        self.assertEqual(mock_adapter1.device, 'bar')
 
     def test_remove_adapter(self):
         collection = AdapterCollection(DummyAdapter('foo'))

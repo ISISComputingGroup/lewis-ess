@@ -77,8 +77,10 @@ class Simulation(object):
     :param control_server: 'host:port'-string to construct control server or None.
     """
 
-    def __init__(self, device, adapter, control_server=None):
+    def __init__(self, device, adapter, device_builder=None, control_server=None):
         super(Simulation, self).__init__()
+
+        self._device_builder = device_builder
 
         self._device = device
         self._adapters = AdapterCollection(adapter)
@@ -109,6 +111,38 @@ class Simulation(object):
              'interface': ExposedObject(self._adapters,
                                         exclude=('add_adapter', 'remove_adapter', 'handle'))},
             control_server)
+
+    @property
+    def setups(self):
+        """
+        A list of setups that are available. Use :meth:`switch_setup` to
+        change the setup.
+        """
+        return list(self._device_builder.setups.keys()) if self._device_builder is not None else []
+
+    def switch_setup(self, new_setup):
+        """
+        This method switches the setup, which means that it replaces the currently
+        simulated device with a new device, as defined by the setup. This resets
+        the timers that keep track of the simulation.
+
+        If any error occurs during setup switching it is logged and re-raised.
+
+        :param new_setup: Name of the new setup to load.
+        """
+        try:
+            self._device = self._device_builder.create_device(new_setup)
+            self._reset_timers()
+            self._adapters.device = self._device
+        except Exception as e:
+            self.log.error(
+                'Caught an error while trying to switch setups. Setup not switched, '
+                'simulation continues: %s', e)
+            raise
+
+    def _reset_timers(self):
+        self._cycles = 0  # Number of cycles processed
+        self._runtime = 0.0  # Total simulation time processed
 
     def start(self):
         """
