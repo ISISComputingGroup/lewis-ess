@@ -292,7 +292,7 @@ class TestSimulation(unittest.TestCase):
 
         sim = Simulation(device=Mock(), adapter=Mock(), device_builder=MockBuilder())
 
-        self.assertEqual(sim.setups, ['foo', 'bar'])
+        self.assertEqual(set(sim.setups), {'foo', 'bar'})
 
     def test_switch_setup(self):
         class MockBuilder(object):
