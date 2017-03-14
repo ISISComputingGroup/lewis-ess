@@ -51,7 +51,7 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
     internally.
 
     Implementing such a device is straightforward, there are three methods
-    that *must* be overriden:
+    that *must* be overridden:
 
         - :meth:`_get_state_handlers`
         - :meth:`_get_initial_state`
