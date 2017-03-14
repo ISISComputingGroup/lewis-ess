@@ -18,7 +18,7 @@
 # *********************************************************************
 
 import unittest
-from lewis.devices.julabo import SimulatedJulabo
+from lewis.devices.julabo.devices.device import SimulatedJulabo
 from . import assertRaisesNothing
 
 

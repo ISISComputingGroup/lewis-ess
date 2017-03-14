@@ -111,28 +111,29 @@ class DeviceBuilder(object):
     def __init__(self, module):
         self._module = module
 
-        self._device_types = list(get_members(self._module, is_device).values())
-
-        if not self._device_types:
-            # syslog.warning('No devices discovered in module {}.'.format(module.__name__))
-            pass
-        else:
-            pass
-            # syslog.info('Discovered devices in module {}: {}'.format(
-            #    module.__name__, ','.join([x.__name__ for x in self._device_types])))
-
         submodules = get_submodules(self._module)
 
+        self._device_types = self._discover_devices(submodules.get('devices'))
         self._setups = self._discover_setups(submodules.get('setups'))
         self._interfaces = self._discover_interfaces(submodules.get('interfaces'))
 
-    def _discover_setups(self, setups_module):
+    def _discover_devices(self, devices_package):
+        devices = list(get_members(self._module, is_device).values())
+
+        if devices_package is None:
+            return devices
+
+        for module in get_submodules(devices_package).values():
+            devices += list(get_members(module, is_device).values())
+        return devices
+
+    def _discover_setups(self, setups_package):
         setups = getattr(self._module, 'setups', {})
 
         all_setups = setups if isinstance(setups, dict) else {}
 
-        if setups_module is not None:
-            for name, setup_module in get_submodules(setups_module).items():
+        if setups_package is not None:
+            for name, setup_module in get_submodules(setups_package).items():
                 existing_setup = all_setups.get(name)
 
                 if existing_setup is not None:
@@ -150,11 +151,11 @@ class DeviceBuilder(object):
 
         return all_setups
 
-    def _discover_interfaces(self, interfaces_module):
+    def _discover_interfaces(self, interface_package):
         all_interfaces = []
 
-        if interfaces_module is not None:
-            for interface_module in get_submodules(interfaces_module).values():
+        if interface_package is not None:
+            for interface_module in get_submodules(interface_package).values():
                 all_interfaces += list(get_members(interface_module, is_adapter).values())
 
         all_interfaces += list(get_members(self._module, is_adapter).values())

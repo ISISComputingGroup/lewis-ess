@@ -17,8 +17,4 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from .device import SimulatedChopper
-
 framework_version = '1.0.2'
-
-__all__ = ['SimulatedChopper']
