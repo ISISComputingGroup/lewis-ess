@@ -118,10 +118,11 @@ class DeviceBuilder(object):
         self._interfaces = self._discover_interfaces(submodules.get('interfaces'))
 
     def _discover_devices(self, devices_package):
-        if devices_package is None:
-            return []
-
         devices = list(get_members(self._module, is_device).values())
+
+        if devices_package is None:
+            return devices
+
         for module in get_submodules(devices_package).values():
             devices += list(get_members(module, is_device).values())
         return devices
