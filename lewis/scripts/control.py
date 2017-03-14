@@ -48,7 +48,7 @@ def show_api(remote, object_name):
             raw_value = str(getattr(obj, prop))
             value_lines = raw_value.split('\n')
 
-            current_value = value_lines[0][40:] + (
+            current_value = value_lines[0][:40] + (
                 ' [...]' if len(value_lines) > 1 or len(value_lines[0]) > 40 else '')
         except ProtocolException:
             raise
