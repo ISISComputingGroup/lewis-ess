@@ -123,8 +123,7 @@ class Simulation(object):
     def switch_setup(self, new_setup):
         """
         This method switches the setup, which means that it replaces the currently
-        simulated device with a new device, as defined by the setup. This resets
-        the timers that keep track of the simulation.
+        simulated device with a new device, as defined by the setup.
 
         If any error occurs during setup switching it is logged and re-raised.
 
@@ -132,17 +131,13 @@ class Simulation(object):
         """
         try:
             self._device = self._device_builder.create_device(new_setup)
-            self._reset_timers()
             self._adapters.device = self._device
+            self.log.info('Switched setup to \'%s\'', new_setup)
         except Exception as e:
             self.log.error(
                 'Caught an error while trying to switch setups. Setup not switched, '
                 'simulation continues: %s', e)
             raise
-
-    def _reset_timers(self):
-        self._cycles = 0  # Number of cycles processed
-        self._runtime = 0.0  # Total simulation time processed
 
     def start(self):
         """

@@ -72,7 +72,7 @@ It is then possible to switch the setup to one from the list, assuming it is cal
 
     $ lewis-control simulation switch_setup new_setup
 
-Note that the cycle count and the elapsed simulation runtime are reset.
+The setup switching process is logged.
 
 .. _remote-interface-access:
 

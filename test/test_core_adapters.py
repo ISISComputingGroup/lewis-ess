@@ -101,7 +101,7 @@ class TestAdapterCollection(unittest.TestCase):
         collection.device = 'foo'
 
         self.assertEqual(mock_adapter1.device, 'foo')
-        self.assertEqual(mock_adapter1.device, 'foo')
+        self.assertEqual(mock_adapter2.device, 'foo')
 
         mock_adapter3 = MagicMock()
         mock_adapter3.device = 'other'

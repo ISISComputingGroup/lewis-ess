@@ -20,8 +20,6 @@ New features
 
       $ lewis-control simulation switch_setup new_setup
 
-   The simulation cycles and runtime are reset.
-
  - It has been made easier to deposit devices in an external module while maintaining control over
    compatibility with the rest of the Lewis-framework. Lewis now checks for a version specification
    in each device module against the framework version before obtaining devices, adapters and

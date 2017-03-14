@@ -305,17 +305,7 @@ class TestSimulation(unittest.TestCase):
         adapter_mock = MagicMock()
         sim = Simulation(device=Mock(), adapter=adapter_mock, device_builder=MockBuilder())
 
-        set_simulation_running(sim)
-        sim._process_cycle(0.5)
-
-        self.assertNotEqual(sim.cycles, 0)
-        self.assertNotEqual(sim.runtime, 0)
-
         sim.switch_setup('foo')
 
-        self.assertEqual(sim.cycles, 0)
-        self.assertEqual(sim.runtime, 0)
-
         self.assertEqual(adapter_mock.device, 'foo')
-
         self.assertRaises(RuntimeError, sim.switch_setup, 'bar')
