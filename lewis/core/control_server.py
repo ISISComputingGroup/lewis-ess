@@ -37,6 +37,7 @@ from jsonrpc import JSONRPCResponseManager
 
 from .exceptions import LewisException
 from .logging import has_log
+from ..devices import Device, StateMachineDevice
 
 
 class ExposedObject(object):
@@ -78,17 +79,27 @@ class ExposedObject(object):
 
         self._add_function(':api', self.get_api)
 
-        exposed_members = members if members else self._public_members()
+        exposed_members = members or self._default_members()
 
         for method in exposed_members:
             if not exclude or method not in exclude:
                 self._add_member_wrappers(method)
 
-    def _public_members(self):
+    def _default_members(self):
         """
-        Returns a list of members that do not start with an underscore.
+        Returns a list of members that are good default candidates for being exposed.
+
+        This means public members that appear to be user-created and not part of the framework.
         """
-        return [prop for prop in dir(self._object) if not prop.startswith('_')]
+        def is_valid(prop):
+            return not any([
+                prop.startswith('_'),
+                prop == 'log',
+                prop in dir(Device),
+                prop in dir(StateMachineDevice)
+            ])
+
+        return filter(is_valid, dir(self._object))
 
     def _add_member_wrappers(self, member):
         """
@@ -98,7 +109,6 @@ class ExposedObject(object):
 
         :param member: The member of the wrapped object to expose
         """
-
         method_object = getattr(type(self._object), member, None) or getattr(self._object, member)
 
         if callable(method_object):
