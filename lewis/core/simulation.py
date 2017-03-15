@@ -103,11 +103,13 @@ class Simulation(object):
         if control_server is None:
             return None
 
-        return ControlServer(
-            {'device': self._device,
-             'simulation': ExposedObject(self, exclude=('start', 'control_server')),
-             'interface': ExposedObject(self._adapters,
-                                        exclude=('add_adapter', 'remove_adapter', 'handle'))},
+        return ControlServer({
+            'device': self._device,
+            'simulation': ExposedObject(self, exclude=('start', 'control_server', 'log')),
+            'interface': ExposedObject(
+                self._adapters,
+                exclude=('add_adapter', 'remove_adapter', 'handle', 'log')
+            )},
             control_server)
 
     def start(self):

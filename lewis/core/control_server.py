@@ -33,11 +33,11 @@ from __future__ import absolute_import
 import socket
 import zmq
 import json
+import inspect
 from jsonrpc import JSONRPCResponseManager
 
 from .exceptions import LewisException
 from .logging import has_log
-from ..devices import Device, StateMachineDevice
 
 
 class ExposedObject(object):
@@ -67,11 +67,12 @@ class ExposedObject(object):
     takes precedence.
 
     :param obj: The object to expose.
-    :param members: If supplied, only this list of methods will be exposed.
+    :param members: This list of methods will be exposed. (defaults to all public members)
     :param exclude: Members in this list will not be exposed.
+    :param exclude_inherited: Should inherited members be excluded? (defaults to True)
     """
 
-    def __init__(self, obj, members=None, exclude=None):
+    def __init__(self, obj, members=None, exclude=None, exclude_inherited=True):
         super(ExposedObject, self).__init__()
 
         self._object = obj
@@ -79,27 +80,21 @@ class ExposedObject(object):
 
         self._add_function(':api', self.get_api)
 
-        exposed_members = members or self._default_members()
+        exposed_members = members if members else self._public_members()
+        exclude = list(exclude or [])
+        if not exclude_inherited:
+            for base in inspect.getmro(type(obj))[1:]:
+                exclude += dir(base)
 
         for method in exposed_members:
-            if not exclude or method not in exclude:
+            if method not in exclude:
                 self._add_member_wrappers(method)
 
-    def _default_members(self):
+    def _public_members(self):
         """
-        Returns a list of members that are good default candidates for being exposed.
-
-        This means public members that appear to be user-created and not part of the framework.
+        Returns a list of members that do not start with an underscore.
         """
-        def is_valid(prop):
-            return not any([
-                prop.startswith('_'),
-                prop == 'log',
-                prop in dir(Device),
-                prop in dir(StateMachineDevice)
-            ])
-
-        return filter(is_valid, dir(self._object))
+        return [prop for prop in dir(self._object) if not prop.startswith('_')]
 
     def _add_member_wrappers(self, member):
         """
