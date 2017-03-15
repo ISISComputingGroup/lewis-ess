@@ -82,7 +82,7 @@ class ExposedObject(object):
 
         exposed_members = members if members else self._public_members()
         exclude = list(exclude or [])
-        if not exclude_inherited:
+        if exclude_inherited:
             for base in inspect.getmro(type(obj))[1:]:
                 exclude += dir(base)
 
