@@ -196,6 +196,7 @@ class AdapterCollection(object):
 
     def __init__(self, *args):
         self._adapters = {}
+        self._device = None
 
         for adapter in args:
             self.add_adapter(adapter)
@@ -203,13 +204,21 @@ class AdapterCollection(object):
     def add_adapter(self, adapter):
         """
         Adds the supplied adapter to the container but raises a ``RuntimeError`` if there's
-        already an adapter registered for the same protocol.
+        already an adapter registered for the same protocol. If the adapter has
+        a device and the collection does not, all adapters will get the new
+        device. If the collection already has a device, the new adapter's
+        device is overwritten.
 
         :param adapter: Adapter to add to the container
         """
         if adapter.protocol in self._adapters:
             raise RuntimeError(
                 'Adapter for protocol \'{}\' is already registered.'.format(adapter))
+
+        if self.device is not None:
+            adapter.device = self.device
+        else:
+            self.device = adapter.device
 
         self._adapters[adapter.protocol] = adapter
 
@@ -225,6 +234,21 @@ class AdapterCollection(object):
                 'Can not remove adapter for protocol \'{}\', none registered.'.format(protocol))
 
         del self._adapters[protocol]
+
+    @property
+    def device(self):
+        """
+        The device object exposed by all adapters. Setting a new device
+        will change the device in all contained adapters.
+        """
+        return self._device
+
+    @device.setter
+    def device(self, new_device):
+        self._device = new_device
+
+        for adapter in self._adapters.values():
+            adapter.device = self._device
 
     def handle(self, cycle_delay):
         """

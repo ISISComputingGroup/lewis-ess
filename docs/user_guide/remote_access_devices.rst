@@ -59,6 +59,21 @@ itself, so that it is generic to all devices:
 
     $ lewis-control simulation set_device_parameters "{'target_speed': 1, 'target_phase': 20}"
 
+Another case of device-related access to the simulation is switching the setup. To obtain a
+list of available setups, the following command is available:
+
+::
+
+    $ lewis-control simulation setups
+
+It is then possible to switch the setup to one from the list, assuming it is called ``new_setup``:
+
+::
+
+    $ lewis-control simulation switch_setup new_setup
+
+The setup switching process is logged.
+
 .. _remote-interface-access:
 
 Accessing the Device Communication Interface

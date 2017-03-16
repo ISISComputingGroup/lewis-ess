@@ -8,6 +8,18 @@ This release is currently in progress.
 New features
 ------------
 
+ - The device setup can be changed at runtime through the control server. It is not possible to switch to another device, only setups of the same device can be used. To query available setups:
+
+   .. ::
+
+      $ lewis-control simulation setups
+
+   Then, to actually activate the new setup, assuming it is called ``new_setup``:
+
+   .. ::
+
+      $ lewis-control simulation switch_setup new_setup
+
  - It has been made easier to deposit devices in an external module while maintaining control over
    compatibility with the rest of the Lewis-framework. Lewis now checks for a version specification
    in each device module against the framework version before obtaining devices, adapters and
