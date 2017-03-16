@@ -33,6 +33,7 @@ from __future__ import absolute_import
 import socket
 import zmq
 import json
+import inspect
 from jsonrpc import JSONRPCResponseManager
 
 from .exceptions import LewisException
@@ -66,11 +67,12 @@ class ExposedObject(object):
     takes precedence.
 
     :param obj: The object to expose.
-    :param members: If supplied, only this list of methods will be exposed.
+    :param members: This list of methods will be exposed. (defaults to all public members)
     :param exclude: Members in this list will not be exposed.
+    :param exclude_inherited: Should inherited members be excluded? (defaults to False)
     """
 
-    def __init__(self, obj, members=None, exclude=None):
+    def __init__(self, obj, members=None, exclude=None, exclude_inherited=False):
         super(ExposedObject, self).__init__()
 
         self._object = obj
@@ -79,9 +81,13 @@ class ExposedObject(object):
         self._add_function(':api', self.get_api)
 
         exposed_members = members if members else self._public_members()
+        exclude = list(exclude or [])
+        if exclude_inherited:
+            for base in inspect.getmro(type(obj))[1:]:
+                exclude += dir(base)
 
         for method in exposed_members:
-            if not exclude or method not in exclude:
+            if method not in exclude:
                 self._add_member_wrappers(method)
 
     def _public_members(self):
@@ -98,7 +104,6 @@ class ExposedObject(object):
 
         :param member: The member of the wrapped object to expose
         """
-
         method_object = getattr(type(self._object), member, None) or getattr(self._object, member)
 
         if callable(method_object):

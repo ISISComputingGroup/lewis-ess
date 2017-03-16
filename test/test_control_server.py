@@ -29,12 +29,16 @@ from . import assertRaisesNothing
 
 
 class TestObject(object):
-    def __init__(self):
-        self.a = 10
-        self.b = 20
+    a = 10
+    b = 20
 
+    def __init__(self):
         self.getTest = Mock()
         self.setTest = Mock()
+
+
+class TestObjectChild(TestObject):
+    c = 30
 
 
 class TestRPCObject(unittest.TestCase):
@@ -69,6 +73,24 @@ class TestRPCObject(unittest.TestCase):
         rpc_object = ExposedObject(TestObject(), members=('a', 'getTest'), exclude=('a'))
 
         expected_methods = [':api', 'getTest']
+        self.assertEqual(len(rpc_object), len(expected_methods))
+
+        for method in expected_methods:
+            self.assertTrue(method in rpc_object)
+
+    def test_inherited_not_exposed(self):
+        rpc_object = ExposedObject(TestObjectChild(), members=('a', 'c'), exclude_inherited=True)
+
+        expected_methods = [':api', 'c:get', 'c:set']
+        self.assertEqual(len(rpc_object), len(expected_methods))
+
+        for method in expected_methods:
+            self.assertTrue(method in rpc_object)
+
+    def test_inherited_exposed(self):
+        rpc_object = ExposedObject(TestObjectChild(), members=('a', 'c'))
+
+        expected_methods = [':api', 'a:get', 'a:set', 'c:get', 'c:set']
         self.assertEqual(len(rpc_object), len(expected_methods))
 
         for method in expected_methods:

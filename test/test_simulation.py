@@ -166,15 +166,12 @@ class TestSimulation(unittest.TestCase):
     @patch('lewis.core.simulation.ExposedObject')
     @patch('lewis.core.simulation.ControlServer')
     def test_construct_control_server(self, mock_control_server_type, exposed_object_mock):
-        device = Mock()
-        adapter = Mock()
-
         exposed_object_mock.return_value = 'test'
-        assertRaisesNothing(self, Simulation, device=device, adapter=adapter,
+        assertRaisesNothing(self, Simulation, device=Mock(), adapter=Mock(),
                             control_server='localhost:10000')
 
         mock_control_server_type.assert_called_once_with(
-            {'device': device, 'simulation': 'test', 'interface': 'test'},
+            {'device': 'test', 'simulation': 'test', 'interface': 'test'},
             'localhost:10000')
 
     def test_start_starts_control_server(self):
@@ -233,13 +230,12 @@ class TestSimulation(unittest.TestCase):
         # The return value (= instance of ControlServer) must be specified
         control_server_mock.return_value = Mock()
         exposed_object_mock.return_value = 'test'
-        device_mock = Mock()
 
-        env = Simulation(device=device_mock, adapter=Mock())
+        env = Simulation(device=Mock(), adapter=Mock())
 
         assertRaisesNothing(self, setattr, env, 'control_server', '127.0.0.1:10001')
         control_server_mock.assert_called_once_with(
-            {'device': device_mock, 'simulation': 'test', 'interface': 'test'}, '127.0.0.1:10001')
+            {'device': 'test', 'simulation': 'test', 'interface': 'test'}, '127.0.0.1:10001')
 
         control_server_mock.reset_mock()
 
@@ -253,7 +249,7 @@ class TestSimulation(unittest.TestCase):
 
         # The server is started automatically when the simulation is running
         control_server_mock.assert_called_once_with(
-            {'device': device_mock, 'simulation': 'test', 'interface': 'test'}, '127.0.0.1:10002')
+            {'device': 'test', 'simulation': 'test', 'interface': 'test'}, '127.0.0.1:10002')
 
         # The instance must have one call to start_server
         control_server_mock.return_value.assert_has_calls([call.start_server()])
