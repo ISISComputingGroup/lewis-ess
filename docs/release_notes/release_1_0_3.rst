@@ -52,3 +52,7 @@ Bug fixes and other improvements
    notably a settable timeout for requests was added so that incomplete requests do not cause the
    client to hang anymore. In ``lewis-control`` script, a new ``-t/--timeout`` argument was added
    to make use of that new functionality.
+   
+ - Only members defined as part of the device class are listed when using ``lewis-control device``.
+   ``lewis-control`` generally no longer lists inherited framework functions such as ``log``, 
+   ``add_processor``, etc. 
