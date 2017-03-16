@@ -104,11 +104,19 @@ class Simulation(object):
             return None
 
         return ControlServer({
-            'device': self._device,
-            'simulation': ExposedObject(self, exclude=('start', 'control_server', 'log')),
+            'device': ExposedObject(
+                self._device,
+                exclude_inherited=True
+            ),
+            'simulation': ExposedObject(
+                self,
+                exclude=('start', 'control_server', 'log'),
+                exclude_inherited=True
+            ),
             'interface': ExposedObject(
                 self._adapters,
-                exclude=('add_adapter', 'remove_adapter', 'handle', 'log')
+                exclude=('add_adapter', 'remove_adapter', 'handle', 'log'),
+                exclude_inherited=True
             )},
             control_server)
 

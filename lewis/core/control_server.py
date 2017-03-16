@@ -69,10 +69,10 @@ class ExposedObject(object):
     :param obj: The object to expose.
     :param members: This list of methods will be exposed. (defaults to all public members)
     :param exclude: Members in this list will not be exposed.
-    :param exclude_inherited: Should inherited members be excluded? (defaults to True)
+    :param exclude_inherited: Should inherited members be excluded? (defaults to False)
     """
 
-    def __init__(self, obj, members=None, exclude=None, exclude_inherited=True):
+    def __init__(self, obj, members=None, exclude=None, exclude_inherited=False):
         super(ExposedObject, self).__init__()
 
         self._object = obj

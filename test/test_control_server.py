@@ -79,7 +79,7 @@ class TestRPCObject(unittest.TestCase):
             self.assertTrue(method in rpc_object)
 
     def test_inherited_not_exposed(self):
-        rpc_object = ExposedObject(TestObjectChild(), members=('a', 'c'))
+        rpc_object = ExposedObject(TestObjectChild(), members=('a', 'c'), exclude_inherited=True)
 
         expected_methods = [':api', 'c:get', 'c:set']
         self.assertEqual(len(rpc_object), len(expected_methods))
@@ -88,7 +88,7 @@ class TestRPCObject(unittest.TestCase):
             self.assertTrue(method in rpc_object)
 
     def test_inherited_exposed(self):
-        rpc_object = ExposedObject(TestObjectChild(), members=('a', 'c'), exclude_inherited=False)
+        rpc_object = ExposedObject(TestObjectChild(), members=('a', 'c'))
 
         expected_methods = [':api', 'a:get', 'a:set', 'c:get', 'c:set']
         self.assertEqual(len(rpc_object), len(expected_methods))
