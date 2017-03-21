@@ -5,6 +5,7 @@ import inspect
 
 from lewis.adapters.stream import StreamAdapter
 from lewis.core.adapters import is_adapter, Adapter, AdapterCollection
+from lewis.core.exceptions import LewisException
 from . import assertRaisesNothing
 
 
@@ -30,8 +31,13 @@ class DummyAdapter(Adapter):
     A dummy adapter for tests.
     """
 
-    def __init__(self, protocol, running=False):
-        super(DummyAdapter, self).__init__(None)
+    default_options = {
+        'foo': True,
+        'bar': False,
+    }
+
+    def __init__(self, protocol, running=False, options=None):
+        super(DummyAdapter, self).__init__(options)
         self.protocol = protocol
         self._running = running
 
@@ -170,3 +176,7 @@ class TestAdapterCollection(unittest.TestCase):
         collection.handle(0.1)
         sleep_mock.assert_has_calls([call(0.05)])
         adapter_mock.assert_has_calls([call(0.05)])
+
+    def test_options(self):
+        assertRaisesNothing(self, DummyAdapter, 'protocol', options={'bar': 2, 'foo': 3})
+        self.assertRaises(LewisException, DummyAdapter, 'protocol', options={'invalid': False})
