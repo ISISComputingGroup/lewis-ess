@@ -6,16 +6,15 @@ EPICS Adapter Specifics
 
 The EPICS adapter takes only one optional argument:
 
--  ``-p`` / ``--prefix``: This string is prefixed to all PV names.
-   Defaults to empty / no prefix.
+-  ``prefix``: This string is prefixed to all PV names. Defaults to empty / no prefix.
 
-Arguments meant for the adapter should be separated from general
-Lewis arguments by a free-standing ``--``. For example:
+Arguments meant for the adapter can be specified with the adapter options.
+For example:
 
 ::
 
-    $ docker run -itd dmscid/lewis -p epics chopper -- -p SIM1:
-    $ python lewis.py -p epics chopper -- --prefix SIM2:
+    $ docker run -itd dmscid/lewis chopper -p "epics: {prefix: 'SIM1:'}"
+    $ python lewis.py chopper --adapter-options "epics: {prefix: 'SIM2:'}"
 
 When using the EPICS adapter within a docker container, the PV will be
 served on the docker0 network (172.17.0.0/16).
@@ -41,18 +40,19 @@ Stream Adapter Specifics
 
 The TCP Stream adapter has the following optional arguments:
 
--  ``-b`` / ``--bind-address``: Address of network adapter to listen on.
+-  ``bind_address``: Address of network adapter to listen on.
    Defaults to "0.0.0.0" (all network adapters).
--  ``-p`` / ``--port``: Port to listen for connections on. Defaults to
-   9999.
+-  ``port``: Port to listen for connections on. Defaults to 9999.
+-  ``telnet_mode``: When True, overrides both in and out terminators
+   to CRNL for telnet compatibility. Defaults to False.
 
-Arguments meant for the adapter should be separated from general
-Lewis arguments by a free-standing ``--``. For example:
+Arguments meant for the adapter can be specified with the adapter options.
+For example:
 
 ::
 
-    $ docker run -itd dmscid/lewis -p stream linkam_t95 -- -p 1234
-    $ python lewis.py -p stream linkam_t95 -- --bind-address localhost
+    $ docker run -itd dmscid/lewis linkam_t95 --adapter-options "stream: {port: 1234}"
+    $ python lewis.py linkam_t95 -p "stream: {bind_address: localhost, port: 1234}"
 
 When using Lewis via Docker on Windows and OSX, the container will be
 running inside a virtual machine, and so the port it is listening on
@@ -61,10 +61,10 @@ VM, an additional argument must be passed to Docker to forward the port:
 
 ::
 
-    $ docker run -it -p 1234:4321 dmscid/lewis -p stream linkam_t95 -- -p 4321
+    $ docker run -it -p 1234:4321 dmscid/lewis linkam_t95 -p "stream: {port: 4321}"
     $ telnet 192.168.99.100 1234
 
-This ``-p`` argument links port 4321 on the container to port 1234 on
+This port option links port 4321 on the container to port 1234 on
 the VM network adapter. It must appear after ``docker run`` and before
 ``dmscid/lewis``. This allows us to connect to the container from
 outside of the VM, in this case using Telnet. The ``192.168.99.100`` IP

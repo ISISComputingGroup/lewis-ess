@@ -23,9 +23,12 @@ implementations in :mod:`lewis.adapters`. It also contains :class:`AdapterCollec
 be used to store multiple adapters and manage them together.
 """
 import inspect
+from collections import namedtuple
 from time import sleep
 
 from lewis.core.logging import has_log
+from lewis.core.utils import dict_strict_update
+from lewis.core.exceptions import LewisException
 
 
 @has_log
@@ -54,13 +57,34 @@ class Adapter(object):
     :class:`lewis.core.devices.DeviceBase` to the ``device``-property. Sub-classes have to
     implement :meth:`_bind_device` to achieve actual binding behavior.
 
-    :param arguments: Command line arguments to the adapter, currently ignored.
+    It is possible to pass a dictionary with configuration options to Adapter. The keys of
+    the dictionary are accessible as properties of the ``_options``-member. Only keys that are
+    in the ``default_options`` member of the class are accepted. Inheriting classes must override
+    ``default_options`` to be a dictionary with the possible options for the adapter.
+
+    :param options: Configuration options for the adapter.
     """
     protocol = None
+    default_options = {}
 
-    def __init__(self, arguments=None):
+    def __init__(self, options=None):
         super(Adapter, self).__init__()
         self._device = None
+
+        options = options or {}
+
+        combined_options = dict(self.default_options)
+
+        try:
+            dict_strict_update(combined_options, options)
+        except RuntimeError as e:
+            raise LewisException(
+                'Invalid options found: {}. Valid options are: {}'.format(
+                    ', '.join(e.args[1]), ', '.join(self.default_options.keys())
+                ))
+
+        options_type = namedtuple('adapter_options', list(combined_options.keys()))
+        self._options = options_type(**combined_options)
 
     @property
     def device(self):

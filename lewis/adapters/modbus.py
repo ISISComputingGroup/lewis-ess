@@ -40,7 +40,6 @@ import struct
 
 from copy import deepcopy
 from math import ceil
-from argparse import ArgumentParser
 
 from lewis.core.adapters import Adapter
 from lewis.core.logging import has_log
@@ -585,19 +584,15 @@ class ModbusAdapter(Adapter):
     ir = None
     hr = None
 
-    def __init__(self, arguments=None):
-        super(ModbusAdapter, self).__init__(arguments)
+    default_options = {
+        'bind_address': '0.0.0.0',
+        'port': 502
+    }
 
-        self._options = self._parse_arguments(arguments or [])
+    def __init__(self, options=None):
+        super(ModbusAdapter, self).__init__(options)
+
         self._server = None
-
-    def _parse_arguments(self, arguments):
-        parser = ArgumentParser(description='Adapter to expose a device via Modbus TCP')
-        parser.add_argument('-b', '--bind-address', default='0.0.0.0',
-                            help='IP Address to bind and listen for connections on')
-        parser.add_argument('-p', '--port', type=int, default=502,
-                            help='Port to listen for connections on')
-        return parser.parse_args(arguments)
 
     def start_server(self):
         self._server = ModbusServer(self._options.bind_address, self._options.port, self)

@@ -23,23 +23,23 @@ general format:
 
 ::
 
-    $ docker run -it [docker args] dmscid/lewis [lewis args] [-- [adapter args]]
+    $ docker run -it [docker args] dmscid/lewis [device] [arguments]
 
-For example, to simulate a Linkam T95 **d**\ evice and expose it via the
+For example, to simulate a Linkam T95 device and expose it via the
 TCP Stream **p**\ rotocol:
 
 ::
 
-    $ docker run -it dmscid/lewis -p stream linkam_t95
+    $ docker run -it dmscid/lewis linkam_t95 -p stream
 
 To change the rate at which simulation cycles are calculated, increase
 or decrease the cycle delay, via the ``-c`` or ``--cycle-delay`` option.
-Smaller values mean more cycles per second, 0 means greates possible
+Smaller values mean more cycles per second, 0 means fastest possible
 speed.
 
 ::
 
-    $ docker run -it dmscid/lewis -p stream -c 0.05 linkam_t95
+    $ docker run -it dmscid/lewis linkam_t95 -p stream -c 0.05
 
 For long running devices it might be useful to speed up the simulation
 using the ``-e`` or ``--speed`` parameter, which is a factor by which
@@ -48,7 +48,7 @@ simulation cycle. To run a simulation 10 times faster:
 
 ::
 
-    $ docker run -it dmscid/lewis -p stream -e 10 linkam_t95
+    $ docker run -it dmscid/lewis linkam_t95 -p stream -e 10
 
 Details about parameters for the various adapters, and differences
 between OSes are covered in the "Adapter Specifics" sections.

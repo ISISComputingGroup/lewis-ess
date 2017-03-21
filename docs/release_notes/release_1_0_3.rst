@@ -5,10 +5,39 @@ Release 1.0.3
 
 This release is currently in progress.
 
+Command line interface change
+-----------------------------
+
+The way options are passed to the adapters has changed completely, the functionality has been
+merged into the ``-p``-argument, which has a new long version now, ``--adapter-options``.
+
+For the default adapter options, it is still possible to use the ``lewis``-command with ``-p``
+in the same way as before:
+
+.. ::
+
+   $ lewis -p stream linkam_t95
+
+To supply options, such as the address and port to bind to, the argument accepts an extended
+dictionary syntax now:
+
+.. ::
+
+   $ lewis linkam_t95 -p "stream: {bind_address: localhost, port: 9998}"
+
+The space after each colon is significant, it can not be left out. For strings containing
+special characters, such as colons, it is necessary to quote them:
+
+.. ::
+
+   $ lewis chopper -p "epics: {prefix: 'PREF:'}"
+
 New features
 ------------
 
- - The device setup can be changed at runtime through the control server. It is not possible to switch to another device, only setups of the same device can be used. To query available setups:
+ - The device setup can be changed at runtime through the control server. It is not possible to
+   switch to another device, only setups of the same device can be used.
+   To query available setups:
 
    .. ::
 

@@ -296,7 +296,7 @@ started using the ``-k`` parameter of ``lewis.py``:
 
 ::
 
-    $ ./lewis.py -k lewis.examples example_motor -- -b 127.0.0.1 -p 9999
+    $ ./lewis.py -k lewis.examples example_motor -p "stream: {bind_address: 127.0.0.1, port: 9999}"
 
 All functionality described in the
 :ref:`user_guide`, such as accessing the device and the simulation via the

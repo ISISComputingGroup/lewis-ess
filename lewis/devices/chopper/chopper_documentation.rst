@@ -26,7 +26,7 @@ Start using Docker:
 
 ::
 
-    $ docker run -it dmscid/lewis --protocol epics chopper -- --prefix SIM:
+    $ docker run -it dmscid/lewis chopper -p "epics: {prefix: 'SIM:'}"
 
 If running on Windows or OSX, you will additionally need to start a
 `Gateway <https://hub.docker.com/r/dmscid/epics-gateway/>`__ if you want
@@ -36,7 +36,7 @@ Start using Python:
 
 ::
 
-    $ python simulation.py --protocol epics chopper -- --prefix SIM:
+    $ python simulation.py chopper -p "epic: {prefix: 'SIM:'}"
 
 The ``--`` separates arguments of the protocol adapter from the
 simulation's arguments.

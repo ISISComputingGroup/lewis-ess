@@ -10,7 +10,7 @@ the ``-r`` option with a ``host:port`` string to the simulation:
 
 ::
 
-    $ lewis -r 127.0.0.1:10000 chopper -- -p SIM:
+    $ lewis chopper -r 127.0.0.1:10000 -p "epics: {prefix: 'SIM:'}"
 
 Now the device can be controlled via the ``lewis-control.py``-script
 in a different terminal window. The service can be queried to show the
