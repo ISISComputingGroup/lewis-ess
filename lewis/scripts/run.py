@@ -17,18 +17,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from lewis.core.logging import logging, default_log_format
-from lewis import __version__
-from lewis.core.devices import DeviceRegistry
-from lewis.core.simulation import Simulation
-from lewis.core.exceptions import LewisException
-from lewis.scripts import get_usage_text
-
-from six import string_types
 import argparse
 import os
 import sys
 import yaml
+
+from six import string_types
+from lewis import __version__
+from lewis.core.exceptions import LewisException
+from lewis.core.logging import logging, default_log_format
+from lewis.core.simulation import SimulationFactory
+from lewis.scripts import get_usage_text
 
 parser = argparse.ArgumentParser(
     description='This script starts a simulated device that is exposed via the specified '
@@ -107,44 +106,13 @@ __doc__ = 'This script is the main interaction point of the user with Lewis. The
           'is as follows:\n\n.. code-block:: none\n\n{}'.format(get_usage_text(parser, indent=4))
 
 
-def do_run_simulation(argument_list=None):  # noqa: C901
-    arguments = parser.parse_args(argument_list or sys.argv[1:])
-
-    if arguments.version:
-        print(__version__)
-        return
-
-    if arguments.output_level != 'none':
-        logging.basicConfig(level=getattr(logging, arguments.output_level.upper()),
-                            format=default_log_format)
-
-    if arguments.add_path is not None:
-        sys.path.append(os.path.abspath(arguments.add_path))
-
-    device_registry = DeviceRegistry(arguments.device_package)
-
-    if not arguments.device:
-        devices = ['Please specify a device to simulate. The following devices are available:']
-
-        for dev in device_registry.devices:
-            devices.append('    ' + dev)
-
-        print('\n'.join(devices))
-        return
-
-    device_builder = device_registry.device_builder(
-        arguments.device, arguments.relaxed_versions)
-
-    if arguments.list_protocols:
-        print('\n'.join(device_builder.protocols))
-        return
-
+def parse_adapter_options(raw_adapter_options):
     protocol = None
     options = {}
 
-    if arguments.adapter_options:
+    if raw_adapter_options:
         try:
-            adapter_options = yaml.load(arguments.adapter_options)
+            adapter_options = yaml.load(raw_adapter_options)
         except yaml.YAMLError:
             raise LewisException(
                 'It was not possible to parse this adapter option specification:\n'
@@ -152,7 +120,7 @@ def do_run_simulation(argument_list=None):  # noqa: C901
                 'Correct formats for the -p argument are:\n'
                 '    -p protocol\n'
                 '    -p "protocol: {option: \'val\', option2: 34}"\n'
-                'The spaces after the colons are significant!' % arguments.adapter_options)
+                'The spaces after the colons are significant!' % raw_adapter_options)
 
         if isinstance(adapter_options, string_types):
             protocol = adapter_options
@@ -161,39 +129,65 @@ def do_run_simulation(argument_list=None):  # noqa: C901
             protocol = list(adapter_options.keys())[0]
             options = adapter_options.get(protocol, {})
 
-    device = device_builder.create_device(arguments.setup)
-    interface = device_builder.create_interface(protocol, options=options)
-    interface.device = device
-
-    if arguments.show_interface:
-        print(interface.documentation)
-        return
-
-    simulation = Simulation(
-        device=device,
-        adapter=interface,
-        device_builder=device_builder,
-        control_server=arguments.rpc_host)
-
-    simulation.cycle_delay = arguments.cycle_delay
-    simulation.speed = arguments.speed
-
-    try:
-        simulation.start()
-    except KeyboardInterrupt:
-        print('\nInterrupt received; shutting down. Goodbye, cruel world!')
-        simulation.log.critical('Simulation aborted by user interaction')
+    return protocol, options
 
 
-def run_simulation(argument_list=None):
+def run_simulation(argument_list=None):  # noqa: C901
     """
-    This function is just a very thin wrapper around do_run_simulation to catch expected
-    exceptions that are derived from LewisException.
+    This is effectively the main function of a typical simulation run. Arguments passed in are
+    parsed and used to construct and run the simulation.
+
+    This function only exits when the program has completed or is interrupted.
 
     :param argument_list: Argument list to pass to the argument parser declared in this module.
-    :return:
     """
     try:
-        do_run_simulation(argument_list)
+        arguments = parser.parse_args(argument_list or sys.argv[1:])
+
+        if arguments.version:
+            print(__version__)
+            return
+
+        if arguments.output_level != 'none':
+            logging.basicConfig(level=getattr(logging, arguments.output_level.upper()),
+                                format=default_log_format)
+
+        if arguments.add_path is not None:
+            sys.path.append(os.path.abspath(arguments.add_path))
+
+        simulation_factory = SimulationFactory(arguments.device_package,
+                                               arguments.relaxed_versions)
+
+        if not arguments.device:
+            devices = ['Please specify a device to simulate. The following devices are available:']
+
+            for dev in simulation_factory.devices:
+                devices.append('    ' + dev)
+
+            print('\n'.join(devices))
+            return
+
+        if arguments.list_protocols:
+            print('\n'.join(simulation_factory.get_protocols(arguments.device)))
+            return
+
+        protocol, options = parse_adapter_options(arguments.adapter_options)
+
+        simulation = simulation_factory.create(
+            arguments.device, arguments.setup, protocol, options, arguments.rpc_host)
+
+        if arguments.show_interface:
+            print(simulation._adapters.documentation())
+            return
+
+        simulation.cycle_delay = arguments.cycle_delay
+        simulation.speed = arguments.speed
+
+        try:
+            simulation.start()
+        except KeyboardInterrupt:
+            print('\nInterrupt received; shutting down. Goodbye, cruel world!')
+            simulation.log.critical('Simulation aborted by user interaction')
+
     except LewisException as e:
         print('\n'.join(('An error occurred:', e.message)))
