@@ -142,18 +142,18 @@ def do_run_simulation(argument_list=None):  # noqa: C901
     protocol = None
     options = {}
 
-    try:
-        adapter_options = yaml.load(arguments.adapter_options)
-    except yaml.YAMLError:
-        raise LewisException(
-            'It was not possible to parse this adapter option specification:\n'
-            '    %s\n'
-            'Correct formats for the -p argument are:\n'
-            '    -p protocol\n'
-            '    -p "protocol: {option: \'val\', option2: 34}"\n'
-            'The spaces after the colons are significant!' % (arguments.adapter_options))
+    if arguments.adapter_options:
+        try:
+            adapter_options = yaml.load(arguments.adapter_options)
+        except yaml.YAMLError:
+            raise LewisException(
+                'It was not possible to parse this adapter option specification:\n'
+                '    %s\n'
+                'Correct formats for the -p argument are:\n'
+                '    -p protocol\n'
+                '    -p "protocol: {option: \'val\', option2: 34}"\n'
+                'The spaces after the colons are significant!' % arguments.adapter_options)
 
-    if adapter_options:
         if isinstance(adapter_options, string_types):
             protocol = adapter_options
             options = {}
