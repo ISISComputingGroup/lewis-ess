@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from argparse import ArgumentParser
 from datetime import datetime
 import inspect
 
@@ -279,15 +278,23 @@ class EpicsAdapter(Adapter):
     via EPICS might involve writing a value to a PV, whereas other protocols may
     offer an RPC-way of achieving the same thing.
 
-    :param arguments: Command line arguments to parse.
+    It's possible to configure the prefix for the PVs provided by this adapter. The
+    corresponding key in the ``options`` dictionary is called ``prefix``:
+
+    .. sourcecode:: Python
+
+        options = {
+            'prefix': 'PVPREFIX:'
+        }
+
+    :param options: Dictionary with options.
     """
     protocol = 'epics'
     pvs = None
+    default_options = {'prefix': ''}
 
-    def __init__(self, arguments=None):
-        super(EpicsAdapter, self).__init__(arguments)
-
-        self._options = self._parse_arguments(arguments or [])
+    def __init__(self, options=None):
+        super(EpicsAdapter, self).__init__(options)
 
         self._server = None
         self._driver = None
@@ -377,11 +384,6 @@ class EpicsAdapter(Adapter):
     @property
     def is_running(self):
         return self._server is not None
-
-    def _parse_arguments(self, arguments):
-        parser = ArgumentParser(description="Adapter to expose a device via EPICS")
-        parser.add_argument('-p', '--prefix', help='Prefix to use for all PVs', default='')
-        return parser.parse_args(arguments)
 
     def handle(self, cycle_delay=0.1):
         """

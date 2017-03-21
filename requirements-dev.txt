@@ -5,3 +5,4 @@ json-rpc
 sphinx>=1.4.5
 sphinx_rtd_theme
 semantic_version
+PyYAML

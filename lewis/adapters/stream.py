@@ -22,7 +22,6 @@ import asyncore
 import inspect
 import re
 import socket
-from argparse import ArgumentParser
 
 from six import b
 
@@ -460,7 +459,13 @@ class StreamAdapter(Adapter):
     In addition, the :meth:`handle_error`-method can be overridden. It is called when an exception
     is raised while handling commands.
 
-    :param arguments: Command line arguments.
+    Available adapter options are:
+
+     - bind_address: IP of network adapter to bind on (defaults to 0.0.0.0, or all adapters)
+     - port: Port to listen on (defaults to 9999)
+     - telnet_mode: When True, overrides in- and out-terminator for CRNL (defaults to False)
+
+    :param options: Dictionary with options.
     """
     protocol = 'stream'
 
@@ -469,10 +474,14 @@ class StreamAdapter(Adapter):
 
     commands = None
 
-    def __init__(self, arguments=None):
-        super(StreamAdapter, self).__init__(arguments)
+    default_options = {
+        'telnet_mode': False,
+        'bind_address': '0.0.0.0',
+        'port': 9999
+    }
 
-        self._options = self._parse_arguments(arguments or [])
+    def __init__(self, options=None):
+        super(StreamAdapter, self).__init__(options)
 
         if self._options.telnet_mode:
             self.in_terminator = '\r\n'
@@ -552,16 +561,6 @@ class StreamAdapter(Adapter):
     @property
     def is_running(self):
         return self._server is not None
-
-    def _parse_arguments(self, arguments):
-        parser = ArgumentParser(description='Adapter to expose a device via TCP Stream')
-        parser.add_argument('-b', '--bind-address', default='0.0.0.0',
-                            help='IP Address to bind and listen for connections on')
-        parser.add_argument('-p', '--port', type=int, default=9999,
-                            help='Port to listen for connections on')
-        parser.add_argument('-t', '--telnet-mode', action='store_true',
-                            help='Override terminators to be telnet compatible')
-        return parser.parse_args(arguments)
 
     def handle_error(self, request, error):
         """

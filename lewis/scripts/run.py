@@ -24,9 +24,11 @@ from lewis.core.simulation import Simulation
 from lewis.core.exceptions import LewisException
 from lewis.scripts import get_usage_text
 
+from six import string_types
 import argparse
 import os
 import sys
+import yaml
 
 parser = argparse.ArgumentParser(
     description='This script starts a simulated device that is exposed via the specified '
@@ -41,10 +43,6 @@ positional_args.add_argument(
     'device', nargs='?',
     help='Name of the device to simulate, omitting this argument prints out a list '
          'of available devices.')
-positional_args.add_argument(
-    'adapter_args', nargs='*',
-    help='Arguments for the adapter. Must be separated from the device by a '
-         'double dash. Use lewis device -- -h to display parameter options.')
 
 device_args = parser.add_argument_group(
     'Device related parameters',
@@ -55,9 +53,10 @@ device_args.add_argument(
     help='Name of the setup to load. If not provided, the default setup is selected. If there'
          'is no default, a list of setups is printed.')
 device_args.add_argument(
-    '-p', '--protocol', default=None,
-    help='Communication protocol to expose device. Use the --l flag to see which protocols are '
-         'available for the selected device.')
+    '-p', '--adapter-options', default=None,
+    help='Supply the protocol name and adapter options in the format '
+         '"name:{opt1: val, opt2: val}". Use the --l flag to see which protocols '
+         'are available for the selected device.')
 device_args.add_argument(
     '-l', '--list-protocols', action='store_true',
     help='List available protocols for selected device.')
@@ -140,9 +139,30 @@ def do_run_simulation(argument_list=None):  # noqa: C901
         print('\n'.join(device_builder.protocols))
         return
 
+    protocol = None
+    options = {}
+
+    try:
+        adapter_options = yaml.load(arguments.adapter_options)
+    except yaml.YAMLError:
+        raise LewisException(
+            'It was not possible to parse this adapter option specification:\n'
+            '    %s\n'
+            'Correct formats for the -p argument are:\n'
+            '    -p protocol\n'
+            '    -p "protocol: {option: \'val\', option2: 34}"\n'
+            'The spaces after the colons are significant!' % (arguments.adapter_options))
+
+    if adapter_options:
+        if isinstance(adapter_options, string_types):
+            protocol = adapter_options
+            options = {}
+        else:
+            protocol = list(adapter_options.keys())[0]
+            options = adapter_options.get(protocol, {})
+
     device = device_builder.create_device(arguments.setup)
-    interface = device_builder.create_interface(
-        arguments.protocol, arguments=arguments.adapter_args)
+    interface = device_builder.create_interface(protocol, options=options)
     interface.device = device
 
     if arguments.show_interface:

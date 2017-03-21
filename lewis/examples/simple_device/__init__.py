@@ -22,8 +22,13 @@ from lewis.devices import Device
 from lewis.adapters.stream import StreamAdapter, Var, Cmd
 
 
+class bla(dict):
+    pass
+
+
 class VerySimpleDevice(Device):
     param = 10
+    g = bla()
 
 
 class VerySimpleInterface(StreamAdapter):

@@ -274,6 +274,9 @@ class DeviceBuilder(object):
                 'device module \'{}\' provides multiple device types so that no meaningful '
                 'default can be deduced.'.format(setup_name, self.name))
 
+    def get_interface_type(self, protocol=None):
+        return self.interfaces[protocol]
+
     def create_interface(self, protocol=None, *args, **kwargs):
         """
         Returns an interface that implements the provided protocol. If the protocol is not

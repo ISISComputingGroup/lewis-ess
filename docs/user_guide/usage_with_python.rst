@@ -139,14 +139,14 @@ directory):
 
 ::
 
-    $ python lewis.py [lewis args] [-- [adapter args]]
+    $ python lewis.py device_name [arguments]
 
 You can then run Lewis as follows (from within the lewis
 directory):
 
 ::
 
-    $ python lewis.py -p epics chopper
+    $ python lewis.py chopper -p epics
 
 Details about parameters for the various adapters, and differences
 between OSes are covered in the "Adapter Specifics" sections.
