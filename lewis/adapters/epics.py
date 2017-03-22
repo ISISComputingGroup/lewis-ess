@@ -294,6 +294,9 @@ class MethodPV(PV):
         :param targets: List of targets with decreasing priority for finding the wrapped method.
         :return: Target object to be used by :class:`BoundPV`.
         """
+        if prop is None:
+            return None
+
         raw_getter, raw_setter = self._specifications.get(prop, (None, None))
 
         return type(prop, (object,),
