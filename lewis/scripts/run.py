@@ -158,7 +158,9 @@ def run_simulation(argument_list=None):  # noqa: C901
                 level=getattr(logging, loglevel.upper()), format=default_log_format)
 
         if arguments.add_path is not None:
-            sys.path.append(os.path.abspath(arguments.add_path))
+            additional_path = os.path.abspath(arguments.add_path)
+            logging.getLogger().debug('Extending path with: %s', additional_path)
+            sys.path.append(additional_path)
 
         simulation_factory = SimulationFactory(arguments.device_package,
                                                arguments.relaxed_versions)
@@ -196,4 +198,4 @@ def run_simulation(argument_list=None):  # noqa: C901
                 simulation.log.critical('Simulation aborted by user interaction')
 
     except LewisException as e:
-        print('\n'.join(('An error occurred:', e.message)))
+        print('\n'.join(('An error occurred:', str(e))))
