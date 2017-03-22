@@ -168,9 +168,8 @@ class PV(object):
 
     def bind(self, *targets):
         """
-        Tries to bind the PV to one of the supplied targets. The aspects of a PV defined directly
-        with a callable have the highest priority and do not require any target. Otherwise,
-        targets are inspected according to their order in which they are supplied.
+        Tries to bind the PV to one of the supplied targets. Targets are inspected according to
+        the order in which they are supplied.
 
         :param targets: Objects to inspect from.
         :return: BoundPV instance with the PV bound to the target property.
