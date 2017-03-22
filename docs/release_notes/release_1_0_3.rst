@@ -14,21 +14,21 @@ merged into the ``-p``-argument, which has a new long version now, ``--adapter-o
 For the default adapter options, it is still possible to use the ``lewis``-command with ``-p``
 in the same way as before:
 
-.. ::
+::
 
    $ lewis -p stream linkam_t95
 
 To supply options, such as the address and port to bind to, the argument accepts an extended
 dictionary syntax now:
 
-.. ::
+::
 
    $ lewis linkam_t95 -p "stream: {bind_address: localhost, port: 9998}"
 
 The space after each colon is significant, it can not be left out. For strings containing
 special characters, such as colons, it is necessary to quote them:
 
-.. ::
+::
 
    $ lewis chopper -p "epics: {prefix: 'PREF:'}"
 
@@ -39,13 +39,13 @@ New features
    switch to another device, only setups of the same device can be used.
    To query available setups:
 
-   .. ::
+   ::
 
       $ lewis-control simulation setups
 
    Then, to actually activate the new setup, assuming it is called ``new_setup``:
 
-   .. ::
+   ::
 
       $ lewis-control simulation switch_setup new_setup
 
