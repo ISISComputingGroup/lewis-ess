@@ -149,51 +149,6 @@ class PV(object):
 
     The PV infos are then updated together with the value, determined by ``poll_interval``.
 
-    :param target_property: Property of the adapter to expose.
-    :param poll_interval: Update interval of the PV.
-    :param read_only: Should be True if the PV is read only.
-    :param meta_data_property: Property which returns a dict containing PV metadata.
-    :param doc: Description of the PV. If not supplied, docstring of mapped property is used.
-    :param kwargs: Arguments forwarded into pcaspy pvdb-dict.
-    """
-
-    def __init__(self, target_property, poll_interval=1.0, read_only=False,
-                 meta_data_property=None, doc=None, **kwargs):
-        self.property = target_property
-        self.read_only = read_only
-        self.poll_interval = poll_interval
-        self.meta_data_property = meta_data_property
-        self.doc = doc
-        self.config = kwargs
-
-    def bind(self, *targets):
-        """
-        Tries to bind the PV to one of the supplied targets. Targets are inspected according to
-        the order in which they are supplied.
-
-        :param targets: Objects to inspect from.
-        :return: BoundPV instance with the PV bound to the target property.
-        """
-
-        return BoundPV(self,
-                       self._get_target(self.property, *targets),
-                       self._get_target(self.meta_data_property, *targets))
-
-    def _get_target(self, prop, *targets):
-        if prop is None:
-            return None
-
-        target = next((obj for obj in targets if prop in dir(obj)), None)
-
-        if target is None:
-            raise AttributeError('Can not find property \''
-                                 + prop + '\' in device or interface.')
-
-        return target
-
-
-class MethodPV(PV):
-    """
     In cases where the device is accessed via properties alone, this class provides the possibility
     to expose methods as PVs. A common use case would be to model a getter:
 
@@ -205,7 +160,7 @@ class MethodPV(PV):
 
         class Interface(EpicsAdapter):
             pvs = {
-                'example': MethodPV('get_example')
+                'example': PV('get_example')
             }
 
     It is also possible to model a getter/setter pair, in this case a tuple has to be provided:
@@ -223,7 +178,7 @@ class MethodPV(PV):
 
         class Interface(EpicsAdapter):
             pvs = {
-                'example': MethodPV(('get_example', 'set_example'))
+                'example': PV(('get_example', 'set_example'))
             }
 
     Any of the two members in the tuple can be substituted with ``None`` in case it does not apply.
@@ -235,32 +190,45 @@ class MethodPV(PV):
     arguments, setter functions must be callable with exactly one argument. The ``self`` of
     methods does not count towards this.
 
-    If
 
-    :param value: Getter function, method name or tuple of getter/setter.
+    :param target_property: Property or method name, getter function, tuple of getter/setter.
     :param poll_interval: Update interval of the PV.
     :param read_only: Should be True if the PV is read only. If not specified, the PV is
                       read_only if only a getter is supplied.
-    :param meta: Getter function or method name or tuple of getter/setter.
+    :param meta_data_property: Property or method name, getter function, tuple of getter/setter.
     :param doc: Description of the PV. If not supplied, docstring of mapped property is used.
     :param kwargs: Arguments forwarded into pcaspy pvdb-dict.
     """
 
-    def __init__(self, value, poll_interval=1.0, read_only=None,
-                 meta=None, doc=None, **kwargs):
-        value = self._get_specification(value)
-        meta = self._get_specification(meta)
+    def __init__(self, target_property, poll_interval=1.0, read_only=False,
+                 meta_data_property=None, doc=None, **kwargs):
+        self.property = 'value'
+        self.read_only = read_only
+        self.poll_interval = poll_interval
+        self.meta_data_property = 'meta'
+        self.doc = doc
+        self.config = kwargs
 
-        meta_data_property = 'meta' if any(meta) else None
-        read_only = read_only if read_only is not None else None in value
-
-        super(MethodPV, self).__init__('value', poll_interval=poll_interval, read_only=read_only,
-                                       meta_data_property=meta_data_property, doc=doc, **kwargs)
+        value = self._get_specification(target_property)
+        meta = self._get_specification(meta_data_property)
 
         self._specifications = {
             'value': value,
             'meta': meta
         }
+
+    def bind(self, *targets):
+        """
+        Tries to bind the PV to one of the supplied targets. Targets are inspected according to
+        the order in which they are supplied.
+
+        :param targets: Objects to inspect from.
+        :return: BoundPV instance with the PV bound to the target property.
+        """
+
+        return BoundPV(self,
+                       self._get_target(self.property, *targets),
+                       self._get_target(self.meta_data_property, *targets))
 
     def _get_specification(self, spec):
         """
@@ -278,15 +246,11 @@ class MethodPV(PV):
 
     def _get_target(self, prop, *targets):
         """
-        Re-implemented from :class:`PV`. The only two possible values for ``prop`` are
-        'value' and 'meta', but this is handled in :meth:`__init__` - nothing can go wrong
-        at this stage.
-
         The actual target methods are retrieved (possibly from the list of targets) and a
         wrapper-property is installed on a throwaway type that is specifically created for
-        the purpose of holding this property. An instance of this type (with the wrapper-property
-        forwarding calls to the correct target) is returned so that :class:`BoundPV` can
-        do the right thing.
+        the purpose of holding this property if necessary. In that case, an instance of this type
+        (with the wrapper-property forwarding calls to the correct target) is returned so
+        that :class:`BoundPV` can do the right thing.
 
         .. seealso:: :meth:`_create_getter`, :meth:`_create_setter`
 
@@ -299,9 +263,24 @@ class MethodPV(PV):
 
         raw_getter, raw_setter = self._specifications.get(prop, (None, None))
 
-        return type(prop, (object,),
-                    {prop: property(self._create_getter(raw_getter, *targets),
-                                    self._create_setter(raw_setter, *targets))})()
+        target = next(
+            (obj for obj in targets if isinstance(raw_getter, string_types) and not callable(
+                getattr(type(obj), raw_getter, lambda: True))),
+            None)
+
+        if target is not None:
+            # Now the target does not need to be constructed, property' or meta_data_property
+            # needs to change.
+            setattr(self, 'property' if prop == 'value' else 'meta_data_property', raw_getter)
+            return target
+
+        getter = self._create_getter(raw_getter, *targets)
+        setter = self._create_setter(raw_setter, *targets)
+
+        if prop == 'value' and setter is None:
+            self.read_only = True
+
+        return type(prop, (object,), {prop: property(getter, setter)})()
 
     def _create_getter(self, func, *targets):
         """
@@ -415,7 +394,7 @@ class PropertyExposingDriver(Driver):
             pv_object.value = value
             self.setParam(pv, pv_object.value)
             return True
-        except (LimitViolationException, AccessViolationException):
+        except (LimitViolationException, AccessViolationException) as e:
             return False
 
     def process_pv_updates(self, force=False):

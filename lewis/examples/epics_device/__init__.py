@@ -19,7 +19,7 @@
 
 from lewis.devices import Device
 
-from lewis.adapters.epics import EpicsAdapter, PV, MethodPV
+from lewis.adapters.epics import EpicsAdapter, PV
 
 
 class VerySimpleDevice(Device):
@@ -50,10 +50,10 @@ class VerySimpleInterface(EpicsAdapter):
     """
     pvs = {
         'Param-Raw': PV('param', type='int', doc='The raw underlying parameter.'),
-        'Param': MethodPV(('get_param', 'set_param'), type='int'),
+        'Param': PV(('get_param', 'set_param'), type='int'),
         'Second': PV('second'),
         'Second-Int': PV('second_int', type='int', read_only=True),
-        'Constant': MethodPV(lambda: 4, doc='A constant number.')
+        'Constant': PV(lambda: 4, doc='A constant number.')
     }
 
     @property
