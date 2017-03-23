@@ -9,8 +9,8 @@ one working day.
 Reporting Issues
 ----------------
 
-If you run into any issues or bugs while using Lewis, you can help us improve
-Lewis by
+If you run into any issues or bugs while using Lewis or find the documentation
+of a feature unclear, you can help us improve Lewis by
 `opening an Issue <https://github.com/DMSC-Instrument-Data/lewis/issues/new>`__
 here on GitHub. Please be sure to include enough information to reproduce the
 issue.
