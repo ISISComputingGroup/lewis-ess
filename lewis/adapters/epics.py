@@ -225,6 +225,8 @@ class PV(object):
         :param targets: Objects to inspect from.
         :return: BoundPV instance with the PV bound to the target property.
         """
+        self.property = 'value'
+        self.meta_data_property = 'meta'
 
         return BoundPV(self,
                        self._get_target(self.property, *targets),
@@ -258,6 +260,7 @@ class PV(object):
         :param targets: List of targets with decreasing priority for finding the wrapped method.
         :return: Target object to be used by :class:`BoundPV`.
         """
+
         if prop is None:
             return None
 
@@ -269,7 +272,7 @@ class PV(object):
             None)
 
         if target is not None:
-            # Now the target does not need to be constructed, property' or meta_data_property
+            # Now the target does not need to be constructed, property or meta_data_property
             # needs to change.
             setattr(self, 'property' if prop == 'value' else 'meta_data_property', raw_getter)
             return target
@@ -511,6 +514,9 @@ class EpicsAdapter(Adapter):
         :meth:`_bind_properties` to generate a dict of bound PVs.
         """
         self._bound_pvs = self._bind_properties(self.pvs)
+
+        if self._driver is not None:
+            self._driver._pv_dict = self._bound_pvs
 
     def _bind_properties(self, pvs):
         """
