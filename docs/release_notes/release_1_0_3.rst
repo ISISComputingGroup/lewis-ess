@@ -61,6 +61,9 @@ New features
    This way using devices from different sources becomes more reliable for users with different
    versions of Lewis, or hint them to update.
 
+ - A new flag ``-V/--verify`` has been added to the ``lewis``-script. When activated, it sets
+   the output level to ``debug`` and exits before actually starting the simulation. This can
+   help diagnose problems with device modules or input parameters.
 
 Bug fixes and other improvements
 --------------------------------
