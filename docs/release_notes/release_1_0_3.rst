@@ -70,6 +70,9 @@ New features
    In this case the simulation will start, but a warning will still be logged so that this can be
    identified as a potential source of errors later on.
    
+ - A new flag ``-V/--verify`` has been added to the ``lewis``-script. When activated, it sets
+   the output level to ``debug`` and exits before actually starting the simulation. This can
+   help diagnose problems with device modules or input parameters.
    
 Bug fixes and other improvements
 --------------------------------

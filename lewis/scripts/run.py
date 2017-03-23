@@ -93,6 +93,10 @@ other_args.add_argument(
     choices=['none', 'critical', 'error', 'warning', 'info', 'debug'],
     help='Level of detail for logging to stderr.')
 other_args.add_argument(
+    '-V', '--verify', action='store_true',
+    help='Sets the output level to \'debug\' and aborts before starting the device simulation. '
+         'This is intended to help with diagnosing problems with devices or input arguments.')
+other_args.add_argument(
     '-v', '--version', action='store_true',
     help='Prints the version and exits.')
 other_args.add_argument(
@@ -148,12 +152,15 @@ def run_simulation(argument_list=None):  # noqa: C901
             print(__version__)
             return
 
-        if arguments.output_level != 'none':
-            logging.basicConfig(level=getattr(logging, arguments.output_level.upper()),
-                                format=default_log_format)
+        loglevel = 'debug' if arguments.verify else arguments.output_level
+        if loglevel != 'none':
+            logging.basicConfig(
+                level=getattr(logging, loglevel.upper()), format=default_log_format)
 
         if arguments.add_path is not None:
-            sys.path.append(os.path.abspath(arguments.add_path))
+            additional_path = os.path.abspath(arguments.add_path)
+            logging.getLogger().debug('Extending path with: %s', additional_path)
+            sys.path.append(additional_path)
 
         simulation_factory = SimulationFactory(arguments.device_package,
                                                arguments.relaxed_versions)
@@ -183,11 +190,12 @@ def run_simulation(argument_list=None):  # noqa: C901
         simulation.cycle_delay = arguments.cycle_delay
         simulation.speed = arguments.speed
 
-        try:
-            simulation.start()
-        except KeyboardInterrupt:
-            print('\nInterrupt received; shutting down. Goodbye, cruel world!')
-            simulation.log.critical('Simulation aborted by user interaction')
+        if not arguments.verify:
+            try:
+                simulation.start()
+            except KeyboardInterrupt:
+                print('\nInterrupt received; shutting down. Goodbye, cruel world!')
+                simulation.log.critical('Simulation aborted by user interaction')
 
     except LewisException as e:
-        print('\n'.join(('An error occurred:', e.message)))
+        print('\n'.join(('An error occurred:', str(e))))

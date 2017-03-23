@@ -54,6 +54,7 @@ def is_device(obj):
         obj, DeviceBase) and obj.__module__ not in ('lewis.devices', 'lewis.core.devices')
 
 
+@has_log
 class DeviceBuilder(object):
     """
     This class takes a module object (for example imported via importlib.import_module or via the
@@ -117,6 +118,13 @@ class DeviceBuilder(object):
         self._setups = self._discover_setups(submodules.get('setups'))
         self._interfaces = self._discover_interfaces(submodules.get('interfaces'))
 
+        self.log.debug(
+            'Discovered the following items in \'%s\': Devices: %s; Setups: %s; Interfaces: %s',
+            self._module.__name__,
+            ', '.join(device_t.__name__ for device_t in self._device_types),
+            ', '.join(self._setups.keys()),
+            ', '.join('(%s: %s)' % (k, v.__name__) for k, v in self._interfaces.items()))
+
     def _discover_devices(self, devices_package):
         devices = list(get_members(self._module, is_device).values())
 
@@ -125,6 +133,7 @@ class DeviceBuilder(object):
 
         for module in get_submodules(devices_package).values():
             devices += list(get_members(module, is_device).values())
+
         return devices
 
     def _discover_setups(self, setups_package):
@@ -265,6 +274,9 @@ class DeviceBuilder(object):
         setup_data = self.setups[setup_name]
         device_type = setup_data.get('device_type') or self.default_device_type
 
+        self.log.debug('Trying to create device \'%s\' (setup: %s, device type: %s)',
+                       self.name, setup_name, device_type.__name__)
+
         try:
             return self._create_device_instance(
                 device_type, **setup_data.get('parameters', {}))
@@ -289,6 +301,8 @@ class DeviceBuilder(object):
         :return: Instance of the interface type.
         """
         protocol = protocol if protocol is not None else self.default_protocol
+
+        self.log.debug('Trying to create interface for protocol \'%s\'', protocol)
 
         try:
             return self.interfaces[protocol](*args, **kwargs)
@@ -331,6 +345,9 @@ class DeviceRegistry(object):
 
         self._devices = {name: DeviceBuilder(module) for name, module in
                          get_submodules(self._device_module).items()}
+
+        self.log.debug('Devices loaded from \'%s\': %s', device_module,
+                       ', '.join(self._devices.keys()))
 
     @property
     def devices(self):

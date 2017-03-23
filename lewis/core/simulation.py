@@ -102,6 +102,12 @@ class Simulation(object):
         self._control_server = None  # Just initialize to None and use property setter afterwards
         self.control_server = control_server
 
+        self.log.debug(
+            'Created simulation. Device type: %s, Protocol: %s, Possible setups for '
+            'switching: %s, Control server: %s', device.__class__.__name__, adapter.protocol,
+            ', '.join(device_builder.setups.keys()) if device_builder else None,
+            control_server)
+
     def _create_control_server(self, control_server):
         if control_server is None:
             return None
