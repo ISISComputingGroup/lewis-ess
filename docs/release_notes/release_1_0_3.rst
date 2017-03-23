@@ -58,9 +58,9 @@ New features
    signature of the function is checked. See also the new example in
    ``lewis.examples.epics_device``.
 
- - The device setup can be changed at runtime through the control server. It is not possible to
-   switch to another device, only setups of the same device can be used.
-   To query available setups:
+ - The device setup (specified in the ``setups``-dict or module inside the device module)
+   can be changed at runtime through the control server. It is not possible to switch to
+   another device, only setups of the same device can be used. To query available setups:
 
    ::
 
@@ -82,9 +82,18 @@ New features
       framework_version = '1.0.3'
 
    This way using devices from different sources becomes more reliable for users with different
-   versions of Lewis, or hint them to update.
-
-
+   versions of Lewis, or hint them to update. By default, Lewis won't start if a device specifies
+   another framework version, but this behavior can be overridden by using the new flag
+   ``-R/--relaxed-versions``:
+   
+   ::
+   
+      $ lewis some_device -R
+      
+   In this case the simulation will start, but a warning will still be logged so that this can be
+   identified as a potential source of errors later on.
+   
+   
 Bug fixes and other improvements
 --------------------------------
 
