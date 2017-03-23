@@ -394,7 +394,7 @@ class PropertyExposingDriver(Driver):
             pv_object.value = value
             self.setParam(pv, pv_object.value)
             return True
-        except (LimitViolationException, AccessViolationException) as e:
+        except (LimitViolationException, AccessViolationException):
             return False
 
     def process_pv_updates(self, force=False):
