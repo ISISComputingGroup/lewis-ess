@@ -36,9 +36,9 @@ New features
 ------------
 
  - Writing devices with an EPICS interface has been made more convenient for cases where the device
-   does not have properties, but getter and setter methods. :class:`~lewis.adapters.epics.PV` has
-   been extended to accept a wider range of values for ``target_property`` and
-   ``meta_data_property``, for example method names:
+   does not have properties, but does have getter and setter methods.
+   :class:`~lewis.adapters.epics.PV` has been extended to accept a wider range of values for
+   ``target_property`` and ``meta_data_property``, for example method names:
 
    .. sourcecode:: Python
 
