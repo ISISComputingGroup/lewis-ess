@@ -275,7 +275,7 @@ class DeviceBuilder(object):
         device_type = setup_data.get('device_type') or self.default_device_type
 
         self.log.debug('Trying to create device \'%s\' (setup: %s, device type: %s)',
-                       self.name, setup_name, device_type.__name__)
+                       self.name, setup_name, device_type.__name__ if device_type else '')
 
         try:
             return self._create_device_instance(

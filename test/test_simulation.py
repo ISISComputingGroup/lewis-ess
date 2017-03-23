@@ -292,6 +292,8 @@ class TestSimulation(unittest.TestCase):
 
     def test_switch_setup(self):
         class MockBuilder(object):
+            setups = {'foo': None}
+
             def create_device(self, setup):
                 if setup == 'foo':
                     return setup
