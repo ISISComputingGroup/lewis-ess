@@ -62,4 +62,4 @@ class VerySimpleInterface(EpicsAdapter):
         return int(self.device.second)
 
 
-framework_version = '1.0.2'
+framework_version = '1.0.3'
