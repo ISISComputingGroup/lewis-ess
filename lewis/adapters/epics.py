@@ -278,6 +278,13 @@ class PV(object):
                 None)
 
         if target is not None:
+            # If the property is an actual property and has no setter, read_only can be
+            # set to True at this point automatically.
+            target_prop = getattr(type(target), raw_getter, None)
+
+            if isinstance(target_prop, property) and target_prop.fset is None:
+                self.read_only = True
+
             # Now the target does not need to be constructed, property or meta_data_property
             # needs to change.
             setattr(self, 'property' if prop == 'value' else 'meta_data_property', raw_getter)

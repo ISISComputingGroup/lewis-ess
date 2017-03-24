@@ -52,7 +52,7 @@ class VerySimpleInterface(EpicsAdapter):
         'Param-Raw': PV('param', type='int', doc='The raw underlying parameter.'),
         'Param': PV(('get_param', 'set_param'), type='int'),
         'Second': PV('second'),
-        'Second-Int': PV('second_int', type='int', read_only=True),
+        'Second-Int': PV('second_int', type='int'),
         'Constant': PV(lambda: 4, doc='A constant number.')
     }
 
