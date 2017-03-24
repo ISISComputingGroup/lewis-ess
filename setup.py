@@ -29,7 +29,7 @@ def readme():
 
 setup(
     name='lewis',
-    version='1.0.2',
+    version='1.0.3',
     description='LeWIS - Let\'s Write Intricate Simulators!',
     long_description=readme(),
     url='https://github.com/DMSC-Instrument-Data/lewis',
@@ -55,7 +55,7 @@ setup(
     keywords='hardware simulation controls',
     packages=find_packages(exclude=['docs', 'test']),
 
-    install_requires=['six', 'pyzmq', 'json-rpc'],
+    install_requires=['six', 'pyzmq', 'json-rpc', 'semantic_version', 'PyYAML'],
 
     extras_require={
         'epics': ['pcaspy'],

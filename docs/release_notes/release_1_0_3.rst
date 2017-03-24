@@ -1,9 +1,11 @@
-:orphan:
-
 Release 1.0.3
 =============
 
-This release is currently in progress.
+This version was released on March 24th, 2017. In this release, the :mod:`~lewis.adapters.epics`-
+module has received some updates. Some important groundwork for future improvements has been
+laid as well, which resulted in the ability to switch device setups at runtime via the control
+server and a new command line syntax for configuring communications. The control server and client
+have been improved as well.
 
 Command line interface change
 -----------------------------
