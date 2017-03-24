@@ -35,6 +35,29 @@ special characters, such as colons, it is necessary to quote them:
 New features
 ------------
 
+ - Writing devices with an EPICS interface has been made more convenient for cases where the device
+   does not have properties, but does have getter and setter methods.
+   :class:`~lewis.adapters.epics.PV` has been extended to accept a wider range of values for
+   ``target_property`` and ``meta_data_property``, for example method names:
+
+   .. sourcecode:: Python
+
+        class FooDevice(Device):
+            _foo = 3
+
+            def get_foo(self):
+                return self._foo * 3
+
+        class FooDeviceInterface(EpicsAdapter):
+            pvs = {
+                'Foo': PV('get_foo')
+            }
+
+   For read/write cases, a tuple of names can be supplied. Instead of method names it is also
+   allowed to specify callables, for example functions or lambda expressions. In that case, the
+   signature of the function is checked. See also the new example in
+   ``lewis.examples.epics_device``.
+
  - The device setup (specified in the ``setups``-dict or module inside the device module)
    can be changed at runtime through the control server. It is not possible to switch to
    another device, only setups of the same device can be used. To query available setups:

@@ -18,10 +18,11 @@
 # *********************************************************************
 
 from datetime import datetime
+from functools import wraps
 import inspect
 
 from lewis.core.adapters import Adapter
-from six import iteritems
+from six import iteritems, string_types
 
 from lewis.core.logging import has_log
 from lewis.core.utils import seconds_since, FromOptionalDependency, format_doc_text
@@ -39,58 +40,6 @@ missing_pcaspy_exception = LewisException(
 
 Driver, SimpleServer = FromOptionalDependency(
     'pcaspy', missing_pcaspy_exception).do_import('Driver', 'SimpleServer')
-
-
-class PV(object):
-    """
-    The PV-class is used to declare the EPICS-interface exposed by a sub-class of
-    EpicsAdapter. The ``target_property`` argument specifies which property of the adapter
-    the PV maps to. To make development easier it can also be a part of the exposed
-    device. If the property exists on both the Adapter-subclass and the device, the former
-    has precedence. This is useful for overriding behavior for protocol specific "quirks".
-
-    If the PV should be read only, this needs to be specified via
-    the corresponding parameter. The information about the poll interval is used
-    py EpicsAdapter to update the PV in regular intervals. All other named arguments
-    are forwarded to the pcaspy server's `pvdb`, so it's possible to pass on
-    limits, types, enum-values and so on.
-
-    In case those arguments change at runtime, it's possible to provide ``meta_data_property``,
-    which should contain the name of a property that returns a dict containing these values.
-    For example if limits change:
-
-    .. sourcecode:: Python
-
-        class Interface(EpicsAdapter):
-            pvs = {
-                'example': PV('example', meta_data_property='example_meta')
-            }
-
-            @property
-            def example_meta(self):
-                return {
-                    'lolim': self.device._example_low_limit,
-                    'hilim': self.device._example_high_limit,
-                }
-
-    The PV infos are then updated together with the value, determined by ``poll_interval``.
-
-    :param target_property: Property of the adapter to expose.
-    :param poll_interval: Update interval of the PV.
-    :param read_only: Should be True if the PV is read only.
-    :param meta_data_property: Property which returns a dict containing PV metadata.
-    :param doc: Description of the PV. If not supplied, docstring of mapped property is used.
-    :param kwargs: Arguments forwarded into pcaspy pvdb-dict.
-    """
-
-    def __init__(self, target_property, poll_interval=1.0, read_only=False,
-                 meta_data_property=None, doc=None, **kwargs):
-        self.property = target_property
-        self.read_only = read_only
-        self.poll_interval = poll_interval
-        self.meta_data_property = meta_data_property
-        self.doc = doc
-        self.config = kwargs
 
 
 class BoundPV(object):
@@ -164,6 +113,277 @@ class BoundPV(object):
         """Docstring of property on target or override specified on PV-object."""
         return self._pv.doc or inspect.getdoc(
             getattr(type(self._target), self._pv.property, None)) or ''
+
+
+class PV(object):
+    """
+    The PV-class is used to declare the EPICS-interface exposed by a sub-class of
+    EpicsAdapter. The ``target_property`` argument specifies which property of the adapter
+    the PV maps to. To make development easier it can also be a part of the exposed
+    device. If the property exists on both the Adapter-subclass and the device, the former
+    has precedence. This is useful for overriding behavior for protocol specific "quirks".
+
+    If the PV should be read only, this needs to be specified via
+    the corresponding parameter. The information about the poll interval is used
+    py EpicsAdapter to update the PV in regular intervals. All other named arguments
+    are forwarded to the pcaspy server's `pvdb`, so it's possible to pass on
+    limits, types, enum-values and so on.
+
+    In case those arguments change at runtime, it's possible to provide ``meta_data_property``,
+    which should contain the name of a property that returns a dict containing these values.
+    For example if limits change:
+
+    .. sourcecode:: Python
+
+        class Interface(EpicsAdapter):
+            pvs = {
+                'example': PV('example', meta_data_property='example_meta')
+            }
+
+            @property
+            def example_meta(self):
+                return {
+                    'lolim': self.device._example_low_limit,
+                    'hilim': self.device._example_high_limit,
+                }
+
+    The PV infos are then updated together with the value, determined by ``poll_interval``.
+
+    In cases where the device is accessed via properties alone, this class provides the possibility
+    to expose methods as PVs. A common use case would be to model a getter:
+
+    .. sourcecode:: Python
+
+        class SomeDevice(Device):
+            def get_example(self):
+                return 42
+
+        class Interface(EpicsAdapter):
+            pvs = {
+                'example': PV('get_example')
+            }
+
+    It is also possible to model a getter/setter pair, in this case a tuple has to be provided:
+
+    .. sourcecode:: Python
+
+        class SomeDevice(Device):
+            _ex = 40
+
+            def get_example(self):
+                return self._ex + 2
+
+            def set_example(self, new_example):
+                self._ex = new_example - 2
+
+        class Interface(EpicsAdapter):
+            pvs = {
+                'example': PV(('get_example', 'set_example'))
+            }
+
+    Any of the two members in the tuple can be substituted with ``None`` in case it does not apply.
+    Besides method names it is also allowed to provide callables. Valid callables are for example
+    bound methods and free functions, but also lambda expressions and partials.
+
+    There are however restrictions for the supplied functions (be it as method names or directly
+    as callables) with respect to their signature. Getter functions must be callable without any
+    arguments, setter functions must be callable with exactly one argument. The ``self`` of
+    methods does not count towards this.
+
+
+    :param target_property: Property or method name, getter function, tuple of getter/setter.
+    :param poll_interval: Update interval of the PV.
+    :param read_only: Should be True if the PV is read only. If not specified, the PV is
+                      read_only if only a getter is supplied.
+    :param meta_data_property: Property or method name, getter function, tuple of getter/setter.
+    :param doc: Description of the PV. If not supplied, docstring of mapped property is used.
+    :param kwargs: Arguments forwarded into pcaspy pvdb-dict.
+    """
+
+    def __init__(self, target_property, poll_interval=1.0, read_only=False,
+                 meta_data_property=None, doc=None, **kwargs):
+        self.property = 'value'
+        self.read_only = read_only
+        self.poll_interval = poll_interval
+        self.meta_data_property = 'meta'
+        self.doc = doc
+        self.config = kwargs
+
+        value = self._get_specification(target_property)
+        meta = self._get_specification(meta_data_property)
+
+        self._specifications = {
+            'value': value,
+            'meta': meta
+        }
+
+    def bind(self, *targets):
+        """
+        Tries to bind the PV to one of the supplied targets. Targets are inspected according to
+        the order in which they are supplied.
+
+        :param targets: Objects to inspect from.
+        :return: BoundPV instance with the PV bound to the target property.
+        """
+        self.property = 'value'
+        self.meta_data_property = 'meta'
+
+        return BoundPV(self,
+                       self._get_target(self.property, *targets),
+                       self._get_target(self.meta_data_property, *targets))
+
+    def _get_specification(self, spec):
+        """
+        Helper method to create a homogeneous representation of a specified getter or
+        getter/setter pair.
+
+        :param spec: Function specification 'getter', (getter,) or (getter,setter)
+        :return:  Harmonized getter/setter specification, (getter, setter)
+        """
+        if spec is None or callable(spec) or isinstance(spec, string_types):
+            spec = (spec,)
+        if len(spec) == 1:
+            spec = (spec[0], None)
+        return spec
+
+    def _get_target(self, prop, *targets):
+        """
+        The actual target methods are retrieved (possibly from the list of targets) and a
+        wrapper-property is installed on a throwaway type that is specifically created for
+        the purpose of holding this property if necessary. In that case, an instance of this type
+        (with the wrapper-property forwarding calls to the correct target) is returned so
+        that :class:`BoundPV` can do the right thing.
+
+        .. seealso:: :meth:`_create_getter`, :meth:`_create_setter`
+
+        :param prop: Property, is either 'value' or 'meta'.
+        :param targets: List of targets with decreasing priority for finding the wrapped method.
+        :return: Target object to be used by :class:`BoundPV`.
+        """
+
+        if prop is None:
+            return None
+
+        raw_getter, raw_setter = self._specifications.get(prop, (None, None))
+
+        target = None
+
+        if isinstance(raw_getter, string_types):
+            target = next(
+                (obj for obj in targets if
+                 isinstance(
+                     getattr(type(obj), raw_getter, None), property)
+                 or not callable(
+                     getattr(obj, raw_getter, lambda: True))),
+                None)
+
+        if target is not None:
+            # If the property is an actual property and has no setter, read_only can be
+            # set to True at this point automatically.
+            target_prop = getattr(type(target), raw_getter, None)
+
+            if isinstance(target_prop, property) and target_prop.fset is None:
+                self.read_only = True
+
+            # Now the target does not need to be constructed, property or meta_data_property
+            # needs to change.
+            setattr(self, 'property' if prop == 'value' else 'meta_data_property', raw_getter)
+            return target
+
+        getter = self._create_getter(raw_getter, *targets)
+        setter = self._create_setter(raw_setter, *targets)
+
+        if prop == 'value' and setter is None:
+            self.read_only = True
+
+        return type(prop, (object,), {prop: property(getter, setter)})()
+
+    def _create_getter(self, func, *targets):
+        """
+        Returns a function wrapping the supplied function. The returned wrapper can be used as the
+        getter in a property definition. Raises a RuntimeError if the signature of the supplied
+        function is not compatible with the getter-concept (no arguments except self).
+
+        :param func: Callable or name of method on one object in targets.
+        :param targets: List of targets with decreasing priority for finding func.
+        :return: Getter function for constructing a wrapper-property.
+        """
+        if not func:
+            return None
+
+        final_callable = self._get_callable(func, *targets)
+
+        if not self._function_has_n_args(final_callable, 0):
+            raise RuntimeError(
+                'The function \'{}\' does not look like a getter function. A valid getter '
+                'function has no arguments that do not have a default. The self-argument of '
+                'methods does not count towards that number.')
+
+        @wraps(final_callable)
+        def getter(obj):
+            return final_callable()
+
+        return getter
+
+    def _create_setter(self, func, *targets):
+        """
+        Returns a function wrapping the supplied function. The returned wrapper can be used as the
+        setter in a property definition. Raises a RuntimeError if the signature of the supplied
+        function is not compatible with the setter-concept (exactly one argument except self).
+
+        :param func: Callable or name of method on one object in targets.
+        :param targets: List of targets with decreasing priority for finding func.
+        :return: Setter function for constructing a wrapper-property or ``None``.
+        """
+        if not func:
+            return None
+
+        func = self._get_callable(func, *targets)
+
+        if not self._function_has_n_args(func, 1):
+            raise RuntimeError(
+                'The function \'{}\' does not look like a setter function. A valid setter '
+                'function has exactly one argument without a default. The self-argument of '
+                'methods does not count towards that number.')
+
+        def setter(obj, value):
+            func(value)
+
+        return setter
+
+    def _get_callable(self, func, *targets):
+        """
+        If func is already a callable, it is returned directly. If it's a string, it is assumed
+        to be a method on one of the objects supplied in targets and that is returned. If no
+        method with the specified name is found, an AttributeError is raised.
+
+        :param func: Callable or name of method on one object in targets.
+        :param targets: List of targets with decreasing priority for finding func.
+        :return: Callable.
+        """
+        if not callable(func):
+            func = next((getattr(obj, func, None) for obj in targets if func in dir(obj)),
+                        None)
+
+        if not func:
+            raise AttributeError(
+                'No method with the name \'{}\' could be found on any of the target objects '
+                '(device, interface). Please check the spelling.'.format(func))
+
+        return func
+
+    def _function_has_n_args(self, func, n):
+        """
+        Returns true if func has n arguments. Arguments with default and self for
+        methods are not considered.
+        """
+        if inspect.ismethod(func):
+            n += 1
+
+        argspec = inspect.getargspec(func)
+        defaults = argspec.defaults or ()
+
+        return len(argspec.args) - len(defaults) == n
 
 
 @has_log
@@ -308,6 +528,9 @@ class EpicsAdapter(Adapter):
         """
         self._bound_pvs = self._bind_properties(self.pvs)
 
+        if self._driver is not None:
+            self._driver._pv_dict = self._bound_pvs
+
     def _bind_properties(self, pvs):
         """
         This method transforms a dict of :class:`PV` objects to a dict of :class:`BoundPV` objects,
@@ -323,25 +546,9 @@ class EpicsAdapter(Adapter):
         """
         bound_pvs = {}
         for pv_name, pv in pvs.items():
-            value_target = self._get_target(pv.property)
-            meta_target = self._get_target(pv.meta_data_property)
-
-            bound_pvs[pv_name] = BoundPV(pv, value_target, meta_target)
+            bound_pvs[pv_name] = pv.bind(self, self.device)
 
         return bound_pvs
-
-    def _get_target(self, prop):
-        if prop is None:
-            return None
-
-        if prop in dir(self):
-            return self
-
-        if prop in dir(self.device):
-            return self.device
-
-        raise AttributeError('Can not find property \''
-                             + prop + '\' in device or interface.')
 
     @property
     def documentation(self):
