@@ -266,10 +266,16 @@ class PV(object):
 
         raw_getter, raw_setter = self._specifications.get(prop, (None, None))
 
-        target = next(
-            (obj for obj in targets if isinstance(raw_getter, string_types) and not callable(
-                getattr(type(obj), raw_getter, lambda: True))),
-            None)
+        target = None
+
+        if isinstance(raw_getter, string_types):
+            target = next(
+                (obj for obj in targets if
+                 isinstance(
+                     getattr(type(obj), raw_getter, None), property)
+                 or not callable(
+                     getattr(obj, raw_getter, lambda: True))),
+                None)
 
         if target is not None:
             # Now the target does not need to be constructed, property or meta_data_property
@@ -354,7 +360,7 @@ class PV(object):
 
         if not func:
             raise AttributeError(
-                'No method with the name \'{}\' could be found on any of the target objects'
+                'No method with the name \'{}\' could be found on any of the target objects '
                 '(device, interface). Please check the spelling.'.format(func))
 
         return func
