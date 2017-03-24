@@ -60,6 +60,10 @@ device_args.add_argument(
     '-l', '--list-protocols', action='store_true',
     help='List available protocols for selected device.')
 device_args.add_argument(
+    '-L', '--list-adapter-options', action='store_true',
+    help='List available configuration options and their value. Values that have not been '
+         'modified in the -p argument are default values.')
+device_args.add_argument(
     '-i', '--show-interface', action='store_true',
     help='Show command interface of device interface.')
 device_args.add_argument(
@@ -185,6 +189,17 @@ def run_simulation(argument_list=None):  # noqa: C901
 
         if arguments.show_interface:
             print(simulation._adapters.documentation())
+            return
+
+        if arguments.list_adapter_options:
+            configurations = simulation._adapters.configuration()
+
+            for protocol, options in configurations.items():
+                print('{}:'.format(protocol))
+
+                for opt, val in options.items():
+                    print('    {} = {}'.format(opt, val))
+
             return
 
         simulation.cycle_delay = arguments.cycle_delay

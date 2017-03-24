@@ -333,6 +333,17 @@ class AdapterCollection(object):
 
         return status_dict
 
+    def configuration(self, *args):
+        """
+        Returns a dictionary that contains the options for the specified adapter. The dictionary
+        keys are the adapter protocols.
+
+        :param args: List of protocols for which to list options, empty for all adapters.
+        :return: Dict of protocol: option-dict pairs.
+        """
+        return {adapter.protocol: adapter._options._asdict()
+                for adapter in self._get_adapters(args)}
+
     def documentation(self, *args):
         """
         Returns the concatenated documentation for the adapters specified by the supplied
