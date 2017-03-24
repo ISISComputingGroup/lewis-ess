@@ -32,6 +32,12 @@ special characters, such as colons, it is necessary to quote them:
 
    $ lewis chopper -p "epics: {prefix: 'PREF:'}"
 
+To see what options can be specified, use the new ``-L/--list-adapter-options`` flag:
+
+::
+
+   $ lewis chopper -p epics -L
+
 New features
 ------------
 

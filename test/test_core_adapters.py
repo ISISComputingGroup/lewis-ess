@@ -81,6 +81,10 @@ class TestAdapter(unittest.TestCase):
             bind_mock.assert_called_once()
             self.assertEqual(adapter.device, None)
 
+    def test_options(self):
+        assertRaisesNothing(self, DummyAdapter, 'protocol', options={'bar': 2, 'foo': 3})
+        self.assertRaises(LewisException, DummyAdapter, 'protocol', options={'invalid': False})
+
 
 class TestAdapterCollection(unittest.TestCase):
     def test_add_adapter(self):
@@ -177,6 +181,24 @@ class TestAdapterCollection(unittest.TestCase):
         sleep_mock.assert_has_calls([call(0.05)])
         adapter_mock.assert_has_calls([call(0.05)])
 
-    def test_options(self):
-        assertRaisesNothing(self, DummyAdapter, 'protocol', options={'bar': 2, 'foo': 3})
-        self.assertRaises(LewisException, DummyAdapter, 'protocol', options={'invalid': False})
+    def test_configuration(self):
+        collection = AdapterCollection(
+            DummyAdapter('protocol_a', options={'bar': 2, 'foo': 3}),
+            DummyAdapter('protocol_b', options={'bar': True, 'foo': False}))
+
+        self.assertDictEqual(collection.configuration(),
+                             {
+                                 'protocol_a': {'bar': 2, 'foo': 3},
+                                 'protocol_b': {'bar': True,
+                                                'foo': False}
+                             })
+
+        self.assertDictEqual(collection.configuration('protocol_a'),
+                             {
+                                 'protocol_a': {'bar': 2, 'foo': 3},
+                             })
+
+        self.assertDictEqual(collection.configuration('protocol_b'),
+                             {
+                                 'protocol_b': {'bar': True, 'foo': False},
+                             })
