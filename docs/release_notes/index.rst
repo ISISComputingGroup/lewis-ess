@@ -7,6 +7,7 @@ called "Plankton").
 .. toctree::
     :maxdepth: 1
 
+    release_1_0_3
     release_1_0_2
     release_1_0_1
     release_1_0_0
