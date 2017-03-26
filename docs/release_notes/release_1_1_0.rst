@@ -4,7 +4,7 @@ Release 1.1.0
 New features
 ------------
 
-The control client, lewis-control,  not provides a ``-v``-argument
+The control client, lewis-control, now provides a ``-v``-argument
 
 ::
 
