@@ -1,0 +1,12 @@
+Release 1.1.0
+=============
+
+New features
+------------
+
+The control client, lewis-control,  not provides a ``-v``-argument
+
+::
+
+   $ lewis-control -v 
+
