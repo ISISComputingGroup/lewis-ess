@@ -24,6 +24,7 @@ import sys
 
 from lewis.core.control_client import ControlClient, ProtocolException
 from lewis.scripts import get_usage_text
+from lewis import __version__
 
 
 def list_objects(remote):
@@ -120,6 +121,9 @@ optional_args.add_argument(
     help='By default, no output is generated if the remote function returns None. '
          'Specifying this flag will force the client to print those None-values.')
 optional_args.add_argument(
+    '-v', '--version', action='store_true',
+    help='Prints the version and exits.')
+optional_args.add_argument(
     '-h', '--h', action='help',
     help='Shows this help message and exits.')
 
@@ -129,6 +133,10 @@ __doc__ = 'To interact with the control server of a running simulation, use this
 
 def control_simulation(argument_list=None):
     args = parser.parse_args(argument_list or sys.argv[1:])
+
+    if args.version:
+        print(__version__)
+        return
 
     try:
         remote = ControlClient(*args.rpc_host.split(':'),
