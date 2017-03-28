@@ -3,6 +3,8 @@
 Release 1.1.0
 =============
 
+This release is currently in progress.
+
 New features
 ------------
 
