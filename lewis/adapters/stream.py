@@ -23,6 +23,7 @@ import inspect
 import re
 import socket
 
+from scanf import scanf_compile
 from six import b
 
 from lewis.core.adapters import Adapter
@@ -117,6 +118,13 @@ class StreamServer(asyncore.dispatcher):
         self._accepted_connections = []
 
 
+class fmt(object):
+    def __init__(self, pattern):
+        self.raw_pattern = pattern
+        regex, self.argument_mappings = scanf_compile(pattern)
+        self.pattern = regex.pattern
+
+
 class Func(object):
     """
     Objects of this type connect a callable object to a regular expression. The regular expression
@@ -163,8 +171,16 @@ class Func(object):
             raise RuntimeError('Can not construct a Func-object from a non callable object.')
 
         self.func = func
-        self.raw_pattern = pattern
-        self.pattern = re.compile(b(pattern), 0) if pattern else None
+
+        if isinstance(pattern, fmt):
+            self.raw_pattern = pattern.raw_pattern
+            self.pattern = re.compile(b(pattern.pattern), 0)
+
+            if argument_mappings is None:
+                argument_mappings = pattern.argument_mappings or None
+        else:
+            self.raw_pattern = pattern
+            self.pattern = re.compile(b(pattern), 0) if pattern else None
 
         try:
             inspect.getcallargs(func, *[None] * self.pattern.groups)

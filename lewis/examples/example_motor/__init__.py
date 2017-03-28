@@ -23,7 +23,7 @@ from lewis.core import approaches
 from lewis.core.statemachine import State
 from lewis.devices import StateMachineDevice
 
-from lewis.adapters.stream import StreamAdapter, Cmd
+from lewis.adapters.stream import StreamAdapter, Cmd, fmt
 
 
 class DefaultMovingState(State):
@@ -101,7 +101,7 @@ class ExampleMotorStreamInterface(StreamAdapter):
         Cmd('get_status', r'^S\?$'),
         Cmd('get_position', r'^P\?$'),
         Cmd('get_target', r'^T\?$'),
-        Cmd('set_target', r'^T=([-+]?[0-9]*\.?[0-9]+)$', argument_mappings=(float,)),
+        Cmd('set_target', fmt('T=%f'), argument_mappings=(float,)),
         Cmd('stop', r'^H$',
             return_mapping=lambda x: 'T={},P={}'.format(x[0], x[1])),
     }
