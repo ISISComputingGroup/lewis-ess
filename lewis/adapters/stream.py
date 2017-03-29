@@ -24,7 +24,7 @@ import re
 import socket
 
 from scanf import scanf_compile
-from six import b
+from six import b, string_types
 
 from lewis.core.adapters import Adapter
 from lewis.core.logging import has_log
@@ -122,7 +122,14 @@ class fmt(object):
     def __init__(self, pattern):
         self.raw_pattern = pattern
         regex, self.argument_mappings = scanf_compile(pattern)
-        self.pattern = regex.pattern
+        self.regex_pattern = regex.pattern
+
+
+class regex(object):
+    def __init__(self, pattern):
+        self.raw_pattern = pattern
+        self.regex_pattern = pattern
+        self.argument_mappings = None
 
 
 class Func(object):
@@ -172,15 +179,11 @@ class Func(object):
 
         self.func = func
 
-        if isinstance(pattern, fmt):
-            self.raw_pattern = pattern.raw_pattern
-            self.pattern = re.compile(b(pattern.pattern), 0)
+        self.raw_pattern = pattern.raw_pattern
+        self.pattern = re.compile(b(pattern.regex_pattern), 0)
 
-            if argument_mappings is None:
-                argument_mappings = pattern.argument_mappings or None
-        else:
-            self.raw_pattern = pattern
-            self.pattern = re.compile(b(pattern), 0) if pattern else None
+        if argument_mappings is None:
+            argument_mappings = pattern.argument_mappings or None
 
         try:
             inspect.getcallargs(func, *[None] * self.pattern.groups)
@@ -288,7 +291,7 @@ class CommandBase(object):
         self.return_mapping = return_mapping
         self.doc = doc
 
-    def bind(self, target):
+    def bind(self, target, pattern_type):
         raise NotImplementedError('Binders need to implement the bind method.')
 
 
@@ -336,13 +339,16 @@ class Cmd(CommandBase):
         super(Cmd, self).__init__(func, pattern, argument_mappings, return_mapping,
                                   doc)
 
-    def bind(self, target):
+    def bind(self, target, pattern_type):
         method = self.func if callable(self.func) else getattr(target, self.func, None)
 
         if method is None:
             return None
 
-        return [Func(method, self.pattern, self.argument_mappings, self.return_mapping,
+        pattern = pattern_type(self.pattern) if isinstance(self.pattern,
+                                                           string_types) else self.pattern
+
+        return [Func(method, pattern, self.argument_mappings, self.return_mapping,
                      self.doc)]
 
 
@@ -403,13 +409,16 @@ class Var(CommandBase):
         self.read_pattern = read_pattern
         self.write_pattern = write_pattern
 
-    def bind(self, target):
+    def bind(self, target, pattern_type):
         if self.func not in dir(target):
             return None
 
         funcs = []
 
         if self.read_pattern is not None:
+            read_pattern = pattern_type(self.read_pattern) if isinstance(
+                self.read_pattern, string_types) else self.read_pattern
+
             def getter():
                 return getattr(target, self.func)
 
@@ -417,9 +426,12 @@ class Var(CommandBase):
                 getter.__doc__ = 'Getter: ' + inspect.getdoc(getattr(type(target), self.func))
 
             funcs.append(
-                Func(getter, self.read_pattern, return_mapping=self.return_mapping, doc=self.doc))
+                Func(getter, read_pattern, return_mapping=self.return_mapping, doc=self.doc))
 
         if self.write_pattern is not None:
+            write_pattern = pattern_type(self.write_pattern) if isinstance(
+                self.write_pattern, string_types) else self.read_pattern
+
             def setter(new_value):
                 setattr(target, self.func, new_value)
 
@@ -427,7 +439,7 @@ class Var(CommandBase):
                 setter.__doc__ = 'Setter: ' + inspect.getdoc(getattr(type(target), self.func))
 
             funcs.append(
-                Func(setter, self.write_pattern, argument_mappings=self.argument_mappings,
+                Func(setter, write_pattern, argument_mappings=self.argument_mappings,
                      return_mapping=self.return_mapping, doc=self.doc))
 
         return funcs
@@ -496,6 +508,8 @@ class StreamAdapter(Adapter):
         'port': 9999
     }
 
+    pattern_type = regex
+
     def __init__(self, options=None):
         super(StreamAdapter, self).__init__(options)
 
@@ -521,7 +535,9 @@ class StreamAdapter(Adapter):
         bound_commands = []
 
         for cmd in cmds:
-            bound = cmd.bind(self) or cmd.bind(self.device) or None
+            bound = cmd.bind(self, self.pattern_type) or \
+                    cmd.bind(self.device, self.pattern_type) or \
+                    None
 
             if bound is None:
                 raise RuntimeError(

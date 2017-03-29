@@ -23,7 +23,7 @@ from lewis.core import approaches
 from lewis.core.statemachine import State
 from lewis.devices import StateMachineDevice
 
-from lewis.adapters.stream import StreamAdapter, Cmd, fmt
+from lewis.adapters.stream import StreamAdapter, Cmd, fmt, regex
 
 
 class DefaultMovingState(State):
@@ -97,10 +97,13 @@ class ExampleMotorStreamInterface(StreamAdapter):
     The motor starts moving immediately when a new target position is set. Once it's moving,
     it has to be stopped to receive a new target, otherwise an error is generated.
     """
+
+    pattern_type = fmt
+
     commands = {
-        Cmd('get_status', r'^S\?$'),
-        Cmd('get_position', r'^P\?$'),
-        Cmd('get_target', r'^T\?$'),
+        Cmd('get_status', regex(r'^S\?$')),
+        Cmd('get_position', r'^P?$'),
+        Cmd('get_target', r'^T?$'),
         Cmd('set_target', fmt('T=%f'), argument_mappings=(float,)),
         Cmd('stop', r'^H$',
             return_mapping=lambda x: 'T={},P={}'.format(x[0], x[1])),
