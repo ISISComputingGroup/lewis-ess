@@ -104,7 +104,7 @@ class ExampleMotorStreamInterface(StreamAdapter):
         Cmd('get_status', regex(r'^S\?$')),
         Cmd('get_position', r'^P?$'),
         Cmd('get_target', r'^T?$'),
-        Cmd('set_target', fmt('T=%f'), argument_mappings=(float,)),
+        Cmd('set_target', 'T=%f'),
         Cmd('stop', r'^H$',
             return_mapping=lambda x: 'T={},P={}'.format(x[0], x[1])),
     }
