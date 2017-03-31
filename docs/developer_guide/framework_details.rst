@@ -67,7 +67,7 @@ first raise ``on_exit`` against the current state, and then raise
 may occur per cycle.
 
 There are three ways to specify event handlers when initializing the
-statemacine:
+statemachine:
 
 -  Object-Oriented: Implement one class per state, derived from
    :class:`~lewis.core.statemachine.State`, which optionally contains up to
