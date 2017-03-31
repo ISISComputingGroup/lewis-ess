@@ -88,10 +88,10 @@ What Can You Do With Lewis?
 -  Create one or more ``Interface``\ s over your ``Device`` to expose it
    as an EPICS IOC, a TCP listener, or on any other bespoke protocol you
    like
--  Access and control the ``Device`` while it is running via a "back
-   door"
--  Access and control the ``Simulation`` while it is running via a "back
-   door"
+-  Access and control the ``Device`` while it is running via a control server
+-  Access and control the ``Simulation`` while it is running via a control server
+-  Control server can be accessed via command-line utility, Python bindings, or
+   JSON RPC.
 
 Additional Documentation
 ------------------------
