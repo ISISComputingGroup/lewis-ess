@@ -1,7 +1,7 @@
 Framework Details
 =================
 
-The Lewis framework is built around a cycle-based core which drives the
+The Lewis framework is built around a cycle-driven core which drives the
 device simulation, including an optional StateMachine, and shared protocol
 adapters that separate the communication layer from the simulated device.
 
