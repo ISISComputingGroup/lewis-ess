@@ -1,9 +1,13 @@
 Framework Details
 =================
 
-The Lewis framework is built around a cycle-based statemachine that
-drives the device simulation, and shared protocol adapters that separate
-the communication layer from the simulated device.
+The Lewis framework is built around a cycle-based core which drives the
+device simulation, including an optional StateMachine, and shared protocol
+adapters that separate the communication layer from the simulated device.
+
+.. figure:: /diagrams/SimulationCycles.png
+   
+   Overview of Lewis framework architecture.
 
 Cycle-based
 -----------
@@ -39,7 +43,7 @@ identified.
 Statemachine
 ------------
 
-A :class:`~lewis.core.statemachine.StateMachine`-class designed
+A :class:`~lewis.core.statemachine.StateMachine` class designed
 for a cycle-based approach is provided to allow modeling complex
 device behaviour in an event-driven fashion.
 
