@@ -138,7 +138,7 @@ class fmt(object):
     :param pattern: Scanf format specification.
     :param exact_match: Match only if the entire string matches.
 
-    .. _scanf :: https://github.com/joshburnett/scanf
+    .. _scanf: https://github.com/joshburnett/scanf
     """
     # TODO: Remove escaping/unescaping when patched version of scanf is available
     additional_escape = re.compile(r'([\^\|\$])')
