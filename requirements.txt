@@ -3,7 +3,7 @@ pyzmq
 json-rpc
 semantic_version
 PyYAML
-scanf
+scanf==1.4
 
 # If you want to use EPICS based devices, uncomment the pcaspy-line.
 # It requires a working EPICS installation, please refer to the

@@ -119,10 +119,18 @@ class StreamServer(asyncore.dispatcher):
 
 
 class fmt(object):
-    def __init__(self, pattern):
-        self.raw_pattern = pattern
-        regex, self.argument_mappings = scanf_compile(pattern)
-        self.regex_pattern = regex.pattern
+    # TODO: Remove escaping/unescaping when patched version of scanf is available
+    additional_escape = re.compile(r'([\^\|\$])')
+    unesacpe = re.compile(r'\\([\^\|\$])')
+
+    def __init__(self, pattern, exact_match=True):
+        self.raw_pattern = self.additional_escape.sub(r'\\\1', pattern)
+
+        regex, self.argument_mappings = scanf_compile(self.raw_pattern)
+        self.regex_pattern = self.unesacpe.sub(r'\1', regex.pattern)
+
+        if exact_match:
+            self.regex_pattern = '^{}$'.format(self.regex_pattern)
 
 
 class regex(object):
@@ -562,7 +570,7 @@ class StreamAdapter(Adapter):
         commands = ['{}:\n{}'.format(
             cmd.raw_pattern,
             format_doc_text(cmd.doc or inspect.getdoc(cmd.func) or ''))
-                    for cmd in sorted(self.bound_commands, key=lambda x: x.raw_pattern)]
+            for cmd in sorted(self.bound_commands, key=lambda x: x.raw_pattern)]
 
         options = format_doc_text(
             'Listening on: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}'.format(
