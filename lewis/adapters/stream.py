@@ -119,6 +119,27 @@ class StreamServer(asyncore.dispatcher):
 
 
 class fmt(object):
+    """
+    Interprets the specified pattern as a scanf format. Internally, the scanf_ package is used
+    to transform the format into a regular expression. Please consult the documentation of scanf_
+    for valid pattern specifications.
+
+    By default, the resulting regular expression matches exactly. Consider this example:
+
+    ..sourcecode:: Python
+
+        exact = fmt('T=%f')
+        not_exact = fmt('T=%f', exact_match=False)
+
+    The first pattern only matches the string ``T=4.0``, whereas the second would also match
+    ``T=4.0garbage``. Please note that the specifiers like ``%f`` are automatically turned into
+    groups in the generated regular expression.
+
+    :param pattern: Scanf format specification.
+    :param exact_match: Match only if the entire string matches.
+
+    .. _scanf :: https://github.com/joshburnett/scanf
+    """
     # TODO: Remove escaping/unescaping when patched version of scanf is available
     additional_escape = re.compile(r'([\^\|\$])')
     unesacpe = re.compile(r'\\([\^\|\$])')
@@ -161,7 +182,8 @@ class Func(object):
     same length as the number of arguments of the function. The first parameter will be
     transformed using the first function, the second using the second function and so on.
     This can be useful to automatically transform strings provided by the adapter into a proper
-    data type such as ``int`` or ``float`` before they are passed to the function.
+    data type such as ``int`` or ``float`` before they are passed to the function. In case the
+    pattern is of type :class:`fmt`
 
     The return_mapping argument is similar, it should map the return value of the function
     to a string. The default map function only does that when the supplied value
@@ -173,19 +195,31 @@ class Func(object):
     the docstring of the bound function is used and if that is not present, left empty.
 
     :param func: Function to be called when pattern matches or member of device/interface.
-    :param pattern: Regex to match for function call.
+    :param pattern: :class:`fmt`, :class:`regex` object or string.
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
+    :param pattern_type: If pattern is a string, use this type to transform the pattern. Can be
+                         either :class:`fmt` or :class:`regex`.
 
     .. _re: https://docs.python.org/2/library/re.html#regular-expression-syntax
     """
 
-    def __init__(self, func, pattern, argument_mappings=None, return_mapping=None, doc=None):
+    def __init__(self, func, pattern, argument_mappings=None, return_mapping=None, doc=None,
+                 pattern_type=None):
         if not callable(func):
             raise RuntimeError('Can not construct a Func-object from a non callable object.')
 
         self.func = func
+
+        if isinstance(pattern, string_types):
+            if pattern_type is None:
+                raise RuntimeError(
+                    'Pattern \'{}\' is a string, but no pattern type was supplied. Either '
+                    'fmt or regex must be supplied as pattern_type so that the pattern '
+                    'can be interpreted correctly.'.format(pattern))
+
+            pattern = pattern_type(pattern)
 
         self.raw_pattern = pattern.raw_pattern
         self.pattern = re.compile(b(pattern.regex_pattern), 0)
@@ -261,6 +295,10 @@ class CommandBase(object):
     the stream adapter is based on connecting a callable object to a pattern that matches an
     inbound request.
 
+    The type of pattern can be either :class:`fmt` (scanf format specification), :class:`regex`
+    (regular expression) or a plain string. In the latter case, the pattern is only interpreted
+    as one of the former types when :meth:`bind` is called with the ``pattern_type`` parameter.
+
     For free function and lambda expressions this is straightforward: the function object can
     simply be stored together with the regular expression. Most often however, the callable
     is a method of the device or interface object - these do not exist when the commands are
@@ -284,7 +322,7 @@ class CommandBase(object):
         :class:`Func`.
 
     :param func: Function to be called when pattern matches or member of device/interface.
-    :param pattern: Regex to match for function call.
+    :param pattern: Pattern to match (:class:`fmt`, :class:`regex` or string.
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
@@ -314,6 +352,8 @@ class Cmd(CommandBase):
             return 6
 
         SomeInterface(StreamAdapter):
+            pattern_type = regex
+
             commands = {
                 Cmd(lambda: 4, pattern='^R$', doc='Returns a random number.'),
                 Cmd('random', pattern='^RR$', doc='Better random number.'),
@@ -336,7 +376,7 @@ class Cmd(CommandBase):
         of :class:`Func` provides more information about the common constructor arguments.
 
     :param func: Function to be called when pattern matches or member of device/interface.
-    :param pattern: Regex to match for function call.
+    :param pattern: Pattern to match (:class:`fmt`, :class:`regex` or string).
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
@@ -353,11 +393,8 @@ class Cmd(CommandBase):
         if method is None:
             return None
 
-        pattern = pattern_type(self.pattern) if isinstance(self.pattern,
-                                                           string_types) else self.pattern
-
-        return [Func(method, pattern, self.argument_mappings, self.return_mapping,
-                     self.doc)]
+        return [Func(method, self.pattern, self.argument_mappings, self.return_mapping,
+                     self.doc, pattern_type)]
 
 
 class Var(CommandBase):
@@ -373,6 +410,8 @@ class Var(CommandBase):
     .. sourcecode:: Python
 
         class SomeInterface(StreamAdapter):
+            pattern_type = regex
+
             commands = {
                 Var('foo', read_pattern='^F$', write_pattern=r'^F=(\d+)$',
                     argument_mappings=(int,), doc='An integer attribute.'),
@@ -397,8 +436,8 @@ class Var(CommandBase):
         For exposing methods and free functions, there's the :class:`Cmd`-class.
 
     :param target_member: Attribute or property of device/interface to expose.
-    :param read_pattern: Regex that matches command for property getter.
-    :param write_pattern: Regex that matches command for property setter.
+    :param read_pattern: Pattern to match for getter (:class:`fmt`, :class:`regex` or string).
+    :param write_pattern: Pattern to match for setter (:class:`fmt`, :class:`regex` or string).
     :param argument_mappings: Iterable with mapping functions from string to some type,
                               only applied to setter.
     :param return_mapping: Mapping function for return value of method,
@@ -424,9 +463,6 @@ class Var(CommandBase):
         funcs = []
 
         if self.read_pattern is not None:
-            read_pattern = pattern_type(self.read_pattern) if isinstance(
-                self.read_pattern, string_types) else self.read_pattern
-
             def getter():
                 return getattr(target, self.func)
 
@@ -434,12 +470,10 @@ class Var(CommandBase):
                 getter.__doc__ = 'Getter: ' + inspect.getdoc(getattr(type(target), self.func))
 
             funcs.append(
-                Func(getter, read_pattern, return_mapping=self.return_mapping, doc=self.doc))
+                Func(getter, self.read_pattern, return_mapping=self.return_mapping, doc=self.doc,
+                     pattern_type=pattern_type))
 
         if self.write_pattern is not None:
-            write_pattern = pattern_type(self.write_pattern) if isinstance(
-                self.write_pattern, string_types) else self.read_pattern
-
             def setter(new_value):
                 setattr(target, self.func, new_value)
 
@@ -447,8 +481,8 @@ class Var(CommandBase):
                 setter.__doc__ = 'Setter: ' + inspect.getdoc(getattr(type(target), self.func))
 
             funcs.append(
-                Func(setter, write_pattern, argument_mappings=self.argument_mappings,
-                     return_mapping=self.return_mapping, doc=self.doc))
+                Func(setter, self.write_pattern, argument_mappings=self.argument_mappings,
+                     return_mapping=self.return_mapping, doc=self.doc, pattern_type=pattern_type))
 
         return funcs
 
@@ -468,14 +502,14 @@ class StreamAdapter(Adapter):
      - commands: A list of :class:`~CommandBase`-objects that define mappings between protocol
        and device/interface methods/attributes.
 
-    Commands are expressed as regular expressions, a simple example may look like this:
+    By default, commands are expressed as regular expressions, a simple example may look like this:
 
     .. sourcecode:: Python
 
         class SimpleDeviceStreamInterface(StreamAdapter):
             commands = [
                 Cmd('set_speed', r'^S=([0-9]+)$', argument_mappings=[int]),
-                Cmd('get_speed', r'^S\\?$')
+                Cmd('get_speed', r'^S\?$')
                 Var('speed', read_pattern=r'^V\\?$', write_pattern=r'^V=([0-9]+)$')
             ]
 
@@ -486,7 +520,38 @@ class StreamAdapter(Adapter):
                 return self.device.speed
 
     The interface has two commands, ``S?`` to return the speed and ``S=10`` to set the speed
-    to an integer value.
+    to an integer value. It is also possible to use ``scanf`` formats to match commands.
+    One way to do that is to specify the pattern type :class:`fmt` explicitly:
+
+    .. sourcecode:: Python
+
+        from lewis.adapters.stream import StreamAdapter, Cmd, fmt
+
+        class SimpleDeviceStreamInterface(StreamAdapter):
+            commands = [
+                Cmd('set_speed', fmt('S=%i')),
+                Cmd('get_speed', r'^S\?$')
+            ]
+
+    This will interpret the pattern for ``get_speed`` as a regular expression and the one for
+    ``set_speed`` as a scanf format specification. To make it easier to specify *all* commands
+    of an interface to use a certain pattern type, there's the ``pattern_type`` member that
+    changes how string patterns are interpreted:
+
+    .. sourcecode:: Python
+
+        from lewis.adapters.stream import StreamAdapter, Cmd, fmt, regex
+
+        class SimpleDeviceStreamInterface(StreamAdapter):
+            pattern_type = fmt
+
+            commands = [
+                Cmd('set_speed', 'S=%i'),
+                Cmd('get_speed', regex(r'^S\?$'))
+            ]
+
+    The ``pattern_type`` only changes how strings are interpreted, if the :class:`Cmd` has been
+    initialized with :class:`fmt` or :class:`regex`, this overrides the default pattern type.
 
     As in the :class:`lewis.adapters.epics.EpicsAdapter`, it does not matter whether the
     wrapped method is a part of the device or of the interface, this is handled automatically when
