@@ -76,7 +76,7 @@ by Lewis. The ``Device`` and ``Interface`` are instantiated as part of a
 ``Simulation`` that provides a cycle "heart beat" and manages other
 environmental aspects and services.
 
-.. image:: /docs/diagrams/SimulationCycles.png
+.. image:: /docs/resources/diagrams/SimulationCycles.png
 
 What Can You Do With Lewis?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
