@@ -172,7 +172,9 @@ class Func(object):
             raise RuntimeError(
                 'The number of arguments for function \'{}\' matched by pattern '
                 '\'{}\' is not compatible with number of defined '
-                'groups in pattern ({}).'.format(func.__name__, pattern, self.pattern.groups))
+                'groups in pattern ({}).'.format(
+                    getattr(func, '__name__', repr(func)), pattern, self.pattern.groups
+                ))
 
         if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
             raise RuntimeError(
