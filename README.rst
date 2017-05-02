@@ -1,7 +1,7 @@
 |Version| |Layers| |Build Status| |Codacy| |Coverage Status| |Documentation|
 
-Lewis
-=====
+|Lewis|
+=======
 
 LeWIS - Let's Write Intricate Simulators.
 
@@ -120,5 +120,4 @@ The ``docs/_build/html`` directory will then contain the full documentation in H
    :target: https://coveralls.io/github/DMSC-Instrument-Data/lewis?branch=master
 .. |Documentation| image:: https://readthedocs.org/projects/lewis/badge/?version=latest
    :target: http://lewis.readthedocs.io/en/latest/?badge=latest
-   
-.. _PyPI: 
+.. |Lewis| image:: /docs/resources/logo/lewis-logo.png
