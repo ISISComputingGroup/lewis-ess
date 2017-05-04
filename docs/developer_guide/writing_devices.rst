@@ -216,19 +216,19 @@ Implementing the device interface
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Device interfaces are implemented by sub-classing an appropriate
-pre-written communication adapter base class from the framework's
+pre-written, protocol specific interface base class from the framework's
 :mod:`lewis.adapters`-package and overriding a few members. In this case this
-adapter is called :class:`~lewis.adapters.stream.StreamAdapter`. The first step
+base class is called :class:`~lewis.adapters.stream.StreamInterface`. The first step
 is to specify the available commands in terms of a collection of
 :class:`~lewis.adapters.stream.Cmd`-objects. These objects effectively bind
-commands specified in terms of regular expressions to a the adapter's methods.
+commands specified in terms of regular expressions to the interface's methods.
 According to the specifications above, the commands are defined like this:
 
 .. code:: python
 
-    from lewis.adapters.stream import StreamAdapter, Cmd
+    from lewis.adapters.stream import StreamInterface, Cmd
 
-    class ExampleMotorStreamInterface(StreamAdapter):
+    class ExampleMotorStreamInterface(StreamInterface):
         commands = {
             Cmd('get_status', r'^S\?$'),
             Cmd('get_position', r'^P\?$'),
@@ -274,11 +274,11 @@ overridden by supplying a callable object to ``return_mapping``, as it
 is the case for the ``stop``-command.
 
 You may have noticed that ``stop`` is not a method of the interface.
-:class:`~lewis.adapters.stream.StreamAdapter` tries to resolve the supplied method
+:class:`~lewis.adapters.stream.StreamInterface` tries to resolve the supplied method
 names in multiple ways. First it checks its own members, then it checks the members of the
 device it owns (accessible in the interface via the ``device``-member)
-and adds forwarders to itself if possible. If the method name can not be
-found in either the device or the adapter, an error is produced, which
+and binds to the appropriate method. If the method name can not be
+found in either the device or the interface, an error is produced, which
 minimizes the likelihood of typos. The definitions in the interface
 always have precedence, this is intentionally done so that device
 behavior can be overridden later on with minimal changes to the code.
@@ -330,11 +330,10 @@ User facing documentation
 The :class:`~lewis.adapters.stream.StreamAdapter`-class has a property
 ``documentation``, which generates user facing documentation from the
 :class:`~lewis.adapters.stream.Cmd`-objects (it can be displayed via the ``-i``-flag of
-``lewis.py`` or as the ``device_documentation``-property of the ``simulation``-object via
-``lewis-control.py``. The regular expression of each command is listed, along
-with a documentation string. If the ``doc``-parameter is provided to Cmd, it is used,
-otherwise the docstring of the wrapped method is used (it does not matter whether the
-method is part of the device or the interface for feature to work). The latter is the
+``lewis.py`` from the ``interface`` object via ``lewis-control.py``). The regular expression of
+each command is listed, along with a documentation string. If the ``doc``-parameter is provided
+to Cmd, it is used,otherwise the docstring of the wrapped method is used (it does not matter
+whether the method is part of the device or the interface for feature to work). The latter is the
 recommended way, because it avoids duplication. But in some cases, the user- and the
 developer facing documentation may be so different that it's useful to override the docstring.
 
@@ -412,7 +411,7 @@ suggestions for changes. Once the code is acceptable, it will be merged
 into Lewis' master branch and become a part of the distribution.
 
 If a second interface is added to a device, either using a different
-adapter or the same adapter but with different commands, the interface
+interface type or the same but with different commands, the interface
 definitions should be moved out of the ``__init__.py`` file. Lewis
 will continue to work if the interfaces are moved to a sub-folder of the
 device called ``interfaces``. This needs to have its own
