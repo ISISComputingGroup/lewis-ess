@@ -19,7 +19,7 @@
 
 from lewis.devices import Device
 
-from lewis.adapters.epics import EpicsAdapter, PV
+from lewis.adapters.epics import EpicsInterface, PV
 
 
 class VerySimpleDevice(Device):
@@ -43,7 +43,7 @@ class VerySimpleDevice(Device):
         self._second = new_second
 
 
-class VerySimpleInterface(EpicsAdapter):
+class VerySimpleInterface(EpicsInterface):
     """
     This is the EPICS interface to a quite simple device. It offers 5 PVs that expose
     different things that are part of the device, the interface or neither.
