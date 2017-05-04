@@ -26,6 +26,7 @@ import socket
 from six import b
 
 from lewis.core.adapters import Adapter
+from lewis.core.devices import InterfaceBase
 from lewis.core.logging import has_log
 from lewis.core.utils import format_doc_text
 
@@ -581,3 +582,7 @@ class StreamAdapter(Adapter):
         :param cycle_delay: S
         """
         asyncore.loop(cycle_delay, count=1)
+
+
+class StreamInterface(InterfaceBase):
+    pass

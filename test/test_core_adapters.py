@@ -1,29 +1,11 @@
+import inspect
 import unittest
 
 from mock import patch, call, Mock, MagicMock
-import inspect
 
-from lewis.adapters.stream import StreamAdapter
-from lewis.core.adapters import is_adapter, Adapter, AdapterCollection
+from lewis.core.adapters import Adapter, AdapterCollection
 from lewis.core.exceptions import LewisException
 from . import assertRaisesNothing
-
-
-class TestIsAdapter(unittest.TestCase):
-    def test_not_a_type_returns_false(self):
-        self.assertFalse(is_adapter(0.0))
-        self.assertFalse(is_adapter(None))
-
-    def test_arbitrary_types_fail(self):
-        self.assertFalse(is_adapter(type(3.0)))
-        self.assertFalse(is_adapter(property))
-
-    def test_adapter_base_is_ignored(self):
-        self.assertFalse(is_adapter(Adapter))
-        self.assertFalse(is_adapter(StreamAdapter))
-
-    def test_adapter_types_work(self):
-        self.assertTrue(is_adapter(DummyAdapter))
 
 
 class DummyAdapter(Adapter):

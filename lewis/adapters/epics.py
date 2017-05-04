@@ -22,6 +22,7 @@ from functools import wraps
 import inspect
 
 from lewis.core.adapters import Adapter
+from lewis.core.devices import InterfaceBase
 from six import iteritems, string_types
 
 from lewis.core.logging import has_log
@@ -604,3 +605,7 @@ class EpicsAdapter(Adapter):
         if self._server is not None:
             self._server.process(cycle_delay)
             self._driver.process_pv_updates()
+
+
+class EpicsInterface(InterfaceBase):
+    pass

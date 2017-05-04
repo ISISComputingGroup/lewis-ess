@@ -42,6 +42,7 @@ from copy import deepcopy
 from math import ceil
 
 from lewis.core.adapters import Adapter
+from lewis.core.devices import InterfaceBase
 from lewis.core.logging import has_log
 
 
@@ -608,3 +609,7 @@ class ModbusAdapter(Adapter):
 
     def handle(self, cycle_delay=0.1):
         asyncore.loop(cycle_delay, count=1)
+
+
+class ModbusInterface(InterfaceBase):
+    pass

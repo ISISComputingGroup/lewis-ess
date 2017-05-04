@@ -27,7 +27,6 @@ produces factory-like objects that create device instances and interfaces based 
 import importlib
 
 from lewis import __version__
-from lewis.core.adapters import is_adapter
 from lewis.core.exceptions import LewisException
 from lewis.core.logging import has_log
 from lewis.core.utils import get_submodules, get_members, is_compatible_with_framework
@@ -42,6 +41,11 @@ class DeviceBase(object):
     """
 
 
+@has_log
+class InterfaceBase(object):
+    adapter = None
+
+
 def is_device(obj):
     """
     Returns True if obj is a device type (derived from DeviceBase), but not defined in
@@ -52,6 +56,20 @@ def is_device(obj):
     """
     return isinstance(obj, type) and issubclass(
         obj, DeviceBase) and obj.__module__ not in ('lewis.devices', 'lewis.core.devices')
+
+
+def is_interface(obj):
+    """
+    Returns True if obj is an interface (derived from :class:`InterfaceBase`), but not defined in
+    :mod:`lewis.adapters`.
+
+    :param obj: Object to test.
+    :return: True if obj is an interface type.
+    """
+    return isinstance(obj, type) and issubclass(
+        obj, InterfaceBase) and not (
+        obj.__module__.startswith('lewis.core.devices') or obj.__module__.startswith(
+            'lewis.adapters'))
 
 
 @has_log
@@ -165,9 +183,9 @@ class DeviceBuilder(object):
 
         if interface_package is not None:
             for interface_module in get_submodules(interface_package).values():
-                all_interfaces += list(get_members(interface_module, is_adapter).values())
+                all_interfaces += list(get_members(interface_module, is_interface).values())
 
-        all_interfaces += list(get_members(self._module, is_adapter).values())
+        all_interfaces += list(get_members(self._module, is_interface).values())
 
         interfaces = {}
         for interface in all_interfaces:

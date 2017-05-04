@@ -26,9 +26,9 @@ import inspect
 from collections import namedtuple
 from time import sleep
 
+from lewis.core.exceptions import LewisException
 from lewis.core.logging import has_log
 from lewis.core.utils import dict_strict_update
-from lewis.core.exceptions import LewisException
 
 
 @has_log
@@ -178,20 +178,6 @@ class Adapter(object):
         :param cycle_delay: Approximate time spent processing requests.
         """
         pass
-
-
-def is_adapter(obj):
-    """
-    Returns True if obj is an interface (derived from Adapter), but not defined in
-    :mod:`lewis.adapters`.
-
-    :param obj: Object to test.
-    :return: True if obj is an interface type.
-    """
-    return isinstance(obj, type) and issubclass(
-        obj, Adapter) and not (
-        obj.__module__.startswith('lewis.core.adapters') or obj.__module__.startswith(
-            'lewis.adapters'))
 
 
 @has_log
