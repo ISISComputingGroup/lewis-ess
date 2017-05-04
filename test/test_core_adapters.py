@@ -1,7 +1,7 @@
 import inspect
 import unittest
 
-from mock import patch, call, Mock
+from mock import patch, call, Mock, MagicMock
 
 from lewis.core.adapters import Adapter, AdapterCollection
 from lewis.core.exceptions import LewisException
@@ -60,6 +60,19 @@ class TestAdapter(unittest.TestCase):
         # not have binding behavior).
         adapter.interface = mock_interface
         self.assertEqual(adapter.interface, mock_interface)
+
+    def test_protocol_is_forwarded_from_interface(self):
+        adapter = Adapter()
+
+        adapter.interface = None
+        self.assertEqual(adapter.protocol, None)
+
+        mock_interface = MagicMock()
+        mock_interface.protocol = 'foo'
+
+        adapter.interface = mock_interface
+
+        self.assertEqual(adapter.protocol, 'foo')
 
     def test_options(self):
         assertRaisesNothing(self, DummyAdapter, 'protocol', options={'bar': 2, 'foo': 3})
