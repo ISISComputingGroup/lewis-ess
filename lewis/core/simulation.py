@@ -124,7 +124,7 @@ class Simulation(object):
             ),
             'interface': ExposedObject(
                 self._adapters,
-                exclude=('device', 'add_adapter', 'remove_adapter', 'handle', 'log'),
+                exclude=('add_adapter', 'remove_adapter', 'handle', 'log'),
                 exclude_inherited=True
             )},
             control_server)

@@ -525,13 +525,13 @@ class ModbusProtocol(object):
 
 @has_log
 class ModbusHandler(asyncore.dispatcher_with_send):
-    def __init__(self, sock, adapter, server):
+    def __init__(self, sock, interface, server):
         asyncore.dispatcher_with_send.__init__(self, sock=sock)
-        self._datastore = ModbusDataStore(adapter.di, adapter.co, adapter.ir, adapter.hr)
+        self._datastore = ModbusDataStore(interface.di, interface.co, interface.ir, interface.hr)
         self._modbus = ModbusProtocol(self.send, self._datastore)
         self._server = server
 
-        self._set_logging_context(adapter)
+        self._set_logging_context(interface)
         self.log.info('Client connected from %s:%s', *sock.getpeername())
 
     def handle_read(self):
@@ -546,15 +546,15 @@ class ModbusHandler(asyncore.dispatcher_with_send):
 
 @has_log
 class ModbusServer(asyncore.dispatcher):
-    def __init__(self, host, port, adapter=None):
+    def __init__(self, host, port, interface=None):
         asyncore.dispatcher.__init__(self)
-        self.adapter = adapter
+        self.interface = interface
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         self.bind((host, port))
         self.listen(5)
 
-        self._set_logging_context(adapter)
+        self._set_logging_context(interface)
         self.log.info('Listening on %s:%s', host, port)
 
         self._accepted_connections = []
@@ -563,7 +563,7 @@ class ModbusServer(asyncore.dispatcher):
         pair = self.accept()
         if pair is not None:
             sock, _ = pair
-            handler = ModbusHandler(sock, self.adapter, self)
+            handler = ModbusHandler(sock, self.interface, self)
             self._accepted_connections.append(handler)
 
     def remove_handler(self, handler):
@@ -579,12 +579,6 @@ class ModbusServer(asyncore.dispatcher):
 
 
 class ModbusAdapter(Adapter):
-    protocol = 'modbus'
-    di = None
-    co = None
-    ir = None
-    hr = None
-
     default_options = {
         'bind_address': '0.0.0.0',
         'port': 502
@@ -592,11 +586,10 @@ class ModbusAdapter(Adapter):
 
     def __init__(self, options=None):
         super(ModbusAdapter, self).__init__(options)
-
         self._server = None
 
     def start_server(self):
-        self._server = ModbusServer(self._options.bind_address, self._options.port, self)
+        self._server = ModbusServer(self._options.bind_address, self._options.port, self.interface)
 
     def stop_server(self):
         if self._server is not None:
@@ -612,4 +605,10 @@ class ModbusAdapter(Adapter):
 
 
 class ModbusInterface(InterfaceBase):
-    pass
+    adapter = ModbusAdapter
+
+    protocol = 'modbus'
+    di = None
+    co = None
+    ir = None
+    hr = None

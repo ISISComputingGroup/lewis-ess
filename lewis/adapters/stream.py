@@ -470,12 +470,6 @@ class StreamAdapter(Adapter):
 
     :param options: Dictionary with options.
     """
-    protocol = 'stream'
-
-    in_terminator = '\r'
-    out_terminator = '\r'
-
-    commands = None
 
     default_options = {
         'telnet_mode': False,
@@ -485,13 +479,69 @@ class StreamAdapter(Adapter):
 
     def __init__(self, options=None):
         super(StreamAdapter, self).__init__(options)
-
-        if self._options.telnet_mode:
-            self.in_terminator = '\r\n'
-            self.out_terminator = '\r\n'
-
         self._server = None
-        self._bound_commands = []
+
+    @property
+    def documentation(self):
+        commands = ['{}:\n{}'.format(
+            cmd.raw_pattern,
+            format_doc_text(cmd.doc or inspect.getdoc(cmd.func) or ''))
+                    for cmd in sorted(self.interface.bound_commands, key=lambda x: x.raw_pattern)]
+
+        options = format_doc_text(
+            'Listening on: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}'.format(
+                self._options.bind_address, self._options.port,
+                repr(self.interface.in_terminator), repr(self.interface.out_terminator)))
+
+        return '\n\n'.join(
+            [inspect.getdoc(self.interface) or '',
+             'Parameters\n==========', options, 'Commands\n========'] + commands)
+
+    def start_server(self):
+        """
+        Starts the TCP stream server, binding to the configured host and port.
+        Host and port are configured via the command line arguments.
+
+        .. note:: The server does not process requests unless
+                  :meth:`handle` is called in regular intervals.
+
+        """
+        if self._server is None:
+            if self._options.telnet_mode:
+                self.interface.in_terminator = '\r\n'
+                self.interface.out_terminator = '\r\n'
+
+            self._server = StreamServer(self._options.bind_address, self._options.port,
+                                        self.interface)
+
+    def stop_server(self):
+        if self._server is not None:
+            self._server.close()
+            self._server = None
+
+    @property
+    def is_running(self):
+        return self._server is not None
+
+    def handle(self, cycle_delay=0.1):
+        """
+        Spend approximately ``cycle_delay`` seconds to process requests to the server.
+
+        :param cycle_delay: S
+        """
+        asyncore.loop(cycle_delay, count=1)
+
+
+class StreamInterface(InterfaceBase):
+    adapter = StreamAdapter
+
+    protocol = 'stream'
+
+    in_terminator = '\r'
+    out_terminator = '\r'
+
+    commands = None
+    bound_commands = None
 
     def _bind_device(self):
         """
@@ -499,15 +549,11 @@ class StreamAdapter(Adapter):
         :meth:`_bind_commands` to bind the defined :class:`Cmd` and :class:`Var`-objects
         to the proper objects and make them usable.
         """
-
-        self.bound_commands = self._bind_commands(self.commands)
-
-    def _bind_commands(self, cmds):
         patterns = set()
 
-        bound_commands = []
+        self.bound_commands = []
 
-        for cmd in cmds:
+        for cmd in self.commands:
             bound = cmd.bind(self) or cmd.bind(self.device) or None
 
             if bound is None:
@@ -523,47 +569,7 @@ class StreamAdapter(Adapter):
 
                 patterns.add(bound_cmd.pattern)
 
-                bound_commands.append(bound_cmd)
-
-        return bound_commands
-
-    @property
-    def documentation(self):
-
-        commands = ['{}:\n{}'.format(
-            cmd.raw_pattern,
-            format_doc_text(cmd.doc or inspect.getdoc(cmd.func) or ''))
-                    for cmd in sorted(self.bound_commands, key=lambda x: x.raw_pattern)]
-
-        options = format_doc_text(
-            'Listening on: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}'.format(
-                self._options.bind_address, self._options.port,
-                repr(self.in_terminator), repr(self.out_terminator)))
-
-        return '\n\n'.join(
-            [inspect.getdoc(self) or '',
-             'Parameters\n==========', options, 'Commands\n========'] + commands)
-
-    def start_server(self):
-        """
-        Starts the TCP stream server, binding to the configured host and port.
-        Host and port are configured via the command line arguments.
-
-        .. note:: The server does not process requests unless
-                  :meth:`handle` is called in regular intervals.
-
-        """
-        if self._server is None:
-            self._server = StreamServer(self._options.bind_address, self._options.port, self)
-
-    def stop_server(self):
-        if self._server is not None:
-            self._server.close()
-            self._server = None
-
-    @property
-    def is_running(self):
-        return self._server is not None
+                self.bound_commands.append(bound_cmd)
 
     def handle_error(self, request, error):
         """
@@ -574,15 +580,3 @@ class StreamAdapter(Adapter):
         :param error: The exception that was raised.
         """
         pass
-
-    def handle(self, cycle_delay=0.1):
-        """
-        Spend approximately ``cycle_delay`` seconds to process requests to the server.
-
-        :param cycle_delay: S
-        """
-        asyncore.loop(cycle_delay, count=1)
-
-
-class StreamInterface(InterfaceBase):
-    pass

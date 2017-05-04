@@ -23,7 +23,7 @@ from lewis.core import approaches
 from lewis.core.statemachine import State
 from lewis.devices import StateMachineDevice
 
-from lewis.adapters.stream import StreamAdapter, Cmd
+from lewis.adapters.stream import StreamInterface, Cmd
 
 
 class DefaultMovingState(State):
@@ -83,7 +83,7 @@ class SimulatedExampleMotor(StateMachineDevice):
         return self.target, self.position
 
 
-class ExampleMotorStreamInterface(StreamAdapter):
+class ExampleMotorStreamInterface(StreamInterface):
     """
     TCP-stream based example motor interface
 
