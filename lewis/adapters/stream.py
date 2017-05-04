@@ -533,8 +533,6 @@ class StreamAdapter(Adapter):
 
 
 class StreamInterface(InterfaceBase):
-    adapter = StreamAdapter
-
     protocol = 'stream'
 
     in_terminator = '\r'
@@ -542,6 +540,10 @@ class StreamInterface(InterfaceBase):
 
     commands = None
     bound_commands = None
+
+    @property
+    def adapter(self):
+        return StreamAdapter
 
     def _bind_device(self):
         """

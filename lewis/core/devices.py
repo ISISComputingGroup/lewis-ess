@@ -43,7 +43,14 @@ class DeviceBase(object):
 
 @has_log
 class InterfaceBase(object):
-    adapter = None
+    """
+    This class is a common base for adapter depending
+    """
+
+    @property
+    def adapter(self):
+        raise NotImplementedError('An interface type must specify which adapter it is compatible '
+                                  'with. Please implement the adapter-property.')
 
     @property
     def device(self):

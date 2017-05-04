@@ -586,7 +586,9 @@ class EpicsInterface(InterfaceBase):
     pvs = None
     bound_pvs = None
 
-    adapter = EpicsAdapter
+    @property
+    def adapter(self):
+        return EpicsAdapter
 
     def _bind_device(self):
         """

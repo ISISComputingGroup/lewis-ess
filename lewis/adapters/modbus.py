@@ -605,10 +605,12 @@ class ModbusAdapter(Adapter):
 
 
 class ModbusInterface(InterfaceBase):
-    adapter = ModbusAdapter
-
     protocol = 'modbus'
     di = None
     co = None
     ir = None
     hr = None
+
+    @property
+    def adapter(self):
+        return ModbusAdapter
