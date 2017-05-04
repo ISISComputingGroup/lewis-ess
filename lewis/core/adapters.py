@@ -64,12 +64,11 @@ class Adapter(object):
 
     :param options: Configuration options for the adapter.
     """
-    protocol = None
     default_options = {}
 
     def __init__(self, options=None):
         super(Adapter, self).__init__()
-        self._device = None
+        self._interface = None
 
         options = options or {}
 
@@ -87,7 +86,18 @@ class Adapter(object):
         self._options = options_type(**combined_options)
 
     @property
-    def device(self):
+    def protocol(self):
+        return self.interface.protocol
+
+    def update_device(self, new_device):
+        if self.interface is None:
+            raise RuntimeError()
+
+        self.interface.device = new_device
+        self._bind_interface()
+
+    @property
+    def interface(self):
         """
         The device property contains the device-object exposed by the adapter.
 
@@ -95,14 +105,14 @@ class Adapter(object):
         call :meth:`_bind_device` (which is implemented in each adapter sub-class)
         and thus re-bind its commands etc. to call the new device.
         """
-        return self._device
+        return self._interface
 
-    @device.setter
-    def device(self, new_device):
-        self._device = new_device
-        self._bind_device()
+    @interface.setter
+    def interface(self, new_interface):
+        self._interface = new_interface
+        self._bind_interface()
 
-    def _bind_device(self):
+    def _bind_interface(self):
         """
         This method is called in the setter of the ``device`` property after the device
         has been set. Implementations should do whatever is necessary to actually expose
@@ -226,9 +236,9 @@ class AdapterCollection(object):
                 'Adapter for protocol \'{}\' is already registered.'.format(adapter))
 
         if self.device is not None:
-            adapter.device = self.device
+            adapter.update_device(self.device)
         else:
-            self.device = adapter.device
+            self.device = adapter.interface.device
 
         self._adapters[adapter.protocol] = adapter
 
@@ -258,7 +268,7 @@ class AdapterCollection(object):
         self._device = new_device
 
         for adapter in self._adapters.values():
-            adapter.device = self._device
+            adapter.update_device(self._device)
 
     def handle(self, cycle_delay):
         """

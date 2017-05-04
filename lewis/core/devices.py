@@ -45,6 +45,18 @@ class DeviceBase(object):
 class InterfaceBase(object):
     adapter = None
 
+    @property
+    def device(self):
+        return self._device
+
+    @device.setter
+    def device(self, new_device):
+        self._device = new_device
+        self._bind_device()
+
+    def _bind_device(self):
+        pass
+
 
 def is_device(obj):
     """

@@ -510,8 +510,7 @@ class EpicsAdapter(Adapter):
 
     :param options: Dictionary with options.
     """
-    protocol = 'epics'
-    pvs = None
+
     default_options = {'prefix': ''}
 
     def __init__(self, options=None):
@@ -522,40 +521,20 @@ class EpicsAdapter(Adapter):
 
         self._bound_pvs = {}
 
-    def _bind_device(self):
+    def _bind_interface(self):
         """
         This method is re-implemented from :class:`~lewis.core.adapters.Adapter`. It uses
         :meth:`_bind_properties` to generate a dict of bound PVs.
         """
-        self._bound_pvs = self._bind_properties(self.pvs)
 
         if self._driver is not None:
-            self._driver._pv_dict = self._bound_pvs
-
-    def _bind_properties(self, pvs):
-        """
-        This method transforms a dict of :class:`PV` objects to a dict of :class:`BoundPV` objects,
-        the keys are always the PV-names that are exposed via ChannelAccess.
-
-        In the transformation process, the method tries to find whether the attribute specified by
-        PV's ``property`` (and ``meta_data_property``) is part of the internally stored device
-        or the interface and constructs a BoundPV, which acts as a forwarder to the appropriate
-        objects.
-
-        :param pvs: Dict of PV-name/:class:`PV`-objects.
-        :return: Dict of PV-name/:class:`BoundPV`-objects.
-        """
-        bound_pvs = {}
-        for pv_name, pv in pvs.items():
-            bound_pvs[pv_name] = pv.bind(self, self.device)
-
-        return bound_pvs
+            self._driver._pv_dict = self.interface.bound_pvs
 
     @property
     def documentation(self):
         pvs = []
 
-        for name, pv in self._bound_pvs.items():
+        for name, pv in self.interface.bound_pvs.items():
             complete_name = self._options.prefix + name
 
             data_type = pv.config.get('type', 'float')
@@ -578,12 +557,12 @@ class EpicsAdapter(Adapter):
         if self._server is None:
             self._server = SimpleServer()
             self._server.createPV(prefix=self._options.prefix,
-                                  pvdb={k: v.config for k, v in self._bound_pvs.items()})
-            self._driver = PropertyExposingDriver(target=self, pv_dict=self._bound_pvs)
+                                  pvdb={k: v.config for k, v in self.interface.bound_pvs.items()})
+            self._driver = PropertyExposingDriver(target=self, pv_dict=self.interface.bound_pvs)
             self._driver.process_pv_updates(force=True)
 
             self.log.info('Started serving PVs: %s',
-                          ', '.join((self._options.prefix + pv for pv in self._bound_pvs.keys())))
+                          ', '.join((self._options.prefix + pv for pv in self.interface.bound_pvs.keys())))
 
     def stop_server(self):
         self._driver = None
@@ -608,4 +587,26 @@ class EpicsAdapter(Adapter):
 
 
 class EpicsInterface(InterfaceBase):
-    pass
+    protocol = 'epics'
+
+    pvs = None
+    bound_pvs = None
+
+    adapter = EpicsAdapter
+
+    def _bind_device(self):
+        """
+        This method transforms a dict of :class:`PV` objects to a dict of :class:`BoundPV` objects,
+        the keys are always the PV-names that are exposed via ChannelAccess.
+
+        In the transformation process, the method tries to find whether the attribute specified by
+        PV's ``property`` (and ``meta_data_property``) is part of the internally stored device
+        or the interface and constructs a BoundPV, which acts as a forwarder to the appropriate
+        objects.
+
+        :param pvs: Dict of PV-name/:class:`PV`-objects.
+        :return: Dict of PV-name/:class:`BoundPV`-objects.
+        """
+        self.bound_pvs = {}
+        for pv_name, pv in self.pvs.items():
+            self.bound_pvs[pv_name] = pv.bind(self, self.device)
