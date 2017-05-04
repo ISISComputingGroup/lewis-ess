@@ -448,60 +448,7 @@ class PropertyExposingDriver(Driver):
 
 class EpicsAdapter(Adapter):
     """
-    Inheriting from this class provides an EPICS-interface to a device, powered by
-    the pcaspy-module. In the simplest case all that is required is to inherit
-    from this class and override the ``pvs``-member. It should be a dictionary
-    that contains PV-names (without prefix) as keys and instances of PV as
-    values.
-
-    For a simple device with two properties, speed and position, the first of which
-    should be read-only, it's enough to define the following:
-
-    .. sourcecode:: Python
-
-        class SimpleDeviceEpicsInterface(EpicsAdapter):
-            pvs = {
-                'VELO': PV('speed', read_only=True),
-                'POS': PV('position', lolo=0, hihi=100)
-            }
-
-    For more complex behavior, the interface could contain properties that do not
-    exist in the device itself. If the device should also have a PV called STOP
-    that "stops the device", the interface could look like this:
-
-    .. sourcecode:: Python
-
-        class SimpleDeviceEpicsInterface(EpicsAdapter):
-            pvs = {
-                'VELO': PV('speed', read_only=True),
-                'POS': PV('position', lolo=0, hihi=100),
-                'STOP': PV('stop', type='int'),
-            }
-
-            @property
-            def stop(self):
-                return 0
-
-            @stop.setter
-            def stop(self, value):
-                if value == 1:
-                    self.device.halt()
-
-    Even though the device does *not* have a property called ``stop`` (but a method called
-    ``halt``), issuing the command
-
-    ::
-
-        $ caput STOP 1
-
-    will achieve the desired behavior, because ``EpicsAdapter`` merges the properties
-    of the device into ``SimpleDeviceEpicsInterface`` itself, so that it is does not
-    matter whether the specified property in PV exists in the device or the adapter.
-
-    The intention of this design is to keep device classes small and free of
-    protocol specific stuff, such as in the case above where stopping a device
-    via EPICS might involve writing a value to a PV, whereas other protocols may
-    offer an RPC-way of achieving the same thing.
+    This adapter provides ChannelAccess server functionality through the pcaspy module.
 
     It's possible to configure the prefix for the PVs provided by this adapter. The
     corresponding key in the ``options`` dictionary is called ``prefix``:
@@ -581,6 +528,63 @@ class EpicsAdapter(Adapter):
 
 
 class EpicsInterface(InterfaceBase):
+    """
+    Inheriting from this class provides an EPICS-interface to a device for use with
+    :class:`EpicsAdapter`. In the simplest case all that is required is to inherit
+    from this class and override the ``pvs``-member. It should be a dictionary
+    that contains PV-names (without prefix) as keys and instances of PV as
+    values. The prefix is handled by ``EpicsAdapter``.
+
+    For a simple device with two properties, speed and position, the first of which
+    should be read-only, it's enough to define the following:
+
+    .. sourcecode:: Python
+
+        class SimpleDeviceEpicsInterface(EpicsInterface):
+            pvs = {
+                'VELO': PV('speed', read_only=True),
+                'POS': PV('position', lolo=0, hihi=100)
+            }
+
+    For more complex behavior, the interface could contain properties that do not
+    exist in the device itself. If the device should also have a PV called STOP
+    that "stops the device", the interface could look like this:
+
+    .. sourcecode:: Python
+
+        class SimpleDeviceEpicsInterface(EpicsInterface):
+            pvs = {
+                'VELO': PV('speed', read_only=True),
+                'POS': PV('position', lolo=0, hihi=100),
+                'STOP': PV('stop', type='int'),
+            }
+
+            @property
+            def stop(self):
+                return 0
+
+            @stop.setter
+            def stop(self, value):
+                if value == 1:
+                    self.device.halt()
+
+    Even though the device does *not* have a property called ``stop`` (but a method called
+    ``halt``), issuing the command
+
+    ::
+
+        $ caput STOP 1
+
+    will achieve the desired behavior, because ``EpicsInterface`` merges the properties
+    of the device into ``SimpleDeviceEpicsInterface`` itself, so that it is does not
+    matter whether the specified property in PV exists in the device or the adapter.
+
+    The intention of this design is to keep device classes small and free of
+    protocol specific stuff, such as in the case above where stopping a device
+    via EPICS might involve writing a value to a PV, whereas other protocols may
+    offer an RPC-way of achieving the same thing.
+    """
+
     protocol = 'epics'
 
     pvs = None
@@ -592,16 +596,14 @@ class EpicsInterface(InterfaceBase):
 
     def _bind_device(self):
         """
-        This method transforms a dict of :class:`PV` objects to a dict of :class:`BoundPV` objects,
-        the keys are always the PV-names that are exposed via ChannelAccess.
+        This method transforms the ``self.pvs`` dict of :class:`PV` objects ``self.bound_pvs``,
+        a dict of :class:`BoundPV` objects, the keys are always the PV-names that are exposed
+        via ChannelAccess.
 
         In the transformation process, the method tries to find whether the attribute specified by
         PV's ``property`` (and ``meta_data_property``) is part of the internally stored device
         or the interface and constructs a BoundPV, which acts as a forwarder to the appropriate
         objects.
-
-        :param pvs: Dict of PV-name/:class:`PV`-objects.
-        :return: Dict of PV-name/:class:`BoundPV`-objects.
         """
         self.bound_pvs = {}
         for pv_name, pv in self.pvs.items():

@@ -44,16 +44,32 @@ class DeviceBase(object):
 @has_log
 class InterfaceBase(object):
     """
-    This class is a common base for adapter depending
+    This class is a common base for protocol specific interfaces that are exposed by a subclass of
+    :class:`~lewis.core.adapters.Adapter`. This base class is not meant to be used directly in
+    a device package - this is what the interfaces in :mod:`lewis.adapters` are for.
+
+    There is a 1:1 correspondence between device and interface, where the interface holds a
+    reference to the device. It can be changed through the ``device``-property.
     """
+
+    protocol = None
+    _device = None
 
     @property
     def adapter(self):
+        """
+        Adapter type that is required to process and expose interfaces of this type. Must be
+        implemented in subclasses.
+        """
         raise NotImplementedError('An interface type must specify which adapter it is compatible '
                                   'with. Please implement the adapter-property.')
 
     @property
     def device(self):
+        """
+        The device this interface is bound to. When a new device is set, :meth:`_bind_device` is
+        called, where the interface can react to the device change if necessary.
+        """
         return self._device
 
     @device.setter
@@ -62,6 +78,12 @@ class InterfaceBase(object):
         self._bind_device()
 
     def _bind_device(self):
+        """
+        This method should perform any binding steps between device and interface. The result
+        of this binding step is generally used by the adapter to process network traffic.
+
+        The default implementation does nothing.
+        """
         pass
 
 
@@ -80,7 +102,7 @@ def is_device(obj):
 def is_interface(obj):
     """
     Returns True if obj is an interface (derived from :class:`InterfaceBase`), but not defined in
-    :mod:`lewis.adapters`.
+    :mod:`lewis.adapters`, where concrete interfaces for protocols are defined.
 
     :param obj: Object to test.
     :return: True if obj is an interface type.
@@ -139,7 +161,7 @@ class DeviceBuilder(object):
     A setup can be supplied to the :meth:`create_device`.
 
     Lastly, the builder tries to discover device interfaces, which are currently classes based on
-    :class:`lewis.adapters.Adapter`. These are looked for in the module and in a sub-package
+    :class:`lewis.adapters.InterfaceBase`. These are looked for in the module and in a sub-package
     called ``interfaces`` (which should contain modules with adapters like the ``setups`` package).
 
     Each interface has a protocol, if a protocol occurs more than once in a device module,
