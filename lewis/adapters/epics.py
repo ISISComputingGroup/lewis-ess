@@ -605,6 +605,4 @@ class EpicsInterface(InterfaceBase):
         or the interface and constructs a BoundPV, which acts as a forwarder to the appropriate
         objects.
         """
-        self.bound_pvs = {}
-        for pv_name, pv in self.pvs.items():
-            self.bound_pvs[pv_name] = pv.bind(self, self.device)
+        self.bound_pvs = {pv_name: pv.bind(self, self.device) for pv_name, pv in self.pvs.items()}
