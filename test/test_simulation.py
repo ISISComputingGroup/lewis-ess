@@ -305,5 +305,5 @@ class TestSimulation(unittest.TestCase):
 
         sim.switch_setup('foo')
 
-        self.assertEqual(adapter_mock.device, 'foo')
+        self.assertEqual(sim._device, 'foo')
         self.assertRaises(RuntimeError, sim.switch_setup, 'bar')

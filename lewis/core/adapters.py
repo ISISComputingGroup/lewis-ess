@@ -87,14 +87,10 @@ class Adapter(object):
 
     @property
     def protocol(self):
-        return self.interface.protocol
-
-    def update_device(self, new_device):
         if self.interface is None:
-            raise RuntimeError()
+            return None
 
-        self.interface.device = new_device
-        self._bind_interface()
+        return self.interface.protocol
 
     @property
     def interface(self):
@@ -110,21 +106,6 @@ class Adapter(object):
     @interface.setter
     def interface(self, new_interface):
         self._interface = new_interface
-        self._bind_interface()
-
-    def _bind_interface(self):
-        """
-        This method is called in the setter of the ``device`` property after the device
-        has been set. Implementations should do whatever is necessary to actually expose
-        any methods that are part of the device and not the interface.
-
-        .. seealso:
-
-            Some concrete implementations in the framework:
-             - :meth:`lewis.adapters.epics.EpicsAdapter._bind_device`
-             - :meth:`lewis.adapters.stream.StreamAdapter._bind_device`
-        """
-        pass
 
     @property
     def documentation(self):
@@ -216,7 +197,6 @@ class AdapterCollection(object):
 
     def __init__(self, *args):
         self._adapters = {}
-        self._device = None
 
         for adapter in args:
             self.add_adapter(adapter)
@@ -224,21 +204,13 @@ class AdapterCollection(object):
     def add_adapter(self, adapter):
         """
         Adds the supplied adapter to the container but raises a ``RuntimeError`` if there's
-        already an adapter registered for the same protocol. If the adapter has
-        a device and the collection does not, all adapters will get the new
-        device. If the collection already has a device, the new adapter's
-        device is overwritten.
+        already an adapter registered for the same protocol.
 
         :param adapter: Adapter to add to the container
         """
         if adapter.protocol in self._adapters:
             raise RuntimeError(
                 'Adapter for protocol \'{}\' is already registered.'.format(adapter))
-
-        if self.device is not None:
-            adapter.update_device(self.device)
-        else:
-            self.device = adapter.interface.device
 
         self._adapters[adapter.protocol] = adapter
 
@@ -254,21 +226,6 @@ class AdapterCollection(object):
                 'Can not remove adapter for protocol \'{}\', none registered.'.format(protocol))
 
         del self._adapters[protocol]
-
-    @property
-    def device(self):
-        """
-        The device object exposed by all adapters. Setting a new device
-        will change the device in all contained adapters.
-        """
-        return self._device
-
-    @device.setter
-    def device(self, new_device):
-        self._device = new_device
-
-        for adapter in self._adapters.values():
-            adapter.update_device(self._device)
 
     def handle(self, cycle_delay):
         """

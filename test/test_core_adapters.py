@@ -20,8 +20,12 @@ class DummyAdapter(Adapter):
 
     def __init__(self, protocol, running=False, options=None):
         super(DummyAdapter, self).__init__(options)
-        self.protocol = protocol
+        self._protocol = protocol
         self._running = running
+
+    @property
+    def protocol(self):
+        return self._protocol
 
     def start_server(self):
         self._running = True
@@ -48,20 +52,14 @@ class TestAdapter(unittest.TestCase):
         self.assertRaises(NotImplementedError, getattr, adapter, 'is_running')
         assertRaisesNothing(self, adapter.handle, 0)
 
-    def test_device_property(self):
+    def test_interface_property(self):
         adapter = Adapter()
-        mock_device = Mock()
+        mock_interface = Mock()
 
         # Make sure that the default implementation works (for adapters that do
         # not have binding behavior).
-        adapter.device = mock_device
-        self.assertEqual(adapter.device, mock_device)
-
-        with patch('lewis.core.adapters.Adapter._bind_device') as bind_mock:
-            adapter.device = None
-
-            bind_mock.assert_called_once()
-            self.assertEqual(adapter.device, None)
+        adapter.interface = mock_interface
+        self.assertEqual(adapter.interface, mock_interface)
 
     def test_options(self):
         assertRaisesNothing(self, DummyAdapter, 'protocol', options={'bar': 2, 'foo': 3})
@@ -84,33 +82,6 @@ class TestAdapterCollection(unittest.TestCase):
         self.assertSetEqual(set(collection.protocols), {'foo', 'bar'})
 
         self.assertRaises(RuntimeError, collection.add_adapter, DummyAdapter('bar'))
-
-    def test_set_device(self):
-        mock_adapter1 = MagicMock()
-        mock_adapter2 = MagicMock()
-
-        collection = AdapterCollection(mock_adapter1, mock_adapter2)
-        collection.device = 'foo'
-
-        self.assertEqual(mock_adapter1.device, 'foo')
-        self.assertEqual(mock_adapter2.device, 'foo')
-
-        mock_adapter3 = MagicMock()
-        mock_adapter3.device = 'other'
-
-        collection.add_adapter(mock_adapter3)
-
-        self.assertEqual(mock_adapter3.device, 'foo')
-        collection.device = None
-
-        self.assertEqual(mock_adapter1.device, None)
-
-        mock_adapter4 = MagicMock()
-        mock_adapter4.device = 'bar'
-
-        collection.add_adapter(mock_adapter4)
-
-        self.assertEqual(mock_adapter1.device, 'bar')
 
     def test_remove_adapter(self):
         collection = AdapterCollection(DummyAdapter('foo'))

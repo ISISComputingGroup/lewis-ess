@@ -389,27 +389,28 @@ class PV(object):
 
 @has_log
 class PropertyExposingDriver(Driver):
-    def __init__(self, target, pv_dict):
+    def __init__(self, interface):
         super(PropertyExposingDriver, self).__init__()
 
-        self._target = target
-        self._set_logging_context(target)
+        self._interface = interface
+        self._set_logging_context(interface)
 
-        self._pv_dict = pv_dict
-        self._timers = {k: 0.0 for k in self._pv_dict.keys()}
+        self._timers = {k: 0.0 for k in self._interface.bound_pvs.keys()}
         self._last_update_call = None
 
     def write(self, pv, value):
         self.log.debug('PV put request: %s=%s', pv, value)
 
-        pv_object = self._pv_dict.get(pv)
+        pv_object = self._interface.bound_pvs.get(pv)
 
         if not pv_object:
             return False
 
         try:
-            pv_object.value = value
-            self.setParam(pv, pv_object.value)
+            with self.lock:
+                pv_object.value = value
+                self.setParam(pv, pv_object.value)
+
             return True
         except (LimitViolationException, AccessViolationException):
             return False
@@ -420,7 +421,10 @@ class PropertyExposingDriver(Driver):
 
         updates = []
 
-        for pv, pv_object in iteritems(self._pv_dict):
+        for pv, pv_object in iteritems(self._interface.bound_pvs):
+            if not pv in self._timers:
+                self._timers = 0.0
+
             self._timers[pv] += dt
             if self._timers[pv] >= pv_object.poll_interval or force:
                 try:
@@ -519,17 +523,6 @@ class EpicsAdapter(Adapter):
         self._server = None
         self._driver = None
 
-        self._bound_pvs = {}
-
-    def _bind_interface(self):
-        """
-        This method is re-implemented from :class:`~lewis.core.adapters.Adapter`. It uses
-        :meth:`_bind_properties` to generate a dict of bound PVs.
-        """
-
-        if self._driver is not None:
-            self._driver._pv_dict = self.interface.bound_pvs
-
     @property
     def documentation(self):
         pvs = []
@@ -544,7 +537,7 @@ class EpicsAdapter(Adapter):
                 complete_name, data_type, read_only_tag, format_doc_text(pv.doc)))
 
         return '\n\n'.join(
-            [inspect.getdoc(self) or '', 'PVs\n==='] + pvs)
+            [inspect.getdoc(self.interface) or '', 'PVs\n==='] + pvs)
 
     def start_server(self):
         """
@@ -558,11 +551,12 @@ class EpicsAdapter(Adapter):
             self._server = SimpleServer()
             self._server.createPV(prefix=self._options.prefix,
                                   pvdb={k: v.config for k, v in self.interface.bound_pvs.items()})
-            self._driver = PropertyExposingDriver(target=self, pv_dict=self.interface.bound_pvs)
+            self._driver = PropertyExposingDriver(interface=self.interface)
             self._driver.process_pv_updates(force=True)
 
             self.log.info('Started serving PVs: %s',
-                          ', '.join((self._options.prefix + pv for pv in self.interface.bound_pvs.keys())))
+                          ', '.join((self._options.prefix + pv for pv in
+                                     self.interface.bound_pvs.keys())))
 
     def stop_server(self):
         self._driver = None

@@ -422,6 +422,7 @@ class SimulationFactory(object):
         :return: Simulation object according to input parameters.
         """
         device_builder = self._reg.device_builder(device, self._rv)
+
         interface = device_builder.create_interface(protocol)
         interface.device = device_builder.create_device(setup)
 
