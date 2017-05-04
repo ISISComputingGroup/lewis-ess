@@ -422,7 +422,7 @@ class PropertyExposingDriver(Driver):
         updates = []
 
         for pv, pv_object in iteritems(self._interface.bound_pvs):
-            if not pv in self._timers:
+            if pv not in self._timers:
                 self._timers = 0.0
 
             self._timers[pv] += dt

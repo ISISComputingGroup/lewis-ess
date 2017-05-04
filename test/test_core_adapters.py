@@ -1,7 +1,7 @@
 import inspect
 import unittest
 
-from mock import patch, call, Mock, MagicMock
+from mock import patch, call, Mock
 
 from lewis.core.adapters import Adapter, AdapterCollection
 from lewis.core.exceptions import LewisException
