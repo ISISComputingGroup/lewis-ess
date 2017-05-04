@@ -422,45 +422,8 @@ class Var(CommandBase):
 
 class StreamAdapter(Adapter):
     """
-    This class is used to provide a TCP-stream based interface to a device.
-
-    Many hardware devices use a protocol that is based on exchanging text with a client via
-    a TCP stream. Sometimes RS232-based devices are also exposed this way via an adapter-box.
-    This adapter makes it easy to mimic such a protocol, in a subclass only three members must
-    be overridden:
-
-     - in_terminator, out_terminator: These define how lines are terminated when transferred
-       to and from the device respectively. They are stripped/added automatically.
-       The default is ``\\r``.
-     - commands: A list of :class:`~CommandBase`-objects that define mappings between protocol
-       and device/interface methods/attributes.
-
-    Commands are expressed as regular expressions, a simple example may look like this:
-
-    .. sourcecode:: Python
-
-        class SimpleDeviceStreamInterface(StreamAdapter):
-            commands = [
-                Cmd('set_speed', r'^S=([0-9]+)$', argument_mappings=[int]),
-                Cmd('get_speed', r'^S\\?$')
-                Var('speed', read_pattern=r'^V\\?$', write_pattern=r'^V=([0-9]+)$')
-            ]
-
-            def set_speed(self, new_speed):
-                self.device.speed = new_speed
-
-            def get_speed(self):
-                return self.device.speed
-
-    The interface has two commands, ``S?`` to return the speed and ``S=10`` to set the speed
-    to an integer value.
-
-    As in the :class:`lewis.adapters.epics.EpicsAdapter`, it does not matter whether the
-    wrapped method is a part of the device or of the interface, this is handled automatically when
-    a new device is assigned to the ``device``-property.
-
-    In addition, the :meth:`handle_error`-method can be overridden. It is called when an exception
-    is raised while handling commands.
+    The StreamAdapter is the bridge between the Device Interface and the TCP Stream networking
+    backend implementation.
 
     Available adapter options are:
 
@@ -533,6 +496,48 @@ class StreamAdapter(Adapter):
 
 
 class StreamInterface(InterfaceBase):
+    """
+    This class is used to provide a TCP-stream based interface to a device.
+
+    Many hardware devices use a protocol that is based on exchanging text with a client via
+    a TCP stream. Sometimes RS232-based devices are also exposed this way via an adapter-box.
+    This adapter makes it easy to mimic such a protocol, in a subclass only three members must
+    be overridden:
+
+     - in_terminator, out_terminator: These define how lines are terminated when transferred
+       to and from the device respectively. They are stripped/added automatically.
+       The default is ``\\r``.
+     - commands: A list of :class:`~CommandBase`-objects that define mappings between protocol
+       and device/interface methods/attributes.
+
+    Commands are expressed as regular expressions, a simple example may look like this:
+
+    .. sourcecode:: Python
+
+        class SimpleDeviceStreamInterface(StreamInterface):
+            commands = [
+                Cmd('set_speed', r'^S=([0-9]+)$', argument_mappings=[int]),
+                Cmd('get_speed', r'^S\\?$')
+                Var('speed', read_pattern=r'^V\\?$', write_pattern=r'^V=([0-9]+)$')
+            ]
+
+            def set_speed(self, new_speed):
+                self.device.speed = new_speed
+
+            def get_speed(self):
+                return self.device.speed
+
+    The interface has two commands, ``S?`` to return the speed and ``S=10`` to set the speed
+    to an integer value. It also exposes the same speed attribute as a variable, using auto-
+    generated ``V?`` and ``V=10`` commands.
+
+    As in the :class:`lewis.adapters.epics.EpicsInterface`, it does not matter whether the
+    wrapped method is a part of the device or of the interface, this is handled automatically when
+    a new device is assigned to the ``device``-property.
+
+    In addition, the :meth:`handle_error`-method can be overridden. It is called when an exception
+    is raised while handling commands.
+    """
     protocol = 'stream'
 
     in_terminator = '\r'
@@ -547,9 +552,8 @@ class StreamInterface(InterfaceBase):
 
     def _bind_device(self):
         """
-        This method is re-implemented from :class:`~lewis.core.adapters.Adapter`. It uses
-        :meth:`_bind_commands` to bind the defined :class:`Cmd` and :class:`Var`-objects
-        to the proper objects and make them usable.
+        This method implements ``_bind_device`` from :class:`~lewis.core.devices.InterfaceBase`.
+        It binds Cmd and Var definitions to implementations in Interface and Device.
         """
         patterns = set()
 
