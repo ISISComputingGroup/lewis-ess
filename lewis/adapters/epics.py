@@ -414,9 +414,14 @@ class PropertyExposingDriver(Driver):
             self.setParam(pv, pv_object.value)
 
             return True
-        except (LimitViolationException, AccessViolationException):
-            self.log.exception('An error occurred when writing %s to PV %s', value, pv)
-            return False
+        except LimitViolationException as e:
+            self.log.warning('Rejected writing value %s to PV %s due to limit '
+                             'violation. %s', value, pv, e)
+        except AccessViolationException:
+            self.log.warning('Rejected writing value %s to PV %s due to access '
+                             'violation, PV is read-only.', value, pv)
+
+        return False
 
     def process_pv_updates(self, force=False):
         dt = seconds_since(self._last_update_call or datetime.now())
