@@ -294,6 +294,9 @@ class PV(object):
         getter = self._create_getter(raw_getter, *targets)
         setter = self._create_setter(raw_setter, *targets)
 
+        if getter is None and setter is None:
+            return None
+
         if prop == 'value' and setter is None:
             self.read_only = True
 
