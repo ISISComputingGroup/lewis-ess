@@ -53,7 +53,10 @@ class InterfaceBase(object):
     """
 
     protocol = None
-    _device = None
+
+    def __init__(self):
+        super(InterfaceBase, self).__init__()
+        self._device = None
 
     @property
     def adapter(self):
