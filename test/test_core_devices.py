@@ -19,12 +19,14 @@
 
 import unittest
 from mock import patch
+
 from . import assertRaisesNothing, TestWithPackageStructure
 from types import ModuleType
 from uuid import uuid4
 
-from lewis.core.adapters import Adapter
-from lewis.core.devices import is_device, DeviceRegistry, DeviceBuilder, DeviceBase
+from lewis.adapters.stream import StreamInterface
+from lewis.core.devices import is_device, DeviceRegistry, DeviceBuilder, DeviceBase, \
+    is_interface, InterfaceBase
 from lewis.core.exceptions import LewisException
 from lewis.devices import Device, StateMachineDevice
 
@@ -60,12 +62,12 @@ class TestDeviceBuilderSimpleModule(unittest.TestCase):
         class DummyDevice(Device):
             pass
 
-        class DummyAdapter(Adapter):
+        class DummyInterface(InterfaceBase):
             protocol = 'dummy'
 
         cls.module = ModuleType('simple_dummy_module')
         cls.module.DummyDevice = DummyDevice
-        cls.module.DummyAdapter = DummyAdapter
+        cls.module.DummyAdapter = DummyInterface
 
     def test_init(self):
         assertRaisesNothing(self, DeviceBuilder, self.module)
@@ -120,17 +122,17 @@ class TestDeviceBuilderMultipleDevicesAndProtocols(unittest.TestCase):
         class OtherDummyDevice(Device):
             pass
 
-        class DummyAdapter(Adapter):
+        class DummyInterface(InterfaceBase):
             protocol = 'dummy'
 
-        class OtherDummyAdapter(Adapter):
+        class OtherDummyInterface(InterfaceBase):
             protocol = 'other_dummy'
 
         cls.module = ModuleType('multiple_devices_dummy_module')
         cls.module.DummyDevice = DummyDevice
         cls.module.OtherDummyDevice = OtherDummyDevice
-        cls.module.DummyAdapter = DummyAdapter
-        cls.module.OtherDummyAdapter = OtherDummyAdapter
+        cls.module.DummyAdapter = DummyInterface
+        cls.module.OtherDummyAdapter = OtherDummyInterface
 
     def test_defaults(self):
         builder = DeviceBuilder(self.module)
@@ -169,10 +171,10 @@ class TestDeviceBuilderComplexModule(unittest.TestCase):
         class OtherDummyDevice(Device):
             pass
 
-        class DummyAdapter(Adapter):
+        class DummyInterface(InterfaceBase):
             protocol = 'dummy'
 
-        class OtherDummyAdapter(Adapter):
+        class OtherDummyInterface(InterfaceBase):
             protocol = 'other_dummy'
 
         cls.module = ModuleType('complex_dummy_module')
@@ -180,9 +182,9 @@ class TestDeviceBuilderComplexModule(unittest.TestCase):
         cls.module.OtherDummyDevice = OtherDummyDevice
         cls.module.interfaces = ModuleType('interfaces')
         cls.module.interfaces.dummy = ModuleType('dummy')
-        cls.module.interfaces.dummy.DummyAdapter = DummyAdapter
+        cls.module.interfaces.dummy.DummyAdapter = DummyInterface
         cls.module.interfaces.other_dummy = ModuleType('other_dummy')
-        cls.module.interfaces.other_dummy.OtherDummyAdapter = OtherDummyAdapter
+        cls.module.interfaces.other_dummy.OtherDummyAdapter = OtherDummyInterface
         cls.module.setups = ModuleType('setups')
         cls.module.setups.default = ModuleType('default')
         cls.module.setups.default.device_type = DummyDevice
@@ -214,15 +216,15 @@ class TestDeviceBuilderComplexModule(unittest.TestCase):
 class TestDeviceBuilderWithDuplicateProtocols(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        class DummyAdapter(Adapter):
+        class DummyInterface(InterfaceBase):
             protocol = 'dummy'
 
-        class DummyAdapterTwo(Adapter):
+        class DummyInterfaceTwo(InterfaceBase):
             protocol = 'dummy'
 
         cls.module = ModuleType('simple_dummy_module')
-        cls.module.DummyAdapter = DummyAdapter
-        cls.module.DummyAdapterTwo = DummyAdapterTwo
+        cls.module.DummyAdapter = DummyInterface
+        cls.module.DummyAdapterTwo = DummyInterfaceTwo
 
     def test_init_fails(self):
         self.assertRaises(RuntimeError, DeviceBuilder, self.module)
@@ -256,3 +258,23 @@ class TestDeviceRegistry(TestWithPackageStructure):
                               relaxed_versions=False)
 
         self.assertRaises(LewisException, registry.device_builder, 'invalid_device')
+
+
+class TestIsInterface(unittest.TestCase):
+    def test_not_a_type_returns_false(self):
+        self.assertFalse(is_interface(0.0))
+        self.assertFalse(is_interface(None))
+
+    def test_arbitrary_types_fail(self):
+        self.assertFalse(is_interface(type(3.0)))
+        self.assertFalse(is_interface(property))
+
+    def test_interface_base_is_ignored(self):
+        self.assertFalse(is_interface(InterfaceBase))
+        self.assertFalse(is_interface(StreamInterface))
+
+    def test_interface_types_work(self):
+        class DummyInterface(InterfaceBase):
+            pass
+
+        self.assertTrue(is_interface(DummyInterface))

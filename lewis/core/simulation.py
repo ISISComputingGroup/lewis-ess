@@ -124,7 +124,7 @@ class Simulation(object):
             ),
             'interface': ExposedObject(
                 self._adapters,
-                exclude=('device', 'add_adapter', 'remove_adapter', 'handle', 'log'),
+                exclude=('add_adapter', 'remove_adapter', 'handle', 'log'),
                 exclude_inherited=True
             )},
             control_server)
@@ -422,11 +422,15 @@ class SimulationFactory(object):
         :return: Simulation object according to input parameters.
         """
         device_builder = self._reg.device_builder(device, self._rv)
-        interface = device_builder.create_interface(protocol, options=adapter_options)
+
+        interface = device_builder.create_interface(protocol)
         interface.device = device_builder.create_device(setup)
+
+        adapter = interface.adapter(options=adapter_options)
+        adapter.interface = interface
 
         return Simulation(
             device=interface.device,
-            adapter=interface,
+            adapter=adapter,
             device_builder=device_builder,
             control_server=control_server)

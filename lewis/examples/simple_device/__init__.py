@@ -19,14 +19,14 @@
 
 from lewis.devices import Device
 
-from lewis.adapters.stream import StreamAdapter, Var, Cmd
+from lewis.adapters.stream import StreamInterface, Var, Cmd
 
 
 class VerySimpleDevice(Device):
     param = 10
 
 
-class VerySimpleInterface(StreamAdapter):
+class VerySimpleInterface(StreamInterface):
     """
     A very simple device with TCP-stream interface
 

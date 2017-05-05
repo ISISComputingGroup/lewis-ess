@@ -26,9 +26,9 @@ import inspect
 from collections import namedtuple
 from time import sleep
 
+from lewis.core.exceptions import LewisException
 from lewis.core.logging import has_log
 from lewis.core.utils import dict_strict_update
-from lewis.core.exceptions import LewisException
 
 
 @has_log
@@ -64,12 +64,11 @@ class Adapter(object):
 
     :param options: Configuration options for the adapter.
     """
-    protocol = None
     default_options = {}
 
     def __init__(self, options=None):
         super(Adapter, self).__init__()
-        self._device = None
+        self._interface = None
 
         options = options or {}
 
@@ -87,7 +86,14 @@ class Adapter(object):
         self._options = options_type(**combined_options)
 
     @property
-    def device(self):
+    def protocol(self):
+        if self.interface is None:
+            return None
+
+        return self.interface.protocol
+
+    @property
+    def interface(self):
         """
         The device property contains the device-object exposed by the adapter.
 
@@ -95,26 +101,11 @@ class Adapter(object):
         call :meth:`_bind_device` (which is implemented in each adapter sub-class)
         and thus re-bind its commands etc. to call the new device.
         """
-        return self._device
+        return self._interface
 
-    @device.setter
-    def device(self, new_device):
-        self._device = new_device
-        self._bind_device()
-
-    def _bind_device(self):
-        """
-        This method is called in the setter of the ``device`` property after the device
-        has been set. Implementations should do whatever is necessary to actually expose
-        any methods that are part of the device and not the interface.
-
-        .. seealso:
-
-            Some concrete implementations in the framework:
-             - :meth:`lewis.adapters.epics.EpicsAdapter._bind_device`
-             - :meth:`lewis.adapters.stream.StreamAdapter._bind_device`
-        """
-        pass
+    @interface.setter
+    def interface(self, new_interface):
+        self._interface = new_interface
 
     @property
     def documentation(self):
@@ -180,20 +171,6 @@ class Adapter(object):
         pass
 
 
-def is_adapter(obj):
-    """
-    Returns True if obj is an interface (derived from Adapter), but not defined in
-    :mod:`lewis.adapters`.
-
-    :param obj: Object to test.
-    :return: True if obj is an interface type.
-    """
-    return isinstance(obj, type) and issubclass(
-        obj, Adapter) and not (
-        obj.__module__.startswith('lewis.core.adapters') or obj.__module__.startswith(
-            'lewis.adapters'))
-
-
 @has_log
 class AdapterCollection(object):
     """
@@ -220,7 +197,6 @@ class AdapterCollection(object):
 
     def __init__(self, *args):
         self._adapters = {}
-        self._device = None
 
         for adapter in args:
             self.add_adapter(adapter)
@@ -228,21 +204,13 @@ class AdapterCollection(object):
     def add_adapter(self, adapter):
         """
         Adds the supplied adapter to the container but raises a ``RuntimeError`` if there's
-        already an adapter registered for the same protocol. If the adapter has
-        a device and the collection does not, all adapters will get the new
-        device. If the collection already has a device, the new adapter's
-        device is overwritten.
+        already an adapter registered for the same protocol.
 
         :param adapter: Adapter to add to the container
         """
         if adapter.protocol in self._adapters:
             raise RuntimeError(
                 'Adapter for protocol \'{}\' is already registered.'.format(adapter))
-
-        if self.device is not None:
-            adapter.device = self.device
-        else:
-            self.device = adapter.device
 
         self._adapters[adapter.protocol] = adapter
 
@@ -258,21 +226,6 @@ class AdapterCollection(object):
                 'Can not remove adapter for protocol \'{}\', none registered.'.format(protocol))
 
         del self._adapters[protocol]
-
-    @property
-    def device(self):
-        """
-        The device object exposed by all adapters. Setting a new device
-        will change the device in all contained adapters.
-        """
-        return self._device
-
-    @device.setter
-    def device(self, new_device):
-        self._device = new_device
-
-        for adapter in self._adapters.values():
-            adapter.device = self._device
 
     def handle(self, cycle_delay):
         """

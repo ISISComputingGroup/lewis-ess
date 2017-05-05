@@ -22,6 +22,7 @@ from functools import wraps
 import inspect
 
 from lewis.core.adapters import Adapter
+from lewis.core.devices import InterfaceBase
 from six import iteritems, string_types
 
 from lewis.core.logging import has_log
@@ -293,6 +294,9 @@ class PV(object):
         getter = self._create_getter(raw_getter, *targets)
         setter = self._create_setter(raw_setter, *targets)
 
+        if getter is None and setter is None:
+            return None
+
         if prop == 'value' and setter is None:
             self.read_only = True
 
@@ -388,20 +392,19 @@ class PV(object):
 
 @has_log
 class PropertyExposingDriver(Driver):
-    def __init__(self, target, pv_dict):
+    def __init__(self, interface):
         super(PropertyExposingDriver, self).__init__()
 
-        self._target = target
-        self._set_logging_context(target)
+        self._interface = interface
+        self._set_logging_context(interface)
 
-        self._pv_dict = pv_dict
-        self._timers = {k: 0.0 for k in self._pv_dict.keys()}
+        self._timers = {k: 0.0 for k in self._interface.bound_pvs.keys()}
         self._last_update_call = None
 
     def write(self, pv, value):
         self.log.debug('PV put request: %s=%s', pv, value)
 
-        pv_object = self._pv_dict.get(pv)
+        pv_object = self._interface.bound_pvs.get(pv)
 
         if not pv_object:
             return False
@@ -409,9 +412,16 @@ class PropertyExposingDriver(Driver):
         try:
             pv_object.value = value
             self.setParam(pv, pv_object.value)
+
             return True
-        except (LimitViolationException, AccessViolationException):
-            return False
+        except LimitViolationException as e:
+            self.log.warning('Rejected writing value %s to PV %s due to limit '
+                             'violation. %s', value, pv, e)
+        except AccessViolationException:
+            self.log.warning('Rejected writing value %s to PV %s due to access '
+                             'violation, PV is read-only.', value, pv)
+
+        return False
 
     def process_pv_updates(self, force=False):
         dt = seconds_since(self._last_update_call or datetime.now())
@@ -419,7 +429,10 @@ class PropertyExposingDriver(Driver):
 
         updates = []
 
-        for pv, pv_object in iteritems(self._pv_dict):
+        for pv, pv_object in iteritems(self._interface.bound_pvs):
+            if pv not in self._timers:
+                self._timers = 0.0
+
             self._timers[pv] += dt
             if self._timers[pv] >= pv_object.poll_interval or force:
                 try:
@@ -427,34 +440,116 @@ class PropertyExposingDriver(Driver):
                     self.setParam(pv, new_value)
                     self.setParamInfo(pv, pv_object.meta)
 
-                    self._timers[pv] = 0.0
                     updates.append((pv, new_value))
                 except (AttributeError, TypeError):
-                    pass
+                    self.log.exception('An error occurred while updating PV %s.', pv)
+                finally:
+                    self._timers[pv] = 0.0
 
         self.updatePVs()
 
         if updates:
-            self.log.debug('Processed PV updates: %s',
-                           ', '.join(('{}={}'.format(pv, val) for pv, val in updates)))
+            self.log.info('Processed PV updates: %s',
+                          ', '.join(('{}={}'.format(pv, val) for pv, val in updates)))
 
         self._last_update_call = datetime.now()
 
 
 class EpicsAdapter(Adapter):
     """
-    Inheriting from this class provides an EPICS-interface to a device, powered by
-    the pcaspy-module. In the simplest case all that is required is to inherit
+    This adapter provides ChannelAccess server functionality through the pcaspy module.
+
+    It's possible to configure the prefix for the PVs provided by this adapter. The
+    corresponding key in the ``options`` dictionary is called ``prefix``:
+
+    .. sourcecode:: Python
+
+        options = {
+            'prefix': 'PVPREFIX:'
+        }
+
+    :param options: Dictionary with options.
+    """
+
+    default_options = {'prefix': ''}
+
+    def __init__(self, options=None):
+        super(EpicsAdapter, self).__init__(options)
+
+        self._server = None
+        self._driver = None
+
+    @property
+    def documentation(self):
+        pvs = []
+
+        for name, pv in self.interface.bound_pvs.items():
+            complete_name = self._options.prefix + name
+
+            data_type = pv.config.get('type', 'float')
+            read_only_tag = ', read only' if pv.read_only else ''
+
+            pvs.append('{} ({}{}):\n{}'.format(
+                complete_name, data_type, read_only_tag, format_doc_text(pv.doc)))
+
+        return '\n\n'.join(
+            [inspect.getdoc(self.interface) or '', 'PVs\n==='] + pvs)
+
+    def start_server(self):
+        """
+        Creates a pcaspy-server.
+
+        .. note::
+
+            The server does not process requests unless :meth:`handle` is called regularly.
+        """
+        if self._server is None:
+            self._server = SimpleServer()
+            self._server.createPV(prefix=self._options.prefix,
+                                  pvdb={k: v.config for k, v in self.interface.bound_pvs.items()})
+            self._driver = PropertyExposingDriver(interface=self.interface)
+            self._driver.process_pv_updates(force=True)
+
+            self.log.info('Started serving PVs: %s',
+                          ', '.join((self._options.prefix + pv for pv in
+                                     self.interface.bound_pvs.keys())))
+
+    def stop_server(self):
+        self._driver = None
+        self._server = None
+
+    @property
+    def is_running(self):
+        return self._server is not None
+
+    def handle(self, cycle_delay=0.1):
+        """
+        Call this method to spend about ``cycle_delay`` seconds processing
+        requests in the pcaspy server. Under load, for example when running ``caget`` at a
+        high frequency, the actual time spent in the method may be much shorter. This effect
+        is not corrected for.
+
+        :param cycle_delay: Approximate time to be spent processing requests in pcaspy server.
+        """
+        if self._server is not None:
+            self._server.process(cycle_delay)
+            self._driver.process_pv_updates()
+
+
+class EpicsInterface(InterfaceBase):
+    """
+    Inheriting from this class provides an EPICS-interface to a device for use with
+    :class:`EpicsAdapter`. In the simplest case all that is required is to inherit
     from this class and override the ``pvs``-member. It should be a dictionary
     that contains PV-names (without prefix) as keys and instances of PV as
-    values.
+    values. The prefix is handled by ``EpicsAdapter``.
 
     For a simple device with two properties, speed and position, the first of which
     should be read-only, it's enough to define the following:
 
     .. sourcecode:: Python
 
-        class SimpleDeviceEpicsInterface(EpicsAdapter):
+        class SimpleDeviceEpicsInterface(EpicsInterface):
             pvs = {
                 'VELO': PV('speed', read_only=True),
                 'POS': PV('position', lolo=0, hihi=100)
@@ -466,7 +561,7 @@ class EpicsAdapter(Adapter):
 
     .. sourcecode:: Python
 
-        class SimpleDeviceEpicsInterface(EpicsAdapter):
+        class SimpleDeviceEpicsInterface(EpicsInterface):
             pvs = {
                 'VELO': PV('speed', read_only=True),
                 'POS': PV('position', lolo=0, hihi=100),
@@ -489,7 +584,7 @@ class EpicsAdapter(Adapter):
 
         $ caput STOP 1
 
-    will achieve the desired behavior, because ``EpicsAdapter`` merges the properties
+    will achieve the desired behavior, because ``EpicsInterface`` merges the properties
     of the device into ``SimpleDeviceEpicsInterface`` itself, so that it is does not
     matter whether the specified property in PV exists in the device or the adapter.
 
@@ -497,110 +592,28 @@ class EpicsAdapter(Adapter):
     protocol specific stuff, such as in the case above where stopping a device
     via EPICS might involve writing a value to a PV, whereas other protocols may
     offer an RPC-way of achieving the same thing.
-
-    It's possible to configure the prefix for the PVs provided by this adapter. The
-    corresponding key in the ``options`` dictionary is called ``prefix``:
-
-    .. sourcecode:: Python
-
-        options = {
-            'prefix': 'PVPREFIX:'
-        }
-
-    :param options: Dictionary with options.
     """
+
     protocol = 'epics'
     pvs = None
-    default_options = {'prefix': ''}
 
-    def __init__(self, options=None):
-        super(EpicsAdapter, self).__init__(options)
+    def __init__(self):
+        super(EpicsInterface, self).__init__()
+        self.bound_pvs = None
 
-        self._server = None
-        self._driver = None
-
-        self._bound_pvs = {}
+    @property
+    def adapter(self):
+        return EpicsAdapter
 
     def _bind_device(self):
         """
-        This method is re-implemented from :class:`~lewis.core.adapters.Adapter`. It uses
-        :meth:`_bind_properties` to generate a dict of bound PVs.
-        """
-        self._bound_pvs = self._bind_properties(self.pvs)
-
-        if self._driver is not None:
-            self._driver._pv_dict = self._bound_pvs
-
-    def _bind_properties(self, pvs):
-        """
-        This method transforms a dict of :class:`PV` objects to a dict of :class:`BoundPV` objects,
-        the keys are always the PV-names that are exposed via ChannelAccess.
+        This method transforms the ``self.pvs`` dict of :class:`PV` objects ``self.bound_pvs``,
+        a dict of :class:`BoundPV` objects, the keys are always the PV-names that are exposed
+        via ChannelAccess.
 
         In the transformation process, the method tries to find whether the attribute specified by
         PV's ``property`` (and ``meta_data_property``) is part of the internally stored device
         or the interface and constructs a BoundPV, which acts as a forwarder to the appropriate
         objects.
-
-        :param pvs: Dict of PV-name/:class:`PV`-objects.
-        :return: Dict of PV-name/:class:`BoundPV`-objects.
         """
-        bound_pvs = {}
-        for pv_name, pv in pvs.items():
-            bound_pvs[pv_name] = pv.bind(self, self.device)
-
-        return bound_pvs
-
-    @property
-    def documentation(self):
-        pvs = []
-
-        for name, pv in self._bound_pvs.items():
-            complete_name = self._options.prefix + name
-
-            data_type = pv.config.get('type', 'float')
-            read_only_tag = ', read only' if pv.read_only else ''
-
-            pvs.append('{} ({}{}):\n{}'.format(
-                complete_name, data_type, read_only_tag, format_doc_text(pv.doc)))
-
-        return '\n\n'.join(
-            [inspect.getdoc(self) or '', 'PVs\n==='] + pvs)
-
-    def start_server(self):
-        """
-        Creates a pcaspy-server.
-
-        .. note::
-
-            The server does not process requests unless :meth:`handle` is called regularly.
-        """
-        if self._server is None:
-            self._server = SimpleServer()
-            self._server.createPV(prefix=self._options.prefix,
-                                  pvdb={k: v.config for k, v in self._bound_pvs.items()})
-            self._driver = PropertyExposingDriver(target=self, pv_dict=self._bound_pvs)
-            self._driver.process_pv_updates(force=True)
-
-            self.log.info('Started serving PVs: %s',
-                          ', '.join((self._options.prefix + pv for pv in self._bound_pvs.keys())))
-
-    def stop_server(self):
-        self._driver = None
-        self._server = None
-
-    @property
-    def is_running(self):
-        return self._server is not None
-
-    def handle(self, cycle_delay=0.1):
-        """
-        Call this method to spend about ``cycle_delay`` seconds processing
-        requests in the pcaspy server. Under load, for example when running ``caget`` at a
-        high frequency, the actual time spent in the method may be much shorter. This effect
-        is not corrected for.
-
-        :param cycle_delay: Approximate time to be spent processing requests in pcaspy server.
-        """
-        if self._server is not None:
-            self._server.process(cycle_delay)
-            self._driver.process_pv_updates()
+        self.bound_pvs = {pv_name: pv.bind(self, self.device) for pv_name, pv in self.pvs.items()}

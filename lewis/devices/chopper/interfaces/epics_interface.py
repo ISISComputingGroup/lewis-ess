@@ -17,10 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from lewis.adapters.epics import EpicsAdapter, PV
+from lewis.adapters.epics import EpicsInterface, PV
 
 
-class ChopperEpicsInterface(EpicsAdapter):
+class ChopperEpicsInterface(EpicsInterface):
     """
     ESS chopper EPICS interface
 

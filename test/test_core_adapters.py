@@ -1,29 +1,11 @@
+import inspect
 import unittest
 
 from mock import patch, call, Mock, MagicMock
-import inspect
 
-from lewis.adapters.stream import StreamAdapter
-from lewis.core.adapters import is_adapter, Adapter, AdapterCollection
+from lewis.core.adapters import Adapter, AdapterCollection
 from lewis.core.exceptions import LewisException
 from . import assertRaisesNothing
-
-
-class TestIsAdapter(unittest.TestCase):
-    def test_not_a_type_returns_false(self):
-        self.assertFalse(is_adapter(0.0))
-        self.assertFalse(is_adapter(None))
-
-    def test_arbitrary_types_fail(self):
-        self.assertFalse(is_adapter(type(3.0)))
-        self.assertFalse(is_adapter(property))
-
-    def test_adapter_base_is_ignored(self):
-        self.assertFalse(is_adapter(Adapter))
-        self.assertFalse(is_adapter(StreamAdapter))
-
-    def test_adapter_types_work(self):
-        self.assertTrue(is_adapter(DummyAdapter))
 
 
 class DummyAdapter(Adapter):
@@ -38,8 +20,12 @@ class DummyAdapter(Adapter):
 
     def __init__(self, protocol, running=False, options=None):
         super(DummyAdapter, self).__init__(options)
-        self.protocol = protocol
+        self._protocol = protocol
         self._running = running
+
+    @property
+    def protocol(self):
+        return self._protocol
 
     def start_server(self):
         self._running = True
@@ -66,20 +52,27 @@ class TestAdapter(unittest.TestCase):
         self.assertRaises(NotImplementedError, getattr, adapter, 'is_running')
         assertRaisesNothing(self, adapter.handle, 0)
 
-    def test_device_property(self):
+    def test_interface_property(self):
         adapter = Adapter()
-        mock_device = Mock()
+        mock_interface = Mock()
 
         # Make sure that the default implementation works (for adapters that do
         # not have binding behavior).
-        adapter.device = mock_device
-        self.assertEqual(adapter.device, mock_device)
+        adapter.interface = mock_interface
+        self.assertEqual(adapter.interface, mock_interface)
 
-        with patch('lewis.core.adapters.Adapter._bind_device') as bind_mock:
-            adapter.device = None
+    def test_protocol_is_forwarded_from_interface(self):
+        adapter = Adapter()
 
-            bind_mock.assert_called_once()
-            self.assertEqual(adapter.device, None)
+        adapter.interface = None
+        self.assertEqual(adapter.protocol, None)
+
+        mock_interface = MagicMock()
+        mock_interface.protocol = 'foo'
+
+        adapter.interface = mock_interface
+
+        self.assertEqual(adapter.protocol, 'foo')
 
     def test_options(self):
         assertRaisesNothing(self, DummyAdapter, 'protocol', options={'bar': 2, 'foo': 3})
@@ -102,33 +95,6 @@ class TestAdapterCollection(unittest.TestCase):
         self.assertSetEqual(set(collection.protocols), {'foo', 'bar'})
 
         self.assertRaises(RuntimeError, collection.add_adapter, DummyAdapter('bar'))
-
-    def test_set_device(self):
-        mock_adapter1 = MagicMock()
-        mock_adapter2 = MagicMock()
-
-        collection = AdapterCollection(mock_adapter1, mock_adapter2)
-        collection.device = 'foo'
-
-        self.assertEqual(mock_adapter1.device, 'foo')
-        self.assertEqual(mock_adapter2.device, 'foo')
-
-        mock_adapter3 = MagicMock()
-        mock_adapter3.device = 'other'
-
-        collection.add_adapter(mock_adapter3)
-
-        self.assertEqual(mock_adapter3.device, 'foo')
-        collection.device = None
-
-        self.assertEqual(mock_adapter1.device, None)
-
-        mock_adapter4 = MagicMock()
-        mock_adapter4.device = 'bar'
-
-        collection.add_adapter(mock_adapter4)
-
-        self.assertEqual(mock_adapter1.device, 'bar')
 
     def test_remove_adapter(self):
         collection = AdapterCollection(DummyAdapter('foo'))

@@ -18,14 +18,14 @@
 # *********************************************************************
 
 from lewis.devices import Device
-from lewis.adapters.modbus import ModbusAdapter, ModbusBasicDataBank
+from lewis.adapters.modbus import ModbusInterface, ModbusBasicDataBank
 
 
 class ModbusDevice(Device):
     pass
 
 
-class ModbusInterface(ModbusAdapter):
+class ExampleModbusInterface(ModbusInterface):
     """
     The class attributes di, co, ir and hr represent Discrete Inputs, Coils, Input Registers and
     Holding Registers, respectively. Each attribute should be assigned a ModbusDataBank instance
