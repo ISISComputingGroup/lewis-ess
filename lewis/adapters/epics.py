@@ -410,13 +410,12 @@ class PropertyExposingDriver(Driver):
             return False
 
         try:
-            with self.lock:
-                pv_object.value = value
-                self.setParam(pv, pv_object.value)
+            pv_object.value = value
+            self.setParam(pv, pv_object.value)
 
             return True
         except (LimitViolationException, AccessViolationException):
-            return False
+            self.log.exception('An error occurred when writing %s to PV %s', value, pv)
 
     def process_pv_updates(self, force=False):
         dt = seconds_since(self._last_update_call or datetime.now())
