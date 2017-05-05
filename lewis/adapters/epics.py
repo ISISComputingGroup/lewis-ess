@@ -416,6 +416,7 @@ class PropertyExposingDriver(Driver):
             return True
         except (LimitViolationException, AccessViolationException):
             self.log.exception('An error occurred when writing %s to PV %s', value, pv)
+            return False
 
     def process_pv_updates(self, force=False):
         dt = seconds_since(self._last_update_call or datetime.now())
