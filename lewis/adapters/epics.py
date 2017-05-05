@@ -440,16 +440,17 @@ class PropertyExposingDriver(Driver):
                     self.setParam(pv, new_value)
                     self.setParamInfo(pv, pv_object.meta)
 
-                    self._timers[pv] = 0.0
                     updates.append((pv, new_value))
                 except (AttributeError, TypeError):
-                    pass
+                    self.log.exception('An error occurred while updating PV %s.', pv)
+                finally:
+                    self._timers[pv] = 0.0
 
         self.updatePVs()
 
         if updates:
-            self.log.debug('Processed PV updates: %s',
-                           ', '.join(('{}={}'.format(pv, val) for pv, val in updates)))
+            self.log.info('Processed PV updates: %s',
+                          ', '.join(('{}={}'.format(pv, val) for pv, val in updates)))
 
         self._last_update_call = datetime.now()
 
