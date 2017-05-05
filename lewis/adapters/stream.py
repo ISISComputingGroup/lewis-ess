@@ -449,7 +449,7 @@ class StreamAdapter(Adapter):
         commands = ['{}:\n{}'.format(
             cmd.raw_pattern,
             format_doc_text(cmd.doc or inspect.getdoc(cmd.func) or ''))
-                    for cmd in sorted(self.interface.bound_commands, key=lambda x: x.raw_pattern)]
+            for cmd in sorted(self.interface.bound_commands, key=lambda x: x.raw_pattern)]
 
         options = format_doc_text(
             'Listening on: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}'.format(
@@ -544,7 +544,10 @@ class StreamInterface(InterfaceBase):
     out_terminator = '\r'
 
     commands = None
-    bound_commands = None
+
+    def __init__(self):
+        super(StreamInterface, self).__init__()
+        self.bound_commands = None
 
     @property
     def adapter(self):

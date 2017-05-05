@@ -589,9 +589,11 @@ class EpicsInterface(InterfaceBase):
     """
 
     protocol = 'epics'
-
     pvs = None
-    bound_pvs = None
+
+    def __init__(self):
+        super(EpicsInterface, self).__init__()
+        self.bound_pvs = None
 
     @property
     def adapter(self):
