@@ -392,10 +392,11 @@ class PV(object):
 
 @has_log
 class PropertyExposingDriver(Driver):
-    def __init__(self, interface):
+    def __init__(self, interface, lock):
         super(PropertyExposingDriver, self).__init__()
 
         self._interface = interface
+        self._lock = lock
         self._set_logging_context(interface)
 
         self._timers = {k: 0.0 for k in self._interface.bound_pvs.keys()}
@@ -410,10 +411,11 @@ class PropertyExposingDriver(Driver):
             return False
 
         try:
-            pv_object.value = value
-            self.setParam(pv, pv_object.value)
+            with self._lock:
+                pv_object.value = value
+                self.setParam(pv, pv_object.value)
 
-            return True
+                return True
         except LimitViolationException as e:
             self.log.warning('Rejected writing value %s to PV %s due to limit '
                              'violation. %s', value, pv, e)
@@ -436,11 +438,13 @@ class PropertyExposingDriver(Driver):
             self._timers[pv] += dt
             if self._timers[pv] >= pv_object.poll_interval or force:
                 try:
-                    new_value = pv_object.value
-                    self.setParam(pv, new_value)
-                    self.setParamInfo(pv, pv_object.meta)
+                    with self._lock:
+                        new_value = pv_object.value
 
-                    updates.append((pv, new_value))
+                        self.setParam(pv, new_value)
+                        self.setParamInfo(pv, pv_object.meta)
+
+                        updates.append((pv, new_value))
                 except (AttributeError, TypeError):
                     self.log.exception('An error occurred while updating PV %s.', pv)
                 finally:
@@ -507,7 +511,7 @@ class EpicsAdapter(Adapter):
             self._server = SimpleServer()
             self._server.createPV(prefix=self._options.prefix,
                                   pvdb={k: v.config for k, v in self.interface.bound_pvs.items()})
-            self._driver = PropertyExposingDriver(interface=self.interface)
+            self._driver = PropertyExposingDriver(interface=self.interface, lock=self.lock)
             self._driver.process_pv_updates(force=True)
 
             self.log.info('Started serving PVs: %s',

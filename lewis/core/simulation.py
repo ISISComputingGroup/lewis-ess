@@ -23,8 +23,9 @@ an :mod:`Adapter <lewis.adapters>`).
 """
 
 from datetime import datetime
+import threading
 
-from lewis.core.adapters import AdapterCollection, MultiThreadedAdapterCollection
+from lewis.core.adapters import MultiThreadedAdapterCollection, NoLock
 from lewis.core.control_server import ControlServer, ExposedObject
 from lewis.core.devices import DeviceRegistry
 from lewis.core.logging import has_log
@@ -78,13 +79,15 @@ class Simulation(object):
     :param control_server: 'host:port'-string to construct control server or None.
     """
 
-    def __init__(self, device, adapter, device_builder=None, control_server=None):
+    def __init__(self, device, adapter, device_builder=None, control_server=None,
+                 device_lock=None):
         super(Simulation, self).__init__()
 
         self._device_builder = device_builder
 
         self._device = device
         self._adapters = MultiThreadedAdapterCollection(adapter)
+        self._device_lock = device_lock or NoLock()
 
         self._speed = 1.0  # Multiplier for delta t
         self._cycle_delay = 0.1  # Target time between cycles
@@ -194,10 +197,11 @@ class Simulation(object):
         """
         start = datetime.now()
 
-        self._process_simulation_cycle(delta)
+        with self._device_lock:
+            self._process_simulation_cycle(delta)
 
-        if self._control_server:
-            self._control_server.process()
+            if self._control_server:
+                self._control_server.process()
 
         delta = seconds_since(start)
 
@@ -426,11 +430,14 @@ class SimulationFactory(object):
         interface = device_builder.create_interface(protocol)
         interface.device = device_builder.create_device(setup)
 
+        lock = threading.Lock()
+
         adapter = interface.adapter(options=adapter_options)
+        adapter.lock = lock
         adapter.interface = interface
 
         return Simulation(
             device=interface.device,
             adapter=adapter,
             device_builder=device_builder,
-            control_server=control_server)
+            control_server=control_server, device_lock=lock)

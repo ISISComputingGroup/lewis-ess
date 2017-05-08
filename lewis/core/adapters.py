@@ -32,6 +32,14 @@ from lewis.core.logging import has_log
 from lewis.core.utils import dict_strict_update
 
 
+class NoLock(object):
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
 @has_log
 class Adapter(object):
     """
@@ -70,6 +78,7 @@ class Adapter(object):
     def __init__(self, options=None):
         super(Adapter, self).__init__()
         self._interface = None
+        self.lock = NoLock()
 
         options = options or {}
 
@@ -270,7 +279,7 @@ class AdapterCollection(object):
         :param args: List of protocols for which to stop adapters or empty for all.
         """
         for adapter in self._get_adapters(args):
-            self.log.info('Disonnecting device interface for protocol \'%s\'', adapter.protocol)
+            self.log.info('Disconnecting device interface for protocol \'%s\'', adapter.protocol)
             self._stop_server(adapter)
 
     def _stop_server(self, adapter):

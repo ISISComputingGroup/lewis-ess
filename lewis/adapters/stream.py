@@ -53,20 +53,21 @@ class StreamHandler(asynchat.async_chat):
 
         self.log.debug('Got request %s', request)
 
-        try:
-            cmd = next((cmd for cmd in self.target.bound_commands if cmd.can_process(request)),
-                       None)
+        with self._stream_server.device_lock:
+            try:
+                cmd = next((cmd for cmd in self.target.bound_commands if cmd.can_process(request)),
+                           None)
 
-            if cmd is None:
-                raise RuntimeError('None of the device\'s commands matched.')
+                if cmd is None:
+                    raise RuntimeError('None of the device\'s commands matched.')
 
-            self.log.info('Processing request %s using command %s', request, cmd.raw_pattern)
+                self.log.info('Processing request %s using command %s', request, cmd.raw_pattern)
 
-            reply = cmd.process_request(request)
+                reply = cmd.process_request(request)
 
-        except Exception as error:
-            reply = self.target.handle_error(request, error)
-            self.log.debug('Error while processing request', exc_info=error)
+            except Exception as error:
+                reply = self.target.handle_error(request, error)
+                self.log.debug('Error while processing request', exc_info=error)
 
         if reply is not None:
             self.log.debug('Sending reply %s', reply)
@@ -80,9 +81,10 @@ class StreamHandler(asynchat.async_chat):
 
 @has_log
 class StreamServer(asyncore.dispatcher):
-    def __init__(self, host, port, target):
+    def __init__(self, host, port, target, device_lock):
         asyncore.dispatcher.__init__(self)
         self.target = target
+        self.device_lock = device_lock
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         self.bind((host, port))
@@ -475,7 +477,7 @@ class StreamAdapter(Adapter):
                 self.interface.out_terminator = '\r\n'
 
             self._server = StreamServer(self._options.bind_address, self._options.port,
-                                        self.interface)
+                                        self.interface, self.lock)
 
     def stop_server(self):
         if self._server is not None:
