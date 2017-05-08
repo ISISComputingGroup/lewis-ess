@@ -207,6 +207,7 @@ class AdapterCollection(object):
 
     def __init__(self, *args):
         self._adapters = {}
+        self.lock = NoLock()
 
         for adapter in args:
             self.add_adapter(adapter)
@@ -348,6 +349,8 @@ class MultiThreadedAdapterCollection(AdapterCollection):
         self._threads = {}
         self._stop = {}
 
+        self.lock = threading.Lock()
+
     def _start_server(self, adapter):
         if adapter.protocol not in self._threads:
             adapter_thread = threading.Thread(target=self._do_handle, args=(adapter, 0.1))
@@ -363,6 +366,7 @@ class MultiThreadedAdapterCollection(AdapterCollection):
             del self._threads[adapter.protocol]
 
     def _do_handle(self, adapter, dt):
+        adapter.lock = self.lock
         adapter.start_server()
 
         while not self._stop.get(adapter.protocol, False):

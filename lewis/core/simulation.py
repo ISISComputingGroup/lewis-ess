@@ -23,7 +23,6 @@ an :mod:`Adapter <lewis.adapters>`).
 """
 
 from datetime import datetime
-import threading
 
 from lewis.core.adapters import MultiThreadedAdapterCollection, NoLock
 from lewis.core.control_server import ControlServer, ExposedObject
@@ -48,7 +47,7 @@ class Simulation(object):
     In the simplest case, the actual time-delta between two cycles
     is passed to the simulated device so that it can update its internal
     state according to the elapsed time. It is however possible to set
-    a simulation speed, which serves as a multiplier for this time.
+    a simulation speed, which serv es as a multiplier for this time.
     If the speed is set to 2 and 0.1 seconds pass between two cycles,
     the simulation is asked to simulate 0.2 seconds, and so on. Speed 0
     effectively stops all time dependent calculations in the
@@ -79,15 +78,13 @@ class Simulation(object):
     :param control_server: 'host:port'-string to construct control server or None.
     """
 
-    def __init__(self, device, adapter, device_builder=None, control_server=None,
-                 device_lock=None):
+    def __init__(self, device, adapter, device_builder=None, control_server=None):
         super(Simulation, self).__init__()
 
         self._device_builder = device_builder
 
         self._device = device
         self._adapters = MultiThreadedAdapterCollection(adapter)
-        self._device_lock = device_lock or NoLock()
 
         self._speed = 1.0  # Multiplier for delta t
         self._cycle_delay = 0.1  # Target time between cycles
@@ -197,11 +194,7 @@ class Simulation(object):
         """
         start = datetime.now()
 
-        with self._device_lock:
-            self._process_simulation_cycle(delta)
-
-            if self._control_server:
-                self._control_server.process()
+        self._process_simulation_cycle(delta)
 
         delta = seconds_since(start)
 
@@ -223,7 +216,12 @@ class Simulation(object):
 
         if self._running:
             delta_simulation = delta * self._speed
-            self._device.process(delta_simulation)
+
+            with self._adapters.lock:
+                self._device.process(delta_simulation)
+
+                if self._control_server:
+                    self._control_server.process()
 
             self._cycles += 1
             self._runtime += delta_simulation
@@ -430,14 +428,11 @@ class SimulationFactory(object):
         interface = device_builder.create_interface(protocol)
         interface.device = device_builder.create_device(setup)
 
-        lock = threading.Lock()
-
         adapter = interface.adapter(options=adapter_options)
-        adapter.lock = lock
         adapter.interface = interface
 
         return Simulation(
             device=interface.device,
             adapter=adapter,
             device_builder=device_builder,
-            control_server=control_server, device_lock=lock)
+            control_server=control_server)
