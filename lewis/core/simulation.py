@@ -24,7 +24,7 @@ an :mod:`Adapter <lewis.adapters>`).
 
 from datetime import datetime
 
-from lewis.core.adapters import AdapterCollection
+from lewis.core.adapters import AdapterCollection, MultiThreadedAdapterCollection
 from lewis.core.control_server import ControlServer, ExposedObject
 from lewis.core.devices import DeviceRegistry
 from lewis.core.logging import has_log
@@ -84,7 +84,7 @@ class Simulation(object):
         self._device_builder = device_builder
 
         self._device = device
-        self._adapters = AdapterCollection(adapter)
+        self._adapters = MultiThreadedAdapterCollection(adapter)
 
         self._speed = 1.0  # Multiplier for delta t
         self._cycle_delay = 0.1  # Target time between cycles
@@ -125,7 +125,7 @@ class Simulation(object):
             'interface': ExposedObject(
                 self._adapters,
                 exclude=('add_adapter', 'remove_adapter', 'handle', 'log'),
-                exclude_inherited=True
+                exclude_inherited=False
             )},
             control_server)
 
