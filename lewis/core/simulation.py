@@ -218,7 +218,7 @@ class Simulation(object):
         if self._running:
             delta_simulation = delta * self._speed
 
-            with self._adapters._lock:
+            with self._adapters.device_lock:
                 self._device.process(delta_simulation)
 
                 if self._control_server:

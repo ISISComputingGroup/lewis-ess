@@ -216,6 +216,12 @@ class AdapterCollection(object):
 
     @property
     def device_lock(self):
+        """
+        This lock is passed to each adapter when it's started. It's supposed to be used to ensure
+        that the device is only accessed from one thread at a time, for example during network IO.
+        :class:`~lewis.core.simulation.Simulation` uses this lock to block the device during the
+        simulation cycle calculations. 
+        """
         return self._lock
 
     def add_adapter(self, adapter):
@@ -251,17 +257,18 @@ class AdapterCollection(object):
 
     def connect(self, *args):
         """
-        Calls :meth:`~Adapter.start_server` on each adapter that correspond to the supplied
-        protocols. If no arguments are supplied, all adapters are started.
+        This method starts an adapter for each specified protocol in a separate thread, if the
+        adapter is not already running.
 
         :param args: List of protocols for which to start adapters or empty for all.
         """
         for adapter in self._get_adapters(args):
-            self.log.info('Connecting device interface for protocol \'%s\'', adapter.protocol)
             self._start_server(adapter)
 
     def _start_server(self, adapter):
         if adapter.protocol not in self._threads:
+            self.log.info('Connecting device interface for protocol \'%s\'', adapter.protocol)
+
             adapter_thread = threading.Thread(target=self._adapter_loop, args=(adapter, 0.1))
             adapter_thread.daemon = True
 
@@ -283,17 +290,18 @@ class AdapterCollection(object):
 
     def disconnect(self, *args):
         """
-        Calls :meth:`~Adapter.stop_server` on each adapter that correspond to the supplied
-        protocols. If no arguments are supplied, all adapters are stopped.
+        Stops all adapters for the specified protocols. The method waits for each adapter thread
+        to join, so it might hang if the thread is not terminating correctly.
 
         :param args: List of protocols for which to stop adapters or empty for all.
         """
         for adapter in self._get_adapters(args):
-            self.log.info('Disconnecting device interface for protocol \'%s\'', adapter.protocol)
             self._stop_server(adapter)
 
     def _stop_server(self, adapter):
         if adapter.protocol in self._threads:
+            self.log.info('Disconnecting device interface for protocol \'%s\'', adapter.protocol)
+
             self._stop[adapter.protocol] = True
             self._threads[adapter.protocol].join()
             del self._threads[adapter.protocol]
