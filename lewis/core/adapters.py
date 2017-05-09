@@ -77,7 +77,7 @@ class Adapter(object):
     the dictionary are accessible as properties of the ``_options``-member. Only keys that are
     in the ``default_options`` member of the class are accepted. Inheriting classes must override
     ``default_options`` to be a dictionary with the possible options for the adapter.
-    
+
     Each adapter has a ``lock`` member, which contains a :class:`NoLock` by default. To make
     device access thread-safe, any adapter should acquire this lock before interacting with
     the device (or interface). This means that before starting the server component of an Adapter,
