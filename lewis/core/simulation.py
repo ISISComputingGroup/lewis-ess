@@ -23,8 +23,9 @@ an :mod:`Adapter <lewis.adapters>`).
 """
 
 from datetime import datetime
+from time import sleep
 
-from lewis.core.adapters import MultiThreadedAdapterCollection, NoLock
+from lewis.core.adapters import AdapterCollection
 from lewis.core.control_server import ControlServer, ExposedObject
 from lewis.core.devices import DeviceRegistry
 from lewis.core.logging import has_log
@@ -84,7 +85,7 @@ class Simulation(object):
         self._device_builder = device_builder
 
         self._device = device
-        self._adapters = MultiThreadedAdapterCollection(adapter)
+        self._adapters = AdapterCollection(adapter)
 
         self._speed = 1.0  # Multiplier for delta t
         self._cycle_delay = 0.1  # Target time between cycles
@@ -212,12 +213,12 @@ class Simulation(object):
         """
         self.log.debug('Cycle, dt=%s', delta)
 
-        self._adapters.handle(self._cycle_delay)
+        sleep(self._cycle_delay)
 
         if self._running:
             delta_simulation = delta * self._speed
 
-            with self._adapters.lock:
+            with self._adapters._lock:
                 self._device.process(delta_simulation)
 
                 if self._control_server:

@@ -1,7 +1,7 @@
 import inspect
 import unittest
 
-from mock import patch, call, Mock, MagicMock
+from mock import Mock, MagicMock
 
 from lewis.core.adapters import Adapter, AdapterCollection
 from lewis.core.exceptions import LewisException
@@ -130,22 +130,6 @@ class TestAdapterCollection(unittest.TestCase):
 
         self.assertRaises(RuntimeError, collection.connect, 'baz')
         self.assertRaises(RuntimeError, collection.disconnect, 'baz')
-
-    @patch.object(DummyAdapter, 'handle')
-    @patch('lewis.core.adapters.sleep')
-    def test_handle_calls_all_adapters_or_sleeps(self, sleep_mock, adapter_mock):
-        collection = AdapterCollection(DummyAdapter('foo', running=False),
-                                       DummyAdapter('bar', running=False))
-        collection.handle(0.1)
-
-        sleep_mock.assert_has_calls([call(0.05), call(0.05)])
-        sleep_mock.reset_mock()
-
-        collection.connect('foo')
-
-        collection.handle(0.1)
-        sleep_mock.assert_has_calls([call(0.05)])
-        adapter_mock.assert_has_calls([call(0.05)])
 
     def test_configuration(self):
         collection = AdapterCollection(

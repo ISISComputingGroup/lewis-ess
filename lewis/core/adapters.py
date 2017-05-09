@@ -25,7 +25,6 @@ be used to store multiple adapters and manage them together.
 import inspect
 import threading
 from collections import namedtuple
-from time import sleep
 
 from lewis.core.exceptions import LewisException
 from lewis.core.logging import has_log
@@ -78,10 +77,10 @@ class Adapter(object):
     def __init__(self, options=None):
         super(Adapter, self).__init__()
         self._interface = None
+
         self.lock = NoLock()
 
         options = options or {}
-
         combined_options = dict(self.default_options)
 
         try:
@@ -207,10 +206,17 @@ class AdapterCollection(object):
 
     def __init__(self, *args):
         self._adapters = {}
-        self.lock = NoLock()
+
+        self._threads = {}
+        self._stop = {}
+        self._lock = threading.Lock()
 
         for adapter in args:
             self.add_adapter(adapter)
+
+    @property
+    def device_lock(self):
+        return self._lock
 
     def add_adapter(self, adapter):
         """
@@ -238,21 +244,6 @@ class AdapterCollection(object):
 
         del self._adapters[protocol]
 
-    def handle(self, cycle_delay):
-        """
-        Calls all stored and running adapters' ``handle``-methods or sleeps for the specified
-        amount in the rest of the cases.
-
-        :param cycle_delay: Approximate time to spend processing adapters.
-        """
-        delay_per_adapter = cycle_delay / len(self._adapters)
-
-        for adapter in self._adapters.values():
-            if adapter.is_running:
-                adapter.handle(delay_per_adapter)
-            else:
-                sleep(delay_per_adapter)
-
     @property
     def protocols(self):
         """List of protocols for which adapters are registered."""
@@ -270,7 +261,25 @@ class AdapterCollection(object):
             self._start_server(adapter)
 
     def _start_server(self, adapter):
+        if adapter.protocol not in self._threads:
+            adapter_thread = threading.Thread(target=self._adapter_loop, args=(adapter, 0.1))
+            adapter_thread.daemon = True
+
+            self._threads[adapter.protocol] = adapter_thread
+
+            adapter_thread.start()
+
+    def _adapter_loop(self, adapter, dt):
+        adapter.lock = self._lock
         adapter.start_server()
+
+        self.log.debug('Starting adapter loop.')
+        while not self._stop.get(adapter.protocol, False):
+            adapter.handle(dt)
+
+        adapter.stop_server()
+
+        del self._stop[adapter.protocol]
 
     def disconnect(self, *args):
         """
@@ -284,7 +293,10 @@ class AdapterCollection(object):
             self._stop_server(adapter)
 
     def _stop_server(self, adapter):
-        adapter.stop_server()
+        if adapter.protocol in self._threads:
+            self._stop[adapter.protocol] = True
+            self._threads[adapter.protocol].join()
+            del self._threads[adapter.protocol]
 
     def is_connected(self, *args):
         """
@@ -340,41 +352,3 @@ class AdapterCollection(object):
                 'No adapter registered for protocols: {}'.format(', '.join(invalid_protocols)))
 
         return [self._adapters[proto] for proto in protocols or self.protocols]
-
-
-class MultiThreadedAdapterCollection(AdapterCollection):
-    def __init__(self, *args):
-        super(MultiThreadedAdapterCollection, self).__init__(*args)
-
-        self._threads = {}
-        self._stop = {}
-
-        self.lock = threading.Lock()
-
-    def _start_server(self, adapter):
-        if adapter.protocol not in self._threads:
-            adapter_thread = threading.Thread(target=self._do_handle, args=(adapter, 0.1))
-            adapter_thread.daemon = True
-
-            self._threads[adapter.protocol] = adapter_thread
-
-            adapter_thread.start()
-
-    def _stop_server(self, adapter):
-        if adapter.protocol in self._threads:
-            self._stop[adapter.protocol] = True
-            del self._threads[adapter.protocol]
-
-    def _do_handle(self, adapter, dt):
-        adapter.lock = self.lock
-        adapter.start_server()
-
-        while not self._stop.get(adapter.protocol, False):
-            adapter.handle(dt)
-
-        adapter.stop_server()
-
-        del self._stop[adapter.protocol]
-
-    def handle(self, cycle_delay):
-        sleep(cycle_delay)

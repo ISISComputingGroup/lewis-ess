@@ -100,14 +100,11 @@ class TestSimulation(unittest.TestCase):
         device_mock.assert_has_calls([call.process(0.5)])
 
     def test_process_cycle_calls_process_simulation(self):
-        adapter_mock = Mock()
         device_mock = Mock()
-        env = Simulation(device=device_mock, adapter=adapter_mock)
+        env = Simulation(device=device_mock, adapter=Mock())
         set_simulation_running(env)
 
         env._process_cycle(0.5)
-        adapter_mock.assert_has_calls(
-            [call.handle(env.cycle_delay)])
         device_mock.assert_has_calls(
             [call.process(0.5)]
         )
@@ -116,17 +113,14 @@ class TestSimulation(unittest.TestCase):
         self.assertEqual(env.runtime, 0.5)
 
     def test_process_simulation_cycle_applies_speed(self):
-        adapter_mock = Mock()
         device_mock = Mock()
 
-        env = Simulation(device=device_mock, adapter=adapter_mock)
+        env = Simulation(device=device_mock, adapter=Mock())
         set_simulation_running(env)
 
         env.speed = 2.0
         env._process_cycle(0.5)
 
-        adapter_mock.assert_has_calls(
-            [call.handle(env.cycle_delay)])
         device_mock.assert_has_calls(
             [call.process(1.0)])
 
