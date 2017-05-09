@@ -3,7 +3,7 @@ import unittest
 
 from mock import Mock, MagicMock
 
-from lewis.core.adapters import Adapter, AdapterCollection
+from lewis.core.adapters import Adapter, AdapterCollection, NoLock
 from lewis.core.exceptions import LewisException
 from . import assertRaisesNothing
 
@@ -36,6 +36,15 @@ class DummyAdapter(Adapter):
     @property
     def is_running(self):
         return self._running
+
+
+class TestNoLock(unittest.TestCase):
+    def test_raises_when_used(self):
+        def failing_function():
+            with NoLock():
+                pass
+
+        self.assertRaises(RuntimeError, failing_function)
 
 
 class TestAdapter(unittest.TestCase):

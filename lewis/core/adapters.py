@@ -32,8 +32,16 @@ from lewis.core.utils import dict_strict_update
 
 
 class NoLock(object):
+    """
+    A dummy context manager that raises a RuntimeError when it's used. This makes it easier to
+    detect cases where an :class:`Adapter` has not received the proper lock-object to make sure
+    that device/interface access is synchronous.
+    """
+
     def __enter__(self):
-        pass
+        raise RuntimeError(
+            'The attempted action requires a proper threading.Lock-object, '
+            'but none was available.')
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
@@ -220,7 +228,7 @@ class AdapterCollection(object):
         This lock is passed to each adapter when it's started. It's supposed to be used to ensure
         that the device is only accessed from one thread at a time, for example during network IO.
         :class:`~lewis.core.simulation.Simulation` uses this lock to block the device during the
-        simulation cycle calculations. 
+        simulation cycle calculations.
         """
         return self._lock
 
@@ -277,7 +285,7 @@ class AdapterCollection(object):
             adapter_thread.start()
 
     def _adapter_loop(self, adapter, dt):
-        adapter.lock = self._lock
+        adapter.lock = self._lock  # This ensures that the adapter is using the correct lock.
         adapter.start_server()
 
         self.log.debug('Starting adapter loop.')
