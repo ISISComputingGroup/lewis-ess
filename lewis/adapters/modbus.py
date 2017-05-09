@@ -291,7 +291,7 @@ class ModbusProtocol(object):
             0x10: self._handle_write_multiple_registers,
         }
 
-    def process(self, data):
+    def process(self, data, device_lock):
         """
         Process as much of given data as possible.
 
@@ -299,6 +299,7 @@ class ModbusProtocol(object):
         processing may continue where it left off when more data is provided.
 
         :param data: Incoming byte data. Must be compatible with bytearray.
+        :param device_lock: threading.Lock instance that is acquired for device interaction.
         """
         self._buffer.extend(bytearray(data))
 
@@ -307,7 +308,9 @@ class ModbusProtocol(object):
                 'Request: %s', str(['{:#04x}'.format(c) for c in request.to_bytearray()]))
 
             handler = self._get_handler(request.fcode)
-            response = handler(request)
+
+            with device_lock:
+                response = handler(request)
 
             self.log.debug(
                 'Request: %s', str(['{:#04x}'.format(c) for c in response.to_bytearray()]))
@@ -536,7 +539,7 @@ class ModbusHandler(asyncore.dispatcher_with_send):
 
     def handle_read(self):
         data = self.recv(8192)
-        self._modbus.process(data)
+        self._modbus.process(data, self._server.device_lock)
 
     def handle_close(self):
         self.log.info('Closing connection to client %s:%s', *self.socket.getpeername())
@@ -546,8 +549,9 @@ class ModbusHandler(asyncore.dispatcher_with_send):
 
 @has_log
 class ModbusServer(asyncore.dispatcher):
-    def __init__(self, host, port, interface=None):
+    def __init__(self, host, port, interface, lock):
         asyncore.dispatcher.__init__(self)
+        self.device_lock = lock
         self.interface = interface
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
@@ -589,7 +593,8 @@ class ModbusAdapter(Adapter):
         self._server = None
 
     def start_server(self):
-        self._server = ModbusServer(self._options.bind_address, self._options.port, self.interface)
+        self._server = ModbusServer(
+            self._options.bind_address, self._options.port, self.interface, self.lock)
 
     def stop_server(self):
         if self._server is not None:
