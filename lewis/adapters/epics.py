@@ -392,11 +392,11 @@ class PV(object):
 
 @has_log
 class PropertyExposingDriver(Driver):
-    def __init__(self, interface, lock):
+    def __init__(self, interface, device_lock):
         super(PropertyExposingDriver, self).__init__()
 
         self._interface = interface
-        self._lock = lock
+        self._device_lock = device_lock
         self._set_logging_context(interface)
 
         self._timers = {k: 0.0 for k in self._interface.bound_pvs.keys()}
@@ -411,7 +411,7 @@ class PropertyExposingDriver(Driver):
             return False
 
         try:
-            with self._lock:
+            with self._device_lock:
                 pv_object.value = value
                 self.setParam(pv, pv_object.value)
 
@@ -433,12 +433,12 @@ class PropertyExposingDriver(Driver):
 
         for pv, pv_object in iteritems(self._interface.bound_pvs):
             if pv not in self._timers:
-                self._timers = 0.0
+                self._timers[pv] = 0.0
 
             self._timers[pv] += dt
             if self._timers[pv] >= pv_object.poll_interval or force:
                 try:
-                    with self._lock:
+                    with self._device_lock:
                         new_value = pv_object.value
 
                         self.setParam(pv, new_value)
@@ -511,7 +511,7 @@ class EpicsAdapter(Adapter):
             self._server = SimpleServer()
             self._server.createPV(prefix=self._options.prefix,
                                   pvdb={k: v.config for k, v in self.interface.bound_pvs.items()})
-            self._driver = PropertyExposingDriver(interface=self.interface, lock=self.lock)
+            self._driver = PropertyExposingDriver(interface=self.interface, device_lock=self.lock)
             self._driver.process_pv_updates(force=True)
 
             self.log.info('Started serving PVs: %s',
