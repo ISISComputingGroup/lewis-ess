@@ -220,7 +220,7 @@ class AdapterCollection(object):
         self._adapters = {}
 
         self._threads = {}
-        self._stop = {}
+        self._running = {}
         self._lock = threading.Lock()
 
         for adapter in args:
@@ -281,30 +281,27 @@ class AdapterCollection(object):
         if adapter.protocol not in self._threads:
             self.log.info('Connecting device interface for protocol \'%s\'', adapter.protocol)
 
-            server_started = threading.Event()
-
             adapter_thread = threading.Thread(target=self._adapter_loop,
-                                              args=(adapter, 0.1, server_started))
+                                              args=(adapter, 0.1))
             adapter_thread.daemon = True
 
             self._threads[adapter.protocol] = adapter_thread
+            self._running[adapter.protocol] = threading.Event()
 
             adapter_thread.start()
-            server_started.wait()
+            self._running[adapter.protocol].wait()  # Block until server is actually listening
 
-    def _adapter_loop(self, adapter, dt, server_started):
+    def _adapter_loop(self, adapter, dt):
         adapter.lock = self._lock  # This ensures that the adapter is using the correct lock.
         adapter.start_server()
 
-        server_started.set()
+        self._running[adapter.protocol].set()
 
-        self.log.debug('Starting adapter loop.')
-        while not self._stop.get(adapter.protocol, False):
+        self.log.debug('Starting adapter loop for protocol %s.', adapter.protocol)
+        while self._running[adapter.protocol].is_set():
             adapter.handle(dt)
 
         adapter.stop_server()
-
-        del self._stop[adapter.protocol]
 
     def disconnect(self, *args):
         """
@@ -320,9 +317,11 @@ class AdapterCollection(object):
         if adapter.protocol in self._threads:
             self.log.info('Disconnecting device interface for protocol \'%s\'', adapter.protocol)
 
-            self._stop[adapter.protocol] = True
+            self._running[adapter.protocol].clear()
             self._threads[adapter.protocol].join()
+
             del self._threads[adapter.protocol]
+            del self._running[adapter.protocol]
 
     def is_connected(self, *args):
         """
