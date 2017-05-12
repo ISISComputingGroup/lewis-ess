@@ -140,6 +140,8 @@ class TestAdapterCollection(unittest.TestCase):
         self.assertRaises(RuntimeError, collection.connect, 'baz')
         self.assertRaises(RuntimeError, collection.disconnect, 'baz')
 
+        collection.disconnect()  # Clean up so that the test does not hang
+
     def test_configuration(self):
         collection = AdapterCollection(
             DummyAdapter('protocol_a', options={'bar': 2, 'foo': 3}),
