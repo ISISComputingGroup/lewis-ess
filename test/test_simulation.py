@@ -31,6 +31,13 @@ def set_simulation_running(environment):
 
 
 class TestSimulation(unittest.TestCase):
+    def setUp(self):
+        # This makes sure that no actual sleeps happen during the tests.
+        # The recipe is from the mock documentation.
+        patcher = patch('lewis.core.simulation.sleep')
+        self.addCleanup(patcher.stop)
+        self.mock_sleep = patcher.start()
+
     @patch('lewis.core.simulation.seconds_since')
     def test_process_cycle_returns_elapsed_time(self, elapsed_seconds_mock):
         env = Simulation(device=Mock(), adapter=Mock())
