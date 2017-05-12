@@ -91,7 +91,7 @@ class Adapter(object):
         super(Adapter, self).__init__()
         self._interface = None
 
-        self.lock = NoLock()
+        self.device_lock = NoLock()
 
         options = options or {}
         combined_options = dict(self.default_options)

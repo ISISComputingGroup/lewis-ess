@@ -477,7 +477,7 @@ class StreamAdapter(Adapter):
                 self.interface.out_terminator = '\r\n'
 
             self._server = StreamServer(self._options.bind_address, self._options.port,
-                                        self.interface, self.lock)
+                                        self.interface, self.device_lock)
 
     def stop_server(self):
         if self._server is not None:

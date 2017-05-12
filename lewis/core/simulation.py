@@ -48,7 +48,7 @@ class Simulation(object):
     In the simplest case, the actual time-delta between two cycles
     is passed to the simulated device so that it can update its internal
     state according to the elapsed time. It is however possible to set
-    a simulation speed, which serv es as a multiplier for this time.
+    a simulation speed, which serves as a multiplier for this time.
     If the speed is set to 2 and 0.1 seconds pass between two cycles,
     the simulation is asked to simulate 0.2 seconds, and so on. Speed 0
     effectively stops all time dependent calculations in the

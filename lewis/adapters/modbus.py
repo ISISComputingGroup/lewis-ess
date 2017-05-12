@@ -303,19 +303,18 @@ class ModbusProtocol(object):
         """
         self._buffer.extend(bytearray(data))
 
-        for request in self._buffered_requests():
-            self.log.debug(
-                'Request: %s', str(['{:#04x}'.format(c) for c in request.to_bytearray()]))
+        with device_lock:
+            for request in self._buffered_requests():
+                self.log.debug(
+                    'Request: %s', str(['{:#04x}'.format(c) for c in request.to_bytearray()]))
 
-            handler = self._get_handler(request.fcode)
-
-            with device_lock:
+                handler = self._get_handler(request.fcode)
                 response = handler(request)
 
-            self.log.debug(
-                'Request: %s', str(['{:#04x}'.format(c) for c in response.to_bytearray()]))
+                self.log.debug(
+                    'Response: %s', str(['{:#04x}'.format(c) for c in response.to_bytearray()]))
 
-            self._send(response)
+                self._send(response)
 
     def _buffered_requests(self):
         """Generator to yield all complete modbus requests in the internal buffer"""
@@ -549,9 +548,9 @@ class ModbusHandler(asyncore.dispatcher_with_send):
 
 @has_log
 class ModbusServer(asyncore.dispatcher):
-    def __init__(self, host, port, interface, lock):
+    def __init__(self, host, port, interface, device_lock):
         asyncore.dispatcher.__init__(self)
-        self.device_lock = lock
+        self.device_lock = device_lock
         self.interface = interface
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
@@ -594,7 +593,7 @@ class ModbusAdapter(Adapter):
 
     def start_server(self):
         self._server = ModbusServer(
-            self._options.bind_address, self._options.port, self.interface, self.lock)
+            self._options.bind_address, self._options.port, self.interface, self.device_lock)
 
     def stop_server(self):
         if self._server is not None:
