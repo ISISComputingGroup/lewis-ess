@@ -281,16 +281,22 @@ class AdapterCollection(object):
         if adapter.protocol not in self._threads:
             self.log.info('Connecting device interface for protocol \'%s\'', adapter.protocol)
 
-            adapter_thread = threading.Thread(target=self._adapter_loop, args=(adapter, 0.1))
+            server_started = threading.Event()
+
+            adapter_thread = threading.Thread(target=self._adapter_loop,
+                                              args=(adapter, 0.1, server_started))
             adapter_thread.daemon = True
 
             self._threads[adapter.protocol] = adapter_thread
 
             adapter_thread.start()
+            server_started.wait()
 
-    def _adapter_loop(self, adapter, dt):
+    def _adapter_loop(self, adapter, dt, server_started):
         adapter.lock = self._lock  # This ensures that the adapter is using the correct lock.
         adapter.start_server()
+
+        server_started.set()
 
         self.log.debug('Starting adapter loop.')
         while not self._stop.get(adapter.protocol, False):
