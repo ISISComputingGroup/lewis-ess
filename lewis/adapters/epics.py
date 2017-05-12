@@ -513,7 +513,8 @@ class EpicsAdapter(Adapter):
             self._server = SimpleServer()
             self._server.createPV(prefix=self._options.prefix,
                                   pvdb={k: v.config for k, v in self.interface.bound_pvs.items()})
-            self._driver = PropertyExposingDriver(interface=self.interface, device_lock=self.device_lock)
+            self._driver = PropertyExposingDriver(interface=self.interface,
+                                                  device_lock=self.device_lock)
             self._driver.process_pv_updates(force=True)
 
             self.log.info('Started serving PVs: %s',
