@@ -1,9 +1,9 @@
 import inspect
 import unittest
 
-from mock import patch, call, Mock, MagicMock
+from mock import Mock, MagicMock
 
-from lewis.core.adapters import Adapter, AdapterCollection
+from lewis.core.adapters import Adapter, AdapterCollection, NoLock
 from lewis.core.exceptions import LewisException
 from . import assertRaisesNothing
 
@@ -36,6 +36,15 @@ class DummyAdapter(Adapter):
     @property
     def is_running(self):
         return self._running
+
+
+class TestNoLock(unittest.TestCase):
+    def test_raises_when_used(self):
+        def failing_function():
+            with NoLock():
+                pass
+
+        self.assertRaises(RuntimeError, failing_function)
 
 
 class TestAdapter(unittest.TestCase):
@@ -131,21 +140,7 @@ class TestAdapterCollection(unittest.TestCase):
         self.assertRaises(RuntimeError, collection.connect, 'baz')
         self.assertRaises(RuntimeError, collection.disconnect, 'baz')
 
-    @patch.object(DummyAdapter, 'handle')
-    @patch('lewis.core.adapters.sleep')
-    def test_handle_calls_all_adapters_or_sleeps(self, sleep_mock, adapter_mock):
-        collection = AdapterCollection(DummyAdapter('foo', running=False),
-                                       DummyAdapter('bar', running=False))
-        collection.handle(0.1)
-
-        sleep_mock.assert_has_calls([call(0.05), call(0.05)])
-        sleep_mock.reset_mock()
-
-        collection.connect('foo')
-
-        collection.handle(0.1)
-        sleep_mock.assert_has_calls([call(0.05)])
-        adapter_mock.assert_has_calls([call(0.05)])
+        collection.disconnect()  # Clean up so that the test does not hang
 
     def test_configuration(self):
         collection = AdapterCollection(

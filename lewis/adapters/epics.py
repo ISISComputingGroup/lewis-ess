@@ -392,10 +392,11 @@ class PV(object):
 
 @has_log
 class PropertyExposingDriver(Driver):
-    def __init__(self, interface):
+    def __init__(self, interface, device_lock):
         super(PropertyExposingDriver, self).__init__()
 
         self._interface = interface
+        self._device_lock = device_lock
         self._set_logging_context(interface)
 
         self._timers = {k: 0.0 for k in self._interface.bound_pvs.keys()}
@@ -410,10 +411,11 @@ class PropertyExposingDriver(Driver):
             return False
 
         try:
-            pv_object.value = value
-            self.setParam(pv, pv_object.value)
+            with self._device_lock:
+                pv_object.value = value
+                self.setParam(pv, pv_object.value)
 
-            return True
+                return True
         except LimitViolationException as e:
             self.log.warning('Rejected writing value %s to PV %s due to limit '
                              'violation. %s', value, pv, e)
@@ -424,33 +426,37 @@ class PropertyExposingDriver(Driver):
         return False
 
     def process_pv_updates(self, force=False):
-        dt = seconds_since(self._last_update_call or datetime.now())
-        # Updates bound parameters as needed
+        """
+        Update PV values that have changed for PVs that are due to update according to their
+        respective poll interval timers.
 
+        :param force: If True, will force updates to all PVs regardless of timers.
+        """
+        dt = seconds_since(self._last_update_call or datetime.now())
+
+        # Cache details of PVs that need to update
         updates = []
 
-        for pv, pv_object in iteritems(self._interface.bound_pvs):
-            if pv not in self._timers:
-                self._timers = 0.0
+        with self._device_lock:
+            for pv, pv_object in iteritems(self._interface.bound_pvs):
+                self._timers[pv] = self._timers.get(pv, 0.0) + dt
+                if self._timers[pv] >= pv_object.poll_interval or force:
+                    try:
+                        updates.append((pv, pv_object.value, pv_object.meta))
+                    except (AttributeError, TypeError):
+                        self.log.exception('An error occurred while updating PV %s.', pv)
+                    finally:
+                        self._timers[pv] = 0.0
 
-            self._timers[pv] += dt
-            if self._timers[pv] >= pv_object.poll_interval or force:
-                try:
-                    new_value = pv_object.value
-                    self.setParam(pv, new_value)
-                    self.setParamInfo(pv, pv_object.meta)
-
-                    updates.append((pv, new_value))
-                except (AttributeError, TypeError):
-                    self.log.exception('An error occurred while updating PV %s.', pv)
-                finally:
-                    self._timers[pv] = 0.0
+        for pv, value, info in updates:
+            self.setParam(pv, value)
+            self.setParamInfo(pv, info)
 
         self.updatePVs()
 
         if updates:
             self.log.info('Processed PV updates: %s',
-                          ', '.join(('{}={}'.format(pv, val) for pv, val in updates)))
+                          ', '.join(('{}={}'.format(pv, val) for pv, val, _ in updates)))
 
         self._last_update_call = datetime.now()
 
@@ -507,7 +513,8 @@ class EpicsAdapter(Adapter):
             self._server = SimpleServer()
             self._server.createPV(prefix=self._options.prefix,
                                   pvdb={k: v.config for k, v in self.interface.bound_pvs.items()})
-            self._driver = PropertyExposingDriver(interface=self.interface)
+            self._driver = PropertyExposingDriver(interface=self.interface,
+                                                  device_lock=self.device_lock)
             self._driver.process_pv_updates(force=True)
 
             self.log.info('Started serving PVs: %s',

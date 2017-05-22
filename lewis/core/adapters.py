@@ -23,12 +23,28 @@ implementations in :mod:`lewis.adapters`. It also contains :class:`AdapterCollec
 be used to store multiple adapters and manage them together.
 """
 import inspect
+import threading
 from collections import namedtuple
-from time import sleep
 
 from lewis.core.exceptions import LewisException
 from lewis.core.logging import has_log
 from lewis.core.utils import dict_strict_update
+
+
+class NoLock(object):
+    """
+    A dummy context manager that raises a RuntimeError when it's used. This makes it easier to
+    detect cases where an :class:`Adapter` has not received the proper lock-object to make sure
+    that device/interface access is synchronous.
+    """
+
+    def __enter__(self):
+        raise RuntimeError(
+            'The attempted action requires a proper threading.Lock-object, '
+            'but none was available.')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 
 @has_log
@@ -62,6 +78,11 @@ class Adapter(object):
     in the ``default_options`` member of the class are accepted. Inheriting classes must override
     ``default_options`` to be a dictionary with the possible options for the adapter.
 
+    Each adapter has a ``lock`` member, which contains a :class:`NoLock` by default. To make
+    device access thread-safe, any adapter should acquire this lock before interacting with
+    the device (or interface). This means that before starting the server component of an Adapter,
+    a proper Lock-object needs to be assigned to ``lock``.
+
     :param options: Configuration options for the adapter.
     """
     default_options = {}
@@ -70,8 +91,9 @@ class Adapter(object):
         super(Adapter, self).__init__()
         self._interface = None
 
-        options = options or {}
+        self.device_lock = NoLock()
 
+        options = options or {}
         combined_options = dict(self.default_options)
 
         try:
@@ -189,8 +211,7 @@ class AdapterCollection(object):
     names at all will start/stop all adapters. These semantics also apply for :meth:`is_connected`
     and `documentation`.
 
-    The :meth:`handle` implementation will call all the stored adapters' ``handle`` methods if they
-    are running, otherwise ``time.sleep`` is called.
+    This class also makes sure that all adapters use the same Lock for device interaction.
 
     :param args: List of adapters to add to the container
     """
@@ -198,8 +219,22 @@ class AdapterCollection(object):
     def __init__(self, *args):
         self._adapters = {}
 
+        self._threads = {}
+        self._running = {}
+        self._lock = threading.Lock()
+
         for adapter in args:
             self.add_adapter(adapter)
+
+    @property
+    def device_lock(self):
+        """
+        This lock is passed to each adapter when it's started. It's supposed to be used to ensure
+        that the device is only accessed from one thread at a time, for example during network IO.
+        :class:`~lewis.core.simulation.Simulation` uses this lock to block the device during the
+        simulation cycle calculations.
+        """
+        return self._lock
 
     def add_adapter(self, adapter):
         """
@@ -227,21 +262,6 @@ class AdapterCollection(object):
 
         del self._adapters[protocol]
 
-    def handle(self, cycle_delay):
-        """
-        Calls all stored and running adapters' ``handle``-methods or sleeps for the specified
-        amount in the rest of the cases.
-
-        :param cycle_delay: Approximate time to spend processing adapters.
-        """
-        delay_per_adapter = cycle_delay / len(self._adapters)
-
-        for adapter in self._adapters.values():
-            if adapter.is_running:
-                adapter.handle(delay_per_adapter)
-            else:
-                sleep(delay_per_adapter)
-
     @property
     def protocols(self):
         """List of protocols for which adapters are registered."""
@@ -249,25 +269,59 @@ class AdapterCollection(object):
 
     def connect(self, *args):
         """
-        Calls :meth:`~Adapter.start_server` on each adapter that correspond to the supplied
-        protocols. If no arguments are supplied, all adapters are started.
+        This method starts an adapter for each specified protocol in a separate thread, if the
+        adapter is not already running.
 
         :param args: List of protocols for which to start adapters or empty for all.
         """
         for adapter in self._get_adapters(args):
+            self._start_server(adapter)
+
+    def _start_server(self, adapter):
+        if adapter.protocol not in self._threads:
             self.log.info('Connecting device interface for protocol \'%s\'', adapter.protocol)
-            adapter.start_server()
+
+            adapter_thread = threading.Thread(target=self._adapter_loop,
+                                              args=(adapter, 0.1))
+            adapter_thread.daemon = True
+
+            self._threads[adapter.protocol] = adapter_thread
+            self._running[adapter.protocol] = threading.Event()
+
+            adapter_thread.start()
+            self._running[adapter.protocol].wait()  # Block until server is actually listening
+
+    def _adapter_loop(self, adapter, dt):
+        adapter.lock = self._lock  # This ensures that the adapter is using the correct lock.
+        adapter.start_server()
+
+        self._running[adapter.protocol].set()
+
+        self.log.debug('Starting adapter loop for protocol %s.', adapter.protocol)
+        while self._running[adapter.protocol].is_set():
+            adapter.handle(dt)
+
+        adapter.stop_server()
 
     def disconnect(self, *args):
         """
-        Calls :meth:`~Adapter.stop_server` on each adapter that correspond to the supplied
-        protocols. If no arguments are supplied, all adapters are stopped.
+        Stops all adapters for the specified protocols. The method waits for each adapter thread
+        to join, so it might hang if the thread is not terminating correctly.
 
         :param args: List of protocols for which to stop adapters or empty for all.
         """
         for adapter in self._get_adapters(args):
-            self.log.info('Disonnecting device interface for protocol \'%s\'', adapter.protocol)
-            adapter.stop_server()
+            self._stop_server(adapter)
+
+    def _stop_server(self, adapter):
+        if adapter.protocol in self._threads:
+            self.log.info('Disconnecting device interface for protocol \'%s\'', adapter.protocol)
+
+            self._running[adapter.protocol].clear()
+            self._threads[adapter.protocol].join()
+
+            del self._threads[adapter.protocol]
+            del self._running[adapter.protocol]
 
     def is_connected(self, *args):
         """

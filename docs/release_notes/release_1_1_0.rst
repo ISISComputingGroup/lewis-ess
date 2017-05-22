@@ -8,11 +8,11 @@ This release is currently in progress.
 New features
 ------------
 
-The control client, lewis-control, now provides a version argument via ``--version`` or ``-v``. 
+The control client, lewis-control, now provides a version argument via ``--version`` or ``-v``.
 
 ::
 
-   $ lewis-control -v 
+   $ lewis-control -v
 
 Bug fixes and other improvements
 --------------------------------
@@ -29,6 +29,10 @@ Bug fixes and other improvements
    The logo was made using `inkscape`_, the font in the logo is `Rubik`_. The two PNGs and
    also the SVGs are in the `source repository`_, feel free to include them in presentations,
    posters.
+
+ - Adapters now run in a different thread than the simulation itself. The consequence of this is
+   that slow network communication or expensive computations in the device do not influence
+   one another anymore. Otherwise, communication still works exactly like in previous versions.
 
 Upgrade guide
 -------------

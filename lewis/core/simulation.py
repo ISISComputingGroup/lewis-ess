@@ -23,6 +23,7 @@ an :mod:`Adapter <lewis.adapters>`).
 """
 
 from datetime import datetime
+from time import sleep
 
 from lewis.core.adapters import AdapterCollection
 from lewis.core.control_server import ControlServer, ExposedObject
@@ -124,7 +125,7 @@ class Simulation(object):
             ),
             'interface': ExposedObject(
                 self._adapters,
-                exclude=('add_adapter', 'remove_adapter', 'handle', 'log'),
+                exclude=('device_lock', 'add_adapter', 'remove_adapter', 'handle', 'log'),
                 exclude_inherited=True
             )},
             control_server)
@@ -196,9 +197,6 @@ class Simulation(object):
 
         self._process_simulation_cycle(delta)
 
-        if self._control_server:
-            self._control_server.process()
-
         delta = seconds_since(start)
 
         return delta
@@ -215,11 +213,16 @@ class Simulation(object):
         """
         self.log.debug('Cycle, dt=%s', delta)
 
-        self._adapters.handle(self._cycle_delay)
+        sleep(self._cycle_delay)
 
         if self._running:
             delta_simulation = delta * self._speed
-            self._device.process(delta_simulation)
+
+            with self._adapters.device_lock:
+                self._device.process(delta_simulation)
+
+                if self._control_server:
+                    self._control_server.process()
 
             self._cycles += 1
             self._runtime += delta_simulation
