@@ -17,10 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from lewis.adapters.stream import StreamAdapter, Cmd, Var
+from lewis.adapters.stream import StreamInterface, Cmd, Var
 
 
-class JulaboStreamInterfaceV2(StreamAdapter):
+class JulaboStreamInterfaceV2(StreamInterface):
     """Julabos can have different commands sets depending on the version number of the hardware.
 
     This protocol matches that for: FP50-HE (unconfirmed).

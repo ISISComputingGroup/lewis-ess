@@ -17,10 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from lewis.adapters.stream import StreamAdapter, Cmd
+from lewis.adapters.stream import StreamInterface, Cmd
 
 
-class LinkamT95StreamInterface(StreamAdapter):
+class LinkamT95StreamInterface(StreamInterface):
     """
     Linkam T95 TCP stream interface
 

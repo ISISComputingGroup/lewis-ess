@@ -31,6 +31,13 @@ def set_simulation_running(environment):
 
 
 class TestSimulation(unittest.TestCase):
+    def setUp(self):
+        # This makes sure that no actual sleeps happen during the tests.
+        # The recipe is from the mock documentation.
+        patcher = patch('lewis.core.simulation.sleep')
+        self.addCleanup(patcher.stop)
+        self.mock_sleep = patcher.start()
+
     @patch('lewis.core.simulation.seconds_since')
     def test_process_cycle_returns_elapsed_time(self, elapsed_seconds_mock):
         env = Simulation(device=Mock(), adapter=Mock())
@@ -100,14 +107,11 @@ class TestSimulation(unittest.TestCase):
         device_mock.assert_has_calls([call.process(0.5)])
 
     def test_process_cycle_calls_process_simulation(self):
-        adapter_mock = Mock()
         device_mock = Mock()
-        env = Simulation(device=device_mock, adapter=adapter_mock)
+        env = Simulation(device=device_mock, adapter=Mock())
         set_simulation_running(env)
 
         env._process_cycle(0.5)
-        adapter_mock.assert_has_calls(
-            [call.handle(env.cycle_delay)])
         device_mock.assert_has_calls(
             [call.process(0.5)]
         )
@@ -116,17 +120,14 @@ class TestSimulation(unittest.TestCase):
         self.assertEqual(env.runtime, 0.5)
 
     def test_process_simulation_cycle_applies_speed(self):
-        adapter_mock = Mock()
         device_mock = Mock()
 
-        env = Simulation(device=device_mock, adapter=adapter_mock)
+        env = Simulation(device=device_mock, adapter=Mock())
         set_simulation_running(env)
 
         env.speed = 2.0
         env._process_cycle(0.5)
 
-        adapter_mock.assert_has_calls(
-            [call.handle(env.cycle_delay)])
         device_mock.assert_has_calls(
             [call.process(1.0)])
 
@@ -305,5 +306,5 @@ class TestSimulation(unittest.TestCase):
 
         sim.switch_setup('foo')
 
-        self.assertEqual(adapter_mock.device, 'foo')
+        self.assertEqual(sim._device, 'foo')
         self.assertRaises(RuntimeError, sim.switch_setup, 'bar')

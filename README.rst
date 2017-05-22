@@ -1,7 +1,7 @@
 |Version| |Layers| |Build Status| |Codacy| |Coverage Status| |Documentation|
 
-Lewis
-=====
+|Lewis|
+=======
 
 LeWIS - Let's Write Intricate Simulators.
 
@@ -70,9 +70,13 @@ Lewis. The ``Device`` is model for the device behaviour and internal
 memory. A ``Device`` can be represented using a ``StateMachine``, but it
 does not have to be. A ``Device`` does not include anything specific to
 the communication protocol with the ``Device``. An ``Interface``
-provides a protocol binding to a ``Device``, such as TCP stream or EPICS. The ``Device`` and
-``Interface`` are created as part of a ``Simulation`` that provides a
-"heart beat" and other environmental aspects.
+provides bindings from a protocol ``Adapter`` to a ``Device``.
+Common ``Adapter``\ s, , such as TCP stream, Modbus and EPICS, are provided
+by Lewis. The ``Device`` and ``Interface`` are instantiated as part of a
+``Simulation`` that provides a cycle "heart beat" and manages other
+environmental aspects and services.
+
+.. image:: /docs/resources/diagrams/SimulationCycles.png
 
 What Can You Do With Lewis?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,10 +88,10 @@ What Can You Do With Lewis?
 -  Create one or more ``Interface``\ s over your ``Device`` to expose it
    as an EPICS IOC, a TCP listener, or on any other bespoke protocol you
    like
--  Access and control the ``Device`` while it is running via a "back
-   door"
--  Access and control the ``Simulation`` while it is running via a "back
-   door"
+-  Access and control the ``Device`` while it is running via a control server
+-  Access and control the ``Simulation`` while it is running via a control server
+-  Control server can be accessed via command-line utility, Python bindings, or
+   JSON RPC.
 
 Additional Documentation
 ------------------------
@@ -116,5 +120,4 @@ The ``docs/_build/html`` directory will then contain the full documentation in H
    :target: https://coveralls.io/github/DMSC-Instrument-Data/lewis?branch=master
 .. |Documentation| image:: https://readthedocs.org/projects/lewis/badge/?version=latest
    :target: http://lewis.readthedocs.io/en/latest/?badge=latest
-   
-.. _PyPI: 
+.. |Lewis| image:: /docs/resources/logo/lewis-logo.png

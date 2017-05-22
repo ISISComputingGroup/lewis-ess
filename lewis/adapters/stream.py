@@ -27,6 +27,7 @@ from scanf import scanf_compile
 from six import b, string_types
 
 from lewis.core.adapters import Adapter
+from lewis.core.devices import InterfaceBase
 from lewis.core.logging import has_log
 from lewis.core.utils import format_doc_text
 
@@ -53,20 +54,21 @@ class StreamHandler(asynchat.async_chat):
 
         self.log.debug('Got request %s', request)
 
-        try:
-            cmd = next((cmd for cmd in self.target.bound_commands if cmd.can_process(request)),
-                       None)
+        with self._stream_server.device_lock:
+            try:
+                cmd = next((cmd for cmd in self.target.bound_commands if cmd.can_process(request)),
+                           None)
 
-            if cmd is None:
-                raise RuntimeError('None of the device\'s commands matched.')
+                if cmd is None:
+                    raise RuntimeError('None of the device\'s commands matched.')
 
-            self.log.info('Processing request %s using command %s', request, cmd.raw_pattern)
+                self.log.info('Processing request %s using command %s', request, cmd.raw_pattern)
 
-            reply = cmd.process_request(request)
+                reply = cmd.process_request(request)
 
-        except Exception as error:
-            reply = self.target.handle_error(request, error)
-            self.log.debug('Error while processing request', exc_info=error)
+            except Exception as error:
+                reply = self.target.handle_error(request, error)
+                self.log.debug('Error while processing request', exc_info=error)
 
         if reply is not None:
             self.log.debug('Sending reply %s', reply)
@@ -80,9 +82,10 @@ class StreamHandler(asynchat.async_chat):
 
 @has_log
 class StreamServer(asyncore.dispatcher):
-    def __init__(self, host, port, target):
+    def __init__(self, host, port, target, device_lock):
         asyncore.dispatcher.__init__(self)
         self.target = target
+        self.device_lock = device_lock
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         self.bind((host, port))
@@ -233,7 +236,9 @@ class Func(object):
             raise RuntimeError(
                 'The number of arguments for function \'{}\' matched by pattern '
                 '\'{}\' is not compatible with number of defined '
-                'groups in pattern ({}).'.format(func.__name__, pattern, self.pattern.groups))
+                'groups in pattern ({}).'.format(
+                    getattr(func, '__name__', repr(func)), pattern, self.pattern.groups
+                ))
 
         if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
             raise RuntimeError(
@@ -489,6 +494,81 @@ class Var(CommandBase):
 
 class StreamAdapter(Adapter):
     """
+    The StreamAdapter is the bridge between the Device Interface and the TCP Stream networking
+    backend implementation.
+
+    Available adapter options are:
+
+     - bind_address: IP of network adapter to bind on (defaults to 0.0.0.0, or all adapters)
+     - port: Port to listen on (defaults to 9999)
+     - telnet_mode: When True, overrides in- and out-terminator for CRNL (defaults to False)
+
+    :param options: Dictionary with options.
+    """
+
+    default_options = {
+        'telnet_mode': False,
+        'bind_address': '0.0.0.0',
+        'port': 9999
+    }
+
+    def __init__(self, options=None):
+        super(StreamAdapter, self).__init__(options)
+        self._server = None
+
+    @property
+    def documentation(self):
+        commands = ['{}:\n{}'.format(
+            cmd.raw_pattern,
+            format_doc_text(cmd.doc or inspect.getdoc(cmd.func) or ''))
+            for cmd in sorted(self.interface.bound_commands, key=lambda x: x.raw_pattern)]
+
+        options = format_doc_text(
+            'Listening on: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}'.format(
+                self._options.bind_address, self._options.port,
+                repr(self.interface.in_terminator), repr(self.interface.out_terminator)))
+
+        return '\n\n'.join(
+            [inspect.getdoc(self.interface) or '',
+             'Parameters\n==========', options, 'Commands\n========'] + commands)
+
+    def start_server(self):
+        """
+        Starts the TCP stream server, binding to the configured host and port.
+        Host and port are configured via the command line arguments.
+
+        .. note:: The server does not process requests unless
+                  :meth:`handle` is called in regular intervals.
+
+        """
+        if self._server is None:
+            if self._options.telnet_mode:
+                self.interface.in_terminator = '\r\n'
+                self.interface.out_terminator = '\r\n'
+
+            self._server = StreamServer(self._options.bind_address, self._options.port,
+                                        self.interface, self.device_lock)
+
+    def stop_server(self):
+        if self._server is not None:
+            self._server.close()
+            self._server = None
+
+    @property
+    def is_running(self):
+        return self._server is not None
+
+    def handle(self, cycle_delay=0.1):
+        """
+        Spend approximately ``cycle_delay`` seconds to process requests to the server.
+
+        :param cycle_delay: S
+        """
+        asyncore.loop(cycle_delay, count=1)
+
+
+class StreamInterface(InterfaceBase):
+    """
     This class is used to provide a TCP-stream based interface to a device.
 
     Many hardware devices use a protocol that is based on exchanging text with a client via
@@ -506,7 +586,7 @@ class StreamAdapter(Adapter):
 
     .. sourcecode:: Python
 
-        class SimpleDeviceStreamInterface(StreamAdapter):
+        class SimpleDeviceStreamInterface(StreamInterface):
             commands = [
                 Cmd('set_speed', r'^S=([0-9]+)$', argument_mappings=[int]),
                 Cmd('get_speed', r'^S\?$')
@@ -520,53 +600,15 @@ class StreamAdapter(Adapter):
                 return self.device.speed
 
     The interface has two commands, ``S?`` to return the speed and ``S=10`` to set the speed
-    to an integer value. It is also possible to use ``scanf`` formats to match commands.
-    One way to do that is to specify the pattern type :class:`fmt` explicitly:
+    to an integer value. It also exposes the same speed attribute as a variable, using auto-
+    generated ``V?`` and ``V=10`` commands.
 
-    .. sourcecode:: Python
-
-        from lewis.adapters.stream import StreamAdapter, Cmd, fmt
-
-        class SimpleDeviceStreamInterface(StreamAdapter):
-            commands = [
-                Cmd('set_speed', fmt('S=%i')),
-                Cmd('get_speed', r'^S\?$')
-            ]
-
-    This will interpret the pattern for ``get_speed`` as a regular expression and the one for
-    ``set_speed`` as a scanf format specification. To make it easier to specify *all* commands
-    of an interface to use a certain pattern type, there's the ``pattern_type`` member that
-    changes how string patterns are interpreted:
-
-    .. sourcecode:: Python
-
-        from lewis.adapters.stream import StreamAdapter, Cmd, fmt, regex
-
-        class SimpleDeviceStreamInterface(StreamAdapter):
-            pattern_type = fmt
-
-            commands = [
-                Cmd('set_speed', 'S=%i'),
-                Cmd('get_speed', regex(r'^S\?$'))
-            ]
-
-    The ``pattern_type`` only changes how strings are interpreted, if the :class:`Cmd` has been
-    initialized with :class:`fmt` or :class:`regex`, this overrides the default pattern type.
-
-    As in the :class:`lewis.adapters.epics.EpicsAdapter`, it does not matter whether the
+    As in the :class:`lewis.adapters.epics.EpicsInterface`, it does not matter whether the
     wrapped method is a part of the device or of the interface, this is handled automatically when
     a new device is assigned to the ``device``-property.
 
     In addition, the :meth:`handle_error`-method can be overridden. It is called when an exception
     is raised while handling commands.
-
-    Available adapter options are:
-
-     - bind_address: IP of network adapter to bind on (defaults to 0.0.0.0, or all adapters)
-     - port: Port to listen on (defaults to 9999)
-     - telnet_mode: When True, overrides in- and out-terminator for CRNL (defaults to False)
-
-    :param options: Dictionary with options.
     """
     protocol = 'stream'
 
@@ -575,39 +617,26 @@ class StreamAdapter(Adapter):
 
     commands = None
 
-    default_options = {
-        'telnet_mode': False,
-        'bind_address': '0.0.0.0',
-        'port': 9999
-    }
-
     pattern_type = regex
 
-    def __init__(self, options=None):
-        super(StreamAdapter, self).__init__(options)
+    def __init__(self):
+        super(StreamInterface, self).__init__()
+        self.bound_commands = None
 
-        if self._options.telnet_mode:
-            self.in_terminator = '\r\n'
-            self.out_terminator = '\r\n'
-
-        self._server = None
-        self._bound_commands = []
+    @property
+    def adapter(self):
+        return StreamAdapter
 
     def _bind_device(self):
         """
-        This method is re-implemented from :class:`~lewis.core.adapters.Adapter`. It uses
-        :meth:`_bind_commands` to bind the defined :class:`Cmd` and :class:`Var`-objects
-        to the proper objects and make them usable.
+        This method implements ``_bind_device`` from :class:`~lewis.core.devices.InterfaceBase`.
+        It binds Cmd and Var definitions to implementations in Interface and Device.
         """
-
-        self.bound_commands = self._bind_commands(self.commands)
-
-    def _bind_commands(self, cmds):
         patterns = set()
 
-        bound_commands = []
+        self.bound_commands = []
 
-        for cmd in cmds:
+        for cmd in self.commands:
             bound = cmd.bind(self, self.pattern_type) or \
                     cmd.bind(self.device, self.pattern_type) or \
                     None
@@ -625,47 +654,7 @@ class StreamAdapter(Adapter):
 
                 patterns.add(bound_cmd.pattern)
 
-                bound_commands.append(bound_cmd)
-
-        return bound_commands
-
-    @property
-    def documentation(self):
-
-        commands = ['{}:\n{}'.format(
-            cmd.raw_pattern,
-            format_doc_text(cmd.doc or inspect.getdoc(cmd.func) or ''))
-            for cmd in sorted(self.bound_commands, key=lambda x: x.raw_pattern)]
-
-        options = format_doc_text(
-            'Listening on: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}'.format(
-                self._options.bind_address, self._options.port,
-                repr(self.in_terminator), repr(self.out_terminator)))
-
-        return '\n\n'.join(
-            [inspect.getdoc(self) or '',
-             'Parameters\n==========', options, 'Commands\n========'] + commands)
-
-    def start_server(self):
-        """
-        Starts the TCP stream server, binding to the configured host and port.
-        Host and port are configured via the command line arguments.
-
-        .. note:: The server does not process requests unless
-                  :meth:`handle` is called in regular intervals.
-
-        """
-        if self._server is None:
-            self._server = StreamServer(self._options.bind_address, self._options.port, self)
-
-    def stop_server(self):
-        if self._server is not None:
-            self._server.close()
-            self._server = None
-
-    @property
-    def is_running(self):
-        return self._server is not None
+                self.bound_commands.append(bound_cmd)
 
     def handle_error(self, request, error):
         """
@@ -676,11 +665,3 @@ class StreamAdapter(Adapter):
         :param error: The exception that was raised.
         """
         pass
-
-    def handle(self, cycle_delay=0.1):
-        """
-        Spend approximately ``cycle_delay`` seconds to process requests to the server.
-
-        :param cycle_delay: S
-        """
-        asyncore.loop(cycle_delay, count=1)
