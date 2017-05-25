@@ -412,16 +412,15 @@ class SimulationFactory(object):
         """Returns a list of available protocols for the specified device."""
         return self._reg.device_builder(device, self._rv).protocols
 
-    def create(self, device, setup=None, protocols=None, adapter_options=None,
-               control_server=None):
+    def create(self, device, setup=None, protocols=None, control_server=None):
         """
         Creates a :class:`Simulation` according to the supplied parameters.
 
         :param device: Name of device.
         :param setup: Name of the setup for device creation.
-        :param protocols: Communication protocols, see :meth:`get_protocols`.
-        :param adapter_options: List of dictionaries with :class:`~lewis.core.adapters.Adapter`-
-                                dependent options.
+        :param protocols: Dictionary where each key is assigned a dictionary with options for the
+                          corresponding :class:`~lewis.core.adapters.Adapter`. For available
+                          protocols, see :meth:`get_protocols`.
         :param control_server: String to construct a control server (host:port).
         :return: Simulation object according to input parameters.
         """
@@ -431,14 +430,15 @@ class SimulationFactory(object):
 
         adapters = []
 
-        for protocol, options in zip(protocols, adapter_options):
-            interface = device_builder.create_interface(protocol)
-            interface.device = device
+        if protocols is not None:
+            for protocol, options in protocols.items():
+                interface = device_builder.create_interface(protocol)
+                interface.device = device
 
-            adapter = interface.adapter(options=options or {})
-            adapter.interface = interface
+                adapter = interface.adapter(options=options or {})
+                adapter.interface = interface
 
-            adapters.append(adapter)
+                adapters.append(adapter)
 
         return Simulation(
             device=device,

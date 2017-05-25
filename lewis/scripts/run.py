@@ -121,10 +121,9 @@ __doc__ = 'This script is the main interaction point of the user with Lewis. The
 
 def parse_adapter_options(raw_adapter_options):
     if not raw_adapter_options:
-        return [None], [{}]
+        return {None: {}}
 
-    protocols = []
-    options = []
+    protocols = {}
 
     for option_string in raw_adapter_options:
         try:
@@ -139,14 +138,12 @@ def parse_adapter_options(raw_adapter_options):
                 'The spaces after the colons are significant!' % option_string)
 
         if isinstance(adapter_options, string_types):
-            protocols.append(adapter_options)
-            options.append({})
+            protocols[adapter_options] = {}
         else:
             protocol = list(adapter_options.keys())[0]
-            protocols.append(protocol)
-            options.append(adapter_options.get(protocol, {}))
+            protocols[protocol] = adapter_options.get(protocol, {})
 
-    return protocols, options
+    return protocols
 
 
 def run_simulation(argument_list=None):  # noqa: C901
@@ -191,14 +188,11 @@ def run_simulation(argument_list=None):  # noqa: C901
             print('\n'.join(simulation_factory.get_protocols(arguments.device)))
             return
 
-        protocols = []
-        options = []
-
-        if not arguments.no_interface:
-            protocols, options = parse_adapter_options(arguments.adapter_options)
+        protocols = parse_adapter_options(
+            arguments.adapter_options) if not arguments.no_interface else {}
 
         simulation = simulation_factory.create(
-            arguments.device, arguments.setup, protocols, options, arguments.rpc_host)
+            arguments.device, arguments.setup, protocols, arguments.rpc_host)
 
         if arguments.show_interface:
             print(simulation._adapters.documentation())
