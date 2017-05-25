@@ -54,8 +54,7 @@ device_args.add_argument(
 
 device_args.add_argument(
     '-n', '--no-interface', default=False, action='store_true',
-    help='If supplied, the device simulation will not have any communication interface. Any '
-         '-p arguments are ignored.')
+    help='If supplied, the device simulation will not have any communication interface.')
 device_args.add_argument(
     '-p', '--adapter-options', default=[], action='append',
     help='Supply the protocol name and adapter options in the format '
@@ -189,8 +188,13 @@ def run_simulation(argument_list=None):  # noqa: C901
             print('\n'.join(simulation_factory.get_protocols(arguments.device)))
             return
 
-        protocols = parse_adapter_options(
-            arguments.adapter_options) if not arguments.no_interface else {}
+        if arguments.no_interface and arguments.adapter_options:
+            raise LewisException(
+                'Both -n and -p were specified, these can\'t be used together. Please decide '
+                'whether the device should have communication interfaces or not.')
+
+        protocols = parse_adapter_options(arguments.adapter_options) \
+            if not arguments.no_interface else {}
 
         simulation = simulation_factory.create(
             arguments.device, arguments.setup, protocols, arguments.rpc_host)

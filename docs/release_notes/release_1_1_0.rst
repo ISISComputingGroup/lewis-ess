@@ -23,13 +23,15 @@ New features
 
       $ lewis some_device -n
 
-   This option has precedence over ``-p``, so specifying ``-n`` will always result in a device with
-   no communication interfaces. The ``epics_device`` example has been extended to include a second
-   interface definition, so it exposes the device state via two different protocols:
+   It is not possible to use both ``-p`` and ``-n`` at the same time, this results in an error
+   message.
+
+   The ``epics_device`` example has been renamed to ``dual_device`` and extended to include a
+   second interface definition, so it exposes the device state via two different protocols:
 
    ::
 
-      $ lewis -k lewis.examples epics_device -p epics -p stream
+      $ lewis -k lewis.examples dual_device -p epics -p stream
 
  - The control client, lewis-control, now provides a version argument via ``--version`` or ``-v``.
 
