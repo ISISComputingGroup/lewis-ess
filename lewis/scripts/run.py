@@ -59,8 +59,9 @@ device_args.add_argument(
 device_args.add_argument(
     '-p', '--adapter-options', default=[], action='append',
     help='Supply the protocol name and adapter options in the format '
-         '"name:{opt1: val, opt2: val}". Use the --l flag to see which protocols '
-         'are available for the selected device.')
+         '"name:{opt1: val, opt2: val}". Use the -l flag to see which protocols '
+         'are available for the selected device. Can be supplied multiple times for '
+         'multiple protocols.')
 device_args.add_argument(
     '-l', '--list-protocols', action='store_true',
     help='List available protocols for selected device.')
