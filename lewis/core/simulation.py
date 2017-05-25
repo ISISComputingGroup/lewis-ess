@@ -55,10 +55,9 @@ class Simulation(object):
     simulated device.
 
     Another possibility to pause the simulation is the pause-method. After
-    calling it, all processing in the communication adapters (and thus,
-    possibly also the device) is suspended. This can be used to simulate
-    disconnected devices. The simulation can be continued using
-    the resume-method.
+    calling it, all processing in the device is suspended, while the communication
+    adapters continue to work. This can be used to simulate that a device is "hanging".
+    The simulation can be continued using the resume-method.
 
     A number of status properties provide information about the simulation.
     The total uptime (in actually elapsed time) can be obtained through the
@@ -75,17 +74,19 @@ class Simulation(object):
     control server using the start_server method.
 
     :param device: The simulated device.
-    :param adapter: Adapter which contains the simulated device.
+    :param adapters: Adapters which expose the simulated device.
+    :param device_builder: :class:`~lewis.core.devices.DeviceBuilder` instance to enable setup-
+                           switching at runtime.
     :param control_server: 'host:port'-string to construct control server or None.
     """
 
-    def __init__(self, device, adapters, device_builder=None, control_server=None):
+    def __init__(self, device, adapters=None, device_builder=None, control_server=None):
         super(Simulation, self).__init__()
 
         self._device_builder = device_builder
 
         self._device = device
-        self._adapters = AdapterCollection(*adapters)
+        self._adapters = AdapterCollection(*adapters or [])
 
         self._speed = 1.0  # Multiplier for delta t
         self._cycle_delay = 0.1  # Target time between cycles
