@@ -8,11 +8,34 @@ This release is currently in progress.
 New features
 ------------
 
-The control client, lewis-control, now provides a version argument via ``--version`` or ``-v``.
+ - It is now possible to have devices with more than one communication interface. The `-p`-option
+   can be supplied multiple times:
 
-::
+   ::
 
-   $ lewis-control -v
+      $ lewis some_device -p protocol1 -p protocol2
+
+   When no ``-p`` option is specified, the script behaves as before (use default protocol if
+   possible or produce an error message). To start a simulation without any device communication,
+   use the new ``-n``/``--no-interface`` option:
+
+   ::
+
+      $ lewis some_device -n
+
+   This option has precedence over ``-p``, so specifying ``-n`` will always result in a device with
+   no communication interfaces. The ``epics_device`` example has been extended to include a second
+   interface definition, so it exposes the device state via two different protocols:
+
+   ::
+
+      $ lewis -k lewis.examples epics_device -p epics -p stream
+
+ - The control client, lewis-control, now provides a version argument via ``--version`` or ``-v``.
+
+   ::
+
+      $ lewis-control -v
 
 Bug fixes and other improvements
 --------------------------------
