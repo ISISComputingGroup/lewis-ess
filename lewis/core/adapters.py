@@ -245,7 +245,7 @@ class AdapterCollection(object):
         """
         if adapter.protocol in self._adapters:
             raise RuntimeError(
-                'Adapter for protocol \'{}\' is already registered.'.format(adapter))
+                'Adapter for protocol \'{}\' is already registered.'.format(adapter.protocol))
 
         self._adapters[adapter.protocol] = adapter
 

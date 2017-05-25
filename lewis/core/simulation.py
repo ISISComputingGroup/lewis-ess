@@ -79,13 +79,13 @@ class Simulation(object):
     :param control_server: 'host:port'-string to construct control server or None.
     """
 
-    def __init__(self, device, adapter, device_builder=None, control_server=None):
+    def __init__(self, device, adapters, device_builder=None, control_server=None):
         super(Simulation, self).__init__()
 
         self._device_builder = device_builder
 
         self._device = device
-        self._adapters = AdapterCollection(adapter)
+        self._adapters = AdapterCollection(*adapters)
 
         self._speed = 1.0  # Multiplier for delta t
         self._cycle_delay = 0.1  # Target time between cycles
@@ -104,8 +104,9 @@ class Simulation(object):
         self.control_server = control_server
 
         self.log.debug(
-            'Created simulation. Device type: %s, Protocol: %s, Possible setups for '
-            'switching: %s, Control server: %s', device.__class__.__name__, adapter.protocol,
+            'Created simulation. Device type: %s, Protocol(s): %s, Possible setups for '
+            'switching: %s, Control server: %s', device.__class__.__name__,
+            ', '.join(self._adapters.protocols),
             ', '.join(device_builder.setups.keys()) if device_builder else None,
             control_server)
 
@@ -411,29 +412,36 @@ class SimulationFactory(object):
         """Returns a list of available protocols for the specified device."""
         return self._reg.device_builder(device, self._rv).protocols
 
-    def create(self, device, setup=None, protocol=None, adapter_options=None,
+    def create(self, device, setup=None, protocols=None, adapter_options=None,
                control_server=None):
         """
         Creates a :class:`Simulation` according to the supplied parameters.
 
         :param device: Name of device.
         :param setup: Name of the setup for device creation.
-        :param protocol: Communication protocol, see :meth:`get_protocols`.
-        :param adapter_options: Dictionary with :class:`~lewis.core.adapters.Adapter`-dependent
-                                options.
+        :param protocols: Communication protocols, see :meth:`get_protocols`.
+        :param adapter_options: List of dictionaries with :class:`~lewis.core.adapters.Adapter`-
+                                dependent options.
         :param control_server: String to construct a control server (host:port).
         :return: Simulation object according to input parameters.
         """
+
         device_builder = self._reg.device_builder(device, self._rv)
+        device = device_builder.create_device(setup)
 
-        interface = device_builder.create_interface(protocol)
-        interface.device = device_builder.create_device(setup)
+        adapters = []
 
-        adapter = interface.adapter(options=adapter_options)
-        adapter.interface = interface
+        for protocol, options in zip(protocols, adapter_options):
+            interface = device_builder.create_interface(protocol)
+            interface.device = device
+
+            adapter = interface.adapter(options=options or {})
+            adapter.interface = interface
+
+            adapters.append(adapter)
 
         return Simulation(
-            device=interface.device,
-            adapter=adapter,
+            device=device,
+            adapters=adapters,
             device_builder=device_builder,
             control_server=control_server)

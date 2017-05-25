@@ -51,8 +51,13 @@ device_args.add_argument(
     '-s', '--setup', default=None,
     help='Name of the setup to load. If not provided, the default setup is selected. If there'
          'is no default, a list of setups is printed.')
+
 device_args.add_argument(
-    '-p', '--adapter-options', default=None,
+    '-n', '--no-interface', default=False, action='store_true',
+    help='If supplied, the device simulation will not have any communication interface. Any '
+         '-p arguments are ignored.')
+device_args.add_argument(
+    '-p', '--adapter-options', default=[], action='append',
     help='Supply the protocol name and adapter options in the format '
          '"name:{opt1: val, opt2: val}". Use the --l flag to see which protocols '
          'are available for the selected device.')
@@ -115,12 +120,15 @@ __doc__ = 'This script is the main interaction point of the user with Lewis. The
 
 
 def parse_adapter_options(raw_adapter_options):
-    protocol = None
-    options = {}
+    if not raw_adapter_options:
+        return [None], [{}]
 
-    if raw_adapter_options:
+    protocols = []
+    options = []
+
+    for option_string in raw_adapter_options:
         try:
-            adapter_options = yaml.load(raw_adapter_options)
+            adapter_options = yaml.load(option_string)
         except yaml.YAMLError:
             raise LewisException(
                 'It was not possible to parse this adapter option specification:\n'
@@ -128,16 +136,17 @@ def parse_adapter_options(raw_adapter_options):
                 'Correct formats for the -p argument are:\n'
                 '    -p protocol\n'
                 '    -p "protocol: {option: \'val\', option2: 34}"\n'
-                'The spaces after the colons are significant!' % raw_adapter_options)
+                'The spaces after the colons are significant!' % option_string)
 
         if isinstance(adapter_options, string_types):
-            protocol = adapter_options
-            options = {}
+            protocols.append(adapter_options)
+            options.append({})
         else:
             protocol = list(adapter_options.keys())[0]
-            options = adapter_options.get(protocol, {})
+            protocols.append(protocol)
+            options.append(adapter_options.get(protocol, {}))
 
-    return protocol, options
+    return protocols, options
 
 
 def run_simulation(argument_list=None):  # noqa: C901
@@ -182,10 +191,14 @@ def run_simulation(argument_list=None):  # noqa: C901
             print('\n'.join(simulation_factory.get_protocols(arguments.device)))
             return
 
-        protocol, options = parse_adapter_options(arguments.adapter_options)
+        protocols = []
+        options = []
+
+        if not arguments.no_interface:
+            protocols, options = parse_adapter_options(arguments.adapter_options)
 
         simulation = simulation_factory.create(
-            arguments.device, arguments.setup, protocol, options, arguments.rpc_host)
+            arguments.device, arguments.setup, protocols, options, arguments.rpc_host)
 
         if arguments.show_interface:
             print(simulation._adapters.documentation())
