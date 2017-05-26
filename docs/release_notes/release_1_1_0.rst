@@ -8,11 +8,34 @@ This release is currently in progress.
 New features
 ------------
 
-The control client, lewis-control, now provides a version argument via ``--version`` or ``-v``.
+ - :mod:`~lewis.adapters.stream` has been extended. Besides regular expressions, it is now
+   possible to use `scanf` format specifications to define commands. This makes handling
+   of for example floating point numbers much more convenient:
 
-::
+   .. sourcecode:: python
 
-   $ lewis-control -v
+      from lewis.adapters import StreamInterface, Cmd, scanf
+
+      class SomeInterface(StreamInterface):
+         commands = {
+            Cmd(lambda x: x**2, scanf('SQ %f'))
+         }
+
+   :class:`~lewis.adapters.stream.scanf` provides argument mappings for the matched arguments
+   automatically, so it is optional to pass them to ``Cmd``. In the case outlined above, the
+   argument is automatically converted to ``float``.
+
+   If a string is specified directly (instead of ``scanf(...)``), it is treated as a regular
+   expression like in earlier versions.
+
+   Internally, the scanf_ package is used for handling these patterns, please check the package
+   documentation for all available format specifiers.
+
+ - The control client, lewis-control, now provides a version argument via ``--version`` or ``-v``.
+
+   ::
+
+      $ lewis-control -v
 
 Bug fixes and other improvements
 --------------------------------
@@ -63,3 +86,4 @@ Upgrade guide
 .. _source repository: https://github.com/DMSC-Instrument-Data/lewis/docs/resources/logo
 .. _Rubik: https://github.com/googlefonts/rubik
 .. _inkscape: https://inkscape.org/
+.. _scanf: https://github.com/joshburnett/scanf

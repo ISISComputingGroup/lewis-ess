@@ -23,7 +23,8 @@ import inspect
 import re
 import socket
 
-from six import b
+from scanf import scanf_compile
+from six import b, string_types
 
 from lewis.core.adapters import Adapter
 from lewis.core.devices import InterfaceBase
@@ -61,7 +62,8 @@ class StreamHandler(asynchat.async_chat):
                 if cmd is None:
                     raise RuntimeError('None of the device\'s commands matched.')
 
-                self.log.info('Processing request %s using command %s', request, cmd.raw_pattern)
+                self.log.info(
+                    'Processing request %s using command %s', request, cmd.matcher.pattern)
 
                 reply = cmd.process_request(request)
 
@@ -120,10 +122,125 @@ class StreamServer(asyncore.dispatcher):
         self._accepted_connections = []
 
 
+class PatternMatcher(object):
+    """
+    This class defines an interface for general command-matchers that use any kind of
+    technique to match a certain request in string form. It is used by :class:`Func` to check
+    whether a request can be processed using a function and to extract any function arguments.
+
+    Sub-classes must implement all defined abstract methods/properties.
+
+    .. seealso::
+
+        :class:`regex`, :class:`scanf` are concrete implementations of this class.
+    """
+
+    def __init__(self, pattern):
+        self._pattern = pattern
+
+    @property
+    def pattern(self):
+        """The pattern definition used for matching a request."""
+        return self._pattern
+
+    @property
+    def arg_count(self):
+        """Number of arguments that are matched in a request."""
+        raise NotImplementedError('The arg_count property must be implemented.')
+
+    @property
+    def argument_mappings(self):
+        """Mapping functions that can be applied to the arguments returned by :meth:`match`."""
+        raise NotImplementedError('The argument_mappings property must be implemented.')
+
+    def match(self, request):
+        """
+        Tries to match the request against the internally stored pattern. Returns any matched
+        function arguments.
+
+        :param request: Request to attempt matching.
+        :return: List of matched argument values (possibly empty) or None if not matching.
+        """
+        raise NotImplementedError('The match-method must be implemented.')
+
+
+class regex(PatternMatcher):
+    """
+    Implementation of :class:`PatternMatcher` that compiles the specified pattern into a regular
+    expression.
+    """
+
+    def __init__(self, pattern):
+        super(regex, self).__init__(pattern)
+
+        self.compiled_pattern = re.compile(b(pattern))
+
+    @property
+    def arg_count(self):
+        return self.compiled_pattern.groups
+
+    @property
+    def argument_mappings(self):
+        return None
+
+    def match(self, request):
+        match = self.compiled_pattern.match(request)
+
+        if match is None:
+            return None
+
+        return match.groups()
+
+
+class scanf(regex):
+    """
+    Interprets the specified pattern as a scanf format. Internally, the scanf_ package is used
+    to transform the format into a regular expression. Please consult the documentation of scanf_
+    for valid pattern specifications.
+
+    By default, the resulting regular expression matches exactly. Consider this example:
+
+    .. sourcecode:: Python
+
+        exact = scanf('T=%f')
+        not_exact = scanf('T=%f', exact_match=False)
+
+    The first pattern only matches the string ``T=4.0``, whereas the second would also match
+    ``T=4.0garbage``. Please note that the specifiers like ``%f`` are automatically turned into
+    groups in the generated regular expression.
+
+    :param pattern: Scanf format specification.
+    :param exact_match: Match only if the entire string matches.
+
+    .. _scanf: https://github.com/joshburnett/scanf
+    """
+
+    def __init__(self, pattern, exact_match=True):
+        self._scanf_pattern = pattern
+
+        generated_regex, self._argument_mappings = scanf_compile(pattern)
+        regex_pattern = generated_regex.pattern
+
+        if exact_match:
+            regex_pattern = '^{}$'.format(regex_pattern)
+
+        super(scanf, self).__init__(regex_pattern)
+
+    @property
+    def pattern(self):
+        return self._scanf_pattern
+
+    @property
+    def argument_mappings(self):
+        return self._argument_mappings
+
+
 class Func(object):
     """
-    Objects of this type connect a callable object to a regular expression. The regular expression
-    must define one group (with the use of parentheses) for each argument of the callable.
+    Objects of this type connect a callable object to a pattern matcher (:class:`PatternMatcher`),
+    which currently comprises :class:`regex` and :class:`scanf`. Strings are also
+    accepted, they are treated like a regular expression internally. This preserves default
+    behavior from older versions of Lewis.
 
     In general, Func-objects should not be created directly, instead they are created by one of
     the sub-classes of :class:`CommandBase` using :meth:`~CommandBase.bind`.
@@ -141,7 +258,9 @@ class Func(object):
     same length as the number of arguments of the function. The first parameter will be
     transformed using the first function, the second using the second function and so on.
     This can be useful to automatically transform strings provided by the adapter into a proper
-    data type such as ``int`` or ``float`` before they are passed to the function.
+    data type such as ``int`` or ``float`` before they are passed to the function. In case the
+    pattern is of type :class:`scanf`, this is optional (but will override the mappings
+    provided by the matcher).
 
     The return_mapping argument is similar, it should map the return value of the function
     to a string. The default map function only does that when the supplied value
@@ -153,7 +272,7 @@ class Func(object):
     the docstring of the bound function is used and if that is not present, left empty.
 
     :param func: Function to be called when pattern matches or member of device/interface.
-    :param pattern: Regex to match for function call.
+    :param pattern: :class:`regex`, :class:`scanf` object or string.
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
@@ -166,39 +285,46 @@ class Func(object):
             raise RuntimeError('Can not construct a Func-object from a non callable object.')
 
         self.func = func
-        self.raw_pattern = pattern
-        self.pattern = re.compile(b(pattern), 0) if pattern else None
+
+        if isinstance(pattern, string_types):
+            pattern = regex(pattern)
+
+        self.matcher = pattern
+
+        if argument_mappings is None:
+            argument_mappings = self.matcher.argument_mappings or None
 
         try:
-            inspect.getcallargs(func, *[None] * self.pattern.groups)
+            inspect.getcallargs(func, *[None] * self.matcher.arg_count)
         except TypeError:
             raise RuntimeError(
                 'The number of arguments for function \'{}\' matched by pattern '
                 '\'{}\' is not compatible with number of defined '
                 'groups in pattern ({}).'.format(
-                    getattr(func, '__name__', repr(func)), pattern, self.pattern.groups
+                    getattr(func, '__name__', repr(func)), self.matcher.pattern,
+                    self.matcher.arg_count
                 ))
 
-        if argument_mappings is not None and (self.pattern.groups != len(argument_mappings)):
+        if argument_mappings is not None and (self.matcher.arg_count != len(argument_mappings)):
             raise RuntimeError(
                 'Supplied argument mappings for function matched by pattern \'{}\' specify {} '
                 'argument(s), but the function has {} arguments.'.format(
-                    self.pattern, len(argument_mappings), self.pattern.groups))
+                    self.matcher, len(argument_mappings), self.matcher.arg_count))
 
         self.argument_mappings = argument_mappings
         self.return_mapping = return_mapping
         self.doc = doc or (inspect.getdoc(self.func) if callable(self.func) else None)
 
     def can_process(self, request):
-        return self.pattern.match(request) is not None
+        return self.matcher.match(request) is not None
 
     def process_request(self, request):
-        match = self.pattern.match(request)
+        match = self.matcher.match(request)
 
-        if not match:
+        if match is None:
             raise RuntimeError('Request can not be processed.')
 
-        args = self.map_arguments(match.groups())
+        args = self.map_arguments(match)
 
         return self.map_return_value(self.func(*args))
 
@@ -239,8 +365,12 @@ class CommandBase(object):
     the stream adapter is based on connecting a callable object to a pattern that matches an
     inbound request.
 
+    The type of pattern can be either an implementation of :class:`PatternMatcher`
+    (regex or scanf format specification) or a plain string (which is treated as a regular
+    expression).
+
     For free function and lambda expressions this is straightforward: the function object can
-    simply be stored together with the regular expression. Most often however, the callable
+    simply be stored together with the pattern. Most often however, the callable
     is a method of the device or interface object - these do not exist when the commands are
     defined.
 
@@ -262,7 +392,7 @@ class CommandBase(object):
         :class:`Func`.
 
     :param func: Function to be called when pattern matches or member of device/interface.
-    :param pattern: Regex to match for function call.
+    :param pattern: Pattern to match (:class:`PatternMatcher` or string).
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
@@ -314,7 +444,7 @@ class Cmd(CommandBase):
         of :class:`Func` provides more information about the common constructor arguments.
 
     :param func: Function to be called when pattern matches or member of device/interface.
-    :param pattern: Regex to match for function call.
+    :param pattern: Pattern to match (:class:`PatternMatcher` or string).
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
@@ -372,8 +502,8 @@ class Var(CommandBase):
         For exposing methods and free functions, there's the :class:`Cmd`-class.
 
     :param target_member: Attribute or property of device/interface to expose.
-    :param read_pattern: Regex that matches command for property getter.
-    :param write_pattern: Regex that matches command for property setter.
+    :param read_pattern: Pattern to match for getter (:class:`PatternMatcher` or string).
+    :param write_pattern: Pattern to match for setter (:class:`PatternMatcher` or string).
     :param argument_mappings: Iterable with mapping functions from string to some type,
                               only applied to setter.
     :param return_mapping: Mapping function for return value of method,
@@ -449,9 +579,9 @@ class StreamAdapter(Adapter):
     @property
     def documentation(self):
         commands = ['{}:\n{}'.format(
-            cmd.raw_pattern,
+            cmd.matcher.pattern,
             format_doc_text(cmd.doc or inspect.getdoc(cmd.func) or ''))
-            for cmd in sorted(self.interface.bound_commands, key=lambda x: x.raw_pattern)]
+            for cmd in sorted(self.interface.bound_commands, key=lambda x: x.matcher.pattern)]
 
         options = format_doc_text(
             'Listening on: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}'.format(
@@ -512,14 +642,14 @@ class StreamInterface(InterfaceBase):
      - commands: A list of :class:`~CommandBase`-objects that define mappings between protocol
        and device/interface methods/attributes.
 
-    Commands are expressed as regular expressions, a simple example may look like this:
+    By default, commands are expressed as regular expressions, a simple example may look like this:
 
     .. sourcecode:: Python
 
         class SimpleDeviceStreamInterface(StreamInterface):
             commands = [
                 Cmd('set_speed', r'^S=([0-9]+)$', argument_mappings=[int]),
-                Cmd('get_speed', r'^S\\?$')
+                Cmd('get_speed', r'^S\?$')
                 Var('speed', read_pattern=r'^V\\?$', write_pattern=r'^V=([0-9]+)$')
             ]
 
@@ -573,12 +703,13 @@ class StreamInterface(InterfaceBase):
                     'of device or interface.'.format(cmd.func))
 
             for bound_cmd in bound:
-                if bound_cmd.pattern in patterns:
+                pattern = bound_cmd.matcher.pattern
+                if pattern in patterns:
                     raise RuntimeError(
                         'The regular expression {} is '
-                        'associated with multiple commands.'.format(bound_cmd.pattern.pattern))
+                        'associated with multiple commands.'.format(pattern))
 
-                patterns.add(bound_cmd.pattern)
+                patterns.add(pattern)
 
                 self.bound_commands.append(bound_cmd)
 
