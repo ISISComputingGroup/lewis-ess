@@ -223,8 +223,8 @@ class Simulation(object):
             with self._adapters.device_lock:
                 self._device.process(delta_simulation)
 
-                if self._control_server:
-                    self._control_server.process()
+            if self._control_server:
+                self._control_server.process()
 
             self._cycles += 1
             self._runtime += delta_simulation
@@ -307,8 +307,9 @@ class Simulation(object):
                 'The following parameters do not exist in the device or are methods: {}.'
                 'Parameters not updated.'.format(invalid_parameters))
 
-        for name, value in parameters.items():
-            setattr(self._device, name, value)
+        with self._adapters.device_lock:
+            for name, value in parameters.items():
+                setattr(self._device, name, value)
 
         self.log.debug('Updated device parameters: %s', parameters)
 
