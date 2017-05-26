@@ -118,7 +118,8 @@ class Simulation(object):
         return ControlServer({
             'device': ExposedObject(
                 self._device,
-                exclude_inherited=True
+                exclude_inherited=True,
+                lock=self._adapters.device_lock
             ),
             'simulation': ExposedObject(
                 self,

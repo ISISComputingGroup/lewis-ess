@@ -142,6 +142,19 @@ class TestRPCObject(unittest.TestCase):
         self.assertTrue('methods' in api)
         self.assertEqual(set(api['methods']), {':api', 'a:set', 'a:get'})
 
+    def test_lock_is_used_if_supplied(self):
+        mock_lock = Mock()
+        mock_lock.__enter__ = Mock()
+        mock_lock.__exit__ = Mock()
+
+        obj = TestObject()
+        exposed_object = ExposedObject(obj, ['a'], lock=mock_lock)
+
+        self.assertEqual(exposed_object['a:get'](), obj.a)
+
+        mock_lock.__enter__.assert_called_once()
+        mock_lock.__exit__.assert_called_once()
+
 
 class TestExposedObjectCollection(unittest.TestCase):
     def test_empty_initialization(self):
