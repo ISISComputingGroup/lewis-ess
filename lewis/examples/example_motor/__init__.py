@@ -22,7 +22,7 @@ from collections import OrderedDict
 from lewis.core import approaches
 from lewis.core.statemachine import State
 from lewis.devices import StateMachineDevice
-from lewis.adapters.stream import StreamInterface, Cmd, fmt, regex
+from lewis.adapters.stream import StreamInterface, Cmd, scanf, regex
 
 
 class DefaultMovingState(State):
@@ -101,7 +101,7 @@ class ExampleMotorStreamInterface(StreamInterface):
         Cmd('get_status', regex(r'^S\?$')),  # explicit regex
         Cmd('get_position', r'^P?$'),  # implicit regex
         Cmd('get_target', r'^T?$'),
-        Cmd('set_target', fmt('T=%f')),  # scanf format specification
+        Cmd('set_target', scanf('T=%f')),  # scanf format specification
         Cmd('stop', r'^H$',
             return_mapping=lambda x: 'T={},P={}'.format(x[0], x[1])),
     }

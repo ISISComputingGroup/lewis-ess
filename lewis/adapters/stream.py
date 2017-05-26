@@ -123,26 +123,53 @@ class StreamServer(asyncore.dispatcher):
 
 
 class PatternMatcher(object):
+    """
+    This class defines an interface for general command-matchers that use any kind of
+    technique to match a certain request in string form. It is used by :class:`Func` to check
+    whether a request can be processed using a function and to extract any function arguments.
+
+    Sub-classes must implement all defined abstract methods/properties.
+
+    .. seealso::
+
+        :class:`regex`, :class:`scanf` are concrete implementations of this class.
+    """
+
     def __init__(self, pattern):
         self._pattern = pattern
 
     @property
     def pattern(self):
+        """The pattern definition used for matching a request."""
         return self._pattern
 
     @property
     def arg_count(self):
+        """Number of arguments that are matched in a request."""
         raise NotImplementedError('The arg_count property must be implemented.')
 
     @property
     def argument_mappings(self):
+        """Mapping functions that can be applied to the arguments returned by :meth:`match`."""
         raise NotImplementedError('The argument_mappings property must be implemented.')
 
     def match(self, request):
+        """
+        Tries to match the request against the internally stored pattern. Returns any matched
+        function arguments.
+
+        :param request: Request to attempt matching.
+        :return: List of matched argument values (possibly empty) or None if not matching.
+        """
         raise NotImplementedError('The match-method must be implemented.')
 
 
 class regex(PatternMatcher):
+    """
+    Implementation of :class:`PatternMatcher` that compiles the specified pattern into a regular
+    expression.
+    """
+
     def __init__(self, pattern):
         super(regex, self).__init__(pattern)
 
@@ -165,7 +192,7 @@ class regex(PatternMatcher):
         return match.groups()
 
 
-class fmt(regex):
+class scanf(regex):
     """
     Interprets the specified pattern as a scanf format. Internally, the scanf_ package is used
     to transform the format into a regular expression. Please consult the documentation of scanf_
@@ -173,10 +200,10 @@ class fmt(regex):
 
     By default, the resulting regular expression matches exactly. Consider this example:
 
-    ..sourcecode:: Python
+    .. sourcecode:: Python
 
-        exact = fmt('T=%f')
-        not_exact = fmt('T=%f', exact_match=False)
+        exact = scanf('T=%f')
+        not_exact = scanf('T=%f', exact_match=False)
 
     The first pattern only matches the string ``T=4.0``, whereas the second would also match
     ``T=4.0garbage``. Please note that the specifiers like ``%f`` are automatically turned into
@@ -185,20 +212,19 @@ class fmt(regex):
     :param pattern: Scanf format specification.
     :param exact_match: Match only if the entire string matches.
 
-    ..seealso:: :func:`fmt` is a convenience function that produces ``fmt``-objects.
-
     .. _scanf: https://github.com/joshburnett/scanf
     """
 
     def __init__(self, pattern, exact_match=True):
         self._scanf_pattern = pattern
+
         generated_regex, self._argument_mappings = scanf_compile(pattern)
         regex_pattern = generated_regex.pattern
 
         if exact_match:
             regex_pattern = '^{}$'.format(regex_pattern)
 
-        super(fmt, self).__init__(regex_pattern)
+        super(scanf, self).__init__(regex_pattern)
 
     @property
     def pattern(self):
@@ -212,7 +238,7 @@ class fmt(regex):
 class Func(object):
     """
     Objects of this type connect a callable object to a pattern matcher (:class:`PatternMatcher`),
-    which currently comprises :class:`regex` and :class:`fmt`. Strings are also
+    which currently comprises :class:`regex` and :class:`scanf`. Strings are also
     accepted, they are treated like a regular expression internally. This preserves default
     behavior from older versions of Lewis.
 
@@ -233,7 +259,7 @@ class Func(object):
     transformed using the first function, the second using the second function and so on.
     This can be useful to automatically transform strings provided by the adapter into a proper
     data type such as ``int`` or ``float`` before they are passed to the function. In case the
-    pattern is of type :class:`fmt`, this is optional (but will override the mappings
+    pattern is of type :class:`scanf`, this is optional (but will override the mappings
     provided by the matcher).
 
     The return_mapping argument is similar, it should map the return value of the function
@@ -246,7 +272,7 @@ class Func(object):
     the docstring of the bound function is used and if that is not present, left empty.
 
     :param func: Function to be called when pattern matches or member of device/interface.
-    :param pattern: :class:`regex`, :class:`fmt` object or string.
+    :param pattern: :class:`regex`, :class:`scanf` object or string.
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
