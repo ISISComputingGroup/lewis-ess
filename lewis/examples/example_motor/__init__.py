@@ -97,13 +97,11 @@ class ExampleMotorStreamInterface(StreamInterface):
     it has to be stopped to receive a new target, otherwise an error is generated.
     """
 
-    pattern_type = fmt
-
     commands = {
-        Cmd('get_status', regex(r'^S\?$')),
-        Cmd('get_position', r'^P?$'),
+        Cmd('get_status', regex(r'^S\?$')),  # explicit regex
+        Cmd('get_position', r'^P?$'),  # implicit regex
         Cmd('get_target', r'^T?$'),
-        Cmd('set_target', 'T=%f'),
+        Cmd('set_target', fmt('T=%f')),  # scanf format specification
         Cmd('stop', r'^H$',
             return_mapping=lambda x: 'T={},P={}'.format(x[0], x[1])),
     }
