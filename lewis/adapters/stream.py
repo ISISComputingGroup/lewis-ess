@@ -142,9 +142,9 @@ class PatternMatcher(object):
         raise NotImplementedError('The match-method must be implemented.')
 
 
-class RegexMatcher(PatternMatcher):
+class regex(PatternMatcher):
     def __init__(self, pattern):
-        super(RegexMatcher, self).__init__(pattern)
+        super(regex, self).__init__(pattern)
 
         self.compiled_pattern = re.compile(b(pattern))
 
@@ -157,14 +157,15 @@ class RegexMatcher(PatternMatcher):
         return None
 
     def match(self, request):
-        return self.compiled_pattern.match(request)
+        match = self.compiled_pattern.match(request)
+
+        if match is None:
+            return None
+
+        return match.groups()
 
 
-def regex(pattern):
-    return RegexMatcher(pattern)
-
-
-class ScanfMatcher(PatternMatcher):
+class fmt(regex):
     """
     Interprets the specified pattern as a scanf format. Internally, the scanf_ package is used
     to transform the format into a regular expression. Please consult the documentation of scanf_
@@ -174,8 +175,8 @@ class ScanfMatcher(PatternMatcher):
 
     ..sourcecode:: Python
 
-        exact = ScanfMatcher('T=%f')
-        not_exact = ScanfMatcher('T=%f', exact_match=False)
+        exact = fmt('T=%f')
+        not_exact = fmt('T=%f', exact_match=False)
 
     The first pattern only matches the string ``T=4.0``, whereas the second would also match
     ``T=4.0garbage``. Please note that the specifiers like ``%f`` are automatically turned into
@@ -184,44 +185,34 @@ class ScanfMatcher(PatternMatcher):
     :param pattern: Scanf format specification.
     :param exact_match: Match only if the entire string matches.
 
-    ..seealso:: :func:`fmt` is a convenience function that produces ``ScanfMatcher``-objects.
+    ..seealso:: :func:`fmt` is a convenience function that produces ``fmt``-objects.
 
     .. _scanf: https://github.com/joshburnett/scanf
     """
 
     def __init__(self, pattern, exact_match=True):
-        super(ScanfMatcher, self).__init__(pattern)
-
+        self._scanf_pattern = pattern
         generated_regex, self._argument_mappings = scanf_compile(pattern)
         regex_pattern = generated_regex.pattern
 
         if exact_match:
             regex_pattern = '^{}$'.format(regex_pattern)
 
-        self.compiled_pattern = re.compile(b(regex_pattern))
+        super(fmt, self).__init__(regex_pattern)
 
     @property
-    def arg_count(self):
-        return len(self._argument_mappings)
+    def pattern(self):
+        return self._scanf_pattern
 
     @property
     def argument_mappings(self):
         return self._argument_mappings
 
-    def match(self, request):
-        return self.compiled_pattern.match(request)
-
-
-def fmt(pattern, exact_match=True):
-    """Convenience function that simply forwards its arguments to construct :class:`ScanfMatcher`-
-    objects."""
-    return ScanfMatcher(pattern, exact_match)
-
 
 class Func(object):
     """
     Objects of this type connect a callable object to a pattern matcher (:class:`PatternMatcher`),
-    which currently comprises :class:`RegexMatcher` and :class:`ScanfMatcher`. Strings are also
+    which currently comprises :class:`regex` and :class:`fmt`. Strings are also
     accepted, they are treated like a regular expression internally. This preserves default
     behavior from older versions of Lewis.
 
@@ -242,7 +233,7 @@ class Func(object):
     transformed using the first function, the second using the second function and so on.
     This can be useful to automatically transform strings provided by the adapter into a proper
     data type such as ``int`` or ``float`` before they are passed to the function. In case the
-    pattern is of type :class:`ScanfMatcher`, this is optional (but will override the mappings
+    pattern is of type :class:`fmt`, this is optional (but will override the mappings
     provided by the matcher).
 
     The return_mapping argument is similar, it should map the return value of the function
@@ -255,7 +246,7 @@ class Func(object):
     the docstring of the bound function is used and if that is not present, left empty.
 
     :param func: Function to be called when pattern matches or member of device/interface.
-    :param pattern: :class:`RegexMatcher`, :class:`ScanfMatcher` object or string.
+    :param pattern: :class:`regex`, :class:`fmt` object or string.
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
@@ -270,7 +261,7 @@ class Func(object):
         self.func = func
 
         if isinstance(pattern, string_types):
-            pattern = RegexMatcher(pattern)
+            pattern = regex(pattern)
 
         self.matcher = pattern
 
@@ -304,10 +295,10 @@ class Func(object):
     def process_request(self, request):
         match = self.matcher.match(request)
 
-        if not match:
+        if match is None:
             raise RuntimeError('Request can not be processed.')
 
-        args = self.map_arguments(match.groups())
+        args = self.map_arguments(match)
 
         return self.map_return_value(self.func(*args))
 
