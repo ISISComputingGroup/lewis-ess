@@ -71,5 +71,8 @@ class VerySimpleStreamInterface(StreamInterface):
             doc='An integer parameter.')
     }
 
+    in_terminator = '\r\n'
+    out_terminator = '\r\n'
+
 
 framework_version = '1.0.3'
