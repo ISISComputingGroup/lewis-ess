@@ -65,7 +65,7 @@ class ExposedObject(object):
     should be exposed, it's also possible to use the exclude-argument to explicitly
     exclude a few members. Both parameters can be used in combination, the exclude-list
     takes precedence.
-    
+
     In certain situations it is desirable to acquire a lock before accessing the exposed object,
     for example when multiple threads are accessing it on the server side. For this purpose,
     the ``lock``-parameter can be used. If it is not ``None``, the exposed methods are wrapped
