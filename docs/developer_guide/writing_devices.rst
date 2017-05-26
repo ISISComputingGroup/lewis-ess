@@ -1,7 +1,7 @@
 Writing Device Simulators
 =========================
 
-The following section describes how to write a new device simulator, what to 
+The following section describes how to write a new device simulator, what to
 consider, and how to get the changes upstream.
 
 Getting Lewis Source Code
@@ -226,14 +226,14 @@ According to the specifications above, the commands are defined like this:
 
 .. code:: python
 
-    from lewis.adapters.stream import StreamInterface, Cmd
+    from lewis.adapters.stream import StreamInterface, Cmd, scanf
 
     class ExampleMotorStreamInterface(StreamInterface):
         commands = {
             Cmd('get_status', r'^S\?$'),
             Cmd('get_position', r'^P\?$'),
             Cmd('get_target', r'^T\?$'),
-            Cmd('set_target', r'^T=([-+]?[0-9]*\.?[0-9]+)$', argument_mappings=(float,)),
+            Cmd('set_target', scanf('T=%f'), argument_mappings=(float,)),
             Cmd('stop', r'^H$',
                 return_mapping=lambda x: 'T={},P={}'.format(x[0], x[1])),
         }
@@ -260,15 +260,18 @@ According to the specifications above, the commands are defined like this:
                 return 'err: not 0<=T<=250'
 
 The first argument to :class:`~lewis.adapters.stream.Cmd` specifies the method
-name the command is bound to, whereas the second argument is the regular expression that a
-request coming in over the TCP stream must match. If a method has
+name the command is bound to, whereas the second argument is a pattern that a
+request coming in over the TCP stream must match. If the pattern is specified as a string,
+it is treated as a regular expression. In the above example, :class:`~lewis.adapters.stream.scanf`
+is used for one of the functions, it allows for ``scanf``-like format specifiers. If a method has
 arguments (such as ``set_target``), these need to be defined as capture
 groups in the regular expression. These groups are passed as strings to
 the bound method. If any sort of conversion is required for these
 arguments, the ``argument_mapping``-parameter can be a tuple of
 conversion functions with the same lengths as the number of capture
 groups in the regular expression. In the case of ``set_target`` it's
-enough to convert the string to float. Return values (except ``None``)
+enough to convert the string to float, but :class:`~lewis.adapters.stream.scanf` does that
+automatically, so it is not strictly required here. Return values (except ``None``)
 are converted to strings automatically, but this conversion can be
 overridden by supplying a callable object to ``return_mapping``, as it
 is the case for the ``stop``-command.

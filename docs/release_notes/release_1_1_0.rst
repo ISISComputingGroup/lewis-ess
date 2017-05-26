@@ -29,7 +29,7 @@ New features
    expression like in earlier versions.
 
    Internally, the scanf_ package is used for handling these patterns, please check the package
-   documentation for all available patterns.
+   documentation for all available format specifiers.
 
  - The control client, lewis-control, now provides a version argument via ``--version`` or ``-v``.
 
