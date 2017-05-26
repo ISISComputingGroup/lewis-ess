@@ -179,7 +179,7 @@ def run_simulation(argument_list=None):  # noqa: C901
             return
 
         if arguments.list_protocols:
-            print('\n'.join(simulation_factory.get_protocols(arguments.interface)))
+            print('\n'.join(simulation_factory.get_protocols(arguments.device)))
             return
 
         protocol, options = parse_adapter_options(arguments.adapter_options)

@@ -292,7 +292,7 @@ class AdapterCollection(object):
             self._running[adapter.protocol].wait()  # Block until server is actually listening
 
     def _adapter_loop(self, adapter, dt):
-        adapter.lock = self._lock  # This ensures that the adapter is using the correct lock.
+        adapter.device_lock = self._lock  # This ensures that the adapter is using the correct lock
         adapter.start_server()
 
         self._running[adapter.protocol].set()
