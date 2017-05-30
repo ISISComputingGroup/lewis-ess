@@ -66,17 +66,24 @@ class ExposedObject(object):
     exclude a few members. Both parameters can be used in combination, the exclude-list
     takes precedence.
 
+    In certain situations it is desirable to acquire a lock before accessing the exposed object,
+    for example when multiple threads are accessing it on the server side. For this purpose,
+    the ``lock``-parameter can be used. If it is not ``None``, the exposed methods are wrapped
+    in a function that acquires the lock before accessing ``obj``, and releases it afterwards.
+
     :param obj: The object to expose.
     :param members: This list of methods will be exposed. (defaults to all public members)
     :param exclude: Members in this list will not be exposed.
     :param exclude_inherited: Should inherited members be excluded? (defaults to False)
+    :param lock: ``threading.Lock`` that is used when accessing ``obj``.
     """
 
-    def __init__(self, obj, members=None, exclude=None, exclude_inherited=False):
+    def __init__(self, obj, members=None, exclude=None, exclude_inherited=False, lock=None):
         super(ExposedObject, self).__init__()
 
         self._object = obj
         self._function_map = {}
+        self._lock = lock
 
         self._add_function(':api', self.get_api)
 
@@ -139,6 +146,16 @@ class ExposedObject(object):
     def _add_function(self, name, function):
         if not callable(function):
             raise TypeError('Only callable objects can be exposed.')
+
+        if self._lock is not None:
+            def create_locking_wrapper(f):
+                def locking_wrapper_function(*args, **kwargs):
+                    with self._lock:
+                        return f(*args, **kwargs)
+
+                return locking_wrapper_function
+
+            function = create_locking_wrapper(function)
 
         self._function_map[name] = function
 

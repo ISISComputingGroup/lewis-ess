@@ -20,6 +20,7 @@
 from lewis.devices import Device
 
 from lewis.adapters.epics import EpicsInterface, PV
+from lewis.adapters.stream import StreamInterface, Var
 
 
 class VerySimpleDevice(Device):
@@ -60,6 +61,18 @@ class VerySimpleInterface(EpicsInterface):
     def second_int(self):
         """The second parameter as an integer."""
         return int(self.device.second)
+
+
+class VerySimpleStreamInterface(StreamInterface):
+    """This is a TCP stream interface to the epics device, which only exposes param."""
+
+    commands = {
+        Var('param', read_pattern=r'P\?$', write_pattern=r'P=(\d+)', argument_mappings=(int,),
+            doc='An integer parameter.')
+    }
+
+    in_terminator = '\r\n'
+    out_terminator = '\r\n'
 
 
 framework_version = '1.0.3'

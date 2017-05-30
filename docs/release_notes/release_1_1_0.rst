@@ -8,6 +8,31 @@ This release is currently in progress.
 New features
 ------------
 
+ - It is now possible to have devices with more than one communication interface. The `-p`-option
+   can be supplied multiple times:
+
+   ::
+
+      $ lewis some_device -p protocol1 -p protocol2
+
+   When no ``-p`` option is specified, the script behaves as before (use default protocol if
+   possible or produce an error message). To start a simulation without any device communication,
+   use the new ``-n``/``--no-interface`` option:
+
+   ::
+
+      $ lewis some_device -n
+
+   It is not possible to use both ``-p`` and ``-n`` at the same time, this results in an error
+   message.
+
+   The ``epics_device`` example has been renamed to ``dual_device`` and extended to include a
+   second interface definition, so it exposes the device state via two different protocols:
+
+   ::
+
+      $ lewis -k lewis.examples dual_device -p epics -p stream
+
  - :mod:`~lewis.adapters.stream` has been extended. Besides regular expressions, it is now
    possible to use `scanf` format specifications to define commands. This makes handling
    of for example floating point numbers much more convenient:
