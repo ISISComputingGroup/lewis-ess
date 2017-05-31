@@ -52,10 +52,11 @@ device_args.add_argument(
     help='Name of the setup to load. If not provided, the default setup is selected. If there'
          'is no default, a list of setups is printed.')
 
-device_args.add_argument(
+interface_args = device_args.add_mutually_exclusive_group()
+interface_args.add_argument(
     '-n', '--no-interface', default=False, action='store_true',
     help='If supplied, the device simulation will not have any communication interface.')
-device_args.add_argument(
+interface_args.add_argument(
     '-p', '--adapter-options', default=[], action='append',
     help='Supply the protocol name and adapter options in the format '
          '"name:{opt1: val, opt2: val}". Use the -l flag to see which protocols '
@@ -105,15 +106,28 @@ other_args.add_argument(
     '-V', '--verify', action='store_true',
     help='Sets the output level to \'debug\' and aborts before starting the device simulation. '
          'This is intended to help with diagnosing problems with devices or input arguments.')
+
+version_handling = other_args.add_mutually_exclusive_group()
+version_handling.add_argument(
+    '-I', '--ignore-versions', action='store_true',
+    help='Ignore version mismatches between device and framework. A warning will still '
+         'be logged.')
+version_handling.add_argument(
+    '-S', '--strict-versions', action='store_true',
+    help='Do not allow devices which do not specify a framework version they are '
+         'compatible with.')
 other_args.add_argument(
     '-v', '--version', action='store_true',
     help='Prints the version and exits.')
 other_args.add_argument(
-    '-R', '--relaxed-versions', action='store_true',
-    help='Allow devices with different framework version to be used.')
-other_args.add_argument(
     '-h', '--h', action='help',
     help='Shows this help message and exits.')
+
+deprecated_args = parser.add_argument_group('Deprecated arguments')
+deprecated_args.add_argument(
+    '-R', '--relaxed-versions', action='store_true',
+    help='Renamed to --I/--ignore-versions. Using this old option produces an error when '
+         'and it will be removed in a future release.')
 
 __doc__ = 'This script is the main interaction point of the user with Lewis. The usage ' \
           'is as follows:\n\n.. code-block:: none\n\n{}'.format(get_usage_text(parser, indent=4))
@@ -146,6 +160,15 @@ def parse_adapter_options(raw_adapter_options):
     return protocols
 
 
+def use_strict_versions(strict_versions, ignore_versions):
+    if ignore_versions:
+        return False
+    elif strict_versions:
+        return True
+
+    return None
+
+
 def run_simulation(argument_list=None):  # noqa: C901
     """
     This is effectively the main function of a typical simulation run. Arguments passed in are
@@ -162,6 +185,10 @@ def run_simulation(argument_list=None):  # noqa: C901
             print(__version__)
             return
 
+        if arguments.relaxed_versions:
+            print('Unknown option --relaxed-versions. Did you mean --ignore-versions?')
+            return
+
         loglevel = 'debug' if arguments.verify else arguments.output_level
         if loglevel != 'none':
             logging.basicConfig(
@@ -172,8 +199,9 @@ def run_simulation(argument_list=None):  # noqa: C901
             logging.getLogger().debug('Extending path with: %s', additional_path)
             sys.path.append(additional_path)
 
-        simulation_factory = SimulationFactory(arguments.device_package,
-                                               arguments.relaxed_versions)
+        strict_versions = use_strict_versions(arguments.strict_versions, arguments.ignore_versions)
+
+        simulation_factory = SimulationFactory(arguments.device_package, strict_versions)
 
         if not arguments.device:
             devices = ['Please specify a device to simulate. The following devices are available:']
@@ -187,11 +215,6 @@ def run_simulation(argument_list=None):  # noqa: C901
         if arguments.list_protocols:
             print('\n'.join(simulation_factory.get_protocols(arguments.device)))
             return
-
-        if arguments.no_interface and arguments.adapter_options:
-            raise LewisException(
-                'Both -n and -p were specified, these can\'t be used together. Please decide '
-                'whether the device should have communication interfaces or not.')
 
         protocols = parse_adapter_options(arguments.adapter_options) \
             if not arguments.no_interface else {}

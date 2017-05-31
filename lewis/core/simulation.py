@@ -389,7 +389,7 @@ class SimulationFactory(object):
 
     .. sourcecode:: Python
 
-        factory = SimulationFactory('lewis.devices', relaxed_versions=True)
+        factory = SimulationFactory('lewis.devices')
 
     The actual creation happens via the :meth:`create`-method:
 
@@ -402,9 +402,9 @@ class SimulationFactory(object):
     .. warning:: This class is meant for internal use at the moment and may change frequently.
     """
 
-    def __init__(self, devices_package, relaxed_versions=False):
+    def __init__(self, devices_package, strict_versions=None):
         self._reg = DeviceRegistry(devices_package)
-        self._rv = relaxed_versions
+        self._rv = strict_versions
 
     @property
     def devices(self):
