@@ -372,7 +372,7 @@ def is_compatible_with_framework(version):
     .. _semantic_version: https://pypi.python.org/pypi/semantic_version/
     """
     if version is None:
-        return False
+        return None
 
     lewis_version = Version(__version__)
 

@@ -93,18 +93,24 @@ New features
    versions of Lewis, or hint them to update. By default, Lewis won't start if a device specifies
    another framework version, but this behavior can be overridden by using the new flag
    ``-R/--relaxed-versions``:
-   
+
    ::
-   
+
       $ lewis some_device -R
-      
+
    In this case the simulation will start, but a warning will still be logged so that this can be
    identified as a potential source of errors later on.
-   
+
+   .. warning::
+
+      This feature changes in the following release. It is no longer mandatory to specify
+      ``framework_version``, but still possible and encouraged, and ``--relaxed-versions``
+      is replaced with ``--ignore-versions``.
+
  - A new flag ``-V/--verify`` has been added to the ``lewis``-script. When activated, it sets
    the output level to ``debug`` and exits before actually starting the simulation. This can
    help diagnose problems with device modules or input parameters.
-   
+
 Bug fixes and other improvements
 --------------------------------
 
@@ -124,24 +130,24 @@ Bug fixes and other improvements
    notably a settable timeout for requests was added so that incomplete requests do not cause the
    client to hang anymore. In ``lewis-control`` script, a new ``-t/--timeout`` argument was added
    to make use of that new functionality.
-   
+
  - Only members defined as part of the device class are listed when using ``lewis-control device``.
-   ``lewis-control`` generally no longer lists inherited framework functions such as ``log``, 
-   ``add_processor``, etc. 
+   ``lewis-control`` generally no longer lists inherited framework functions such as ``log``,
+   ``add_processor``, etc.
 
 Upgrade Guide
 -------------
 
-The following changes have to be made to upgrade code working with Lewis `1.0.2` to work with 
+The following changes have to be made to upgrade code working with Lewis `1.0.2` to work with
 Lewis `1.0.3`:
 
- - Any scripts or code starting Lewis with the old style adapter parameters need to be updated to 
-   the new style adapter options. 
-   
+ - Any scripts or code starting Lewis with the old style adapter parameters need to be updated to
+   the new style adapter options.
+
    For EPICS adapters:
-   
+
    ::
-   
+
       Old style:
       $ lewis chopper
       $ lewis chopper -p epics
@@ -151,11 +157,11 @@ Lewis `1.0.3`:
       $ lewis chopper
       $ lewis chopper -p epics
       $ lewis chopper -p "epics: {prefix: 'SIM:'}"
-      
+
    For TCP Stream adapters:
-   
+
    ::
-   
+
        Old style:
        $ lewis linkam_t95
        $ lewis linkam_t95 -p stream
@@ -165,11 +171,11 @@ Lewis `1.0.3`:
        $ lewis linkam_t95
        $ lewis linkam_t95 -p stream
        $ lewis linkam_t95 -p "stream: {bind_address: 127.0.0.1, port: 9999, telnet_mode: True}"
-       
+
    For Modbus adapters:
-   
+
    ::
-   
+
       Old style:
       $ lewis -k lewis.examples modbus_device
       $ lewis -k lewis.examples modbus_device -p modbus
@@ -179,21 +185,25 @@ Lewis `1.0.3`:
       $ lewis -k lewis.examples modbus_device
       $ lewis -k lewis.examples modbus_device -p modbus
       $ lewis -k lewis.examples modbus_device -p "modbus: {bind_address: 127.0.0.1, port: 5020}"
-   
- - Devices must now specify a ``framework_version`` in the global namespace of their top-level 
+
+ - Devices must now specify a ``framework_version`` in the global namespace of their top-level
    ``__init__.py``, like this:
-   
+
    ::
-   
+
       framework_version = '1.0.3'
-   
-   This will need to be updated with every release. If this version is missing or does not match 
-   the current Lewis framework version, attempting to run the device simulation will fail with a 
-   message informing the user of the mismatch. This can be bypassed by starting Lewis with the 
+
+   This will need to be updated with every release. If this version is missing or does not match
+   the current Lewis framework version, attempting to run the device simulation will fail with a
+   message informing the user of the mismatch. This can be bypassed by starting Lewis with the
    following parameter:
-   
+
    ::
-   
+
       $ lewis linkam_t95 -R
       $ lewis linkam_t95 --relaxed-versions
-   
+      
+   :: warning:
+
+      In the next release, specifying ``framework_version`` becomes optional and 
+      ``--relaxed-versions`` is renamed to ``--ignore-versions``. 

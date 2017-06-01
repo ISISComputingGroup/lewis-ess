@@ -416,7 +416,7 @@ class DeviceRegistry(object):
         """All available device names."""
         return self._devices.keys()
 
-    def device_builder(self, name, relaxed_versions=False):
+    def device_builder(self, name, strict_versions=None):
         """
         Returns a :class:`DeviceBuilder` instance that can be used to create device objects
         based on setups, as well as device interfaces. If the device name is not stored
@@ -425,19 +425,22 @@ class DeviceRegistry(object):
         Each DeviceBuilder has a ``framework_version``-member, which specifies the version
         of Lewis the device has been written for. If the version does not match the current
         framework version, it is only possible to obtain those device builders calling the
-        method with ``relaxed_versions`` set to ``True``, otherwise a
+        method with ``strict_versions`` set to ``False``, otherwise a
         :class:`~lewis.core.exceptions.LewisException` is raised. A warning message is logged
-        in all cases.
+        in all cases. If ``framework_version`` is ``None`` (e.g. not specified at all), it
+        is accepted unless ``strict_versions`` is set to ``True``.
 
         :param name: Name of the device.
-        :param relaxed_versions: If ``False``, raise an exception when version of device does
-                                not match framework version.
+        :param strict_versions: If ``True`` or ``None``, raise an exception when version of device
+                                does not match framework version.
         :return: :class:`DeviceBuilder`-object for requested device.
         """
         try:
             builder = self._devices[name]
 
-            if not is_compatible_with_framework(builder.framework_version):
+            compatible = is_compatible_with_framework(builder.framework_version)
+
+            if not compatible:
                 self.log.warn(
                     'Device \'%s\' is specified for a different framework version '
                     '(required: %s, current: %s). This means that the device might not work '
@@ -445,10 +448,10 @@ class DeviceRegistry(object):
                     'different version of lewis to run this device.',
                     builder.name, builder.framework_version, __version__)
 
-                if not relaxed_versions:
+                if strict_versions or (compatible is not None and strict_versions is None):
                     raise LewisException(
                         'Not loading device \'{}\' with different framework version '
-                        '(required: {}, current: {}) in strict mode. Use the --relaxed-versions '
+                        '(required: {}, current: {}) in strict mode. Use the --ignore-versions '
                         'option of lewis to load the device anyway.'.format(
                             builder.name, builder.framework_version, __version__))
 

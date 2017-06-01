@@ -82,6 +82,21 @@ Bug fixes and other improvements
    that slow network communication or expensive computations in the device do not influence
    one another anymore. Otherwise, communication still works exactly like in previous versions.
 
+ - The behavior of the ``framework_version``-variable for devices that was introduced in version
+   1.0.3 has been modified to make it easier to convert from older versions of Lewis.
+
+   With the default options of the ``lewis``-command, devices that do not specify the variable
+   will be loaded after logging a warning. An error message is only displayed when strict
+   version checking is enabled through the new ``-S/--strict-versions``-flag.
+
+   The option to ignore version mismatches has been renamed to ``-I/--ignore-versions``. When
+   that flag is specified, any device regardless of the contents of ``framework_version`` is
+   loaded, but a warning is still logged.
+
+   Specifying the ``framework_version`` variable is still encouraged as it can contribute to
+   more certainty on the user side as to whether a device can function with a certain function
+   of Lewis.
+
 Upgrade guide
 -------------
 
