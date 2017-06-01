@@ -103,8 +103,9 @@ New features
 
    .. warning::
 
-      This feature has changed in the following release. It is no longer mandatory to specify
-      ``framework_version``, but still possible and encouraged.
+      This feature changes in the following release. It is no longer mandatory to specify
+      ``framework_version``, but still possible and encouraged, and ``--relaxed-versions``
+      is replaced with ``--ignore-versions``.
 
  - A new flag ``-V/--verify`` has been added to the ``lewis``-script. When activated, it sets
    the output level to ``debug`` and exits before actually starting the simulation. This can
@@ -201,4 +202,8 @@ Lewis `1.0.3`:
 
       $ lewis linkam_t95 -R
       $ lewis linkam_t95 --relaxed-versions
+      
+   :: warning:
 
+      In the next release, specifying ``framework_version`` becomes optional and 
+      ``--relaxed-versions`` is renamed to ``--ignore-versions``. 
