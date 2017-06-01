@@ -76,7 +76,7 @@ by Lewis. The ``Device`` and ``Interface`` are instantiated as part of a
 ``Simulation`` that provides a cycle "heart beat" and manages other
 environmental aspects and services.
 
-.. image:: /docs/resources/diagrams/SimulationCycles.png
+.. image:: https://github.com/DMSC-Instrument-Data/lewis/raw/master/docs/resources/diagrams/SimulationCycles.png
 
 What Can You Do With Lewis?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,4 +120,4 @@ The ``docs/_build/html`` directory will then contain the full documentation in H
    :target: https://coveralls.io/github/DMSC-Instrument-Data/lewis?branch=master
 .. |Documentation| image:: https://readthedocs.org/projects/lewis/badge/?version=latest
    :target: http://lewis.readthedocs.io/en/latest/?badge=latest
-.. |Lewis| image:: /docs/resources/logo/lewis-logo.png
+.. |Lewis| image:: https://github.com/DMSC-Instrument-Data/lewis/raw/master/docs/resources/logo/lewis-logo.png
