@@ -42,4 +42,4 @@ class ExampleModbusInterface(ModbusInterface):
     hr = ir
 
 
-framework_version = '1.0.4'
+framework_version = '1.1'
