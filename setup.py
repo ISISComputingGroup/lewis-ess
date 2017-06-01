@@ -29,7 +29,7 @@ def readme():
 
 setup(
     name='lewis',
-    version='1.0.3',
+    version='1.0.4',
     description='LeWIS - Let\'s Write Intricate Simulators!',
     long_description=readme(),
     url='https://github.com/DMSC-Instrument-Data/lewis',
@@ -39,7 +39,7 @@ setup(
                  'Owen Arnold <owen.arnold@stfc.ac.uk>',
     license='GPL v3',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
@@ -55,11 +55,13 @@ setup(
     keywords='hardware simulation controls',
     packages=find_packages(exclude=['docs', 'test']),
 
-    install_requires=['six', 'pyzmq', 'json-rpc', 'semantic_version', 'PyYAML'],
+    install_requires=['six', 'pyzmq', 'json-rpc', 'semantic_version',
+                      'PyYAML', 'scanf>=1.4.1'],
 
     extras_require={
         'epics': ['pcaspy'],
-        'dev': ['flake8', 'mock>=1.0.1'],
+        'dev': ['flake8', 'mock>=1.0.1', 'sphinx>=1.4.5', 'sphinx_rtd_theme'
+                'nose', 'coverage'],
     },
 
     entry_points={

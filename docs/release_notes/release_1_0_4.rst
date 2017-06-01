@@ -1,9 +1,18 @@
-:orphan:
-
-Release 1.1.0
+Release 1.0.4
 =============
 
-This release is currently in progress.
+In this release, some key changes to the core framework have been implemented. It is now possible
+to have more than one communication interface for a device, which enables some interesting use
+cases like partial interfaces, or multiple communication protocols accessing the same device. One
+prerequisite for this feature was running the network services in different threads than the
+device simulation.
+
+Another key change, one that requires some minor changes to existing devices (see upgrade guide),
+was that the communication interface definition has been completely separate from the network
+services handling the network communication.
+
+Besides these major improvements, there have been a number of smaller improvements and new
+features, and Lewis now also has a logo (see below).
 
 New features
 ------------
@@ -54,7 +63,8 @@ New features
    expression like in earlier versions.
 
    Internally, the scanf_ package is used for handling these patterns, please check the package
-   documentation for all available format specifiers.
+   documentation for all available format specifiers. Thanks to `@joshburnett`_ for accepting
+   a small patch to the package that made the package easier to integrate into Lewis.
 
  - The control client, lewis-control, now provides a version argument via ``--version`` or ``-v``.
 
@@ -74,9 +84,10 @@ Bug fixes and other improvements
 
    .. image:: /resources/logo/lewis-logo-simple.png
 
-   The logo was made using `inkscape`_, the font in the logo is `Rubik`_. The two PNGs and
-   also the SVGs are in the `source repository`_, feel free to include them in presentations,
-   posters.
+   The logo was made using `inkscape`_, the font used in the logo is `Rubik`_ (in the SVG itself,
+   the text was converted into a path, so that the font does not need to be installed for the logo
+   to render correctly). The two PNGs and also the SVGs are in the `source repository`_, feel
+   free to include them in presentations or posters.
 
  - Adapters now run in a different thread than the simulation itself. The consequence of this is
    that slow network communication or expensive computations in the device do not influence
@@ -105,6 +116,7 @@ Upgrade guide
    They are located in the same modules as the Adapters, so only small changes are necessary:
 
    Old:
+
    .. sourcecode:: Python
 
        from lewis.adapters.stream import StreamAdapter, Cmd
@@ -113,6 +125,7 @@ Upgrade guide
            pass
 
    New:
+
    .. sourcecode:: Python
 
        from lewis.adapters.stream import StreamInterface, Cmd
@@ -127,3 +140,4 @@ Upgrade guide
 .. _Rubik: https://github.com/googlefonts/rubik
 .. _inkscape: https://inkscape.org/
 .. _scanf: https://github.com/joshburnett/scanf
+.. _@joshburnett: https://github.com/joshburnett

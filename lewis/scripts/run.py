@@ -126,7 +126,7 @@ other_args.add_argument(
 deprecated_args = parser.add_argument_group('Deprecated arguments')
 deprecated_args.add_argument(
     '-R', '--relaxed-versions', action='store_true',
-    help='Renamed to --I/--ignore-versions. Using this old option produces an error when '
+    help='Renamed to --I/--ignore-versions. Using this old option produces an error '
          'and it will be removed in a future release.')
 
 __doc__ = 'This script is the main interaction point of the user with Lewis. The usage ' \
