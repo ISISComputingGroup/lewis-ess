@@ -421,7 +421,7 @@ class Cmd(CommandBase):
         def random():
             return 6
 
-        SomeInterface(StreamAdapter):
+        SomeInterface(StreamInterface):
             commands = {
                 Cmd(lambda: 4, pattern='^R$', doc='Returns a random number.'),
                 Cmd('random', pattern='^RR$', doc='Better random number.'),
@@ -477,7 +477,7 @@ class Var(CommandBase):
 
     .. sourcecode:: Python
 
-        class SomeInterface(StreamAdapter):
+        class SomeInterface(StreamInterface):
             commands = {
                 Var('foo', read_pattern='^F$', write_pattern=r'^F=(\d+)$',
                     argument_mappings=(int,), doc='An integer attribute.'),
