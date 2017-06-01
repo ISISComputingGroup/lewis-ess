@@ -1,5 +1,5 @@
-Release 1.0.4
-=============
+Release 1.1
+===========
 
 In this release, some key changes to the core framework have been implemented. It is now possible
 to have more than one communication interface for a device, which enables some interesting use
