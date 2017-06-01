@@ -136,7 +136,7 @@ class PV(object):
 
     .. sourcecode:: Python
 
-        class Interface(EpicsAdapter):
+        class Interface(EpicsInterface):
             pvs = {
                 'example': PV('example', meta_data_property='example_meta')
             }
@@ -159,7 +159,7 @@ class PV(object):
             def get_example(self):
                 return 42
 
-        class Interface(EpicsAdapter):
+        class Interface(EpicsInterface):
             pvs = {
                 'example': PV('get_example')
             }
@@ -177,7 +177,7 @@ class PV(object):
             def set_example(self, new_example):
                 self._ex = new_example - 2
 
-        class Interface(EpicsAdapter):
+        class Interface(EpicsInterface):
             pvs = {
                 'example': PV(('get_example', 'set_example'))
             }
