@@ -374,6 +374,6 @@ def is_compatible_with_framework(version):
     if version is None:
         return None
 
-    lewis_version = Version(__version__)
+    lewis_version = Version.coerce(__version__)
 
-    return lewis_version == Version(''.join(version.split()))
+    return lewis_version == Version.coerce(version.strip())
