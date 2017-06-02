@@ -163,3 +163,12 @@ class TestAdapterCollection(unittest.TestCase):
                              {
                                  'protocol_b': {'bar': True, 'foo': False},
                              })
+
+    def test_set_device(self):
+        adapter = DummyAdapter(protocol='foo')
+        adapter.interface = MagicMock()
+
+        collection = AdapterCollection(adapter)
+        collection.set_device('test')
+
+        self.assertEqual(adapter.interface.device, 'test')
