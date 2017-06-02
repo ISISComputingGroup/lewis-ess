@@ -239,7 +239,6 @@ class AdapterCollection(object):
     def set_device(self, new_device):
         """Bind the new device to all interfaces managed by the adapters in the collection."""
         for adapter in self._adapters.values():
-            print(adapter.protocol, adapter.interface)
             adapter.interface.device = new_device
 
     def add_adapter(self, adapter):
