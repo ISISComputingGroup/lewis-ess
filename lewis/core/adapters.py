@@ -289,7 +289,11 @@ class AdapterCollection(object):
             self._running[adapter.protocol] = threading.Event()
 
             adapter_thread.start()
-            self._running[adapter.protocol].wait()  # Block until server is actually listening
+
+            # Block until server is actually listening
+            self._running[adapter.protocol].wait(2.0)
+            if not self._running[adapter.protocol].is_set():
+                raise LewisException("Adapter for '%s' failed to start!" % adapter.protocol)
 
     def _adapter_loop(self, adapter, dt):
         adapter.device_lock = self._lock  # This ensures that the adapter is using the correct lock
