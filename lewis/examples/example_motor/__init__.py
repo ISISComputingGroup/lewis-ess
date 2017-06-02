@@ -147,4 +147,4 @@ setups = dict(
     )
 )
 
-framework_version = '1.1.0'
+framework_version = '1.1.1'
