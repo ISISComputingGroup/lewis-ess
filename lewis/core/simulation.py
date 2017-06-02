@@ -152,7 +152,7 @@ class Simulation(object):
         """
         try:
             self._device = self._device_builder.create_device(new_setup)
-            self._adapters.device = self._device
+            self._adapters.set_device(self._device)
             self.log.info('Switched setup to \'%s\'', new_setup)
         except Exception as e:
             self.log.error(

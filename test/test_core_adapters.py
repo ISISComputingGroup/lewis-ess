@@ -1,7 +1,7 @@
 import inspect
 import unittest
 
-from mock import Mock, MagicMock
+from mock import Mock, MagicMock, PropertyMock, call, patch
 
 from lewis.core.adapters import Adapter, AdapterCollection, NoLock
 from lewis.core.exceptions import LewisException
@@ -163,3 +163,12 @@ class TestAdapterCollection(unittest.TestCase):
                              {
                                  'protocol_b': {'bar': True, 'foo': False},
                              })
+
+    def test_set_device(self):
+        adapter = DummyAdapter(protocol='foo')
+        adapter.interface = MagicMock()
+
+        collection = AdapterCollection(adapter)
+        collection.set_device('test')
+
+        self.assertEqual(adapter.interface.device, 'test')
