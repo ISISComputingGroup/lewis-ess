@@ -2,3 +2,5 @@
 .idea
 docs/_build
 .coverage
+.tox
+lewis.egg-info
