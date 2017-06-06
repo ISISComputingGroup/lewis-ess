@@ -342,7 +342,7 @@ class Simulation(object):
         Stops the simulation entirely.
         """
 
-        self.log.warn('Stopping simulation')
+        self.log.warning('Stopping simulation')
 
         self._stop_commanded = True
 

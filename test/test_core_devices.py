@@ -248,11 +248,11 @@ class TestDeviceRegistry(TestWithPackageStructure):
 
         with patch('lewis.core.devices.is_compatible_with_framework', return_value=True):
             builder = registry.device_builder('some_file')
-            self.assertEquals(builder.name, 'some_file')
+            self.assertEqual(builder.name, 'some_file')
 
         with patch('lewis.core.devices.is_compatible_with_framework', return_value=False):
             builder = registry.device_builder('some_file', strict_versions=False)
-            self.assertEquals(builder.name, 'some_file')
+            self.assertEqual(builder.name, 'some_file')
 
             self.assertRaises(LewisException, registry.device_builder, 'some_file')
             self.assertRaises(LewisException, registry.device_builder, 'some_file',
@@ -260,10 +260,10 @@ class TestDeviceRegistry(TestWithPackageStructure):
 
         with patch('lewis.core.devices.is_compatible_with_framework', return_value=None):
             builder = registry.device_builder('some_file', strict_versions=False)
-            self.assertEquals(builder.name, 'some_file')
+            self.assertEqual(builder.name, 'some_file')
 
             builder = registry.device_builder('some_dir')
-            self.assertEquals(builder.name, 'some_dir')
+            self.assertEqual(builder.name, 'some_dir')
 
             self.assertRaises(LewisException, registry.device_builder, 'some_file',
                               strict_versions=True)

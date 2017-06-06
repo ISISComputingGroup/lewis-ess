@@ -277,7 +277,7 @@ class TestCheckLimits(unittest.TestCase):
         assertRaisesNothing(self, f.set_bar, 16)
 
         # Updates must have been ignored.
-        self.assertEquals(f.bar, 15)
+        self.assertEqual(f.bar, 15)
 
 
 class TestCompatibleWithFramework(unittest.TestCase):
