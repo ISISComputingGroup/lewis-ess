@@ -60,8 +60,8 @@ setup(
 
     extras_require={
         'epics': ['pcaspy'],
-        'dev': ['flake8', 'mock>=1.0.1', 'sphinx>=1.4.5', 'sphinx_rtd_theme'
-                'nose', 'coverage'],
+        'dev': ['flake8', 'mock>=1.0.1', 'sphinx>=1.4.5', 'sphinx_rtd_theme',
+                'pytest', 'pytest-cov', 'coverage'],
     },
 
     entry_points={
