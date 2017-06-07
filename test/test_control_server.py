@@ -28,7 +28,7 @@ from lewis.core.exceptions import LewisException
 from . import assertRaisesNothing
 
 
-class TestObject(object):
+class DummyObject(object):
     a = 10
     b = 20
 
@@ -37,13 +37,13 @@ class TestObject(object):
         self.setTest = Mock()
 
 
-class TestObjectChild(TestObject):
+class DummyObjectChild(DummyObject):
     c = 30
 
 
 class TestRPCObject(unittest.TestCase):
     def test_all_methods_exposed(self):
-        rpc_object = ExposedObject(TestObject())
+        rpc_object = ExposedObject(DummyObject())
 
         expected_methods = [':api', 'a:get', 'a:set', 'b:get', 'b:set', 'getTest', 'setTest']
         self.assertEqual(len(rpc_object), len(expected_methods))
@@ -52,7 +52,7 @@ class TestRPCObject(unittest.TestCase):
             self.assertTrue(method in rpc_object)
 
     def test_select_methods_exposed(self):
-        rpc_object = ExposedObject(TestObject(), ('a', 'getTest'))
+        rpc_object = ExposedObject(DummyObject(), ('a', 'getTest'))
 
         expected_methods = [':api', 'a:get', 'a:set', 'getTest']
         self.assertEqual(len(rpc_object), len(expected_methods))
@@ -61,7 +61,7 @@ class TestRPCObject(unittest.TestCase):
             self.assertTrue(method in rpc_object)
 
     def test_excluded_methods_not_exposed(self):
-        rpc_object = ExposedObject(TestObject(), exclude=('a', 'setTest'))
+        rpc_object = ExposedObject(DummyObject(), exclude=('a', 'setTest'))
 
         expected_methods = [':api', 'b:get', 'b:set', 'getTest']
         self.assertEqual(len(rpc_object), len(expected_methods))
@@ -70,7 +70,7 @@ class TestRPCObject(unittest.TestCase):
             self.assertTrue(method in rpc_object)
 
     def test_selected_and_excluded_methods(self):
-        rpc_object = ExposedObject(TestObject(), members=('a', 'getTest'), exclude=('a'))
+        rpc_object = ExposedObject(DummyObject(), members=('a', 'getTest'), exclude=('a'))
 
         expected_methods = [':api', 'getTest']
         self.assertEqual(len(rpc_object), len(expected_methods))
@@ -79,7 +79,7 @@ class TestRPCObject(unittest.TestCase):
             self.assertTrue(method in rpc_object)
 
     def test_inherited_not_exposed(self):
-        rpc_object = ExposedObject(TestObjectChild(), members=('a', 'c'), exclude_inherited=True)
+        rpc_object = ExposedObject(DummyObjectChild(), members=('a', 'c'), exclude_inherited=True)
 
         expected_methods = [':api', 'c:get', 'c:set']
         self.assertEqual(len(rpc_object), len(expected_methods))
@@ -88,7 +88,7 @@ class TestRPCObject(unittest.TestCase):
             self.assertTrue(method in rpc_object)
 
     def test_inherited_exposed(self):
-        rpc_object = ExposedObject(TestObjectChild(), members=('a', 'c'))
+        rpc_object = ExposedObject(DummyObjectChild(), members=('a', 'c'))
 
         expected_methods = [':api', 'a:get', 'a:set', 'c:get', 'c:set']
         self.assertEqual(len(rpc_object), len(expected_methods))
@@ -97,17 +97,17 @@ class TestRPCObject(unittest.TestCase):
             self.assertTrue(method in rpc_object)
 
     def test_invalid_method_raises(self):
-        self.assertRaises(AttributeError, ExposedObject, TestObject(), ('nonExisting',))
+        self.assertRaises(AttributeError, ExposedObject, DummyObject(), ('nonExisting',))
 
     def test_attribute_wrapper_gets_value(self):
-        obj = TestObject()
+        obj = DummyObject()
         obj.a = 233
 
         rpc_object = ExposedObject(obj)
         self.assertEqual(rpc_object['a:get'](), obj.a)
 
     def test_attribute_wrapper_sets_value(self):
-        obj = TestObject()
+        obj = DummyObject()
         obj.a = 233
 
         rpc_object = ExposedObject(obj)
@@ -117,14 +117,14 @@ class TestRPCObject(unittest.TestCase):
         self.assertEqual(obj.a, 20)
 
     def test_attribute_wrapper_argument_number(self):
-        rpc_object = ExposedObject(TestObject())
+        rpc_object = ExposedObject(DummyObject())
 
         self.assertRaises(TypeError, rpc_object['a:get'], 20)
         self.assertRaises(TypeError, rpc_object['a:set'])
         self.assertRaises(TypeError, rpc_object['a:set'], 40, 30)
 
     def test_method_wrapper_calls(self):
-        obj = TestObject()
+        obj = DummyObject()
         rpc_object = ExposedObject(obj)
 
         rpc_object['getTest'](45, 56)
@@ -132,7 +132,7 @@ class TestRPCObject(unittest.TestCase):
         obj.getTest.assert_called_with(45, 56)
 
     def test_get_api(self):
-        obj = TestObject()
+        obj = DummyObject()
         rpc_object = ExposedObject(obj, ['a'])
         api = rpc_object.get_api()
 
@@ -147,7 +147,7 @@ class TestRPCObject(unittest.TestCase):
         mock_lock.__enter__ = Mock()
         mock_lock.__exit__ = Mock()
 
-        obj = TestObject()
+        obj = DummyObject()
         exposed_object = ExposedObject(obj, ['a'], lock=mock_lock)
 
         self.assertEqual(exposed_object['a:get'](), obj.a)
@@ -175,7 +175,7 @@ class TestExposedObjectCollection(unittest.TestCase):
 
     def test_add_plain_object(self):
         exposed_objects = ExposedObjectCollection({})
-        obj = TestObject()
+        obj = DummyObject()
 
         assertRaisesNothing(self, exposed_objects.add_object, obj, 'testObject')
 
@@ -188,7 +188,7 @@ class TestExposedObjectCollection(unittest.TestCase):
 
     def test_add_exposed_object(self):
         exposed_objects = ExposedObjectCollection({})
-        obj = TestObject()
+        obj = DummyObject()
 
         assertRaisesNothing(self, exposed_objects.add_object,
                             ExposedObject(obj, ('setTest', 'getTest')), 'testObject')
@@ -196,7 +196,7 @@ class TestExposedObjectCollection(unittest.TestCase):
         obj.getTest.assert_called_once_with(41, 11)
 
     def test_nested_collections(self):
-        obj = TestObject()
+        obj = DummyObject()
         exposed_objects = ExposedObjectCollection(
             {'container': ExposedObjectCollection({'test': obj})})
 
@@ -205,20 +205,20 @@ class TestExposedObjectCollection(unittest.TestCase):
 
     def test_duplicate_name_raises(self):
         exposed_objects = ExposedObjectCollection({})
-        exposed_objects.add_object(TestObject(), 'testObject')
+        exposed_objects.add_object(DummyObject(), 'testObject')
 
-        self.assertRaises(RuntimeError, exposed_objects.add_object, TestObject(), 'testObject')
+        self.assertRaises(RuntimeError, exposed_objects.add_object, DummyObject(), 'testObject')
 
     def test_remove_object(self):
         exposed_objects = ExposedObjectCollection({})
         own_functions_count = len(exposed_objects)
 
-        obj = TestObject()
+        obj = DummyObject()
         exposed_objects.add_object(obj, 'testObject')
 
         self.assertListEqual(exposed_objects.get_objects(), ['testObject'])
         assertRaisesNothing(self, exposed_objects.remove_object, 'testObject')
-        self.assertEquals(len(exposed_objects), own_functions_count)
+        self.assertEqual(len(exposed_objects), own_functions_count)
 
         self.assertRaises(RuntimeError, exposed_objects.remove_object, 'does_not_exist')
 

@@ -11,12 +11,10 @@ python:
 
 install:
   - pip install -r requirements-dev.txt
-  - pip install coveralls
-  - pip install flake8
 
 script:
   - flake8 .
-  - nosetests -w test --with-coverage --cover-package=lewis.core,lewis.devices
+  - pytest --cov=lewis.core --cov=lewis.devices test
 
 after_success:
   - coveralls

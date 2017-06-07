@@ -91,7 +91,7 @@ class TestAdapter(unittest.TestCase):
 class TestAdapterCollection(unittest.TestCase):
     def test_add_adapter(self):
         collection = AdapterCollection()
-        self.assertEquals(len(collection.protocols), 0)
+        self.assertEqual(len(collection.protocols), 0)
 
         assertRaisesNothing(self, collection.add_adapter, DummyAdapter('foo'))
 

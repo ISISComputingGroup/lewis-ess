@@ -441,7 +441,7 @@ class DeviceRegistry(object):
             compatible = is_compatible_with_framework(builder.framework_version)
 
             if not compatible:
-                self.log.warn(
+                self.log.warning(
                     'Device \'%s\' is specified for a different framework version '
                     '(required: %s, current: %s). This means that the device might not work '
                     'as expected. Contact the device author about updating the device or use a '
