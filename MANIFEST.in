@@ -1,2 +1,18 @@
 include LICENSE
+
 include README.rst
+include CONTRIBUTING.rst
+
+graft docs
+prune docs/_build
+
+include requirements*.txt
+include tox.ini
+
+exclude .dockerignore Dockerfile
+exclude .flake8 .travis.yml
+exclude lewis.py lewis-control.py
+
+recursive-exclude src *.rst
+
+recursive-include test *.py
