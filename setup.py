@@ -53,7 +53,8 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     keywords='hardware simulation controls',
-    packages=find_packages(exclude=['docs', 'test']),
+    packages=find_packages(where='src'),
+    package_dir={'': 'src'},
 
     install_requires=['six', 'pyzmq', 'json-rpc', 'semantic_version',
                       'PyYAML', 'scanf>=1.4.1'],
@@ -61,7 +62,7 @@ setup(
     extras_require={
         'epics': ['pcaspy'],
         'dev': ['flake8', 'mock>=1.0.1', 'sphinx>=1.4.5', 'sphinx_rtd_theme',
-                'pytest', 'pytest-cov', 'coverage'],
+                'pytest', 'pytest-cov', 'coverage', 'tox'],
     },
 
     entry_points={

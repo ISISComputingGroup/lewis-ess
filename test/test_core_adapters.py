@@ -5,7 +5,7 @@ from mock import Mock, MagicMock
 
 from lewis.core.adapters import Adapter, AdapterCollection, NoLock
 from lewis.core.exceptions import LewisException
-from . import assertRaisesNothing
+from utils import assertRaisesNothing
 
 
 class DummyAdapter(Adapter):

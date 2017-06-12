@@ -3,4 +3,5 @@
 docs/_build
 .coverage
 .tox
-lewis.egg-info
+.cache
+src/lewis.egg-info
