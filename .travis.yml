@@ -11,6 +11,7 @@ python:
 
 install:
   - pip install -e ".[dev]"
+  - pip install coveralls
 
 script:
   - flake8 .
