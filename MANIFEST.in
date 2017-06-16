@@ -8,10 +8,9 @@ prune docs/_build
 
 include requirements*.txt
 include tox.ini
+include .flake8
 
 exclude .dockerignore Dockerfile
-exclude .flake8 .travis.yml
-exclude lewis.py lewis-control.py
 
 recursive-exclude src *.rst
 
