@@ -4,20 +4,22 @@ Writing Device Simulators
 The following section describes how to write a new device simulator, what to
 consider, and how to get the changes upstream.
 
-Getting Lewis Source Code
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Preparations
+~~~~~~~~~~~~
 
 The Lewis framework provides all the infrastructure to run device
 simulations so that developing a new simulation requires little more
-than writing code for the actual device. Currently, adding a new device
-requires the code from the github repository:
-
-::
-
-    git clone https://github.com/DMSC-Instrument-Data/lewis
+than writing code for the actual device.
 
 The process of writing a new device simulator is best explained using
 the example of a stateful device.
+
+All that is required to develop a new device is to install Lewis, preferably
+in a fresh virtualenv:
+
+::
+
+    $ pip install lewis
 
 Device analysis
 ~~~~~~~~~~~~~~~
@@ -75,9 +77,23 @@ will be explained below.
 Implementing the device simulation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each device resides in the sub-package ``devices`` in the
-``lewis``-package. The first step is to create a new directory in the
-``lewis/devices`` directory called ``example_motor``,
+In many cases there may eventually be more than one device simulation, so the directory
+structure should be something like this, assuming your directory is ``/some/path``:
+
+::
+
+    /some/path
+        |
+        +- my_devices
+            |
+            +- device_1
+            |
+            +- device_2
+            |
+            +- __init__.py (Empty file)
+
+Each device resides in the sub-package ``my_devices`` in the. The first step is to create a
+new directory in the ``my_devices`` directory called ``example_motor``,
 which should contain a single file, ``__init__.py``. For simple devices
 like this it's acceptable to put everything into one file, but for more
 complex simulators it's recommended to follow the structure of the
@@ -207,7 +223,7 @@ with the target or not.
 The device also provides a read-only property ``state``, which forwards
 the state machine's (in the device as member ``_csm``) state. The speed
 of the motor is not part of the device specification, but it is added as
-a member so that it can be changed via the ``lewis-control.py`` script to test
+a member so that it can be changed via the ``lewis-control`` script to test
 how the motor behaves at different speeds. The device is now fully
 functional, but it's not possible to interact with it yet, because the
 interface is not specified yet.
@@ -294,12 +310,12 @@ the top of the page.
 Finally, in- and out-terminators need to be specified. These are
 stripped from and appended to requests and replies respectively.
 
-This entire device can be found in the ``examples`` directory. It can be
-started using the ``-k`` parameter of ``lewis.py``:
+This entire device can also be found in the ``lewis.examples`` module. It can be
+started using the ``-a`` and ``-k`` parameters of ``lewis.py``:
 
 ::
 
-    $ ./lewis.py -k lewis.examples example_motor -p "stream: {bind_address: 127.0.0.1, port: 9999}"
+    $ lewis -a /some/path -k my_devices example_motor -p "stream: {bind_address: 127.0.0.1, port: 9999}"
 
 All functionality described in the
 :ref:`user_guide`, such as accessing the device and the simulation via the
@@ -333,7 +349,7 @@ User facing documentation
 The :class:`~lewis.adapters.stream.StreamAdapter`-class has a property
 ``documentation``, which generates user facing documentation from the
 :class:`~lewis.adapters.stream.Cmd`-objects (it can be displayed via the ``-i``-flag of
-``lewis.py`` from the ``interface`` object via ``lewis-control.py``). The regular expression of
+``lewis`` from the ``interface`` object via ``lewis-control.py``). The regular expression of
 each command is listed, along with a documentation string. If the ``doc``-parameter is provided
 to Cmd, it is used,otherwise the docstring of the wrapped method is used (it does not matter
 whether the method is part of the device or the interface for feature to work). The latter is the
@@ -426,28 +442,6 @@ The same is true for setups. For complex setups, these should be moved
 to a sub-module of the device called ``setups``, where each setup can
 live in its own file. Please see the documentation of
 :func:`lewis.devices.import_device` for reference.
-
-For initial experiments it's also possible to develop a device outside
-of Planton's source tree. Assuming the device package is called
-``my_devices``, which is a subdirectory in ``/some/arbitrary/path``:
-
-::
-
-    /some/arbitrary/path
-        |
-        +- my_devices
-            |
-            +- device_1
-            |
-            +- device_2
-            |
-            +- __init__.py
-
-These devices can be started from within the Lewis directory by:
-
-::
-
-    $ ./lewis.py -a /some/arbitrary/path -k my_devices device_1
 
 More Examples
 -------------

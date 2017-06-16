@@ -8,6 +8,8 @@ To use Lewis directly via Python you must first install its dependencies:
 
 On most linux systems these can be installed via the distribution's package manager.
 
+.. _virtual_environments:
+
 Virtual environments
 --------------------
 
@@ -103,24 +105,26 @@ environment (see above) so that you can keep track of the dependencies:
 If you do not have `git <https://git-scm.com/>`__ available, you can
 also download this repository as an archive and unpack it somewhere. A
 few additional dependencies must be installed. This can be done through
-pip via the requirements.txt file:
+pip in the top level directory of Lewis, which contains the ``setup.py``-file:
 
 ::
 
-    $ pip install -r requirements.txt
+    $ pip install .
 
-**NOTE:** There are a few optional dependencies for certain adapter types. These are commented
-out in the ``requirements.txt``-file and have to be explicitly enabled. Currently the only optional
-dependency is ``pcaspy`` for using devices with an EPICS interface, it requires a working
-installation of EPICS base. Please refer to the `installation instructions
-<https://pcaspy.readthedocs.io/en/latest/installation.html>`__ of the module.
+.. note::
 
-If you also want to run Lewis' unit tests, you may also install the
-development dependencies:
+    There are a few optional dependencies for certain adapter types. Currently the only
+    optional dependency is ``pcaspy`` for using devices with an EPICS interface, it requires a
+    working installation of EPICS base. Please refer to the `installation instructions
+    <https://pcaspy.readthedocs.io/en/latest/installation.html>`__ of the module.
+    To include pcaspy in the installation of dependencies, use:
 
-::
+    ::
 
-    $ pip install -r requirements-dev.txt
+        $ pip install ".[epics]"
+
+If you also want to develop Lewis, the workflow is a bit different. Please refer to the
+:ref:`developer_guide` for details.
 
 If you want to use the EPICS adapter, you will also need to configure a few more
 EPICS environment variables correctly. If you only want to communicate
@@ -139,14 +143,14 @@ directory):
 
 ::
 
-    $ python lewis.py device_name [arguments]
+    $ python -m lewis device_name [arguments]
 
 You can then run Lewis as follows (from within the lewis
 directory):
 
 ::
 
-    $ python lewis.py chopper -p epics
+    $ python -m lewis chopper -p epics
 
 Details about parameters for the various adapters, and differences
 between OSes are covered in the "Adapter Specifics" sections.
