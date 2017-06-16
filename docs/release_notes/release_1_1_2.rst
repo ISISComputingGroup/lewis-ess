@@ -1,0 +1,41 @@
+Release 1.1.2
+=============
+
+After releasing 1.1.0 and 1.1.1, we decided to move to a more reproducible testing workflow that
+is operating closer to the packages that are released in the end. This only affects developers
+who work on the Lewis code base.
+
+Changes
+-------
+ - The ``lewis.py`` and ``lewis-control.py`` files have been removed, because especially the former
+   created some problems with the new package structure by interfering with the tests and docs-
+   generation.
+
+   For using Lewis when it's installed through pip, this does not change anything, but for
+   development of the Lewis framework (not of devices), it is now strongly recommended to do so
+   in a separate virtual environment, installing Lewis from source as an editable package. Details
+   on this can be found in the updated :ref:`developer_guide`.
+
+ - Tests are now run with pytest_ instead of nose_. In addition, a tox_ configuration has been
+   added for more reproducible tests with different interpreters. To run all tests:
+
+   ::
+
+      $ tox
+
+   The first run may take a bit longer, since each step is run in a fresh virtualenv that tox
+   creates automatically.
+
+   To run specific tests, for example to verify that building the docs works, use the ``-e`` flag
+   of tox:
+
+   ::
+
+      $ tox -e docs
+
+   To see all tests that are available, including a short description, use ``tox -l -v``.
+
+
+.. _pytest: https://docs.pytest.org/en/latest/
+.. _nose: http://nose.readthedocs.io/en/latest/
+.. _tox: https://tox.readthedocs.io/en/latest/
