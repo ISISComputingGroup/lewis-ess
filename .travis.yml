@@ -10,13 +10,13 @@ python:
   - "3.5"
 
 install:
-  - pip install -e ".[dev]"
+  - pip install ".[dev]"
   - pip install coveralls
 
 script:
-  - flake8 .
+  - flake8 setup.py src test
   - pytest --cov=lewis.core --cov=lewis.devices test
-  - sphinx-build -b html docs/ docs/_build/html
+  - sphinx-build -W -b html docs/ docs/_build/html
 
 after_success:
   - coveralls

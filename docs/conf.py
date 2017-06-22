@@ -10,7 +10,6 @@ needs_sphinx = '1.4.5'
 
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.imgmath',
     'sphinx.ext.viewcode',
 ]
 
