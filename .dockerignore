@@ -1,6 +1,11 @@
+.git
 *.pyc
 .idea
-.git
+.coverage
 .tox
-docs/
 .cache
+dist/
+build/
+docs/
+test/
+src/lewis.egg-info
