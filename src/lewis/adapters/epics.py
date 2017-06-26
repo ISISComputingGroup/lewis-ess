@@ -480,24 +480,31 @@ class PropertyExposingDriver(Driver):
                     finally:
                         self._timers[pv] = 0.0
 
-        if value_updates:
-            for pv, value in value_updates:
-                self.setParam(pv, value)
+        self._process_value_updates(value_updates)
+        self._process_meta_updates(meta_updates)
 
-            self.log.info('Processed PV updates: %s',
-                          ', '.join(('{}={}'.format(pv, val) for pv, val in value_updates)))
+        self._last_update_call = datetime.now()
+
+    def _process_value_updates(self, updates):
+        if updates:
+            update_log = []
+            for pv, value in updates:
+                self.setParam(pv, value)
+                update_log.append('{}={}'.format(pv, value))
+
+            self.log.info('Processed PV updates: %s', ', '.join(update_log))
 
             # Calling this manually is only required for values, not for meta
             self.updatePVs()
 
-        if meta_updates:
-            for pv, info in meta_updates:
+    def _process_meta_updates(self, updates):
+        if updates:
+            update_log = []
+            for pv, info in updates:
                 self.setParamInfo(pv, info)
+                update_log.append('{}={}'.format(pv, info))
 
-            self.log.info('Processed PV-info updates: %s',
-                          ', '.join(('{}={}'.format(pv, info) for pv, info in meta_updates)))
-
-        self._last_update_call = datetime.now()
+            self.log.info('Processed PV-info updates: %s', ', '.join(update_log))
 
 
 class EpicsAdapter(Adapter):
