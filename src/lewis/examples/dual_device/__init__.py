@@ -21,9 +21,13 @@ from lewis.devices import Device
 
 from lewis.adapters.epics import EpicsInterface, PV
 from lewis.adapters.stream import StreamInterface, Var
+from lewis.core.utils import check_limits
 
 
 class VerySimpleDevice(Device):
+    upper_limit = 100
+    lower_limit = 0
+
     param = 10
     _second = 2.0
 
@@ -40,6 +44,7 @@ class VerySimpleDevice(Device):
         return self._second
 
     @second.setter
+    @check_limits('lower_limit', 'upper_limit')
     def second(self, new_second):
         self._second = new_second
 
@@ -52,10 +57,14 @@ class VerySimpleInterface(EpicsInterface):
     pvs = {
         'Param-Raw': PV('param', type='int', doc='The raw underlying parameter.'),
         'Param': PV(('get_param', 'set_param'), type='int'),
-        'Second': PV('second'),
+        'Second': PV('second', meta_data_property='param_raw_meta'),
         'Second-Int': PV('second_int', type='int'),
         'Constant': PV(lambda: 4, doc='A constant number.')
     }
+
+    @property
+    def param_raw_meta(self):
+        return {'lolo': self.device.lower_limit, 'hihi': self.device.upper_limit}
 
     @property
     def second_int(self):
