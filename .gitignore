@@ -5,5 +5,5 @@
 .cache
 dist/
 build/
-docs/_build
+docs/_build/
 src/lewis.egg-info

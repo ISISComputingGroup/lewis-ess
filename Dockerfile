@@ -15,6 +15,7 @@ COPY . /lewis
 
 # Install lewis in-place and remove compiled Python objects
 RUN pip install -e /lewis && \
+    rm -rf /root/.cache/pip/* && \
     find \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -rf '{}' +
 
 ENTRYPOINT ["/init.sh", "lewis"]
