@@ -321,7 +321,7 @@ class PV(object):
             raise RuntimeError(
                 'The function \'{}\' does not look like a getter function. A valid getter '
                 'function has no arguments that do not have a default. The self-argument of '
-                'methods does not count towards that number.')
+                'methods does not count towards that number.'.format(final_callable.__name__))
 
         @wraps(final_callable)
         def getter(obj):
@@ -348,7 +348,7 @@ class PV(object):
             raise RuntimeError(
                 'The function \'{}\' does not look like a setter function. A valid setter '
                 'function has exactly one argument without a default. The self-argument of '
-                'methods does not count towards that number.')
+                'methods does not count towards that number.'.format(func.__name__))
 
         def setter(obj, value):
             func(value)
@@ -366,13 +366,14 @@ class PV(object):
         :return: Callable.
         """
         if not callable(func):
+            func_name = func
             func = next((getattr(obj, func, None) for obj in targets if func in dir(obj)),
                         None)
 
-        if not func:
-            raise AttributeError(
-                'No method with the name \'{}\' could be found on any of the target objects '
-                '(device, interface). Please check the spelling.'.format(func))
+            if not func:
+                raise AttributeError(
+                    'No method with the name \'{}\' could be found on any of the target objects '
+                    '(device, interface). Please check the spelling.'.format(func_name))
 
         return func
 
@@ -623,4 +624,15 @@ class EpicsInterface(InterfaceBase):
         or the interface and constructs a BoundPV, which acts as a forwarder to the appropriate
         objects.
         """
-        self.bound_pvs = {pv_name: pv.bind(self, self.device) for pv_name, pv in self.pvs.items()}
+        self.bound_pvs = {}
+
+        for pv_name, pv in self.pvs.items():
+            try:
+                self.bound_pvs[pv_name] = pv.bind(self, self.device)
+            except (AttributeError, RuntimeError) as e:
+                self.log.debug('An exception was caught during the binding step of PV \'%s\'.',
+                               pv_name, exc_info=e)
+                raise LewisException(
+                    'The binding step for PV \'{}\' failed, please check the interface-'
+                    'definition or contact the device author. More information is '
+                    'available with debug-level logging (-o debug).'.format(pv_name))
