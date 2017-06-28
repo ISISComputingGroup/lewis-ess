@@ -21,7 +21,7 @@
 This module defines two classes related to one of lewis' essential concepts, namely
 the cycle-based approach. :class:`CanProcess` and :class:`CanProcessComposite` implement the
 composite design pattern so that it's possible to form a tree of objects which can perform
-calculations based on an elapsed time :math:`\Delta t`.
+calculations based on an elapsed time Δt.
 """
 
 

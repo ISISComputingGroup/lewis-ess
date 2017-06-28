@@ -1,7 +1,7 @@
 Contributing to Lewis
 =====================
 
-Contributions to Lewis are always welcome and there are different ways of 
+Contributions to Lewis are always welcome and there are different ways of
 contributing to the framework. We aim to respond to all communications within
 one working day.
 
@@ -34,7 +34,9 @@ can also directly `submit a Pull Request <#submitting-pull-requests>`__.
 Submitting Pull Requests
 ------------------------
 
-We are happy to accept contributed Pull Requests from Forks.
+We are happy to accept contributed Pull Requests from forks. Please read through the
+`developer guide <http://lewis.readthedocs.io/en/latest/developer_guide/index.html>`__
+to get started.
 
 If your Pull Request addresses any open Issues, please reference them with a
 line that reads:
@@ -55,6 +57,6 @@ Submitting Devices
 
 If you have a device you would like to contribute to the main repository, we
 are happy to accept these as a Pull Request as well. Please see the
-documentation for details on 
+documentation for details on
 `how to write a device simulator <http://lewis.readthedocs.io/en/latest/developer_guide/writing_devices.html>`__.
 

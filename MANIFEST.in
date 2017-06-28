@@ -1,2 +1,17 @@
 include LICENSE
+
 include README.rst
+include CONTRIBUTING.rst
+
+graft docs
+prune docs/_build
+
+include requirements*.txt
+include tox.ini
+include .flake8
+
+exclude .dockerignore Dockerfile
+
+recursive-exclude src *.rst
+
+recursive-include test *.py

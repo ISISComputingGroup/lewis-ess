@@ -1,4 +1,9 @@
 *.pyc
 .idea
-docs/_build
 .coverage
+.tox
+.cache
+dist/
+build/
+docs/_build/
+src/lewis.egg-info

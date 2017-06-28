@@ -12,6 +12,7 @@ device from start to finish.
 
     framework_details
     writing_devices
+    developing_lewis
 
 .. seealso::
 

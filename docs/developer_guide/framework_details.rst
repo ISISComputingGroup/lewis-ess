@@ -6,7 +6,7 @@ the device simulation, including an optional StateMachine, and shared protocol
 adapters that separate the communication layer from the simulated device.
 
 .. figure:: /resources/diagrams/SimulationCycles.png
-   
+
    Overview of Lewis framework architecture.
 
 Cycle-driven
@@ -14,7 +14,7 @@ Cycle-driven
 
 All processing in the framework occurs during "heartbeat" simulation ticks
 which propagate calls to ``process`` methods throughout the simulation,
-along with a :math:`\Delta t` parameter that contains the time that has
+along with a Δt parameter that contains the time that has
 passed since the last tick. The device simulation is then responsible for
 updating its state based on how much time has passed and what input has
 been received during that time.
@@ -27,14 +27,14 @@ The benefits of this approach include:
    often captured by the simulated device naturally, without additional
    effort.
 -  The simulation becomes deterministic: The same amount of process
-   cycles, with the same :math:`\Delta t` parameters along the way, and
+   cycles, with the same Δt parameters along the way, and
    the same input via the device protocol, will always result in exactly
    the same device state.
 -  Simulation speed can be controlled by increasing (fast-forward) or
    decreasing (slow-motion) the Δt parameter by a given factor.
 -  Simulation fidelity can be controlled independently from speed by
    increasing or decreasing the number of cycles per second while
-   adjusting the :math:`\Delta t` parameter to compensate.
+   adjusting the Δt parameter to compensate.
 
 The above traits are very desirable both for running automated tests
 against the simulation, and for debugging any issues that are

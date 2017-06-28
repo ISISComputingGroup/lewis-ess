@@ -20,7 +20,7 @@
 import unittest
 from mock import patch
 
-from . import assertRaisesNothing, TestWithPackageStructure
+from utils import assertRaisesNothing, TestWithPackageStructure
 from types import ModuleType
 from uuid import uuid4
 

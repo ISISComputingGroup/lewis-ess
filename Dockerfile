@@ -6,12 +6,16 @@ FROM dmscid/lewis-depends:latest
 COPY requirements.txt /lewis/
 
 # Install any missing PIP requirements, clear PIP cache, and delete all compiled Python objects
-RUN pip install -r lewis/requirements.txt && \
+RUN pip install -r /lewis/requirements.txt && \
     rm -rf /root/.cache/pip/* && \
     find \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -rf '{}' +
 
 # Lewis source is pulled in from current directory (note .dockerignore filters out some files)
 COPY . /lewis
 
-ENTRYPOINT ["/init.sh", "/lewis/lewis.py"]
+# Install lewis in-place and remove compiled Python objects
+RUN pip install -e /lewis && \
+    rm -rf /root/.cache/pip/* && \
+    find \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -rf '{}' +
 
+ENTRYPOINT ["/init.sh", "lewis"]

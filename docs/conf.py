@@ -3,9 +3,6 @@
 # lewis documentation build configuration file, created by
 # sphinx-quickstart on Wed Nov  9 16:42:53 2016.
 import os
-import sys
-
-sys.path.insert(0, os.path.abspath('..'))
 
 # -- General configuration ------------------------------------------------
 
@@ -13,7 +10,6 @@ needs_sphinx = '1.4.5'
 
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.imgmath',
     'sphinx.ext.viewcode',
 ]
 

@@ -21,7 +21,7 @@ import importlib
 import unittest
 from datetime import datetime
 
-from . import assertRaisesNothing, TestWithPackageStructure
+from utils import assertRaisesNothing, TestWithPackageStructure
 from mock import patch
 from six import string_types
 
