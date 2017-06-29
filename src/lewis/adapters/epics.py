@@ -42,6 +42,9 @@ missing_pcaspy_exception = LewisException(
 Driver, SimpleServer = FromOptionalDependency(
     'pcaspy', missing_pcaspy_exception).do_import('Driver', 'SimpleServer')
 
+pcaspy_manager = FromOptionalDependency(
+    'pcaspy.driver', missing_pcaspy_exception).do_import('manager')
+
 
 class BoundPV(object):
     """
@@ -283,7 +286,7 @@ class PV(object):
             # set to True at this point automatically.
             target_prop = getattr(type(target), raw_getter, None)
 
-            if isinstance(target_prop, property) and target_prop.fset is None:
+            if prop == 'value' and isinstance(target_prop, property) and target_prop.fset is None:
                 self.read_only = True
 
             # Now the target does not need to be constructed, property or meta_data_property
@@ -426,6 +429,27 @@ class PropertyExposingDriver(Driver):
 
         return False
 
+    def _get_param_info(self, pv, meta_keys):
+        """
+        Get PV info fields from pcaspy's "manager" object. This function returns a dictionary
+        with info/value pairs, where each entry of meta_keys results in a dictionary entry if
+        pcaspy's PVInfo-object has such an attribute. Attributes that do not exist are ignored.
+        Valid attributes are the same as specified in the ``pvdb``-argument that
+
+        :param pv: PV base name
+        :param meta_keys: List of keys for what information to obtain
+        :return:
+        """
+        # TODO: Submit upstream patch to make this method available in base class
+        pv = pcaspy_manager.pvs[self.port][pv]
+
+        info_dict = {}
+        for key in meta_keys:
+            if hasattr(pv.info, key):
+                info_dict[key] = getattr(pv.info, key)
+
+        return info_dict
+
     def process_pv_updates(self, force=False):
         """
         Update PV values that have changed for PVs that are due to update according to their
@@ -436,30 +460,51 @@ class PropertyExposingDriver(Driver):
         dt = seconds_since(self._last_update_call or datetime.now())
 
         # Cache details of PVs that need to update
-        updates = []
+        value_updates = []
+        meta_updates = []
 
         with self._device_lock:
             for pv, pv_object in iteritems(self._interface.bound_pvs):
                 self._timers[pv] = self._timers.get(pv, 0.0) + dt
                 if self._timers[pv] >= pv_object.poll_interval or force:
                     try:
-                        updates.append((pv, pv_object.value, pv_object.meta))
+                        if self.getParam(pv) != pv_object.value or force:
+                            value_updates.append((pv, pv_object.value))
+
+                        pv_meta = pv_object.meta
+                        if self._get_param_info(pv, pv_meta.keys()) != pv_meta or force:
+                            meta_updates.append((pv, pv_meta))
+
                     except (AttributeError, TypeError):
                         self.log.exception('An error occurred while updating PV %s.', pv)
                     finally:
                         self._timers[pv] = 0.0
 
-        for pv, value, info in updates:
-            self.setParam(pv, value)
-            self.setParamInfo(pv, info)
-
-        self.updatePVs()
-
-        if updates:
-            self.log.info('Processed PV updates: %s',
-                          ', '.join(('{}={}'.format(pv, val) for pv, val, _ in updates)))
+        self._process_value_updates(value_updates)
+        self._process_meta_updates(meta_updates)
 
         self._last_update_call = datetime.now()
+
+    def _process_value_updates(self, updates):
+        if updates:
+            update_log = []
+            for pv, value in updates:
+                self.setParam(pv, value)
+                update_log.append('{}={}'.format(pv, value))
+
+            self.log.info('Processed PV updates: %s', ', '.join(update_log))
+
+            # Calling this manually is only required for values, not for meta
+            self.updatePVs()
+
+    def _process_meta_updates(self, updates):
+        if updates:
+            update_log = []
+            for pv, info in updates:
+                self.setParamInfo(pv, info)
+                update_log.append('{}={}'.format(pv, info))
+
+            self.log.info('Processed PV-info updates: %s', ', '.join(update_log))
 
 
 class EpicsAdapter(Adapter):
