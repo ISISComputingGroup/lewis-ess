@@ -3,10 +3,19 @@ Release 1.1.2
 
 After releasing 1.1.0 and 1.1.1, we decided to move to a more reproducible testing workflow that
 is operating closer to the packages that are released in the end. This only affects developers
-who work on the Lewis code base.
+who work on the Lewis code base. In addition, :mod:`lewis.adapters.epics` was improved a bit
+with better error messages and more reasonable PV update frequencies.
 
-Changes
--------
+Bugfixes and other improvements
+-------------------------------
+ - Error messages in the binding step of :class:`PV` have been improved. It is now easier to find
+   the source of common problems (missing properties, spelling errors).
+ 
+ - PVs are only updated if the underlying value has actually changed. Changes to metadata are processed
+   and logged separately. This leads to cleaner logs even at small values for ``poll_interval``.
+
+Changes for developers
+----------------------
  - The ``lewis.py`` and ``lewis-control.py`` files have been removed, because especially the former
    created some problems with the new package structure by interfering with the tests and docs-
    generation.
