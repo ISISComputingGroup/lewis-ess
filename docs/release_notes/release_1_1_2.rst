@@ -1,3 +1,5 @@
+:orphan:
+
 Release 1.1.2
 =============
 
@@ -10,7 +12,7 @@ Bugfixes and other improvements
 -------------------------------
  - Error messages in the binding step of :class:`PV` have been improved. It is now easier to find
    the source of common problems (missing properties, spelling errors).
- 
+
  - PVs are only updated if the underlying value has actually changed. Changes to metadata are processed
    and logged separately. This leads to cleaner logs even at small values for ``poll_interval``.
 
