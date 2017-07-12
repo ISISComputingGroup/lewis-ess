@@ -52,3 +52,23 @@ simulation cycle. To run a simulation 10 times faster:
 
 Details about parameters for the various adapters, and differences
 between OSes are covered in the "Adapter Specifics" sections.
+
+It's possible to use the Docker container to run devices that reside
+on the host using a mounted volume. This is particularly useful
+for developing and running EPICS-based devices without having to
+install any dependencies on the host besides Docker. This way also removes
+the need to rebuild the Lewis image continuously whenever a change is made
+to the device.
+
+Assuming a package with devices called ``devices`` resides on the host
+under the directory ``/some/host/path`` that contains a device named
+``epics_device``, it can be started like this:
+
+::
+
+    $ docker run -it -v /some/host/path:/external dmscid/lewis -a /external -k devices epics_device
+
+This makes the ``/some/host/path``-directory available as ``/external`` in
+the container. Specifying ``-a /external`` makes the device modules
+residing in ``/external/devices`` available so that it can be found by Lewis
+when the ``-k``-option is used.
