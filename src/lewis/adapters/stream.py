@@ -649,12 +649,18 @@ class StreamInterface(InterfaceBase):
 
     Many hardware devices use a protocol that is based on exchanging text with a client via
     a TCP stream. Sometimes RS232-based devices are also exposed this way via an adapter-box.
-    This adapter makes it easy to mimic such a protocol, in a subclass only three members must
-    be overridden:
+    This adapter makes it easy to mimic such a protocol.
 
+    This class has the following attributes which may be overridden by subclasses:
+
+     - protocol: What this interface is called for purposes of the -p commandline option.
+       Defaults to "stream".
      - in_terminator, out_terminator: These define how lines are terminated when transferred
        to and from the device respectively. They are stripped/added automatically.
-       The default is ``\\r``.
+       Inverse of protocol file InTerminator and OutTerminator. The default is ``\\r``.
+     - readtimeout: How many msec to wait for additional data between packets, once transmission
+       of an incoming command has begun. Inverse of ReadTimeout in protocol files.
+       Defaults to 100 (ms).
      - commands: A list of :class:`~CommandBase`-objects that define mappings between protocol
        and device/interface methods/attributes.
 
