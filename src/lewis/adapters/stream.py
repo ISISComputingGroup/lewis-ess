@@ -675,6 +675,8 @@ class StreamInterface(InterfaceBase):
     in_terminator = '\r'
     out_terminator = '\r'
 
+    readtimeout = 100
+
     commands = None
 
     def __init__(self):
