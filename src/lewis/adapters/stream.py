@@ -51,7 +51,7 @@ class StreamHandler(asynchat.async_chat):
         if len(self._buffer) > 0:
             self._readtimer += msec
 
-        if self._readtimer >= self._readtimeout:
+        if self._readtimer >= self._readtimeout and self._readtimeout != 0:
             if not self.get_terminator():
                 # If no terminator is set, this timeout is the terminator
                 self.found_terminator()
