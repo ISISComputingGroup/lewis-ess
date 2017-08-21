@@ -60,8 +60,7 @@ class StreamHandler(asynchat.async_chat):
                 request = self._get_request()
                 with self._stream_server.device_lock:
                     error = RuntimeError("ReadTimeout while waiting for command terminator.")
-                    reply = self._target.handle_error(request, error)
-                    self.log.debug('Error while processing request', exc_info=error)
+                    reply = self._handle_error(request, error)
                 self._send_reply(reply)
 
     def collect_incoming_data(self, data):
@@ -78,6 +77,10 @@ class StreamHandler(asynchat.async_chat):
         if reply is not None:
             self.log.debug('Sending reply %s', reply)
             self.push(b(reply + self._target.out_terminator))
+
+    def _handle_error(self, request, error):
+        self.log.debug('Error while processing request', exc_info=error)
+        return self._target.handle_error(request, error)
 
     def found_terminator(self):
         self._readtimer = 0
@@ -98,8 +101,7 @@ class StreamHandler(asynchat.async_chat):
                 reply = cmd.process_request(request)
 
             except Exception as error:
-                reply = self._target.handle_error(request, error)
-                self.log.debug('Error while processing request', exc_info=error)
+                reply = self._handle_error(request, error)
 
         self._send_reply(reply)
 
