@@ -37,26 +37,37 @@ class StreamHandler(asynchat.async_chat):
     def __init__(self, sock, target, stream_server):
         asynchat.async_chat.__init__(self, sock=sock)
         self.set_terminator(b(target.in_terminator))
-        self.target = target
-        self.buffer = []
+        self._readtimeout = target.readtimeout
+        self._readtimer = 0
+        self._target = target
+        self._buffer = []
 
         self._stream_server = stream_server
 
         self._set_logging_context(target)
         self.log.info('Client connected from %s:%s', *sock.getpeername())
 
+    def process(self, msec):
+        if len(self._buffer) > 0:
+            self._readtimer += msec
+
+        if self._readtimer >= self._readtimeout:
+            self.found_terminator()
+
     def collect_incoming_data(self, data):
-        self.buffer.append(data)
+        self._buffer.append(data)
+        self._readtimer = 0
 
     def found_terminator(self):
-        request = b''.join(self.buffer)
-        self.buffer = []
+        request = b''.join(self._buffer)
+        self._buffer = []
+        self._readtimer = 0
 
         self.log.debug('Got request %s', request)
 
         with self._stream_server.device_lock:
             try:
-                cmd = next((cmd for cmd in self.target.bound_commands if cmd.can_process(request)),
+                cmd = next((cmd for cmd in self._target.bound_commands if cmd.can_process(request)),
                            None)
 
                 if cmd is None:
@@ -68,12 +79,12 @@ class StreamHandler(asynchat.async_chat):
                 reply = cmd.process_request(request)
 
             except Exception as error:
-                reply = self.target.handle_error(request, error)
+                reply = self._target.handle_error(request, error)
                 self.log.debug('Error while processing request', exc_info=error)
 
         if reply is not None:
             self.log.debug('Sending reply %s', reply)
-            self.push(b(reply + self.target.out_terminator))
+            self.push(b(reply + self._target.out_terminator))
 
     def handle_close(self):
         self.log.info('Closing connection to client %s:%s', *self.socket.getpeername())
@@ -120,6 +131,10 @@ class StreamServer(asyncore.dispatcher):
             handler.close()
 
         self._accepted_connections = []
+
+    def process(self, msec):
+        for handler in self._accepted_connections:
+            handler.process(msec)
 
 
 class PatternMatcher(object):
@@ -625,6 +640,7 @@ class StreamAdapter(Adapter):
         :param cycle_delay: S
         """
         asyncore.loop(cycle_delay, count=1)
+        self._server.process(int(cycle_delay * 1000))
 
 
 class StreamInterface(InterfaceBase):
