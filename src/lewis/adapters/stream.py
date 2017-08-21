@@ -52,18 +52,37 @@ class StreamHandler(asynchat.async_chat):
             self._readtimer += msec
 
         if self._readtimer >= self._readtimeout:
-            self.found_terminator()
+            if not self.get_terminator():
+                # If no terminator is set, this timeout is the terminator
+                self.found_terminator()
+            else:
+                self._readtimer = 0
+                request = self._get_request()
+                with self._stream_server.device_lock:
+                    error = RuntimeError("ReadTimeout while waiting for command terminator.")
+                    reply = self._target.handle_error(request, error)
+                    self.log.debug('Error while processing request', exc_info=error)
+                self._send_reply(reply)
 
     def collect_incoming_data(self, data):
         self._buffer.append(data)
         self._readtimer = 0
 
-    def found_terminator(self):
+    def _get_request(self):
         request = b''.join(self._buffer)
         self._buffer = []
+        self.log.debug('Got request %s', request)
+        return request
+
+    def _send_reply(self, reply):
+        if reply is not None:
+            self.log.debug('Sending reply %s', reply)
+            self.push(b(reply + self._target.out_terminator))
+
+    def found_terminator(self):
         self._readtimer = 0
 
-        self.log.debug('Got request %s', request)
+        request = self._get_request()
 
         with self._stream_server.device_lock:
             try:
@@ -82,9 +101,7 @@ class StreamHandler(asynchat.async_chat):
                 reply = self._target.handle_error(request, error)
                 self.log.debug('Error while processing request', exc_info=error)
 
-        if reply is not None:
-            self.log.debug('Sending reply %s', reply)
-            self.push(b(reply + self._target.out_terminator))
+        self._send_reply(reply)
 
     def handle_close(self):
         self.log.info('Closing connection to client %s:%s', *self.socket.getpeername())

@@ -68,6 +68,8 @@ class TimeTerminatedInterface(StreamInterface):
         Var('param', read_pattern=scanf('P'), write_pattern=scanf('P=%d')),
     }
 
+    # An empty in_terminator triggers "timeout mode"
+    # Otherwise, a ReadTimeout is considered an error.
     in_terminator = ''
     out_terminator = '\r\n'
 
