@@ -86,8 +86,8 @@ class StreamHandler(asynchat.async_chat):
 
         with self._stream_server.device_lock:
             try:
-                cmd = next((cmd for cmd in self._target.bound_commands if cmd.can_process(request)),
-                           None)
+                cmd = next((cmd for cmd in self._target.bound_commands
+                            if cmd.can_process(request)), None)
 
                 if cmd is None:
                     raise RuntimeError('None of the device\'s commands matched.')
