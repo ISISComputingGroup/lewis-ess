@@ -677,7 +677,7 @@ class StreamInterface(InterfaceBase):
        Inverse of protocol file InTerminator and OutTerminator. The default is ``\\r``.
      - readtimeout: How many msec to wait for additional data between packets, once transmission
        of an incoming command has begun. Inverse of ReadTimeout in protocol files.
-       Defaults to 100 (ms).
+       Defaults to 100 (ms). Set to 0 to disable timeout completely.
      - commands: A list of :class:`~CommandBase`-objects that define mappings between protocol
        and device/interface methods/attributes.
 
