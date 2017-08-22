@@ -48,8 +48,8 @@ class StreamHandler(asynchat.async_chat):
         self.log.info('Client connected from %s:%s', *sock.getpeername())
 
     def process(self, msec):
-        if len(self._buffer) > 0:
-            self._readtimer += msec
+        if not self._buffer:
+            return
 
         if self._readtimer >= self._readtimeout and self._readtimeout != 0:
             if not self.get_terminator():
@@ -62,6 +62,9 @@ class StreamHandler(asynchat.async_chat):
                     error = RuntimeError("ReadTimeout while waiting for command terminator.")
                     reply = self._handle_error(request, error)
                 self._send_reply(reply)
+
+        if self._buffer:
+            self._readtimer += msec
 
     def collect_incoming_data(self, data):
         self._buffer.append(data)
