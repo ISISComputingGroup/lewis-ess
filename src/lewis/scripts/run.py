@@ -246,6 +246,8 @@ def run_simulation(argument_list=None):  # noqa: C901
             except KeyboardInterrupt:
                 print('\nInterrupt received; shutting down. Goodbye, cruel world!')
                 simulation.log.critical('Simulation aborted by user interaction')
+            finally:
+                simulation.stop()
 
     except LewisException as e:
         print('\n'.join(('An error occurred:', str(e))))

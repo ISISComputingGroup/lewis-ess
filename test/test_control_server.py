@@ -230,6 +230,7 @@ class TestControlServer(unittest.TestCase):
         cs.start_server()
 
         mock_context.assert_has_calls([call(), call().socket(zmq.REP),
+                                       call().socket().setsockopt(zmq.RCVTIMEO, 100),
                                        call().socket().bind('tcp://127.0.0.1:10001')])
 
     @patch('zmq.Context')
@@ -239,6 +240,7 @@ class TestControlServer(unittest.TestCase):
         server.start_server()
 
         mock_context.assert_has_calls([call(), call().socket(zmq.REP),
+                                       call().socket().setsockopt(zmq.RCVTIMEO, 100),
                                        call().socket().bind('tcp://127.0.0.1:10000')])
 
     def test_process_raises_if_not_started(self):

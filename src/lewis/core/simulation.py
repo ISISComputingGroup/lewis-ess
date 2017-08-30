@@ -24,6 +24,7 @@ an :mod:`Adapter <lewis.adapters>`).
 
 from datetime import datetime
 from time import sleep
+from threading import Thread
 
 from lewis.core.adapters import AdapterCollection
 from lewis.core.control_server import ControlServer, ExposedObject
@@ -102,6 +103,7 @@ class Simulation(object):
         # Constructing the control server must be deferred until the end,
         # because the construction is not complete at this point
         self._control_server = None  # Just initialize to None and use property setter afterwards
+        self._control_server_thread = None
         self.control_server = control_server
 
         self.log.debug(
@@ -170,8 +172,7 @@ class Simulation(object):
         self._started = True
         self._stop_commanded = False
 
-        if self._control_server is not None:
-            self._control_server.start_server()
+        self._start_control_server()
 
         self._adapters.connect()
 
@@ -185,7 +186,25 @@ class Simulation(object):
         self._running = False
         self._started = False
 
-        self._adapters.disconnect()
+        self.log.info('Simulation has ended.')
+
+    def _start_control_server(self):
+        if self._control_server is not None and self._control_server_thread is None:
+            def control_server_loop():
+                self._control_server.start_server()
+
+                while not self._stop_commanded:
+                    self._control_server.process(blocking=True)
+
+                self.log.info('Stopped processing control server commands, ending thread.')
+
+            self._control_server_thread = Thread(target=control_server_loop)
+            self._control_server_thread.start()
+
+    def _stop_control_server(self):
+        if self._control_server_thread is not None:
+            self._control_server_thread.join()
+            self._control_server_thread = None
 
     def _process_cycle(self, delta):
         """
@@ -341,10 +360,13 @@ class Simulation(object):
         """
         Stops the simulation entirely.
         """
+        if self.is_started:
+            self.log.warning('Stopping simulation')
 
-        self.log.warning('Stopping simulation')
+            self._stop_commanded = True
 
-        self._stop_commanded = True
+            self._stop_control_server()
+            self._adapters.disconnect()
 
     @property
     def is_started(self):
