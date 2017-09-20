@@ -287,7 +287,7 @@ class AdapterCollection(object):
             self.log.info('Connecting device interface for protocol \'%s\'', adapter.protocol)
 
             adapter_thread = threading.Thread(target=self._adapter_loop,
-                                              args=(adapter, 0.1))
+                                              args=(adapter, 0.01))
             adapter_thread.daemon = True
 
             self._threads[adapter.protocol] = adapter_thread

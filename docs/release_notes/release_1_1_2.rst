@@ -8,6 +8,20 @@ is operating closer to the packages that are released in the end. This only affe
 who work on the Lewis code base. In addition, :mod:`lewis.adapters.epics` was improved a bit
 with better error messages and more reasonable PV update frequencies.
 
+New Features
+------------
+ - :class:`StreamInterface` has been improved to support a ``readtimeout`` attribute which is analogous
+   to the ReadTimeout system variable in Protocol files. The value of ``readtimeout`` determines how
+   many milliseconds to wait for more input, once we have started receiving data for a command. Under
+   normal circumstances, this timeout being triggered is an error and causes the incoming buffer to be
+   flushed and a ``handle_error`` call in the device interface. However, if the ``in_terminator``
+   attribute is empty, this timeout is treated as the command terminator instead.
+
+   ``readtimeout`` defaults to 100 (ms).
+   ``readtimeout = 0`` disables this feature entirely.
+
+   The effective resolution is currently limited 10 ms increments due to the fixed adapter cycle rate.
+
 Bugfixes and other improvements
 -------------------------------
  - Error messages in the binding step of :class:`PV` have been improved. It is now easier to find

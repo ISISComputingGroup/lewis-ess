@@ -37,27 +37,63 @@ class StreamHandler(asynchat.async_chat):
     def __init__(self, sock, target, stream_server):
         asynchat.async_chat.__init__(self, sock=sock)
         self.set_terminator(b(target.in_terminator))
-        self.target = target
-        self.buffer = []
+        self._readtimeout = target.readtimeout
+        self._readtimer = 0
+        self._target = target
+        self._buffer = []
 
         self._stream_server = stream_server
 
         self._set_logging_context(target)
         self.log.info('Client connected from %s:%s', *sock.getpeername())
 
+    def process(self, msec):
+        if not self._buffer:
+            return
+
+        if self._readtimer >= self._readtimeout and self._readtimeout != 0:
+            if not self.get_terminator():
+                # If no terminator is set, this timeout is the terminator
+                self.found_terminator()
+            else:
+                self._readtimer = 0
+                request = self._get_request()
+                with self._stream_server.device_lock:
+                    error = RuntimeError("ReadTimeout while waiting for command terminator.")
+                    reply = self._handle_error(request, error)
+                self._send_reply(reply)
+
+        if self._buffer:
+            self._readtimer += msec
+
     def collect_incoming_data(self, data):
-        self.buffer.append(data)
+        self._buffer.append(data)
+        self._readtimer = 0
+
+    def _get_request(self):
+        request = b''.join(self._buffer)
+        self._buffer = []
+        self.log.debug('Got request %s', request)
+        return request
+
+    def _send_reply(self, reply):
+        if reply is not None:
+            self.log.debug('Sending reply %s', reply)
+            self.push(b(reply + self._target.out_terminator))
+
+    def _handle_error(self, request, error):
+        self.log.debug('Error while processing request', exc_info=error)
+        return self._target.handle_error(request, error)
 
     def found_terminator(self):
-        request = b''.join(self.buffer)
-        self.buffer = []
+        self._readtimer = 0
 
-        self.log.debug('Got request %s', request)
+        request = self._get_request()
 
         with self._stream_server.device_lock:
             try:
-                cmd = next((cmd for cmd in self.target.bound_commands if cmd.can_process(request)),
-                           None)
+                cmd = next((cmd for cmd in self._target.bound_commands
+                            if cmd.can_process(request)), None)
 
                 if cmd is None:
                     raise RuntimeError('None of the device\'s commands matched.')
@@ -68,12 +104,9 @@ class StreamHandler(asynchat.async_chat):
                 reply = cmd.process_request(request)
 
             except Exception as error:
-                reply = self.target.handle_error(request, error)
-                self.log.debug('Error while processing request', exc_info=error)
+                reply = self._handle_error(request, error)
 
-        if reply is not None:
-            self.log.debug('Sending reply %s', reply)
-            self.push(b(reply + self.target.out_terminator))
+        self._send_reply(reply)
 
     def handle_close(self):
         self.log.info('Closing connection to client %s:%s', *self.socket.getpeername())
@@ -120,6 +153,10 @@ class StreamServer(asyncore.dispatcher):
             handler.close()
 
         self._accepted_connections = []
+
+    def process(self, msec):
+        for handler in self._accepted_connections:
+            handler.process(msec)
 
 
 class PatternMatcher(object):
@@ -625,6 +662,7 @@ class StreamAdapter(Adapter):
         :param cycle_delay: S
         """
         asyncore.loop(cycle_delay, count=1)
+        self._server.process(int(cycle_delay * 1000))
 
 
 class StreamInterface(InterfaceBase):
@@ -633,12 +671,18 @@ class StreamInterface(InterfaceBase):
 
     Many hardware devices use a protocol that is based on exchanging text with a client via
     a TCP stream. Sometimes RS232-based devices are also exposed this way via an adapter-box.
-    This adapter makes it easy to mimic such a protocol, in a subclass only three members must
-    be overridden:
+    This adapter makes it easy to mimic such a protocol.
 
+    This class has the following attributes which may be overridden by subclasses:
+
+     - protocol: What this interface is called for purposes of the -p commandline option.
+       Defaults to "stream".
      - in_terminator, out_terminator: These define how lines are terminated when transferred
        to and from the device respectively. They are stripped/added automatically.
-       The default is ``\\r``.
+       Inverse of protocol file InTerminator and OutTerminator. The default is ``\\r``.
+     - readtimeout: How many msec to wait for additional data between packets, once transmission
+       of an incoming command has begun. Inverse of ReadTimeout in protocol files.
+       Defaults to 100 (ms). Set to 0 to disable timeout completely.
      - commands: A list of :class:`~CommandBase`-objects that define mappings between protocol
        and device/interface methods/attributes.
 
@@ -674,6 +718,8 @@ class StreamInterface(InterfaceBase):
 
     in_terminator = '\r'
     out_terminator = '\r'
+
+    readtimeout = 100
 
     commands = None
 
