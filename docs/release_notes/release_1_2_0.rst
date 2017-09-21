@@ -1,7 +1,7 @@
 :orphan:
 
-Release 1.1.2
-=============
+Release 1.2
+===========
 
 After releasing 1.1.0 and 1.1.1, we decided to move to a more reproducible testing workflow that
 is operating closer to the packages that are released in the end. This only affects developers
