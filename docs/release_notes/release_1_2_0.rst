@@ -6,7 +6,8 @@ Release 1.2
 After releasing 1.1.0 and 1.1.1, we decided to move to a more reproducible testing workflow that
 is operating closer to the packages that are released in the end. This only affects developers
 who work on the Lewis code base. In addition, :mod:`lewis.adapters.epics` was improved a bit
-with better error messages and more reasonable PV update frequencies.
+with better error messages and more reasonable PV update frequencies, and the ``lewis-control``
+was made more responsive.
 
 New Features
 ------------
@@ -24,6 +25,11 @@ New Features
 
 Bugfixes and other improvements
 -------------------------------
+ - The :class:`~lewis.core.control_server.ControlServer` is now running in its own separate thread.
+   This has two consequences, ``lewis-control`` is now much more responsive and requests
+   are processed instantaneously. Furthermore, multiple requests can be processed per
+   simulation cycle, which may have an impact on scripts that were relying on this behavior.
+
  - Error messages in the binding step of :class:`PV` have been improved. It is now easier to find
    the source of common problems (missing properties, spelling errors).
 

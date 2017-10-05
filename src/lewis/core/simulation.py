@@ -203,7 +203,7 @@ class Simulation(object):
 
     def _stop_control_server(self):
         if self._control_server_thread is not None:
-            self._control_server_thread.join()
+            self._control_server_thread.join(timeout=1.0)
             self._control_server_thread = None
 
     def _process_cycle(self, delta):
@@ -242,9 +242,6 @@ class Simulation(object):
 
             with self._adapters.device_lock:
                 self._device.process(delta_simulation)
-
-            if self._control_server:
-                self._control_server.process()
 
             self._cycles += 1
             self._runtime += delta_simulation
