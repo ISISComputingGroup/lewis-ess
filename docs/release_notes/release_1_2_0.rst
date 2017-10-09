@@ -6,8 +6,8 @@ Release 1.2
 After releasing 1.1.0 and 1.1.1, we decided to move to a more reproducible testing workflow that
 is operating closer to the packages that are released in the end. This only affects developers
 who work on the Lewis code base. In addition, :mod:`lewis.adapters.epics` was improved a bit
-with better error messages and more reasonable PV update frequencies, and the ``lewis-control``
-was made more responsive.
+with better error messages and more reasonable PV update frequencies. The ``lewis-control``
+server now runs in its own thread, which has made it more responsive.
 
 New Features
 ------------
@@ -23,13 +23,15 @@ New Features
 
    The effective resolution is currently limited 10 ms increments due to the fixed adapter cycle rate.
 
+ - The :class:`~lewis.core.control_server.ControlServer` is now running in its own thread, separate
+   from the simulation. As a result, ``lewis-control`` and the Python Control API are now much more
+   responsive. This is because requests are processed asynchronously and, therefore, multiple
+   requests can be processed per simulation cycle.
+
+   .. note:: This may have an impact on scripts that use the CLI or Python Control API.
+
 Bugfixes and other improvements
 -------------------------------
- - The :class:`~lewis.core.control_server.ControlServer` is now running in its own separate thread.
-   This has two consequences, ``lewis-control`` is now much more responsive and requests
-   are processed instantaneously. Furthermore, multiple requests can be processed per
-   simulation cycle, which may have an impact on scripts that were relying on this behavior.
-
  - Error messages in the binding step of :class:`PV` have been improved. It is now easier to find
    the source of common problems (missing properties, spelling errors).
 
