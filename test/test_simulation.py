@@ -134,17 +134,6 @@ class TestSimulation(unittest.TestCase):
         self.assertEqual(env.cycles, 1)
         self.assertEqual(env.runtime, 1.0)
 
-    def test_process_calls_control_server(self):
-        env = Simulation(device=Mock())
-
-        control_mock = Mock()
-        env._control_server = control_mock
-
-        set_simulation_running(env)
-        env._process_cycle(0.5)
-
-        control_mock.assert_has_calls([call.process()])
-
     def test_None_control_server_is_None(self):
         env = Simulation(device=Mock(), control_server=None)
 

@@ -304,6 +304,7 @@ class ControlServer(object):
         if self._socket is None:
             context = zmq.Context()
             self._socket = context.socket(zmq.REP)
+            self._socket.setsockopt(zmq.RCVTIMEO, 100)
             self._socket.bind('tcp://{0}:{1}'.format(self.host, self.port))
 
             self.log.info('Listening on %s:%s', self.host, self.port)
@@ -316,7 +317,7 @@ class ControlServer(object):
                                    "args": [exception.args],
                                    "type": type(exception).__name__}}}
 
-    def process(self):
+    def process(self, blocking=False):
         """
         Each time this method is called, the socket tries to retrieve data and passes
         it to the JSONRPCResponseManager, which in turn passes the RPC to the
@@ -329,12 +330,15 @@ class ControlServer(object):
 
         If the server has not been started yet (via :meth:`start_server`), a RuntimeError
         is raised.
+
+        :param blocking: If True, this function will block until it has received data or a timeout
+                         is triggered. Default is False to preserve behavior of prior versions.
         """
         if self._socket is None:
             raise RuntimeError('The server has not been started yet, use start_server to do so.')
 
         try:
-            request = self._socket.recv_unicode(flags=zmq.NOBLOCK)
+            request = self._socket.recv_unicode(flags=zmq.NOBLOCK if not blocking else 0)
 
             self.log.debug('Got request %s', request)
 
