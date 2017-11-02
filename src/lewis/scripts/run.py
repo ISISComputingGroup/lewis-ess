@@ -141,7 +141,7 @@ def parse_adapter_options(raw_adapter_options):
 
     for option_string in raw_adapter_options:
         try:
-            adapter_options = yaml.load(option_string)
+            adapter_options = yaml.safe_load(option_string)
         except yaml.YAMLError:
             raise LewisException(
                 'It was not possible to parse this adapter option specification:\n'
