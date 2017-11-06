@@ -120,7 +120,7 @@ other_args.add_argument(
     '-v', '--version', action='store_true',
     help='Prints the version and exits.')
 other_args.add_argument(
-    '-h', '--h', action='help',
+    '-h', '--help', action='help',
     help='Shows this help message and exits.')
 
 deprecated_args = parser.add_argument_group('Deprecated arguments')

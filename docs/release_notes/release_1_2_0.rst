@@ -1,5 +1,3 @@
-:orphan:
-
 Release 1.2
 ===========
 
@@ -8,6 +6,7 @@ is operating closer to the packages that are released in the end. This only affe
 who work on the Lewis code base. In addition, :mod:`lewis.adapters.epics` was improved a bit
 with better error messages and more reasonable PV update frequencies. The ``lewis-control``
 server now runs in its own thread, which has made it more responsive.
+
 
 New Features
 ------------
@@ -30,6 +29,7 @@ New Features
 
    .. note:: This may have an impact on scripts that use the CLI or Python Control API.
 
+
 Bugfixes and other improvements
 -------------------------------
  - Error messages in the binding step of :class:`PV` have been improved. It is now easier to find
@@ -37,6 +37,9 @@ Bugfixes and other improvements
 
  - PVs are only updated if the underlying value has actually changed. Changes to metadata are processed
    and logged separately. This leads to cleaner logs even at small values for ``poll_interval``.
+
+ - Using ``yaml.safe_load`` instead of ``yaml.load`` as a security precaution.
+
 
 Changes for developers
 ----------------------
