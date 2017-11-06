@@ -22,8 +22,8 @@ project = u'lewis'
 copyright = u'2016-2017, European Spallation Source ERIC'
 author = u'Michael Hart, Michael Wedel, Owen Arnold'
 
-version = u'1.1'
-release = u'1.1.1'
+version = u'1.2'
+release = u'1.2.0'
 
 language = None
 
