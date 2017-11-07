@@ -70,11 +70,12 @@ This should be done in a clean directory.
 
 .. code-block:: bash
 
-   $ virtualenv env
+   $ virtualenv build
    $ . env/bin/activate
-   (env) $ git clone https://github.com/DMSC-Instrument-Data/lewis.git
-   (env) $ cd lewis
-   (env) $ python setup.py sdist bdist_wheel
+   (build) $ git clone https://github.com/DMSC-Instrument-Data/lewis.git
+   (build) $ cd lewis
+   (build) $ python setup.py sdist bdist_wheel
+   (build) $ deactivate
 
 
 Test PyPI Package
@@ -87,12 +88,23 @@ Make sure tests are run in a fresh virtual environment:
 
 .. code-block:: bash
 
-   $ virtualenv test
-   $ . test/bin/activate
-   (test) $ git clone https://github.com/DMSC-Instrument-Data/lewis.git
-   (test) $ cd lewis
-   (test) $ pip install -e ".[dev]"
-   (test) $ tox
+   $ virtualenv targz
+   $ . targz/bin/activate
+   (targz) $ pip install lewis/dist/lewis-X.Y.Z.tar.gz
+   (targz) $ lewis linkam_t95
+   ...
+   (targz) $ deactivate
+
+   $ virtualenv whl
+   $ . whl/bin/activate
+   (whl) $ pip install lewis/dist/lewis-X.Y.Z-py2.py3-none-any.whl
+   (whl) $ lewis linkam_t95
+   ...
+   (whl) $ deactivate
+
+Since these are release packages, unit tests aren't available. Run a few manual
+tests against the packaged version of Lewis to double check that things still
+work as expected.
 
 
 Git Release
