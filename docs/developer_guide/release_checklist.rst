@@ -71,7 +71,7 @@ This should be done in a clean directory.
 .. code-block:: bash
 
    $ virtualenv build
-   $ . env/bin/activate
+   $ . build/bin/activate
    (build) $ git clone https://github.com/DMSC-Instrument-Data/lewis.git
    (build) $ cd lewis
    (build) $ python setup.py sdist bdist_wheel
