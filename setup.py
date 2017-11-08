@@ -34,8 +34,7 @@ setup(
     long_description=readme(),
     url='https://github.com/DMSC-Instrument-Data/lewis',
     author='Michael Hart, Michael Wedel, Owen Arnold',
-    author_email='Michael Hart <michael.hart@stfc.ac.uk>, '
-                 'Owen Arnold <owen.arnold@stfc.ac.uk>',
+    author_email='michael.hart@stfc.ac.uk',
     license='GPL v3',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
