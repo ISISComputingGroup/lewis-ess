@@ -1,4 +1,4 @@
-|Version| |Layers| |Build Status| |Codacy| |Coverage Status| |Documentation|
+|Version| |Build Status| |Codacy| |Coverage Status| |Documentation|
 
 |Lewis|
 =======
