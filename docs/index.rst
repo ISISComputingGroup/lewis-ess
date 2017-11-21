@@ -14,6 +14,7 @@ Documentation contents:
 .. toctree::
    :maxdepth: 2
 
+   quickstart_guide/index
    user_guide/index
    developer_guide/index
    api/index
@@ -27,3 +28,4 @@ Indices and tables
 * :ref:`modindex`
 
 .. _github: https://github.com/DMSC-Instrument-Data/lewis
+
