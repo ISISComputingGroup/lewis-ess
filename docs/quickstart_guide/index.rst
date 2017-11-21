@@ -27,6 +27,7 @@ Lewis can be installed with Pip using a single command:
 
     $ pip install lewis
     $ lewis --version
+    $ lewis -h
 
 
 Run the Motor Example
@@ -60,18 +61,15 @@ For this guide, we will launch the example_motor:
 
 ::
 
-    $ lewis -r :10000 -k lewis.examples example_motor
+    $ lewis -k lewis.examples example_motor
     INFO lewis.DeviceBase: Creating device, setting up state machine
     INFO lewis.Simulation: Changed cycle delay to 0.1
     INFO lewis.Simulation: Changed speed to 1.0
     INFO lewis.Simulation: Starting simulation
-    INFO lewis.ControlServer: Listening on 0.0.0.0:10000
     INFO lewis.AdapterCollection: Connecting device interface for protocol 'stream'
     INFO lewis.ExampleMotorStreamInterface.StreamServer: Listening on 0.0.0.0:9999
 
 The example motor is a TCP Stream device and listens on port 9999 on all adapters by default.
-
-The ``-r`` parameter is optional and specifies an ``adapter:port`` pair for the "Control API" to listen on. Here it listens on port 10000 on all adapters. We will see more on that in following sections.
 
 
 Connect to Motor via Telnet
@@ -100,7 +98,13 @@ T=%f     set target
 H        stop movement
 =======  =============
 
-Note that they are case sensitive. Try entering a few commands in the Telnet session:
+You can get more details, and details on the interface of any device, by using the ``-i`` or ``--show-interface`` argument:
+
+::
+
+    $ lewis -k lewis.examples example_motor -i
+
+Note that the commands are case sensitive. Try entering a few commands in the Telnet session:
 
 ::
 
@@ -121,15 +125,15 @@ See `the source code <https://github.com/DMSC-Instrument-Data/lewis/blob/master/
 Connect to Motor via Control Client
 ===================================
 
-In addition to the simulated TCP Stream interface, Lewis provides a so-called Control Server interface, which allows you to bypass the normal device protocol and access both device and simulation parameters directly while the simulation is running. This can be very useful to debugging and diagnostics.
+In addition to the simulated TCP Stream interface, Lewis provides a so-called Control Server interface, which allows you to bypass the normal device protocol and access both device and simulation parameters directly while the simulation is running. This can be very useful for debugging and diagnostics, without having to modify the main device interface.
 
-Remote access is disabled by default and enabled only if you provide the ``-r`` argument when starting Lewis. If you started the example motor as described in section 2 above, the Control Server is already enabled and listening on port 10000. Otherwise, run Lewis with the ``-r`` parameter to enable remote access like this:
+Remote access is disabled by default and enabled only if you provide the ``-r`` argument when starting Lewis. Run Lewis with the ``-r`` parameter to enable remote access like this:
 
 ::
 
     $ lewis -r localhost:10000 -k lewis.examples example_motor
 
-Lewis ships with a Control Client commandline tool that allows you to connect to it. Leave the Telnet session running and connected and open a third terminal.
+Lewis ships with a Control Client commandline tool that allows you to connect to it. It also has an ``-r`` argument but for the client it defaults to ``localhost:10000``, which is why it is recommended to use the same value above. Leave the Telnet session running and connected and open a third terminal.
 
 If you installed Lewis in a virtual environment, make sure to active it in the new terminal session so that Lewis is available:
 
