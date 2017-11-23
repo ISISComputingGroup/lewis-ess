@@ -127,7 +127,7 @@ Connect to Motor via Control Client
 
 In addition to the simulated TCP Stream interface, Lewis provides a so-called Control Server interface, which allows you to bypass the normal device protocol and access both device and simulation parameters directly while the simulation is running. This can be very useful for debugging and diagnostics, without having to modify the main device interface.
 
-Remote access is disabled by default and enabled only if you provide the ``-r`` argument when starting Lewis. Run Lewis with the ``-r`` parameter to enable remote access like this:
+Remote access is disabled by default and enabled only if you provide the ``-r`` argument when starting Lewis. Stop the previously launched instance of Lewis by pressing ``Ctrl-C`` and run Lewis again with the ``-r`` parameter to enable remote access like this:
 
 ::
 
@@ -135,7 +135,7 @@ Remote access is disabled by default and enabled only if you provide the ``-r`` 
 
 Lewis ships with a Control Client commandline tool that allows you to connect to it. It also has an ``-r`` argument but for the client it defaults to ``localhost:10000``, which is why it is recommended to use the same value above. Leave the Telnet session running and connected and open a third terminal.
 
-If you installed Lewis in a virtual environment, make sure to active it in the new terminal session so that Lewis is available:
+If you installed Lewis in a virtual environment, make sure to activate it in the new terminal session so that Lewis is available:
 
 ::
 
@@ -150,7 +150,7 @@ Running ``lewis-control`` without any parameter displays the objects available t
     interface
     simulation
 
-You can think of these as root nodes in a tree that ``lewis-control`` allows you to traverse. Passing one of them as a parameter shows you what is available below that level:
+You can think of these as root nodes in a tree that ``lewis-control`` allows you to traverse. Passing one of them as an argument shows you what is available below that level:
 
 ::
 
@@ -164,14 +164,14 @@ You can think of these as root nodes in a tree that ``lewis-control`` allows you
     Methods:
         stop
 
-Going down one more level retrieves the value of a single property, or calls a method (without arguments):
+Going down one more level retrieves the value of a single property, or calls a method (without passing arguments):
 
 :: 
 
     $ lewis-control device target
     0.0
 
-And with the following parameter(s) we can set properties (or pass arguments to methods):
+And by specifying additional argument(s) we can set properties (or pass arguments to methods):
 
 ::
 
@@ -197,7 +197,7 @@ And with the following parameter(s) we can set properties (or pass arguments to 
     Methods:
         stop
 
-Note that, as you go along, you can also use the Telnet session to issue commands or request information, and the state of the device will be consistent between the two connections.
+Note that, as you go along, you can also use the Telnet session to issue commands or request information, and that the state of the device will be consistent between the two connections.
 
 Aside from the simulated device itself, you can also access and modify parameters of the simulation and network interface(s):
 
@@ -212,7 +212,7 @@ See the respective sections of documentation for more details.
 Control Motor via Control API
 =============================
 
-While the CLI client is convenient for manual diagnotistics and debugging, you may find the Control API more useful for automated testing. It exposes all the same functionality available on the CLI via a Python library (In fact, that is how the CLI is implemented).
+While the command line client is convenient for manual diagnostics and debugging, you may find the Control API more useful for automated testing. It exposes all the same functionality available on the CLI via a Python library (In fact, that is how the CLI client is implemented).
 
 If you installed Lewis in a virtual environment, make sure you activate it:
 
@@ -220,7 +220,7 @@ If you installed Lewis in a virtual environment, make sure you activate it:
 
     $ . myenv/bin/activate
 
-Usually, you would use this API to write a Python script, but for demo purposes we will just use the interactive client:
+Usually, you would use this API to write a Python script, but for demo purposes we will just use the interactive Python client:
 
 ::
 
