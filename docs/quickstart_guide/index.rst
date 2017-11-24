@@ -133,9 +133,9 @@ Remote access is disabled by default and enabled only if you provide the ``-r`` 
 
     $ lewis -r localhost:10000 -k lewis.examples example_motor
 
-Lewis ships with a Control Client commandline tool that allows you to connect to it. It also has an ``-r`` argument but for the client it defaults to ``localhost:10000``, which is why it is recommended to use the same value above. Leave the Telnet session running and connected and open a third terminal.
+Lewis ships with a Control Client commandline tool that allows you to connect to it. It also has an ``-r`` argument but for the client it defaults to ``localhost:10000``, which is why it is recommended to use the same value above.
 
-If you installed Lewis in a virtual environment, make sure to activate it in the new terminal session so that Lewis is available:
+Open another terminal session. If you installed Lewis in a virtual environment, make sure to activate it in the new terminal session so that Lewis is available:
 
 ::
 
@@ -197,7 +197,7 @@ And by specifying additional argument(s) we can set properties (or pass argument
     Methods:
         stop
 
-Note that, as you go along, you can also use the Telnet session to issue commands or request information, and that the state of the device will be consistent between the two connections.
+Note that, as you go along, you can also use a Telnet session in another terminal to issue commands or request information, and that the state of the device will be consistent between the two connections.
 
 Aside from the simulated device itself, you can also access and modify parameters of the simulation and network interface(s):
 
