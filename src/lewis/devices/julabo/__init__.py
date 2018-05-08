@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # *********************************************************************
-# plankton - a library for creating hardware device simulators
+# lewis - a library for creating hardware device simulators
 # Copyright (C) 2016-2017 European Spallation Source ERIC
 #
 # This program is free software: you can redistribute it and/or modify
