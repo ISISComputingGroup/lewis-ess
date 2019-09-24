@@ -7,7 +7,7 @@ sphinx_rtd_theme
 semantic_version
 PyYAML
 scanf>=1.4.1
-pytest
+pytest>=3.6
 pytest-cov
 coverage
 flake8
