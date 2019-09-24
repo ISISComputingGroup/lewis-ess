@@ -70,7 +70,8 @@ def get_submodules(module):
                 except ImportError as e:
                     # This is necessary in case random directories are in the path or things can
                     # just not be imported due to other ImportErrors.
-                    get_submodules.log.error("ImportError for {module}: {error}".format(module=module_name, error=e))
+                    get_submodules.log.error("ImportError for {module}: {error}"
+                                             .format(module=module_name, error=e))
 
     return submodules
 
