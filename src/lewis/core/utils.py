@@ -67,7 +67,7 @@ def get_submodules(module):
                 try:
                     submodules[module_name] = importlib.import_module(
                         '.{}'.format(module_name), package=module.__name__)
-                except ImportError:
+                except ImportError as e:
                     # This is necessary in case random directories are in the path or things can
                     # just not be imported due to other ImportErrors.
                     get_submodules.log.error("ImportError for {module}: {error}".format(module=module_name, error=e))
