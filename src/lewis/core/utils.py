@@ -37,8 +37,10 @@ from os import listdir
 
 from .exceptions import LewisException, LimitViolationException
 from lewis import __version__
+from lewis.core.logging import has_log
 
 
+@has_log
 def get_submodules(module):
     """
     This function imports all sub-modules of the supplied module and returns a dictionary
@@ -68,7 +70,7 @@ def get_submodules(module):
                 except ImportError:
                     # This is necessary in case random directories are in the path or things can
                     # just not be imported due to other ImportErrors.
-                    pass
+                    get_submodules.log.error("ImportError for {module}: {error}".format(module=module_name, error=e))
 
     return submodules
 
