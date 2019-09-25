@@ -29,7 +29,7 @@ def readme():
 
 setup(
     name='lewis',
-    version='1.2.0',
+    version='1.2.1',
     description='LeWIS - Let\'s Write Intricate Simulators!',
     long_description=readme(),
     url='https://github.com/DMSC-Instrument-Data/lewis',

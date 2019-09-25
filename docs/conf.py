@@ -23,7 +23,7 @@ copyright = u'2016-2017, European Spallation Source ERIC'
 author = u'Michael Hart, Michael Wedel, Owen Arnold'
 
 version = u'1.2'
-release = u'1.2.0'
+release = u'1.2.1'
 
 language = None
 
