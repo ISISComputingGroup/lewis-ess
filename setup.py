@@ -55,7 +55,7 @@ setup(
     package_dir={'': 'src'},
 
     install_requires=['six', 'pyzmq', 'json-rpc', 'semantic_version',
-                      'PyYAML', 'scanf>=1.4.1'],
+                      'PyYAML', 'scanf==1.4.1'],
 
     extras_require={
         'epics': ['pcaspy'],
