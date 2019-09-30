@@ -6,7 +6,7 @@ sphinx>=1.4.5
 sphinx_rtd_theme
 semantic_version
 PyYAML
-scanf>=1.4.1
+scanf==1.4.1
 pytest>=3.6
 pytest-cov
 coverage
