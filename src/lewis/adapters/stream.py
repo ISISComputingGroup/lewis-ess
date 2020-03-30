@@ -569,8 +569,10 @@ class Var(CommandBase):
             def getter():
                 return getattr(target, self.func)
 
-            if inspect.isdatadescriptor(getattr(type(target), self.func)):
-                getter.__doc__ = 'Getter: ' + inspect.getdoc(getattr(type(target), self.func))
+            # Copy docstring if target is a @property
+            prop = getattr(type(target), self.func, None)
+            if prop and inspect.isdatadescriptor(prop):
+                getter.__doc__ = 'Getter: ' + inspect.getdoc(prop)
 
             funcs.append(
                 Func(getter, self.read_pattern, return_mapping=self.return_mapping, doc=self.doc))
@@ -579,8 +581,10 @@ class Var(CommandBase):
             def setter(new_value):
                 setattr(target, self.func, new_value)
 
-            if inspect.isdatadescriptor(getattr(type(target), self.func)):
-                setter.__doc__ = 'Setter: ' + inspect.getdoc(getattr(type(target), self.func))
+            # Copy docstring if target is a @property
+            prop = getattr(type(target), self.func, None)
+            if prop and inspect.isdatadescriptor(prop):
+                setter.__doc__ = 'Setter: ' + inspect.getdoc(prop)
 
             funcs.append(
                 Func(setter, self.write_pattern, argument_mappings=self.argument_mappings,
