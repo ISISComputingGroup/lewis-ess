@@ -109,7 +109,7 @@ class StreamHandler(asynchat.async_chat):
 
         self._send_reply(reply)
 
-    def unsolicitedReply(self, reply):
+    def unsolicited_reply(self, reply):
         self.log.debug('Sending unsolicited reply %s', reply)
         self.push(b(reply + self._target.out_terminator))
 
