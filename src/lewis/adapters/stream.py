@@ -43,6 +43,7 @@ class StreamHandler(asynchat.async_chat):
         self._buffer = []
 
         self._stream_server = stream_server
+        self._target.handler = self
 
         self._set_logging_context(target)
         self.log.info('Client connected from %s:%s', *sock.getpeername())
@@ -107,6 +108,10 @@ class StreamHandler(asynchat.async_chat):
                 reply = self._handle_error(request, error)
 
         self._send_reply(reply)
+
+    def unsolicited_reply(self, reply):
+        self.log.debug('Sending unsolicited reply %s', reply)
+        self.push(b(reply + self._target.out_terminator))
 
     def handle_close(self):
         self.log.info('Closing connection to client %s:%s', *self.socket.getpeername())
