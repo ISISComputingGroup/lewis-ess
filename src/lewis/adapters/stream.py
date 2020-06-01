@@ -111,7 +111,8 @@ class StreamHandler(asynchat.async_chat):
 
     def unsolicited_reply(self, reply):
         self.log.debug('Sending unsolicited reply %s', reply)
-        self.push(b(reply + self._target.out_terminator))
+        with self._stream_server.device_lock:
+            self.push(b(reply + self._target.out_terminator))
 
     def handle_close(self):
         self.log.info('Closing connection to client %s:%s', *self.socket.getpeername())
