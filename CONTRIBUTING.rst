@@ -11,7 +11,7 @@ Reporting Issues
 
 If you run into any issues or bugs while using Lewis or find the documentation
 of a feature unclear, you can help us improve Lewis by
-`opening an Issue <https://github.com/DMSC-Instrument-Data/lewis/issues/new>`__
+`opening an Issue <https://github.com/ess-dmsc/lewis/issues/new>`__
 here on GitHub. Please be sure to include enough information to reproduce the
 issue.
 
@@ -23,7 +23,7 @@ Requesting Features
 -------------------
 
 If a feature you want is missing from Lewis, feel free to
-`open an Issue <https://github.com/DMSC-Instrument-Data/lewis/issues/new>`__
+`open an Issue <https://github.com/ess-dmsc/lewis/issues/new>`__
 here on GitHub to request it. Please describe the context and the expected
 behaviour in detail.
 

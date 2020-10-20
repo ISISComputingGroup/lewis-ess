@@ -32,7 +32,7 @@ setup(
     version='1.2.2',
     description='LeWIS - Let\'s Write Intricate Simulators!',
     long_description=readme(),
-    url='https://github.com/DMSC-Instrument-Data/lewis',
+    url='https://github.com/ess-dmsc/lewis',
     author='Michael Hart, Michael Wedel, Owen Arnold',
     author_email='michael.hart@stfc.ac.uk',
     license='GPL v3',

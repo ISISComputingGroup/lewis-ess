@@ -10,7 +10,7 @@ With the virtual environment activated, checkout the source:
 
 ::
 
-    (lewis-dev)$ git clone https://github.com/DMSC-Instrument-Data/lewis.git
+    (lewis-dev)$ git clone https://github.com/ess-dmsc/lewis.git
 
 Then, Lewis can be installed as an editable package:
 

@@ -136,7 +136,7 @@ Upgrade guide
    The same goes for ``EpicsAdapter`` and ``ModbusAdapter``, which must be modified to
    ``EpicsInterface`` and ``ModbusInterface`` respectively.
 
-.. _source repository: https://github.com/DMSC-Instrument-Data/lewis/docs/resources/logo
+.. _source repository: https://github.com/ess-dmsc/lewis/docs/resources/logo
 .. _Rubik: https://github.com/googlefonts/rubik
 .. _inkscape: https://inkscape.org/
 .. _scanf: https://github.com/joshburnett/scanf

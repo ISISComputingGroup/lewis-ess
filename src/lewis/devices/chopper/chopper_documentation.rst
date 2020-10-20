@@ -16,7 +16,7 @@ the choppers are going to operate internally.
 There are two ways of running the chopper simulation. The first option
 is to run it directly using Python, the second is to run it in a `Docker
 container <https://www.docker.com/>`__. See the `toplevel
-README <https://github.com/DMSC-Instrument-Data/lewis/blob/master/README.md>`__
+README <https://github.com/ess-dmsc/lewis/blob/master/README.md>`__
 for details on installing.
 
 Starting the Chopper
@@ -301,11 +301,3 @@ The commands marked with a \* are not implemented yet. There are however
 two additional commands, INIT and DEINIT. INIT takes the chopper from
 the initial ``init`` state to the ``stopped`` state, DEINIT does the
 opposite.
-
-Additional tools
-----------------
-
-In a separate
-`repository <https://github.com/DMSC-Instrument-Data/lewis-misc>`__
-there is an OPI-file for use with CS-Studio and two files that expose
-the simulated chopper as a setup in NICOS (see readme there).

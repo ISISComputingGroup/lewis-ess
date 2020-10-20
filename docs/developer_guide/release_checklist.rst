@@ -19,7 +19,7 @@ prior to proceeding to the next section.
 Git Milestones
 --------------
 
- - Go to https://github.com/DMSC-Instrument-Data/lewis/milestones
+ - Go to https://github.com/ess-dmsc/lewis/milestones
  - Ensure all issues and PRs included in this release are tagged correctly
  - Create milestone for next release
  - Ensure any open issues or PRs not included are tagged for next release
@@ -47,7 +47,7 @@ Update Version
 GitHub Release
 --------------
 
- - Draft release blurb at https://github.com/DMSC-Instrument-Data/lewis/releases
+ - Draft release blurb at https://github.com/ess-dmsc/lewis/releases
  
 
 Merge Changes
@@ -72,7 +72,7 @@ This should be done in a clean directory.
 
    $ virtualenv build
    $ . build/bin/activate
-   (build) $ git clone https://github.com/DMSC-Instrument-Data/lewis.git
+   (build) $ git clone https://github.com/ess-dmsc/lewis.git
    (build) $ cd lewis
    (build) $ python setup.py sdist bdist_wheel
    (build) $ deactivate
@@ -111,9 +111,9 @@ Git Release
 -----------
 
  - Finalize and submit release blurb at: 
-   https://github.com/DMSC-Instrument-Data/lewis/releases
+   https://github.com/ess-dmsc/lewis/releases
  - Close the current milestone at:
-   https://github.com/DMSC-Instrument-Data/lewis/milestones
+   https://github.com/ess-dmsc/lewis/milestones
  
 
 Upload PyPI Package

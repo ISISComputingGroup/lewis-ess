@@ -119,7 +119,7 @@ Note that the commands are case sensitive. Try entering a few commands in the Te
     P?
     9.106584
 
-See `the source code <https://github.com/DMSC-Instrument-Data/lewis/blob/master/src/lewis/examples/example_motor/__init__.py>`_ of the example motor if you want to see what makes it tick.
+See `the source code <https://github.com/ess-dmsc/lewis/blob/master/src/lewis/examples/example_motor/__init__.py>`_ of the example motor if you want to see what makes it tick.
 
 
 Connect to Motor via Control Client

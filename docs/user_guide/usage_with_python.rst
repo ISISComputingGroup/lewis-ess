@@ -100,7 +100,7 @@ environment (see above) so that you can keep track of the dependencies:
 
 ::
 
-    $ git clone https://github.com/DMSC-Instrument-Data/lewis.git
+    $ git clone https://github.com/ess-dmsc/lewis.git
 
 If you do not have `git <https://git-scm.com/>`__ available, you can
 also download this repository as an archive and unpack it somewhere. A

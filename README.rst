@@ -13,9 +13,9 @@ that includes all dependencies. See relevant usage sections for
 details.
 
 Resources:
-`GitHub <https://github.com/DMSC-Instrument-Data/lewis>`__ --
+`GitHub <https://github.com/ess-dmsc/lewis>`__ --
 `DockerHub <https://hub.docker.com/r/dmscid/lewis/>`__ --
-`Dockerfile <https://github.com/DMSC-Instrument-Data/lewis/blob/master/Dockerfile>`__ --
+`Dockerfile <https://github.com/ess-dmsc/lewis/blob/master/Dockerfile>`__ --
 `ReadTheDocs <http://lewis.readthedocs.io/>`__ --
 `PyPI <https://pypi.python.org/pypi/lewis>`__
 
@@ -76,7 +76,7 @@ by Lewis. The ``Device`` and ``Interface`` are instantiated as part of a
 ``Simulation`` that provides a cycle "heart beat" and manages other
 environmental aspects and services.
 
-.. image:: https://github.com/DMSC-Instrument-Data/lewis/raw/master/docs/resources/diagrams/SimulationCycles.png
+.. image:: https://github.com/ess-dmsc/lewis/raw/master/docs/resources/diagrams/SimulationCycles.png
 
 What Can You Do With Lewis?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -101,7 +101,7 @@ It can also be generated from the sources:
 
 ::
 
-   $ git clone https://github.com/DMSC-Instrument-Data/lewis
+   $ git clone https://github.com/ess-dmsc/lewis
    $ cd lewis
    $ pip install -r requirements-dev.txt
    $ sphinx-build -b html docs/ docs/_build/html
@@ -120,4 +120,4 @@ The ``docs/_build/html`` directory will then contain the full documentation in H
    :target: https://coveralls.io/github/DMSC-Instrument-Data/lewis?branch=master
 .. |Documentation| image:: https://readthedocs.org/projects/lewis/badge/?version=latest
    :target: http://lewis.readthedocs.io/en/latest/?badge=latest
-.. |Lewis| image:: https://github.com/DMSC-Instrument-Data/lewis/raw/master/docs/resources/logo/lewis-logo.png
+.. |Lewis| image:: https://github.com/ess-dmsc/lewis/raw/master/docs/resources/logo/lewis-logo.png

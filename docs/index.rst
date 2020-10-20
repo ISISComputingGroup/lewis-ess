@@ -27,5 +27,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 
-.. _github: https://github.com/DMSC-Instrument-Data/lewis
+.. _github: https://github.com/ess-dmsc/lewis
 
