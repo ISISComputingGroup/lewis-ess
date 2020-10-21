@@ -8,7 +8,7 @@ semantic_version
 PyYAML
 scanf==1.4.1
 pytest>=3.6
-pytest-cov
+pytest-cov<2.10
 coverage
 flake8==3.5.0
 tox
