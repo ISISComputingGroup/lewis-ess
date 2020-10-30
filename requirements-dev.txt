@@ -1,15 +1,11 @@
+-r requirements.txt
 mock>=1.0.1
-pyzmq
-json-rpc
 sphinx>=1.4.5
 sphinx_rtd_theme
-semantic_version
-PyYAML
-scanf==1.4.1
-pytest>=4.6
+pytest
 pytest-cov
 coverage
-flake8==3.5.0
+flake8
 tox
 twine
 wheel

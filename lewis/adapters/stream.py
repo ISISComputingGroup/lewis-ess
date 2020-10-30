@@ -775,4 +775,3 @@ class StreamInterface(InterfaceBase):
         :param request: The request that resulted in the error.
         :param error: The exception that was raised.
         """
-        pass
