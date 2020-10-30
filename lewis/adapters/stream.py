@@ -507,7 +507,7 @@ class Cmd(CommandBase):
 
 
 class Var(CommandBase):
-    """
+    r"""
     With this implementation of :class:`CommandBase` it's possible to expose plain data attributes
     or properties of device or interface. Getting and setting a value are separate procedures
     which both have their own pattern, read_pattern and write_pattern to match a command each.
@@ -674,7 +674,7 @@ class StreamAdapter(Adapter):
 
 
 class StreamInterface(InterfaceBase):
-    """
+    r"""
     This class is used to provide a TCP-stream based interface to a device.
 
     Many hardware devices use a protocol that is based on exchanging text with a client via
@@ -702,7 +702,7 @@ class StreamInterface(InterfaceBase):
             commands = [
                 Cmd('set_speed', r'^S=([0-9]+)$', argument_mappings=[int]),
                 Cmd('get_speed', r'^S\?$')
-                Var('speed', read_pattern=r'^V\\?$', write_pattern=r'^V=([0-9]+)$')
+                Var('speed', read_pattern=r'^V\?$', write_pattern=r'^V=([0-9]+)$')
             ]
 
             def set_speed(self, new_speed):
