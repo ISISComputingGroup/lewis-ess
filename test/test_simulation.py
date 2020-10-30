@@ -22,7 +22,7 @@ import unittest
 from mock import Mock, MagicMock, patch, call, ANY
 
 from lewis.core.simulation import Simulation
-from utils import assertRaisesNothing
+from .utils import assertRaisesNothing
 
 
 def set_simulation_running(environment):

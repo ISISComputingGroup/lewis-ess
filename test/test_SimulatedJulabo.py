@@ -19,7 +19,7 @@
 
 import unittest
 from lewis.devices.julabo.devices.device import SimulatedJulabo
-from utils import assertRaisesNothing
+from .utils import assertRaisesNothing
 
 
 class TestSimulatedJulabo(unittest.TestCase):

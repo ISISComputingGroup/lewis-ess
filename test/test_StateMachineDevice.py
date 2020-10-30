@@ -23,7 +23,7 @@ import itertools
 from mock import Mock, MagicMock, call, patch
 
 from lewis.devices import StateMachineDevice
-from utils import assertRaisesNothing
+from .utils import assertRaisesNothing
 
 
 class MockStateMachineDevice(StateMachineDevice):

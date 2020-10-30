@@ -23,8 +23,6 @@ import sys
 import tempfile
 import unittest
 
-from six import iteritems
-
 
 def assertRaisesNothing(testobj, func, *args, **kwargs):
     """
@@ -70,12 +68,12 @@ class TestWithPackageStructure(unittest.TestCase):
         cls._tmp_package = tempfile.mkdtemp(dir=cls._tmp_dir)
         cls._tmp_package_name = os.path.basename(cls._tmp_package)
 
-        cls._files = {k: os.path.join(cls._tmp_package, v) for k, v in iteritems(dict(
+        cls._files = {k: os.path.join(cls._tmp_package, v) for k, v in dict(
             valid='some_file.py',
             invalid_ext='some_other_file.pyc',
             invalid_name='_some_invalid_file.py',
             failing_module='failing_module.py'
-        ))}
+        ).items()}
 
         for abs_file_name in cls._files.values():
             with open(abs_file_name, mode='w'):
@@ -84,11 +82,11 @@ class TestWithPackageStructure(unittest.TestCase):
         with open(cls._files['failing_module'], mode='w') as fh:
             fh.write('raise ImportError()\n')
 
-        cls._dirs = {k: os.path.join(cls._tmp_package, v) for k, v in iteritems(dict(
+        cls._dirs = {k: os.path.join(cls._tmp_package, v) for k, v in dict(
             valid='some_dir',
             invalid_underscore='_invalid',
             invalid_dot='.invalid'
-        ))}
+        ).items()}
 
         for abs_dir_name in cls._dirs.values():
             os.mkdir(abs_dir_name)

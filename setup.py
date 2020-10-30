@@ -50,7 +50,7 @@ setup(
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
 
-    install_requires=['six', 'pyzmq', 'json-rpc', 'semantic_version',
+    install_requires=['pyzmq', 'json-rpc', 'semantic_version',
                       'PyYAML', 'scanf==1.4.1'],
 
     extras_require={

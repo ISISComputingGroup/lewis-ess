@@ -25,7 +25,7 @@ import socket
 
 from lewis.core.control_server import ExposedObject, ExposedObjectCollection, ControlServer
 from lewis.core.exceptions import LewisException
-from utils import assertRaisesNothing
+from .utils import assertRaisesNothing
 
 
 class DummyObject(object):

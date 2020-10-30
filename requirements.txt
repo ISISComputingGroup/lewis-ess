@@ -1,4 +1,3 @@
-six
 pyzmq
 json-rpc
 semantic_version

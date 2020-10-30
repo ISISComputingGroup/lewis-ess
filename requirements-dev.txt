@@ -1,5 +1,4 @@
 mock>=1.0.1
-six
 pyzmq
 json-rpc
 sphinx>=1.4.5
