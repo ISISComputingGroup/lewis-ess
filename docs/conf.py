@@ -19,11 +19,11 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'lewis'
-copyright = u'2016-2017, European Spallation Source ERIC'
-author = u'Michael Hart, Michael Wedel, Owen Arnold'
+copyright = u'2016-2020, European Spallation Source ERIC'
+author = u'ScreamingUdder'
 
-version = u'1.2'
-release = u'1.2.2'
+version = u'2.0'
+release = u'2.0.0'
 
 language = None
 
@@ -58,5 +58,5 @@ latex_elements = {
 
 latex_documents = [
     (master_doc, 'lewis.tex', u'lewis Documentation',
-     u'Michael Hart, Michael Wedel, Owen Arnold', 'manual'),
+     u'ScreamingUdder', 'manual'),
 ]
