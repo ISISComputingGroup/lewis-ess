@@ -58,8 +58,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'lewis=scripts.run:run_simulation',
-            'lewis-control=scripts.control:control_simulation'
+            'lewis=lewis.scripts.run:run_simulation',
+            'lewis-control=lewis.scripts.control:control_simulation'
         ],
     },
 )
