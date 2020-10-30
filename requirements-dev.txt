@@ -11,3 +11,5 @@ pytest-cov
 coverage
 flake8==3.5.0
 tox
+twine
+wheel
