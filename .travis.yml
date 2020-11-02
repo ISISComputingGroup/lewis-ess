@@ -17,6 +17,7 @@ install:
 script:
   - flake8 setup.py src test
   - pytest --cov=lewis.core --cov=lewis.devices test
+  - pytest system_tests/lewis_tests.py
   - sphinx-build -W -b html docs/ docs/_build/html
 
 after_success:
@@ -30,4 +31,3 @@ after_success:
 branches:
   only:
     - master
-    - v2_0_0_preview
