@@ -205,7 +205,7 @@ def run_simulation(argument_list=None):  # noqa: C901
         if not arguments.device:
             devices = ['Please specify a device to simulate. The following devices are available:']
 
-            for dev in simulation_factory.devices:
+            for dev in sorted(simulation_factory.devices):
                 devices.append('    ' + dev)
 
             print('\n'.join(devices))
