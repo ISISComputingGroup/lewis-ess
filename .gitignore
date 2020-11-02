@@ -6,4 +6,4 @@
 dist/
 build/
 docs/_build/
-src/lewis.egg-info
+lewis/lewis.egg-info

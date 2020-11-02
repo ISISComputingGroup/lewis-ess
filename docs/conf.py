@@ -3,6 +3,9 @@
 # lewis documentation build configuration file, created by
 # sphinx-quickstart on Wed Nov  9 16:42:53 2016.
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 # -- General configuration ------------------------------------------------
 

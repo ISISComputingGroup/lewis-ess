@@ -13,24 +13,8 @@ The docs-directory contains an ``fsm``-file (created using the program
 machine. While this is still work in progress, it gives an idea of how
 the choppers are going to operate internally.
 
-There are two ways of running the chopper simulation. The first option
-is to run it directly using Python, the second is to run it in a `Docker
-container <https://www.docker.com/>`__. See the `toplevel
-README <https://github.com/ess-dmsc/lewis/blob/master/README.md>`__
-for details on installing.
-
 Starting the Chopper
 --------------------
-
-Start using Docker:
-
-::
-
-    $ docker run -it dmscid/lewis chopper -p "epics: {prefix: 'SIM:'}"
-
-If running on Windows or OSX, you will additionally need to start a
-`Gateway <https://hub.docker.com/r/dmscid/epics-gateway/>`__ if you want
-to communicate with the Docker container from outside of the VM.
 
 Start using Python:
 
