@@ -23,5 +23,10 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from lewis.scripts.run import run_simulation
 
+
+def main(argument_list=None):
+    run_simulation(argument_list)
+
+
 if __name__ == '__main__':
-    run_simulation()
+    main()
