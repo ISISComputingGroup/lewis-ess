@@ -11,8 +11,8 @@ import pytest
 
 
 TOP_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-LEWIS_PATH = Path(TOP_DIR) / "lewis/lewis.py"
-LEWIS_CONTROL_PATH = Path(TOP_DIR) / "lewis/lewis-control.py"
+LEWIS_PATH = Path(TOP_DIR) / "scripts/lewis.py"
+LEWIS_CONTROL_PATH = Path(TOP_DIR) / "scripts/lewis-control.py"
 
 
 @contextlib.contextmanager
