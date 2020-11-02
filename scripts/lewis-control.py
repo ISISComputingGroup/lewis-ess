@@ -21,7 +21,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from lewis.scripts.control import control_simulation
+from lewis.scripts.control import control_simulation  # noqa: E402
 
 if __name__ == '__main__':
     control_simulation()
