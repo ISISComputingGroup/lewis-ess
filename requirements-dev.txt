@@ -1,8 +1,9 @@
 -r requirements.txt
-mock>=1.0.1
-sphinx>=1.4.5
+mock
+sphinx
 sphinx_rtd_theme
 pytest
+pytest-approvaltests
 pytest-cov
 coverage
 flake8
