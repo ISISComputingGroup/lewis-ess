@@ -42,7 +42,7 @@ class TestLewis:
 
     def test_list_available_devices(self):
         """
-        When: running LeWIS without parameters
+        When: running Lewis without parameters
         Then: returns a list of possible simulations
         """
         result = subprocess.check_output(["python", str(LEWIS_PATH)]).decode()

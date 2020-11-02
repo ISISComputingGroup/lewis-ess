@@ -1,7 +1,7 @@
 Developing Lewis
 ================
 
-To develop Lewis, it is strongly recommended to work in a dedicated virtualenv, otherwise
+To develop Lewis, it is strongly recommended to work in a dedicated virtual environment, otherwise
 it is not possible to have another version of Lewis installed system wide in parallel. See
 the :ref:`virtual_environments` section for a very quick introduction into creating and
 activating a virtual environment.
@@ -19,14 +19,14 @@ Then, Lewis can be installed as an editable package:
     (lewis-dev)$ cd lewis
     (lewis-dev)$ pip install ".[dev]"
 
-Now the Lewis package that resides in ``src`` can be modified, while it is still treated like a
+Now the Lewis package that resides in ``lewis`` can be modified, while it is still treated like a
 normal package that has been installed via ``pip``. To make sure that everything is working as
 intended, run the unit tests and check for pep8 errors, as well as build the documentation:
 
 ::
 
     (lewis-dev)$ pytest test
-    (lewis-dev)$ flake8 src test setup.py
+    (lewis-dev)$ flake8 setup.py lewis scripts system-tests test
     (lewis-dev)$ sphinx-build -W -b html docs/ docs/_build/html
 
 A more comprehensive way of running all tests is to use ``tox``, which creates fresh virtual

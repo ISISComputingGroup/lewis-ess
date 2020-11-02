@@ -1,5 +1,5 @@
-Welcome to lewis' documentation!
-================================
+Welcome to the LeWIS documentation!
+===================================
 
 Lewis is a Python package that makes it easy to develop complex stateful device simulations. It
 is licensed under GPL version 3 and the source is available on github_, where you are welcome to

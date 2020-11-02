@@ -13,13 +13,14 @@ Install Lewis
 
 The recommended way to install Lewis is via PyPI and using a virtual environment. This guide assumes you have Python and Pip installed and in your PATH.
 
-Install ``virtualenv`` and create a virtual environment. On Windows, the activate script will be located elsewhere and can be executed directly, without ``source``. This step is optional and may be skipped:
+Create a virtual environment (optional):
 
 ::
 
-    $ pip install virtualenv
-    $ virtualenv myenv
+    $ python -m venv myenv
     $ source myenv/bin/activate
+
+On Windows, the activate script will be located elsewhere and can be executed directly, without ``source``.
 
 Lewis can be installed with Pip using a single command:
 
@@ -33,7 +34,7 @@ Lewis can be installed with Pip using a single command:
 Run the Motor Example
 =====================
 
-Once Lewis is installed, you can use it to start some of the example devices it ships with. 
+Once Lewis is installed, you can use it to start some of the example devices it ships with.
 
 You can see which devices are available by just executing Lewis without parameters:
 
@@ -119,7 +120,7 @@ Note that the commands are case sensitive. Try entering a few commands in the Te
     P?
     9.106584
 
-See `the source code <https://github.com/ess-dmsc/lewis/blob/master/src/lewis/examples/example_motor/__init__.py>`_ of the example motor if you want to see what makes it tick.
+See `the source code <https://github.com/ess-dmsc/lewis/blob/master/lewis/examples/example_motor/__init__.py>`_ of the example motor if you want to see what makes it tick.
 
 
 Connect to Motor via Control Client
@@ -140,7 +141,7 @@ Open another terminal session. If you installed Lewis in a virtual environment, 
 ::
 
     $ . myenv/bin/activate
-    
+
 Running ``lewis-control`` without any parameter displays the objects available to interact with:
 
 ::
@@ -166,7 +167,7 @@ You can think of these as root nodes in a tree that ``lewis-control`` allows you
 
 Going down one more level retrieves the value of a single property, or calls a method (without passing arguments):
 
-:: 
+::
 
     $ lewis-control device target
     0.0
@@ -225,11 +226,11 @@ Usually, you would use this API to write a Python script, but for demo purposes 
 ::
 
     $ python
-    Python 2.7.12 (default, Nov 19 2016, 06:48:10) 
+    Python 2.7.12 (default, Nov 19 2016, 06:48:10)
     [GCC 5.4.0 20160609] on linux2
     Type "help", "copyright", "credits" or "license" for more information.
     >>> from lewis.core.control_client import ControlClient
-    >>> 
+    >>>
     >>> client = ControlClient(host='localhost', port='10000')
     >>> motor = client.get_object('device')
     >>>
