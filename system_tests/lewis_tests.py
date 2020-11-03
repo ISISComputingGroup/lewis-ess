@@ -36,10 +36,11 @@ def santise_whitespace(input_str):
 
 def query_device_status():
     command = ["python", str(LEWIS_CONTROL_PATH), "device"]
-    proc = subprocess.Popen(command, stdout=open('output.txt', 'w'))
+    subprocess.Popen(command, stdout=open('output.txt', 'w'))
     time.sleep(0.5)
     with open("output.txt") as f:
         result = santise_whitespace(f.read())
+    time.sleep(0.5)
     os.remove("output.txt")
     return result
     # return santise_whitespace(subprocess.check_output(
