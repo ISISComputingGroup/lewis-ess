@@ -15,7 +15,7 @@ build: off
 install:
 - sh: python --version
 - sh: python3.6 --version
-- sh: python -m virtualenv myenv
+- sh: python3.6 -m virtualenv myenv
 - sh: source myenv/bin/activate
 - python -m pip install tox
 
