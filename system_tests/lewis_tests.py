@@ -31,12 +31,20 @@ def run_control_command(mode, command, value):
 
 
 def santise_whitespace(input_str):
+    return input_str
     return " ".join(input_str.split())
 
 
 def query_device_status():
-    return santise_whitespace(subprocess.check_output(
-        ["python", str(LEWIS_CONTROL_PATH), "device"]).decode())
+    command = ["python", str(LEWIS_CONTROL_PATH), "device"]
+    proc = subprocess.Popen(command, close_fds=True, stdout=open('output.txt', 'w'))
+    time.sleep(0.5)
+    with open("output.txt") as f:
+        result = santise_whitespace(f.read())
+    os.remove("output.txt")
+    return result
+    # return santise_whitespace(subprocess.check_output(
+    #     ["python", str(LEWIS_CONTROL_PATH), "device"]).decode())
 
 
 class TestLewis:
@@ -62,7 +70,8 @@ class TestLewis:
         Then: the current settings are returned
         """
         with julabo_simulation():
-            verify(query_device_status(), self.reporter)
+            result = query_device_status()
+        verify(result, self.reporter)
 
     def test_can_change_set_point(self):
         """
@@ -73,7 +82,8 @@ class TestLewis:
         with julabo_simulation():
             # Set new setpoint
             run_control_command("device", "set_set_point", "35")
-            verify(query_device_status(), self.reporter)
+            result = query_device_status()
+        verify(result, self.reporter)
 
     def test_on_change_set_point_and_circulate_temperature_goes_to_setpoint(
             self):
@@ -95,4 +105,5 @@ class TestLewis:
 
             time.sleep(0.1)
 
-            verify(query_device_status(), self.reporter)
+            result = query_device_status()
+        verify(result, self.reporter)
