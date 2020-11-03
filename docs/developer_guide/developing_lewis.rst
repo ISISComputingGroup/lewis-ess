@@ -64,6 +64,19 @@ it in the virtual environments that it creates, testing closer to the thing that
 installed in the end. Running all the verification steps this way takes a bit longer, so during
 development it might be more desirable to just run the components that are necessary.
 
+Before starting development it is important to install the pre-commit hooks, so that formatting and ``flake8`` checks
+are performed before code is committed:
+
+::
+
+    (lewis-dev)$ pre-commit install
+
+To test that the hooks are installed correctly and to run them manually use the following command:
+
+::
+
+   (lewis-dev)$ pre-commit run --all-files
+
 Development should happen in a separate branch. If the work is related to a specific issue,
 it is good practice to include the issue number in the branch name, along with a short
 summary of a few words, for example:

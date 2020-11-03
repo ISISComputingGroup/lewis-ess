@@ -7,7 +7,11 @@ pytest
 pytest-approvaltests
 pytest-cov
 coverage
-flake8
 tox
 twine
 wheel
+pre-commit
+
+# Pin to match versions in pre-commit hooks
+black==20.8b1
+flake8==3.8.4
