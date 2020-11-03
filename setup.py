@@ -50,11 +50,12 @@ setup(
     packages=find_packages(exclude=["test", "tests.*"]),
     python_requires=">=3.6.0",
     install_requires=['pyzmq', 'json-rpc', 'semantic_version',
-                      'PyYAML', 'scanf==1.4.1'],
+                      'PyYAML', 'scanf'],
     extras_require={
         'epics': ['pcaspy'],
-        'dev': ['flake8==3.5.0', 'mock>=1.0.1', 'sphinx>=1.4.5', 'sphinx_rtd_theme',
-                'pytest>=4.6', 'pytest-cov', 'coverage', 'tox'],
+        'dev': ['flake8', 'mock', 'sphinx', 'sphinx_rtd_theme',
+                'pytest', 'pytest-cov', 'coverage', 'tox',
+                'approvaltests', 'pytest-approvaltests'],
     },
     entry_points={
         'console_scripts': [
