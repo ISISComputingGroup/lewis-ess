@@ -52,6 +52,7 @@ class TestLewis:
         result = fix_windows_newlines(
             subprocess.check_output(["python", str(LEWIS_PATH)]).decode()
         )
+        print(f"OUTPUT:\n{repr(result)}\n")
         verify(result, self.reporter)
 
     def test_can_query_running_device(self):
@@ -61,6 +62,7 @@ class TestLewis:
         Then: the current settings are returned
         """
         with julabo_simulation():
+            print(f"OUTPUT:\n{repr(query_device_status())}\n")
             verify(query_device_status(), self.reporter)
 
     def test_can_change_set_point(self):
