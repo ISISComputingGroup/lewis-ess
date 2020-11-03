@@ -36,7 +36,7 @@ def fix_windows_newlines(input_str):
 
 def query_device_status():
     return fix_windows_newlines(subprocess.check_output(
-                ["python", str(LEWIS_CONTROL_PATH), "device"]).decode())
+        ["python", str(LEWIS_CONTROL_PATH), "device"]).decode())
 
 
 class TestLewis:
@@ -49,7 +49,9 @@ class TestLewis:
         When: running Lewis without parameters
         Then: returns a list of possible simulations
         """
-        result = fix_windows_newlines(subprocess.check_output(["python", str(LEWIS_PATH)]).decode())
+        result = fix_windows_newlines(
+            subprocess.check_output(["python", str(LEWIS_PATH)]).decode()
+        )
         verify(result, self.reporter)
 
     def test_can_query_running_device(self):
