@@ -13,7 +13,7 @@ environment:
 build: off
 
 install:
-- sh: python3 -m virtualenv myenv
+- sh: python -m virtualenv myenv
 - sh: source myenv/bin/activate
 - python -m pip install tox
 
