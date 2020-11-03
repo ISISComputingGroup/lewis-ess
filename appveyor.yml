@@ -13,7 +13,7 @@ environment:
 build: off
 
 install:
-- sh: apt-get install python3-venv
+- sh: sudo apt-get install python3-venv
 - sh: python3 -m venv myenv
 - sh: source myenv/bin/activate
 - python -m pip install tox
