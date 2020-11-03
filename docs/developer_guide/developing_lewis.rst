@@ -60,3 +60,17 @@ During development it is good practice to regularly test that changes do not bre
 or new tests. Before opening a pull request on github (which will run all the tests again
 under different Python environments via Travis CI), it is recommended to run tox one last time
 locally, as that resembles the conditions in the CI environment quite closely.
+
+There are also system-tests that (partially) test Lewis from the application/run-time level. These tests are based on
+the `Approval Tests Framework <https://approvaltests.com/>`__ which works by comparing a program's standard output
+against a "golden master" - if the output doesn't match then the tests fail.
+For ``lewis`` and ``lewis-control`` the tests check that the programs work together correctly. For example: if a value
+on a simulated device in ``lewis`` is changed via ``lewis-control``` then by querying the status of the device the
+values can be compared against the expected status (the "golden master"). The tests can be run like so:
+
+::
+
+    (lewis-dev)$ pytest system_tests\lewis_tests.py
+
+Again, it is good practice to run these tests regularly during development and, also, look for opportunities to add
+more tests. The tests will also be run via Travis CI.
