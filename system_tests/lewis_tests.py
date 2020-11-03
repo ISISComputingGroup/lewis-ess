@@ -46,6 +46,7 @@ class TestLewis:
         Then: returns a list of possible simulations
         """
         result = subprocess.check_output(["python", str(LEWIS_PATH)]).decode()
+        print(f"\n{result}\n")
         verify(result, self.reporter)
 
     def test_can_query_running_device(self):
