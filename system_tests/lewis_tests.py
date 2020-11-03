@@ -30,13 +30,12 @@ def run_control_command(mode, command, value):
          value]).decode()
 
 
-def fix_windows_newlines(input_str):
-    return input_str
-    # return input_str.replace("\r", "")
+def santise_whitespace(input_str):
+    return " ".join(input_str.split())
 
 
 def query_device_status():
-    return fix_windows_newlines(subprocess.check_output(
+    return santise_whitespace(subprocess.check_output(
         ["python", str(LEWIS_CONTROL_PATH), "device"]).decode())
 
 
@@ -50,11 +49,10 @@ class TestLewis:
         When: running Lewis without parameters
         Then: returns a list of possible simulations
         """
-        result = fix_windows_newlines(
+        result = santise_whitespace(
             subprocess.check_output(["python", str(LEWIS_PATH)]).decode()
         )
-        result = " ".join(result.split())
-        print(f"OUTPUT:\n{repr(result)}\n")
+
         verify(result, self.reporter)
 
     def test_can_query_running_device(self):
@@ -64,7 +62,6 @@ class TestLewis:
         Then: the current settings are returned
         """
         with julabo_simulation():
-            print(f"OUTPUT:\n{repr(query_device_status())}\n")
             verify(query_device_status(), self.reporter)
 
     def test_can_change_set_point(self):
