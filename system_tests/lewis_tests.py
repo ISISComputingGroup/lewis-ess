@@ -32,7 +32,7 @@ def run_control_command(mode, command, value):
 
 def query_device_status():
     return subprocess.check_output(
-                ["python", str(LEWIS_CONTROL_PATH), "device"]).decode()
+                ["python", str(LEWIS_CONTROL_PATH), "device"]).decode().replace("\r\n", "\n")
 
 
 class TestLewis:
