@@ -53,6 +53,7 @@ class TestLewis:
         result = fix_windows_newlines(
             subprocess.check_output(["python", str(LEWIS_PATH)]).decode()
         )
+        result = " ".join(result.split())
         print(f"OUTPUT:\n{repr(result)}\n")
         verify(result, self.reporter)
 
