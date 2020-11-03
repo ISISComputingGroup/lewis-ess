@@ -32,7 +32,7 @@ def run_control_command(mode, command, value):
 
 def query_device_status():
     return subprocess.check_output(
-                ["python", str(LEWIS_CONTROL_PATH), "device"]).decode().replace("\r\n", "\n")
+                ["python", str(LEWIS_CONTROL_PATH), "device"]).decode().replace("\r", "")
 
 
 class TestLewis:
@@ -46,6 +46,7 @@ class TestLewis:
         Then: returns a list of possible simulations
         """
         result = subprocess.check_output(["python", str(LEWIS_PATH)]).decode()
+        print(f"\n{result}\n")
         verify(result, self.reporter)
 
     def test_can_query_running_device(self):
