@@ -31,7 +31,8 @@ def run_control_command(mode, command, value):
 
 
 def fix_windows_newlines(input_str):
-    return input_str.replace("\r", "")
+    return input_str
+    # return input_str.replace("\r", "")
 
 
 def query_device_status():

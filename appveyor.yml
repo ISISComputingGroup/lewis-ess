@@ -1,4 +1,8 @@
 ---
+image:
+  - Visual Studio 2019
+  - Ubuntu
+
 
 environment:
   matrix:
@@ -9,7 +13,9 @@ environment:
 build: off
 
 install:
-- pip install tox
+- sh: python -m venv myenv
+- sh: source myenv/bin/activate
+- python -m pip install tox
 
 test_script:
 - tox
