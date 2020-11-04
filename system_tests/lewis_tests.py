@@ -20,6 +20,7 @@ def julabo_simulation():
     command = ["python", str(LEWIS_PATH), "julabo", "-p",
                "julabo-version-1", "-r", "localhost:10000"]
     proc = subprocess.Popen(command, close_fds=True)
+    time.sleep(1)
     yield proc
     proc.kill()
 
@@ -61,7 +62,7 @@ class TestLewis:
             subprocess.check_output(["python", str(LEWIS_PATH)]).decode()
         )
 
-        verify(result, self.reporter, newline="\n")
+        verify(result, self.reporter)
 
     def test_can_query_running_device(self):
         """
@@ -71,7 +72,7 @@ class TestLewis:
         """
         with julabo_simulation():
             result = query_device_status()
-        verify(result, self.reporter, newline="\n")
+        verify(result, self.reporter)
 
     def test_can_change_set_point(self):
         """
@@ -83,7 +84,7 @@ class TestLewis:
             # Set new setpoint
             run_control_command("device", "set_set_point", "35")
             result = query_device_status()
-        verify(result, self.reporter, newline="\n")
+        verify(result, self.reporter)
 
     def test_on_change_set_point_and_circulate_temperature_goes_to_setpoint(
             self):
@@ -106,4 +107,4 @@ class TestLewis:
             time.sleep(0.1)
 
             result = query_device_status()
-        verify(result, self.reporter, newline="\n")
+        verify(result, self.reporter)
