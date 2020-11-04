@@ -1,6 +1,7 @@
 [flake8]
-ignore = E501, E203, W503, Q000
+ignore = E501, E203, W503, Q000, E126
 # E501 & E203: Formatting handled by Black
 # W503 complains about splitting if across lines which conflicts with Black
 # Q000 complains about using "" and not '' which conflicts with Black
+# E126 - can be removed once we move to black
 exclude = .git, docs, .tox
