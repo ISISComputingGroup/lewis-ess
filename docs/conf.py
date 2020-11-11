@@ -3,6 +3,9 @@
 # lewis documentation build configuration file, created by
 # sphinx-quickstart on Wed Nov  9 16:42:53 2016.
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 # -- General configuration ------------------------------------------------
 
@@ -19,11 +22,11 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'lewis'
-copyright = u'2016-2017, European Spallation Source ERIC'
-author = u'Michael Hart, Michael Wedel, Owen Arnold'
+copyright = u'2016-2020, European Spallation Source ERIC'
+author = u'ScreamingUdder'
 
-version = u'1.2'
-release = u'1.2.2'
+version = u'2.0'
+release = u'2.0.0'
 
 language = None
 
@@ -58,5 +61,5 @@ latex_elements = {
 
 latex_documents = [
     (master_doc, 'lewis.tex', u'lewis Documentation',
-     u'Michael Hart, Michael Wedel, Owen Arnold', 'manual'),
+     u'ScreamingUdder', 'manual'),
 ]

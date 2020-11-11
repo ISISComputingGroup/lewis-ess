@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # *********************************************************************
 # lewis - a library for creating hardware device simulators
-# Copyright (C) 2016-2017 European Spallation Source ERIC
+# Copyright (C) 2016-2020 European Spallation Source ERIC
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,12 +29,11 @@ def readme():
 
 setup(
     name='lewis',
-    version='1.2.2',
+    version='2.0.0',
     description='LeWIS - Let\'s Write Intricate Simulators!',
     long_description=readme(),
     url='https://github.com/ess-dmsc/lewis',
-    author='Michael Hart, Michael Wedel, Owen Arnold',
-    author_email='michael.hart@stfc.ac.uk',
+    author='ScreamingUdder',
     license='GPL v3',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -45,24 +44,19 @@ setup(
         'Topic :: Software Development :: Libraries',
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
     ],
     keywords='hardware simulation controls',
-    packages=find_packages(where='src'),
-    package_dir={'': 'src'},
-
-    install_requires=['six', 'pyzmq', 'json-rpc', 'semantic_version',
-                      'PyYAML', 'scanf==1.4.1'],
-
+    packages=find_packages(exclude=["test", "tests.*"]),
+    python_requires=">=3.6.0",
+    install_requires=['pyzmq', 'json-rpc', 'semantic_version',
+                      'PyYAML', 'scanf'],
     extras_require={
         'epics': ['pcaspy'],
-        'dev': ['flake8==3.5.0', 'mock>=1.0.1', 'sphinx>=1.4.5', 'sphinx_rtd_theme',
-                'pytest>=4.6', 'pytest-cov', 'coverage', 'tox'],
+        'dev': ['flake8', 'mock', 'sphinx', 'sphinx_rtd_theme',
+                'pytest', 'pytest-cov', 'coverage', 'tox',
+                'approvaltests', 'pytest-approvaltests'],
     },
-
     entry_points={
         'console_scripts': [
             'lewis=lewis.scripts.run:run_simulation',

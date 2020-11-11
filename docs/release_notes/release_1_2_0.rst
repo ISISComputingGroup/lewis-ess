@@ -59,7 +59,7 @@ Changes for developers
 
       $ tox
 
-   The first run may take a bit longer, since each step is run in a fresh virtualenv that tox
+   The first run may take a bit longer, since each step is run in a fresh virtual environment that tox
    creates automatically.
 
    To run specific tests, for example to verify that building the docs works, use the ``-e`` flag

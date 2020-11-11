@@ -1,7 +1,7 @@
 Release Checklist
 =================
 
-This document provides a check list of steps to take and things to watch out 
+This document provides a check list of steps to take and things to watch out
 for when preparing a new release of Lewis. It is organized roughly in the order
 that these things need to be done or checked.
 
@@ -48,7 +48,7 @@ GitHub Release
 --------------
 
  - Draft release blurb at https://github.com/ess-dmsc/lewis/releases
- 
+
 
 Merge Changes
 -------------
@@ -66,11 +66,11 @@ completed.
 Build PyPI Package
 ------------------
 
-This should be done in a clean directory. 
+This should be done in a clean directory.
 
 .. code-block:: bash
 
-   $ virtualenv build
+   $ python -m venv build
    $ . build/bin/activate
    (build) $ git clone https://github.com/ess-dmsc/lewis.git
    (build) $ cd lewis
@@ -88,14 +88,14 @@ Make sure tests are run in a fresh virtual environment:
 
 .. code-block:: bash
 
-   $ virtualenv targz
+   $ python -m venv targz
    $ . targz/bin/activate
    (targz) $ pip install lewis/dist/lewis-X.Y.Z.tar.gz
    (targz) $ lewis linkam_t95
    ...
    (targz) $ deactivate
 
-   $ virtualenv whl
+   $ python -m venv whl
    $ . whl/bin/activate
    (whl) $ pip install lewis/dist/lewis-X.Y.Z-py2.py3-none-any.whl
    (whl) $ lewis linkam_t95
@@ -110,11 +110,11 @@ work as expected.
 Git Release
 -----------
 
- - Finalize and submit release blurb at: 
+ - Finalize and submit release blurb at:
    https://github.com/ess-dmsc/lewis/releases
  - Close the current milestone at:
    https://github.com/ess-dmsc/lewis/milestones
- 
+
 
 Upload PyPI Package
 -------------------
@@ -127,22 +127,3 @@ The ``twine`` utility can be used to upload the packages to PyPI:
    $ twine register dist/lewis-x.y.z.tar.gz
    $ twine register dist/lewis-x.y.z-py2.py3-none-any.whl
    $ twine upload dist/*
-
-
-Docker
-------
-
-When the changes made in the prepare step were merged into master, it will have
-triggered TravisCI to build a new docker image tagged as ``dmscid/lewis:edge``.
-
-Releasing a new docker image is therefore just a matter of retagging it:
-
-.. code-block:: bash
-
-   $ docker pull dmscid/lewis:edge
-   $ docker tag dmscid/lewis:edge dmscid/lewis:latest
-   $ docker tag dmscid/lewis:edge dmscid/lewis:vX.Y.Z
-   $ docker push dmscid/lewis:latest
-   $ docker push dmscid/lewis:vX.Y.Z
-
-

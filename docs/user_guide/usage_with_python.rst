@@ -18,30 +18,18 @@ installation via pip and from source. For both methods we recommend setting up a
 environment, which provide a great way of keeping packages outside the system directories and
 at the same time have more control over the environment a script is running in.
 
-To setup a virtual environment, you need the ``virtualenv`` package:
+To setup a virtual environment for Lewis:
 
 ::
 
-    $ pip install --user virtualenv
-
-After that it's recommended to create a directory somewhere to hold the environments:
-
-::
-
-    $ mkdir ~/venvs
-
-Then you can create a new environment using the virtualenv command:
-
-::
-
-    $ virtualenv ~/venvs/lewis-env
+    $ python -m venv lewis-env
 
 To actually begin using the environment, a script file containing environment variables and so on
 needs to be sourced:
 
 ::
 
-    $ source ~/venvs/lewis-env/bin/activate
+    $ source lewis-env/bin/activate
 
 By default this modifies the terminal display, showing the name of the environment. To leave the
 environment and go back to the "normal" terminal type the following:
@@ -56,8 +44,7 @@ the directories the packages are installed to are in a location that is writable
 normal user account.
 
 There are some packages to make managing multiple virtual environments easier and some IDEs also
-have builtin support. A number of guides and documentation pages exist on this topic, the
-documentation of virtualenv is a good starting point (`<https://virtualenv.pypa.io/en/stable/>`__).
+have builtin support.
 
 
 Installation via pip
@@ -117,7 +104,7 @@ pip in the top level directory of Lewis, which contains the ``setup.py``-file:
     optional dependency is ``pcaspy`` for using devices with an EPICS interface, it requires a
     working installation of EPICS base. Please refer to the `installation instructions
     <https://pcaspy.readthedocs.io/en/latest/installation.html>`__ of the module.
-    To include pcaspy in the installation of dependencies, use:
+    To include ``pcaspy`` in the installation of dependencies, use:
 
     ::
 
@@ -157,3 +144,29 @@ between OSes are covered in the "Adapter Specifics" sections.
 
 If you decided to install Lewis this way, please be aware that the ``lewis`` and ``lewis-control``
 calls in the other parts of the guide have to be replaced with ``python lewis.py``.
+
+Running from source
+-------------------
+
+Lewis can be run directly from source. First it is necessary to install the basic requirements:
+
+::
+
+    $ pip install -r requirements.txt
+
+If you would like to use EPICS based devices
+and have a working EPICS environment on your machine then it is necessary to install ``pcaspy`` like so:
+
+    ::
+
+        $ pip install pcaspy
+
+
+There are Python scripts for running both ``lewis`` and ``lewis-control`` in the top-level scripts directory.
+These scripts work exactly the same as when Lewis is installed via pip (see above). For example:
+
+::
+
+    $ python scripts/lewis.py --help
+    $ python scripts/lewis-control.py --help
+

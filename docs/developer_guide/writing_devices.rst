@@ -15,7 +15,7 @@ The process of writing a new device simulator is best explained using
 the example of a stateful device.
 
 All that is required to develop a new device is to install Lewis, preferably
-in a fresh virtualenv:
+in a fresh virtual environment:
 
 ::
 

@@ -6,16 +6,13 @@
 LeWIS - Let's Write Intricate Simulators.
 
 Lewis is a Python framework for simulating hardware devices. It is
-compatible with both Python 2.7+ and 3.4+.
+compatible with Python 3.6 or higher.
 
-Lewis can be installed via pip, or using a prepackaged Docker image
-that includes all dependencies. See relevant usage sections for
-details.
+Lewis can be installed via pip or ran from source. See relevant usage sections at
+`ReadTheDocs <http://lewis.readthedocs.io/>`__ for more details.
 
 Resources:
 `GitHub <https://github.com/ess-dmsc/lewis>`__ --
-`DockerHub <https://hub.docker.com/r/dmscid/lewis/>`__ --
-`Dockerfile <https://github.com/ess-dmsc/lewis/blob/master/Dockerfile>`__ --
 `ReadTheDocs <http://lewis.readthedocs.io/>`__ --
 `PyPI <https://pypi.python.org/pypi/lewis>`__
 
@@ -97,21 +94,8 @@ Additional Documentation
 ------------------------
 
 Documentation can be found at `ReadTheDocs <http://lewis.readthedocs.io/>`__.
-It can also be generated from the sources:
 
-::
 
-   $ git clone https://github.com/ess-dmsc/lewis
-   $ cd lewis
-   $ pip install -r requirements-dev.txt
-   $ sphinx-build -b html docs/ docs/_build/html
-
-The ``docs/_build/html`` directory will then contain the full documentation in HTML format.
-
-.. |Version| image:: https://images.microbadger.com/badges/version/dmscid/lewis.svg
-   :target: https://hub.docker.com/r/dmscid/lewis/
-.. |Layers| image:: https://images.microbadger.com/badges/image/dmscid/lewis.svg
-   :target: https://microbadger.com/images/dmscid/lewis
 .. |Build Status| image:: https://travis-ci.org/ess-dmsc/lewis.svg?branch=master
    :target: https://travis-ci.org/ess-dmsc/lewis
 .. |Codacy| image:: https://api.codacy.com/project/badge/Grade/77aef653cf5d42f5a9a8a5a2c929a628

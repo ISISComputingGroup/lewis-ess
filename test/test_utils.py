@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # *********************************************************************
 # lewis - a library for creating hardware device simulators
-# Copyright (C) 2016-2017 European Spallation Source ERIC
+# Copyright (C) 2016-2020 European Spallation Source ERIC
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,9 +21,8 @@ import importlib
 import unittest
 from datetime import datetime
 
-from utils import assertRaisesNothing, TestWithPackageStructure
+from .utils import assertRaisesNothing, TestWithPackageStructure
 from mock import patch
-from six import string_types
 
 from lewis.core.utils import dict_strict_update, extract_module_name, \
     get_submodules, get_members, seconds_since, FromOptionalDependency, \
@@ -102,7 +101,7 @@ class TestGetMembers(unittest.TestCase):
             bar = 3.0
             baz = 'test'
 
-        members = get_members(Foo(), lambda x: isinstance(x, string_types))
+        members = get_members(Foo(), lambda x: isinstance(x, str))
 
         self.assertEqual(len(members), 1)
         self.assertIn('baz', members)

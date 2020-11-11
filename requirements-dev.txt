@@ -1,14 +1,17 @@
-mock>=1.0.1
-six
-pyzmq
-json-rpc
-sphinx>=1.4.5
+-r requirements.txt
+approvaltests
+mock
+sphinx
 sphinx_rtd_theme
-semantic_version
-PyYAML
-scanf==1.4.1
-pytest>=4.6
+pytest
+pytest-approvaltests
 pytest-cov
 coverage
-flake8==3.5.0
 tox
+twine
+wheel
+pre-commit
+
+# Pin to match versions in pre-commit hooks
+black==20.8b1
+flake8==3.8.4

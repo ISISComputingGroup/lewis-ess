@@ -10,8 +10,6 @@ include requirements*.txt
 include tox.ini
 include .flake8
 
-exclude .dockerignore Dockerfile
-
-recursive-exclude src *.rst
+recursive-exclude lewis *.rst
 
 recursive-include test *.py

@@ -2,29 +2,23 @@ sudo: required
 
 language: python
 
-services:
-  - docker
-
 python:
-  - "2.7"
-  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "3.8"
 
 install:
-  - pip install ".[dev]"
+  - pip install -r requirements-dev.txt
   - pip install coveralls
 
 script:
-  - flake8 setup.py src test
+  - flake8 setup.py lewis scripts system_tests test
   - pytest --cov=lewis.core --cov=lewis.devices test
+  - pytest system_tests/lewis_tests.py
   - sphinx-build -W -b html docs/ docs/_build/html
 
 after_success:
   - coveralls
-  - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == false ]; then
-    docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker build -t dmscid/lewis:edge .;
-    docker push dmscid/lewis:edge;
-    fi
 
 branches:
   only:
