@@ -28,9 +28,10 @@ This module provides client code for objects exposed via JSON-RPC over ZMQ.
 
 from __future__ import absolute_import, division
 
-import zmq
-import uuid
 import types
+import uuid
+
+import zmq
 
 # This does not import .exceptions, because absolute_import from the __future__ module
 try:
@@ -52,7 +53,10 @@ class RemoteException(Exception):
 
     def __init__(self, exception_type, message):
         super(RemoteException, self).__init__(
-            'Exception on server side of type \'{}\': \'{}\''.format(exception_type, message))
+            "Exception on server side of type '{}': '{}'".format(
+                exception_type, message
+            )
+        )
 
         self.server_side_type = exception_type
         self.server_side_message = message
@@ -81,12 +85,12 @@ class ControlClient(object):
     :param timeout: Timeout in milliseconds for ZMQ operations.
     """
 
-    def __init__(self, host='127.0.0.1', port='10000', timeout=3000):
+    def __init__(self, host="127.0.0.1", port="10000", timeout=3000):
         self.timeout = timeout if timeout is not None else -1
 
         self._socket = self._get_zmq_req_socket()
 
-        self._connection_string = 'tcp://{0}:{1}'.format(host, port)
+        self._connection_string = "tcp://{0}:{1}".format(host, port)
         self._socket.connect(self._connection_string)
 
     def _get_zmq_req_socket(self):
@@ -114,31 +118,30 @@ class ControlClient(object):
 
         try:
             self._socket.send_json(
-                {'method': method,
-                 'params': args,
-                 'jsonrpc': '2.0',
-                 'id': request_id
-                 })
+                {"method": method, "params": args, "jsonrpc": "2.0", "id": request_id}
+            )
 
             return self._socket.recv_json(), request_id
         except zmq.error.Again:
             raise ProtocolException(
-                'The ZMQ connection to {} timed out after {:.2f}s.'.format(
-                    self._connection_string, self.timeout / 1000))
+                "The ZMQ connection to {} timed out after {:.2f}s.".format(
+                    self._connection_string, self.timeout / 1000
+                )
+            )
 
-    def get_object(self, object_name=''):
-        api, request_id = self.json_rpc(object_name + ':api')
+    def get_object(self, object_name=""):
+        api, request_id = self.json_rpc(object_name + ":api")
 
-        if 'result' not in api or api['id'] != request_id:
-            raise ProtocolException('Failed to retrieve API of remote object.')
+        if "result" not in api or api["id"] != request_id:
+            raise ProtocolException("Failed to retrieve API of remote object.")
 
-        object_type = type(str(api['result']['class']), (ObjectProxy,), {})
-        methods = api['result']['methods']
+        object_type = type(str(api["result"]["class"]), (ObjectProxy,), {})
+        methods = api["result"]["methods"]
 
-        glue = '.' if object_name else ''
+        glue = "." if object_name else ""
         return object_type(self, methods, object_name + glue)
 
-    def get_object_collection(self, object_name=''):
+    def get_object_collection(self, object_name=""):
         """
         If the remote end exposes a collection of objects under the supplied object name (empty
         for top level), this method returns a dictionary of these objects stored under their
@@ -184,7 +187,7 @@ class ObjectProxy(object):
     :param prefix: Usually object name on the server plus dot.
     """
 
-    def __init__(self, connection, members, prefix=''):
+    def __init__(self, connection, members, prefix=""):
         self._properties = set()
 
         self._connection = connection
@@ -204,21 +207,23 @@ class ObjectProxy(object):
         """
         response, request_id = self._connection.json_rpc(self._prefix + method, *args)
 
-        if 'id' not in response:
-            raise ProtocolException('JSON-RPC response does not contain ID field.')
+        if "id" not in response:
+            raise ProtocolException("JSON-RPC response does not contain ID field.")
 
-        if response['id'] != request_id:
+        if response["id"] != request_id:
             raise ProtocolException(
-                'ID of JSON-RPC request ({}) did not match response ({}).'.format(
-                    request_id, response['id']))
+                "ID of JSON-RPC request ({}) did not match response ({}).".format(
+                    request_id, response["id"]
+                )
+            )
 
-        if 'result' in response:
-            return response['result']
+        if "result" in response:
+            return response["result"]
 
-        if 'error' in response:
-            if 'data' in response['error']:
-                exception_type = response['error']['data']['type']
-                exception_message = response['error']['data']['message']
+        if "error" in response:
+            if "data" in response["error"]:
+                exception_type = response["error"]["data"]["type"]
+                exception_message = response["error"]["data"]["message"]
 
                 if not hasattr(exceptions, exception_type):
                     raise RemoteException(exception_type, exception_message)
@@ -226,28 +231,33 @@ class ObjectProxy(object):
                     exception = getattr(exceptions, exception_type)
                     raise exception(exception_message)
             else:
-                raise ProtocolException(response['error']['message'])
+                raise ProtocolException(response["error"]["message"])
 
     def _add_member_proxies(self, members):
         for member in [str(m) for m in members]:
-            if ':set' in member or ':get' in member:
-                self._properties.add(member.split(':')[-2].split('.')[-1])
+            if ":set" in member or ":get" in member:
+                self._properties.add(member.split(":")[-2].split(".")[-1])
             else:
                 setattr(self, member, self._create_method_proxy(member))
 
         for prop in self._properties:
-            setattr(type(self), prop, property(self._create_getter_proxy(prop),
-                                               self._create_setter_proxy(prop)))
+            setattr(
+                type(self),
+                prop,
+                property(
+                    self._create_getter_proxy(prop), self._create_setter_proxy(prop)
+                ),
+            )
 
     def _create_getter_proxy(self, property_name):
         def getter(obj):
-            return obj._make_request(property_name + ':get')
+            return obj._make_request(property_name + ":get")
 
         return getter
 
     def _create_setter_proxy(self, property_name):
         def setter(obj, value):
-            return obj._make_request(property_name + ':set', value)
+            return obj._make_request(property_name + ":set", value)
 
         return setter
 

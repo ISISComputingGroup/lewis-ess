@@ -25,14 +25,15 @@ to be used directly in client code for device simulations - these should be base
 :class:`StateMachineDevice`, which provides a more convenient interface for that purpose.
 """
 
-from lewis.core.processor import CanProcess
 from lewis.core.logging import has_log
+from lewis.core.processor import CanProcess
 
 
 class StateMachineException(Exception):
     """
     Classes in this module should only raise this type of Exception.
     """
+
     pass
 
 
@@ -55,7 +56,7 @@ class HasContext(object):
         """Assigns the new context to the member variable ``_context``."""
         self._context = new_context
 
-        if hasattr(self, '_set_logging_context'):
+        if hasattr(self, "_set_logging_context"):
             self._set_logging_context(self._context)
 
 
@@ -178,24 +179,30 @@ class StateMachine(CanProcess):
 
         self._set_logging_context(context)
 
-        self._state = None  # We start outside of any state, first cycle enters initial state
+        self._state = (
+            None  # We start outside of any state, first cycle enters initial state
+        )
         self._handler = {}  # Nested dict mapping [state][event] = handler
-        self._transition = {}  # Dict mapping [from_state] = [ (to_state, transition), ... ]
+        self._transition = (
+            {}
+        )  # Dict mapping [from_state] = [ (to_state, transition), ... ]
         self._prefix = {  # Default prefixes used when calling handler functions by name
-            'on_entry': '_on_entry_',
-            'in_state': '_in_state_',
-            'on_exit': '_on_exit_',
+            "on_entry": "_on_entry_",
+            "in_state": "_in_state_",
+            "on_exit": "_on_exit_",
         }
 
         # Specifying an initial state is not optional
-        if 'initial' not in cfg:
-            raise StateMachineException("StateMachine configuration must include "
-                                        "'initial' to specify starting state.")
-        self._initial = cfg['initial']
+        if "initial" not in cfg:
+            raise StateMachineException(
+                "StateMachine configuration must include "
+                "'initial' to specify starting state."
+            )
+        self._initial = cfg["initial"]
         self._set_handlers(self._initial)
 
-        self._setup_state_handlers(cfg.get('states', {}), context)
-        self._setup_transition_handlers(cfg.get('transitions', {}), context)
+        self._setup_state_handlers(cfg.get("states", {}), context)
+        self._setup_transition_handlers(cfg.get("transitions", {}), context)
 
     def _setup_state_handlers(self, state_handler_configuration, context):
         """
@@ -213,20 +220,24 @@ class StateMachine(CanProcess):
             try:
                 if isinstance(handlers, State):
                     self._set_handlers(
-                        state_name, handlers.on_entry, handlers.in_state, handlers.on_exit)
+                        state_name,
+                        handlers.on_entry,
+                        handlers.in_state,
+                        handlers.on_exit,
+                    )
                 elif isinstance(handlers, dict):
                     self._set_handlers(state_name, **handlers)
-                elif hasattr(handlers, '__iter__'):
+                elif hasattr(handlers, "__iter__"):
                     self._set_handlers(state_name, *handlers)
                 else:
-                    raise RuntimeError('Handler is not State, dict or __iter__.')
+                    raise RuntimeError("Handler is not State, dict or __iter__.")
             except Exception:
                 raise StateMachineException(
                     "Failed to parse state handlers for state '%s'. "
-                    "Must be dict or iterable." % state_name)
+                    "Must be dict or iterable." % state_name
+                )
 
-    def _setup_transition_handlers(self, transition_handler_configuration,
-                                   context):
+    def _setup_transition_handlers(self, transition_handler_configuration, context):
         """
         This method constructs the transition handlers from a user-provided
         dict.
@@ -302,8 +313,8 @@ class StateMachine(CanProcess):
         """
         if prefix is None:
             prefix = {}
-        if not isinstance(prefix, dict) and hasattr(prefix, '__iter__'):
-            prefix = dict(zip(['on_entry', 'in_state', 'on_exit'], prefix))
+        if not isinstance(prefix, dict) and hasattr(prefix, "__iter__"):
+            prefix = dict(zip(["on_entry", "in_state", "on_exit"], prefix))
 
         # Merge prefix defaults with any provided prefixes
         prefix = dict(list(self._prefix.items()) + list(prefix.items()))
@@ -343,21 +354,23 @@ class StateMachine(CanProcess):
         if self._state is None:
             self.log.debug('Entering initial state "%s"', self._initial)
             self._state = self._initial
-            self._raise_event('on_entry', 0)
-            self._raise_event('in_state', 0)
+            self._raise_event("on_entry", 0)
+            self._raise_event("in_state", 0)
             return
 
         # General transition
         for target_state, check_func in self._transition.get(self._state, []):
             if check_func():
-                self.log.debug('Transition triggered (%s -> %s)', self._state, target_state)
-                self._raise_event('on_exit', dt)
+                self.log.debug(
+                    "Transition triggered (%s -> %s)", self._state, target_state
+                )
+                self._raise_event("on_exit", dt)
                 self._state = target_state
-                self._raise_event('on_entry', dt)
+                self._raise_event("on_entry", dt)
                 break
 
         # Always end with an in_state
-        self._raise_event('in_state', dt)
+        self._raise_event("in_state", dt)
 
     def reset(self):
         """
@@ -382,13 +395,15 @@ class StateMachine(CanProcess):
         """
         # Variable arguments for state handlers
         # Default to calling target.on_entry_state_name(), etc
-        on_entry = args[0] if len(args) > 0 else kwargs.get('on_entry', None)
-        in_state = args[1] if len(args) > 1 else kwargs.get('in_state', None)
-        on_exit = args[2] if len(args) > 2 else kwargs.get('on_exit', None)
+        on_entry = args[0] if len(args) > 0 else kwargs.get("on_entry", None)
+        in_state = args[1] if len(args) > 1 else kwargs.get("in_state", None)
+        on_exit = args[2] if len(args) > 2 else kwargs.get("on_exit", None)
 
-        self._handler[state] = {'on_entry': on_entry,
-                                'in_state': in_state,
-                                'on_exit': on_exit}
+        self._handler[state] = {
+            "on_entry": on_entry,
+            "in_state": in_state,
+            "on_exit": on_exit,
+        }
 
     def _set_transition(self, from_state, to_state, transition_check):
         """
@@ -413,11 +428,17 @@ class StateMachine(CanProcess):
         # Remove previously added transition with same From -> To mapping
         try:
             del self._transition[from_state][
-                [x[0] for x in self._transition[from_state]].index(to_state)]
+                [x[0] for x in self._transition[from_state]].index(to_state)
+            ]
         except Exception:
             pass
 
-        self._transition[from_state].append((to_state, transition_check,))
+        self._transition[from_state].append(
+            (
+                to_state,
+                transition_check,
+            )
+        )
 
     def _raise_event(self, event, dt):
         """
@@ -427,7 +448,7 @@ class StateMachine(CanProcess):
         :param dt: Delta T since last cycle.
         """
         # May be None, function reference, or list of function refs
-        self.log.debug('Processing state=%s, handler=%s', self._state, event)
+        self.log.debug("Processing state=%s, handler=%s", self._state, event)
         handlers = self._handler[self._state][event]
 
         if handlers is None:

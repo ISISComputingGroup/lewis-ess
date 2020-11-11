@@ -17,32 +17,38 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+import inspect
 from datetime import datetime
 from functools import wraps
-import inspect
 
 from lewis.core.adapters import Adapter
 from lewis.core.devices import InterfaceBase
-
+from lewis.core.exceptions import (
+    AccessViolationException,
+    LewisException,
+    LimitViolationException,
+)
 from lewis.core.logging import has_log
-from lewis.core.utils import seconds_since, FromOptionalDependency, format_doc_text
-from lewis.core.exceptions import LewisException, LimitViolationException, AccessViolationException
+from lewis.core.utils import FromOptionalDependency, format_doc_text, seconds_since
 
 # pcaspy might not be available. To make EPICS-based adapters show up
 # in the listed adapters anyway dummy types are created in this case
 # and the failure is postponed to runtime, where a more appropriate
 # LewisException can be raised.
 missing_pcaspy_exception = LewisException(
-    'In order to use EPICS-interfaces, pcaspy must be installed:\n'
-    '\tpip install pcaspy\n'
-    'A fully working installation of EPICS-base is required for this package. '
-    'Please refer to the documentation for advice.')
+    "In order to use EPICS-interfaces, pcaspy must be installed:\n"
+    "\tpip install pcaspy\n"
+    "A fully working installation of EPICS-base is required for this package. "
+    "Please refer to the documentation for advice."
+)
 
 Driver, SimpleServer = FromOptionalDependency(
-    'pcaspy', missing_pcaspy_exception).do_import('Driver', 'SimpleServer')
+    "pcaspy", missing_pcaspy_exception
+).do_import("Driver", "SimpleServer")
 
 pcaspy_manager = FromOptionalDependency(
-    'pcaspy.driver', missing_pcaspy_exception).do_import('manager')
+    "pcaspy.driver", missing_pcaspy_exception
+).do_import("manager")
 
 
 class BoundPV(object):
@@ -84,7 +90,8 @@ class BoundPV(object):
     def value(self, new_value):
         if self.read_only:
             raise AccessViolationException(
-                'The property {} is read only.'.format(self._pv.property))
+                "The property {} is read only.".format(self._pv.property)
+            )
 
         setattr(self._target, self._pv.property, new_value)
 
@@ -114,8 +121,11 @@ class BoundPV(object):
     @property
     def doc(self):
         """Docstring of property on target or override specified on PV-object."""
-        return self._pv.doc or inspect.getdoc(
-            getattr(type(self._target), self._pv.property, None)) or ''
+        return (
+            self._pv.doc
+            or inspect.getdoc(getattr(type(self._target), self._pv.property, None))
+            or ""
+        )
 
 
 class PV(object):
@@ -203,22 +213,26 @@ class PV(object):
     :param kwargs: Arguments forwarded into pcaspy pvdb-dict.
     """
 
-    def __init__(self, target_property, poll_interval=1.0, read_only=False,
-                 meta_data_property=None, doc=None, **kwargs):
-        self.property = 'value'
+    def __init__(
+        self,
+        target_property,
+        poll_interval=1.0,
+        read_only=False,
+        meta_data_property=None,
+        doc=None,
+        **kwargs
+    ):
+        self.property = "value"
         self.read_only = read_only
         self.poll_interval = poll_interval
-        self.meta_data_property = 'meta'
+        self.meta_data_property = "meta"
         self.doc = doc
         self.config = kwargs
 
         value = self._get_specification(target_property)
         meta = self._get_specification(meta_data_property)
 
-        self._specifications = {
-            'value': value,
-            'meta': meta
-        }
+        self._specifications = {"value": value, "meta": meta}
 
     def bind(self, *targets):
         """
@@ -228,12 +242,14 @@ class PV(object):
         :param targets: Objects to inspect from.
         :return: BoundPV instance with the PV bound to the target property.
         """
-        self.property = 'value'
-        self.meta_data_property = 'meta'
+        self.property = "value"
+        self.meta_data_property = "meta"
 
-        return BoundPV(self,
-                       self._get_target(self.property, *targets),
-                       self._get_target(self.meta_data_property, *targets))
+        return BoundPV(
+            self,
+            self._get_target(self.property, *targets),
+            self._get_target(self.meta_data_property, *targets),
+        )
 
     def _get_specification(self, spec):
         """
@@ -273,24 +289,34 @@ class PV(object):
 
         if isinstance(raw_getter, str):
             target = next(
-                (obj for obj in targets if
-                 isinstance(
-                     getattr(type(obj), raw_getter, None), property)
-                 or not callable(
-                     getattr(obj, raw_getter, lambda: True))),
-                None)
+                (
+                    obj
+                    for obj in targets
+                    if isinstance(getattr(type(obj), raw_getter, None), property)
+                    or not callable(getattr(obj, raw_getter, lambda: True))
+                ),
+                None,
+            )
 
         if target is not None:
             # If the property is an actual property and has no setter, read_only can be
             # set to True at this point automatically.
             target_prop = getattr(type(target), raw_getter, None)
 
-            if prop == 'value' and isinstance(target_prop, property) and target_prop.fset is None:
+            if (
+                prop == "value"
+                and isinstance(target_prop, property)
+                and target_prop.fset is None
+            ):
                 self.read_only = True
 
             # Now the target does not need to be constructed, property or meta_data_property
             # needs to change.
-            setattr(self, 'property' if prop == 'value' else 'meta_data_property', raw_getter)
+            setattr(
+                self,
+                "property" if prop == "value" else "meta_data_property",
+                raw_getter,
+            )
             return target
 
         getter = self._create_getter(raw_getter, *targets)
@@ -299,7 +325,7 @@ class PV(object):
         if getter is None and setter is None:
             return None
 
-        if prop == 'value' and setter is None:
+        if prop == "value" and setter is None:
             self.read_only = True
 
         return type(prop, (object,), {prop: property(getter, setter)})()
@@ -321,9 +347,12 @@ class PV(object):
 
         if not self._function_has_n_args(final_callable, 0):
             raise RuntimeError(
-                'The function \'{}\' does not look like a getter function. A valid getter '
-                'function has no arguments that do not have a default. The self-argument of '
-                'methods does not count towards that number.'.format(final_callable.__name__))
+                "The function '{}' does not look like a getter function. A valid getter "
+                "function has no arguments that do not have a default. The self-argument of "
+                "methods does not count towards that number.".format(
+                    final_callable.__name__
+                )
+            )
 
         @wraps(final_callable)
         def getter(obj):
@@ -348,9 +377,10 @@ class PV(object):
 
         if not self._function_has_n_args(func, 1):
             raise RuntimeError(
-                'The function \'{}\' does not look like a setter function. A valid setter '
-                'function has exactly one argument without a default. The self-argument of '
-                'methods does not count towards that number.'.format(func.__name__))
+                "The function '{}' does not look like a setter function. A valid setter "
+                "function has exactly one argument without a default. The self-argument of "
+                "methods does not count towards that number.".format(func.__name__)
+            )
 
         def setter(obj, value):
             func(value)
@@ -369,13 +399,15 @@ class PV(object):
         """
         if not callable(func):
             func_name = func
-            func = next((getattr(obj, func, None) for obj in targets if func in dir(obj)),
-                        None)
+            func = next(
+                (getattr(obj, func, None) for obj in targets if func in dir(obj)), None
+            )
 
             if not func:
                 raise AttributeError(
-                    'No method with the name \'{}\' could be found on any of the target objects '
-                    '(device, interface). Please check the spelling.'.format(func_name))
+                    "No method with the name '{}' could be found on any of the target objects "
+                    "(device, interface). Please check the spelling.".format(func_name)
+                )
 
         return func
 
@@ -406,7 +438,7 @@ class PropertyExposingDriver(Driver):
         self._last_update_call = None
 
     def write(self, pv, value):
-        self.log.debug('PV put request: %s=%s', pv, value)
+        self.log.debug("PV put request: %s=%s", pv, value)
 
         pv_object = self._interface.bound_pvs.get(pv)
 
@@ -420,11 +452,19 @@ class PropertyExposingDriver(Driver):
 
                 return True
         except LimitViolationException as e:
-            self.log.warning('Rejected writing value %s to PV %s due to limit '
-                             'violation. %s', value, pv, e)
+            self.log.warning(
+                "Rejected writing value %s to PV %s due to limit " "violation. %s",
+                value,
+                pv,
+                e,
+            )
         except AccessViolationException:
-            self.log.warning('Rejected writing value %s to PV %s due to access '
-                             'violation, PV is read-only.', value, pv)
+            self.log.warning(
+                "Rejected writing value %s to PV %s due to access "
+                "violation, PV is read-only.",
+                value,
+                pv,
+            )
 
         return False
 
@@ -475,7 +515,9 @@ class PropertyExposingDriver(Driver):
                             meta_updates.append((pv, pv_meta))
 
                     except (AttributeError, TypeError):
-                        self.log.exception('An error occurred while updating PV %s.', pv)
+                        self.log.exception(
+                            "An error occurred while updating PV %s.", pv
+                        )
                     finally:
                         self._timers[pv] = 0.0
 
@@ -489,9 +531,9 @@ class PropertyExposingDriver(Driver):
             update_log = []
             for pv, value in updates:
                 self.setParam(pv, value)
-                update_log.append('{}={}'.format(pv, value))
+                update_log.append("{}={}".format(pv, value))
 
-            self.log.info('Processed PV updates: %s', ', '.join(update_log))
+            self.log.info("Processed PV updates: %s", ", ".join(update_log))
 
             # Calling this manually is only required for values, not for meta
             self.updatePVs()
@@ -501,9 +543,9 @@ class PropertyExposingDriver(Driver):
             update_log = []
             for pv, info in updates:
                 self.setParamInfo(pv, info)
-                update_log.append('{}={}'.format(pv, info))
+                update_log.append("{}={}".format(pv, info))
 
-            self.log.info('Processed PV-info updates: %s', ', '.join(update_log))
+            self.log.info("Processed PV-info updates: %s", ", ".join(update_log))
 
 
 class EpicsAdapter(Adapter):
@@ -522,7 +564,7 @@ class EpicsAdapter(Adapter):
     :param options: Dictionary with options.
     """
 
-    default_options = {'prefix': ''}
+    default_options = {"prefix": ""}
 
     def __init__(self, options=None):
         super(EpicsAdapter, self).__init__(options)
@@ -537,14 +579,16 @@ class EpicsAdapter(Adapter):
         for name, pv in self.interface.bound_pvs.items():
             complete_name = self._options.prefix + name
 
-            data_type = pv.config.get('type', 'float')
-            read_only_tag = ', read only' if pv.read_only else ''
+            data_type = pv.config.get("type", "float")
+            read_only_tag = ", read only" if pv.read_only else ""
 
-            pvs.append('{} ({}{}):\n{}'.format(
-                complete_name, data_type, read_only_tag, format_doc_text(pv.doc)))
+            pvs.append(
+                "{} ({}{}):\n{}".format(
+                    complete_name, data_type, read_only_tag, format_doc_text(pv.doc)
+                )
+            )
 
-        return '\n\n'.join(
-            [inspect.getdoc(self.interface) or '', 'PVs\n==='] + pvs)
+        return "\n\n".join([inspect.getdoc(self.interface) or "", "PVs\n==="] + pvs)
 
     def start_server(self):
         """
@@ -556,15 +600,24 @@ class EpicsAdapter(Adapter):
         """
         if self._server is None:
             self._server = SimpleServer()
-            self._server.createPV(prefix=self._options.prefix,
-                                  pvdb={k: v.config for k, v in self.interface.bound_pvs.items()})
-            self._driver = PropertyExposingDriver(interface=self.interface,
-                                                  device_lock=self.device_lock)
+            self._server.createPV(
+                prefix=self._options.prefix,
+                pvdb={k: v.config for k, v in self.interface.bound_pvs.items()},
+            )
+            self._driver = PropertyExposingDriver(
+                interface=self.interface, device_lock=self.device_lock
+            )
             self._driver.process_pv_updates(force=True)
 
-            self.log.info('Started serving PVs: %s',
-                          ', '.join((self._options.prefix + pv for pv in
-                                     self.interface.bound_pvs.keys())))
+            self.log.info(
+                "Started serving PVs: %s",
+                ", ".join(
+                    (
+                        self._options.prefix + pv
+                        for pv in self.interface.bound_pvs.keys()
+                    )
+                ),
+            )
 
     def stop_server(self):
         self._driver = None
@@ -646,7 +699,7 @@ class EpicsInterface(InterfaceBase):
     offer an RPC-way of achieving the same thing.
     """
 
-    protocol = 'epics'
+    protocol = "epics"
     pvs = None
 
     def __init__(self):
@@ -674,9 +727,13 @@ class EpicsInterface(InterfaceBase):
             try:
                 self.bound_pvs[pv_name] = pv.bind(self, self.device)
             except (AttributeError, RuntimeError) as e:
-                self.log.debug('An exception was caught during the binding step of PV \'%s\'.',
-                               pv_name, exc_info=e)
+                self.log.debug(
+                    "An exception was caught during the binding step of PV '%s'.",
+                    pv_name,
+                    exc_info=e,
+                )
                 raise LewisException(
-                    'The binding step for PV \'{}\' failed, please check the interface-'
-                    'definition or contact the device author. More information is '
-                    'available with debug-level logging (-o debug).'.format(pv_name))
+                    "The binding step for PV '{}' failed, please check the interface-"
+                    "definition or contact the device author. More information is "
+                    "available with debug-level logging (-o debug).".format(pv_name)
+                )

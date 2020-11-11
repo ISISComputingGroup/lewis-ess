@@ -22,9 +22,9 @@ import argparse
 import ast
 import sys
 
+from lewis import __version__
 from lewis.core.control_client import ControlClient, ProtocolException
 from lewis.scripts import get_usage_text
-from lewis import __version__
 
 
 def list_objects(remote):
@@ -34,37 +34,44 @@ def list_objects(remote):
 
 def show_api(remote, object_name):
     if object_name not in remote.keys():
-        raise RuntimeError(
-            'Object \'{}\' is not exposed by remote.'.format(object_name))
+        raise RuntimeError("Object '{}' is not exposed by remote.".format(object_name))
 
     obj = remote[object_name]
-    print('Type: {}'.format(type(obj).__name__))
+    print("Type: {}".format(type(obj).__name__))
 
-    print('Properties (current values):')
+    print("Properties (current values):")
 
     properties = list(obj._properties)
     maxlen = len(max(properties, key=len))
     for prop in sorted(properties):
         try:
             raw_value = str(getattr(obj, prop))
-            value_lines = raw_value.split('\n')
+            value_lines = raw_value.split("\n")
 
             current_value = value_lines[0][:40] + (
-                ' [...]' if len(value_lines) > 1 or len(value_lines[0]) > 40 else '')
+                " [...]" if len(value_lines) > 1 or len(value_lines[0]) > 40 else ""
+            )
         except ProtocolException:
             raise
         except Exception as e:
-            current_value = 'Not accessible: {}'.format(e)
+            current_value = "Not accessible: {}".format(e)
 
-        print('    {}    ({})'.format(prop.ljust(maxlen), current_value))
+        print("    {}    ({})".format(prop.ljust(maxlen), current_value))
 
-    print('Methods:')
-    print('\n'.join(
-        sorted('    {}'.format(member) for member in dir(obj) if is_remote_method(obj, member))))
+    print("Methods:")
+    print(
+        "\n".join(
+            sorted(
+                "    {}".format(member)
+                for member in dir(obj)
+                if is_remote_method(obj, member)
+            )
+        )
+    )
 
 
 def is_remote_method(obj, member):
-    return member[0] not in ('_', ':') and member not in dir(type(obj))
+    return member[0] not in ("_", ":") and member not in dir(type(obj))
 
 
 def convert_type(value):
@@ -76,7 +83,7 @@ def convert_type(value):
 
 def call_method(remote, object_name, method, arguments):
     if not method:
-        raise RuntimeError('Missing object member, can not make call.')
+        raise RuntimeError("Missing object member, can not make call.")
 
     attr = getattr(remote[object_name], method)
     args = [convert_type(arg) for arg in arguments]
@@ -91,44 +98,66 @@ def call_method(remote, object_name, method, arguments):
 
 
 parser = argparse.ArgumentParser(
-    description='A client to manipulate the simulated device remotely through a separate '
-                'channel. For this tool to be of any use, lewis must be invoked with the '
-                '-r/--rpc-host option.',
-    add_help=False, prog='lewis-control')
+    description="A client to manipulate the simulated device remotely through a separate "
+    "channel. For this tool to be of any use, lewis must be invoked with the "
+    "-r/--rpc-host option.",
+    add_help=False,
+    prog="lewis-control",
+)
 
-positional_args = parser.add_argument_group('Positional arguments')
+positional_args = parser.add_argument_group("Positional arguments")
 positional_args.add_argument(
-    'object', nargs='?', default=None,
-    help='Object to control. If left out, all objects are listed.')
+    "object",
+    nargs="?",
+    default=None,
+    help="Object to control. If left out, all objects are listed.",
+)
 positional_args.add_argument(
-    'member', nargs='?', default=None,
-    help='Object-member to access. If omitted, API of the object is listed.')
+    "member",
+    nargs="?",
+    default=None,
+    help="Object-member to access. If omitted, API of the object is listed.",
+)
 positional_args.add_argument(
-    'arguments', nargs='*',
-    help='Arguments to method call. For setting a property, '
-         'supply the property value. ')
+    "arguments",
+    nargs="*",
+    help="Arguments to method call. For setting a property, "
+    "supply the property value. ",
+)
 
-optional_args = parser.add_argument_group('Optional arguments')
+optional_args = parser.add_argument_group("Optional arguments")
 optional_args.add_argument(
-    '-r', '--rpc-host', default='127.0.0.1:10000',
-    help='HOST:PORT string specifying control server to connect to.')
+    "-r",
+    "--rpc-host",
+    default="127.0.0.1:10000",
+    help="HOST:PORT string specifying control server to connect to.",
+)
 optional_args.add_argument(
-    '-t', '--timeout', default=3000, type=int,
-    help='Timeout after which the control client exits. Must be at least as long as '
-         'one simulation cycle.')
+    "-t",
+    "--timeout",
+    default=3000,
+    type=int,
+    help="Timeout after which the control client exits. Must be at least as long as "
+    "one simulation cycle.",
+)
 optional_args.add_argument(
-    '-n', '--print-none', action='store_true',
-    help='By default, no output is generated if the remote function returns None. '
-         'Specifying this flag will force the client to print those None-values.')
+    "-n",
+    "--print-none",
+    action="store_true",
+    help="By default, no output is generated if the remote function returns None. "
+    "Specifying this flag will force the client to print those None-values.",
+)
 optional_args.add_argument(
-    '-v', '--version', action='store_true',
-    help='Prints the version and exits.')
+    "-v", "--version", action="store_true", help="Prints the version and exits."
+)
 optional_args.add_argument(
-    '-h', '--h', action='help',
-    help='Shows this help message and exits.')
+    "-h", "--h", action="help", help="Shows this help message and exits."
+)
 
-__doc__ = 'To interact with the control server of a running simulation, use this script. ' \
-          'Usage:\n\n.. code-block:: none\n\n{}'.format(get_usage_text(parser, indent=4))
+__doc__ = (
+    "To interact with the control server of a running simulation, use this script. "
+    "Usage:\n\n.. code-block:: none\n\n{}".format(get_usage_text(parser, indent=4))
+)
 
 
 def control_simulation(argument_list=None):
@@ -139,8 +168,9 @@ def control_simulation(argument_list=None):
         return
 
     try:
-        remote = ControlClient(*args.rpc_host.split(':'),
-                               timeout=args.timeout).get_object_collection()
+        remote = ControlClient(
+            *args.rpc_host.split(":"), timeout=args.timeout
+        ).get_object_collection()
 
         if not args.object:
             list_objects(remote)
@@ -153,4 +183,4 @@ def control_simulation(argument_list=None):
                 if response is not None or args.print_none:
                     print(response)
     except ProtocolException as e:
-        print('\n'.join(('An error occurred:', str(e))))
+        print("\n".join(("An error occurred:", str(e))))

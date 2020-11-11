@@ -18,7 +18,9 @@
 # *********************************************************************
 
 import unittest
+
 from lewis.devices.julabo.devices.device import SimulatedJulabo
+
 from .utils import assertRaisesNothing
 
 
@@ -34,10 +36,10 @@ class TestSimulatedJulabo(unittest.TestCase):
     def check_setting_values_works(self, par_name, value):
         """Helper function for checking that setting a simple value works.
 
-            :param param_name: The name of the parameter to change.
-            :param value: The new value.
+        :param param_name: The name of the parameter to change.
+        :param value: The new value.
         """
-        setter = getattr(self.julabo_device, 'set_%s' % par_name)
+        setter = getattr(self.julabo_device, "set_%s" % par_name)
         setter(value)
         self.go_forward_one_minute()
         self.assertEqual(value, getattr(self.julabo_device, par_name))
@@ -81,19 +83,19 @@ class TestSimulatedJulabo(unittest.TestCase):
         self.assertNotEqual(old_t, self.julabo_device.temperature)
 
     def test_setting_external_p_sets_p(self):
-        self.check_setting_values_works('external_p', 10)
+        self.check_setting_values_works("external_p", 10)
 
     def test_setting_external_i_sets_i(self):
-        self.check_setting_values_works('external_i', 10)
+        self.check_setting_values_works("external_i", 10)
 
     def test_setting_external_d_sets_d(self):
-        self.check_setting_values_works('external_d', 10)
+        self.check_setting_values_works("external_d", 10)
 
     def test_setting_internal_p_sets_p(self):
-        self.check_setting_values_works('internal_p', 10)
+        self.check_setting_values_works("internal_p", 10)
 
     def test_setting_internal_i_sets_i(self):
-        self.check_setting_values_works('internal_i', 10)
+        self.check_setting_values_works("internal_i", 10)
 
     def test_setting_internal_d_sets_d(self):
-        self.check_setting_values_works('internal_d', 10)
+        self.check_setting_values_works("internal_d", 10)

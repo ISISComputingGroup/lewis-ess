@@ -1,10 +1,11 @@
 import inspect
 import unittest
 
-from mock import Mock, MagicMock
+from mock import MagicMock, Mock
 
 from lewis.core.adapters import Adapter, AdapterCollection, NoLock
 from lewis.core.exceptions import LewisException
+
 from .utils import assertRaisesNothing
 
 
@@ -14,8 +15,8 @@ class DummyAdapter(Adapter):
     """
 
     default_options = {
-        'foo': True,
-        'bar': False,
+        "foo": True,
+        "bar": False,
     }
 
     def __init__(self, protocol, running=False, options=None):
@@ -49,7 +50,7 @@ class TestNoLock(unittest.TestCase):
 
 class TestAdapter(unittest.TestCase):
     def test_documentation(self):
-        adapter = DummyAdapter('foo')
+        adapter = DummyAdapter("foo")
 
         self.assertEqual(inspect.cleandoc(adapter.__doc__), adapter.documentation)
 
@@ -58,7 +59,7 @@ class TestAdapter(unittest.TestCase):
 
         self.assertRaises(NotImplementedError, adapter.start_server)
         self.assertRaises(NotImplementedError, adapter.stop_server)
-        self.assertRaises(NotImplementedError, getattr, adapter, 'is_running')
+        self.assertRaises(NotImplementedError, getattr, adapter, "is_running")
         assertRaisesNothing(self, adapter.handle, 0)
 
     def test_interface_property(self):
@@ -77,15 +78,19 @@ class TestAdapter(unittest.TestCase):
         self.assertEqual(adapter.protocol, None)
 
         mock_interface = MagicMock()
-        mock_interface.protocol = 'foo'
+        mock_interface.protocol = "foo"
 
         adapter.interface = mock_interface
 
-        self.assertEqual(adapter.protocol, 'foo')
+        self.assertEqual(adapter.protocol, "foo")
 
     def test_options(self):
-        assertRaisesNothing(self, DummyAdapter, 'protocol', options={'bar': 2, 'foo': 3})
-        self.assertRaises(LewisException, DummyAdapter, 'protocol', options={'invalid': False})
+        assertRaisesNothing(
+            self, DummyAdapter, "protocol", options={"bar": 2, "foo": 3}
+        )
+        self.assertRaises(
+            LewisException, DummyAdapter, "protocol", options={"invalid": False}
+        )
 
 
 class TestAdapterCollection(unittest.TestCase):
@@ -93,82 +98,89 @@ class TestAdapterCollection(unittest.TestCase):
         collection = AdapterCollection()
         self.assertEqual(len(collection.protocols), 0)
 
-        assertRaisesNothing(self, collection.add_adapter, DummyAdapter('foo'))
+        assertRaisesNothing(self, collection.add_adapter, DummyAdapter("foo"))
 
         self.assertEqual(len(collection.protocols), 1)
-        self.assertSetEqual(set(collection.protocols), {'foo'})
+        self.assertSetEqual(set(collection.protocols), {"foo"})
 
-        assertRaisesNothing(self, collection.add_adapter, DummyAdapter('bar'))
+        assertRaisesNothing(self, collection.add_adapter, DummyAdapter("bar"))
 
         self.assertEqual(len(collection.protocols), 2)
-        self.assertSetEqual(set(collection.protocols), {'foo', 'bar'})
+        self.assertSetEqual(set(collection.protocols), {"foo", "bar"})
 
-        self.assertRaises(RuntimeError, collection.add_adapter, DummyAdapter('bar'))
+        self.assertRaises(RuntimeError, collection.add_adapter, DummyAdapter("bar"))
 
     def test_remove_adapter(self):
-        collection = AdapterCollection(DummyAdapter('foo'))
+        collection = AdapterCollection(DummyAdapter("foo"))
 
-        self.assertSetEqual(set(collection.protocols), {'foo'})
-        self.assertRaises(RuntimeError, collection.remove_adapter, 'bar')
+        self.assertSetEqual(set(collection.protocols), {"foo"})
+        self.assertRaises(RuntimeError, collection.remove_adapter, "bar")
 
-        assertRaisesNothing(self, collection.remove_adapter, 'foo')
+        assertRaisesNothing(self, collection.remove_adapter, "foo")
 
         self.assertEqual(len(collection.protocols), 0)
 
     def test_connect_disconnect_connected(self):
         collection = AdapterCollection(
-            DummyAdapter('foo', running=False), DummyAdapter('bar', running=False))
+            DummyAdapter("foo", running=False), DummyAdapter("bar", running=False)
+        )
 
         # no arguments connects everything
         collection.connect()
 
-        self.assertDictEqual(collection.is_connected(), {'bar': True, 'foo': True})
-        self.assertTrue(collection.is_connected('bar'))
-        self.assertTrue(collection.is_connected('foo'))
+        self.assertDictEqual(collection.is_connected(), {"bar": True, "foo": True})
+        self.assertTrue(collection.is_connected("bar"))
+        self.assertTrue(collection.is_connected("foo"))
 
         collection.disconnect()
 
-        self.assertDictEqual(collection.is_connected(), {'bar': False, 'foo': False})
-        self.assertFalse(collection.is_connected('bar'))
-        self.assertFalse(collection.is_connected('foo'))
+        self.assertDictEqual(collection.is_connected(), {"bar": False, "foo": False})
+        self.assertFalse(collection.is_connected("bar"))
+        self.assertFalse(collection.is_connected("foo"))
 
-        collection.connect('foo')
-        self.assertDictEqual(collection.is_connected(), {'bar': False, 'foo': True})
-        self.assertFalse(collection.is_connected('bar'))
-        self.assertTrue(collection.is_connected('foo'))
+        collection.connect("foo")
+        self.assertDictEqual(collection.is_connected(), {"bar": False, "foo": True})
+        self.assertFalse(collection.is_connected("bar"))
+        self.assertTrue(collection.is_connected("foo"))
 
-        self.assertRaises(RuntimeError, collection.connect, 'baz')
-        self.assertRaises(RuntimeError, collection.disconnect, 'baz')
+        self.assertRaises(RuntimeError, collection.connect, "baz")
+        self.assertRaises(RuntimeError, collection.disconnect, "baz")
 
         collection.disconnect()  # Clean up so that the test does not hang
 
     def test_configuration(self):
         collection = AdapterCollection(
-            DummyAdapter('protocol_a', options={'bar': 2, 'foo': 3}),
-            DummyAdapter('protocol_b', options={'bar': True, 'foo': False}))
+            DummyAdapter("protocol_a", options={"bar": 2, "foo": 3}),
+            DummyAdapter("protocol_b", options={"bar": True, "foo": False}),
+        )
 
-        self.assertDictEqual(collection.configuration(),
-                             {
-                                 'protocol_a': {'bar': 2, 'foo': 3},
-                                 'protocol_b': {'bar': True,
-                                                'foo': False}
-                             })
+        self.assertDictEqual(
+            collection.configuration(),
+            {
+                "protocol_a": {"bar": 2, "foo": 3},
+                "protocol_b": {"bar": True, "foo": False},
+            },
+        )
 
-        self.assertDictEqual(collection.configuration('protocol_a'),
-                             {
-                                 'protocol_a': {'bar': 2, 'foo': 3},
-                             })
+        self.assertDictEqual(
+            collection.configuration("protocol_a"),
+            {
+                "protocol_a": {"bar": 2, "foo": 3},
+            },
+        )
 
-        self.assertDictEqual(collection.configuration('protocol_b'),
-                             {
-                                 'protocol_b': {'bar': True, 'foo': False},
-                             })
+        self.assertDictEqual(
+            collection.configuration("protocol_b"),
+            {
+                "protocol_b": {"bar": True, "foo": False},
+            },
+        )
 
     def test_set_device(self):
-        adapter = DummyAdapter(protocol='foo')
+        adapter = DummyAdapter(protocol="foo")
         adapter.interface = MagicMock()
 
         collection = AdapterCollection(adapter)
-        collection.set_device('test')
+        collection.set_device("test")
 
-        self.assertEqual(adapter.interface.device, 'test')
+        self.assertEqual(adapter.interface.device, "test")

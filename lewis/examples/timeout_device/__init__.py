@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+from lewis.adapters.stream import Cmd, StreamInterface, Var, scanf
 from lewis.devices import Device
-
-from lewis.adapters.stream import StreamInterface, Var, Cmd, scanf
 
 
 class TimeTerminatedDevice(Device):
@@ -60,21 +59,22 @@ class TimeTerminatedInterface(StreamInterface):
      - ``P=something``: Set parameter to specified value
 
     """
+
     commands = {
         # Space as \x20 represents a custom 'terminator' for this command only
         # However, waiting for the timeout still applies
-        Cmd('say_world', pattern=scanf('hello\x20')),
-        Cmd('say_bar', pattern=scanf('foo')),
-        Var('param', read_pattern=scanf('P'), write_pattern=scanf('P=%d')),
+        Cmd("say_world", pattern=scanf("hello\x20")),
+        Cmd("say_bar", pattern=scanf("foo")),
+        Var("param", read_pattern=scanf("P"), write_pattern=scanf("P=%d")),
     }
 
     # An empty in_terminator triggers "timeout mode"
     # Otherwise, a ReadTimeout is considered an error.
-    in_terminator = ''
-    out_terminator = '\r\n'
+    in_terminator = ""
+    out_terminator = "\r\n"
 
     # Unusually long, for easier manual entry
     readtimeout = 2500
 
     def handle_error(self, request, error):
-        return 'An error occurred: ' + repr(error)
+        return "An error occurred: " + repr(error)

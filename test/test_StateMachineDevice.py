@@ -17,18 +17,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-import unittest
 import itertools
+import unittest
 
-from mock import Mock, MagicMock, call, patch
+from mock import MagicMock, Mock, call, patch
 
 from lewis.devices import StateMachineDevice
+
 from .utils import assertRaisesNothing
 
 
 class MockStateMachineDevice(StateMachineDevice):
-    _get_state_handlers = Mock(return_value={'init': {}, 'test': {}})
-    _get_initial_state = Mock(return_value='init')
+    _get_state_handlers = Mock(return_value={"init": {}, "test": {}})
+    _get_initial_state = Mock(return_value="init")
     _get_transition_handlers = Mock(return_value={})
     _initialize_data = Mock()
 
@@ -41,19 +42,20 @@ class TestStateMachineDevice(unittest.TestCase):
         self.assertRaises(NotImplementedError, StateMachineDevice)
 
         mandatory_methods = {
-            '_get_state_handlers': Mock(return_value={'test': MagicMock()}),
-            '_get_initial_state': Mock(return_value='test'),
-            '_get_transition_handlers': Mock(
-                return_value={('test', 'test'): Mock(return_value=True)})
+            "_get_state_handlers": Mock(return_value={"test": MagicMock()}),
+            "_get_initial_state": Mock(return_value="test"),
+            "_get_transition_handlers": Mock(
+                return_value={("test", "test"): Mock(return_value=True)}
+            ),
         }
 
         # If any of the mandatory methods is missing, a NotImplementedError must be raised
         for methods in itertools.combinations(mandatory_methods.items(), 2):
-            with patch.multiple('lewis.devices.StateMachineDevice', **dict(methods)):
+            with patch.multiple("lewis.devices.StateMachineDevice", **dict(methods)):
                 self.assertRaises(NotImplementedError, StateMachineDevice)
 
         # If all are implemented, no exception should be raised
-        with patch.multiple('lewis.devices.StateMachineDevice', **mandatory_methods):
+        with patch.multiple("lewis.devices.StateMachineDevice", **mandatory_methods):
             assertRaisesNothing(self, StateMachineDevice)
 
     def test_init_calls_appropriate_methods(self):
@@ -66,17 +68,23 @@ class TestStateMachineDevice(unittest.TestCase):
 
     def test_invalid_initial_override_fails(self):
         assertRaisesNothing(self, MockStateMachineDevice)
-        assertRaisesNothing(self, MockStateMachineDevice, override_initial_state='init')
-        assertRaisesNothing(self, MockStateMachineDevice, override_initial_state='test')
+        assertRaisesNothing(self, MockStateMachineDevice, override_initial_state="init")
+        assertRaisesNothing(self, MockStateMachineDevice, override_initial_state="test")
 
-        self.assertRaises(RuntimeError, MockStateMachineDevice, override_initial_state='invalid')
+        self.assertRaises(
+            RuntimeError, MockStateMachineDevice, override_initial_state="invalid"
+        )
 
     def test_overriding_undefined_data_fails(self):
         assertRaisesNothing(
-            self, MockStateMachineDevice, override_initial_data={'existing_member': 2.0})
+            self, MockStateMachineDevice, override_initial_data={"existing_member": 2.0}
+        )
 
-        smd = MockStateMachineDevice(override_initial_data={'existing_member': 2.0})
+        smd = MockStateMachineDevice(override_initial_data={"existing_member": 2.0})
         self.assertEqual(smd.existing_member, 2.0)
 
-        self.assertRaises(AttributeError, MockStateMachineDevice,
-                          override_initial_data={'nonexisting_member': 1.0})
+        self.assertRaises(
+            AttributeError,
+            MockStateMachineDevice,
+            override_initial_data={"nonexisting_member": 1.0},
+        )

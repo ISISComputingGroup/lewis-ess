@@ -55,41 +55,59 @@ class SimulatedLinkamT95(StateMachineDevice):
 
     def _get_state_handlers(self):
         return {
-            'init': states.DefaultInitState(),
-            'stopped': states.DefaultStoppedState(),
-            'started': states.DefaultStartedState(),
-            'heat': states.DefaultHeatState(),
-            'hold': states.DefaultHoldState(),
-            'cool': states.DefaultCoolState(),
+            "init": states.DefaultInitState(),
+            "stopped": states.DefaultStoppedState(),
+            "started": states.DefaultStartedState(),
+            "heat": states.DefaultHeatState(),
+            "hold": states.DefaultHoldState(),
+            "cool": states.DefaultCoolState(),
         }
 
     def _get_initial_state(self):
-        return 'init'
+        return "init"
 
     def _get_transition_handlers(self):
-        return OrderedDict([
-            (('init', 'stopped'), lambda: self.serial_command_mode),
-
-            (('stopped', 'started'), lambda: self.start_commanded),
-
-            (('started', 'stopped'), lambda: self.stop_commanded),
-            (('started', 'heat'), lambda: self.temperature < self.temperature_limit),
-            (('started', 'hold'), lambda: self.temperature == self.temperature_limit),
-            (('started', 'cool'), lambda: self.temperature > self.temperature_limit),
-
-            (('heat', 'hold'),
-             lambda: self.temperature == self.temperature_limit or self.hold_commanded),
-            (('heat', 'cool'), lambda: self.temperature > self.temperature_limit),
-            (('heat', 'stopped'), lambda: self.stop_commanded),
-
-            (('hold', 'heat'),
-             lambda: self.temperature < self.temperature_limit and not self.hold_commanded),
-            (('hold', 'cool'),
-             lambda: self.temperature > self.temperature_limit and not self.hold_commanded),
-            (('hold', 'stopped'), lambda: self.stop_commanded),
-
-            (('cool', 'heat'), lambda: self.temperature < self.temperature_limit),
-            (('cool', 'hold'),
-             lambda: self.temperature == self.temperature_limit or self.hold_commanded),
-            (('cool', 'stopped'), lambda: self.stop_commanded),
-        ])
+        return OrderedDict(
+            [
+                (("init", "stopped"), lambda: self.serial_command_mode),
+                (("stopped", "started"), lambda: self.start_commanded),
+                (("started", "stopped"), lambda: self.stop_commanded),
+                (
+                    ("started", "heat"),
+                    lambda: self.temperature < self.temperature_limit,
+                ),
+                (
+                    ("started", "hold"),
+                    lambda: self.temperature == self.temperature_limit,
+                ),
+                (
+                    ("started", "cool"),
+                    lambda: self.temperature > self.temperature_limit,
+                ),
+                (
+                    ("heat", "hold"),
+                    lambda: self.temperature == self.temperature_limit
+                    or self.hold_commanded,
+                ),
+                (("heat", "cool"), lambda: self.temperature > self.temperature_limit),
+                (("heat", "stopped"), lambda: self.stop_commanded),
+                (
+                    ("hold", "heat"),
+                    lambda: self.temperature < self.temperature_limit
+                    and not self.hold_commanded,
+                ),
+                (
+                    ("hold", "cool"),
+                    lambda: self.temperature > self.temperature_limit
+                    and not self.hold_commanded,
+                ),
+                (("hold", "stopped"), lambda: self.stop_commanded),
+                (("cool", "heat"), lambda: self.temperature < self.temperature_limit),
+                (
+                    ("cool", "hold"),
+                    lambda: self.temperature == self.temperature_limit
+                    or self.hold_commanded,
+                ),
+                (("cool", "stopped"), lambda: self.stop_commanded),
+            ]
+        )

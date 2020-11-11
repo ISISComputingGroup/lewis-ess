@@ -1,14 +1,14 @@
 import contextlib
 import os
-from pathlib import Path
 import subprocess
 import time
+from pathlib import Path
 
-from approvaltests.approvals import verify
-from approvaltests.reporters.generic_diff_reporter_factory import \
-    GenericDiffReporterFactory
 import pytest
-
+from approvaltests.approvals import verify
+from approvaltests.reporters.generic_diff_reporter_factory import (
+    GenericDiffReporterFactory,
+)
 
 TOP_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 LEWIS_PATH = Path(TOP_DIR) / "scripts/lewis.py"
@@ -17,8 +17,15 @@ LEWIS_CONTROL_PATH = Path(TOP_DIR) / "scripts/lewis-control.py"
 
 @contextlib.contextmanager
 def julabo_simulation():
-    command = ["python", str(LEWIS_PATH), "julabo", "-p",
-               "julabo-version-1", "-r", "localhost:10000"]
+    command = [
+        "python",
+        str(LEWIS_PATH),
+        "julabo",
+        "-p",
+        "julabo-version-1",
+        "-r",
+        "localhost:10000",
+    ]
     proc = subprocess.Popen(command, close_fds=True)
     time.sleep(1)
     yield proc
@@ -27,8 +34,8 @@ def julabo_simulation():
 
 def run_control_command(mode, command, value):
     subprocess.check_output(
-        ["python", str(LEWIS_CONTROL_PATH), mode, command,
-         value]).decode()
+        ["python", str(LEWIS_CONTROL_PATH), mode, command, value]
+    ).decode()
 
 
 def santise_whitespace(input_str):
@@ -36,8 +43,9 @@ def santise_whitespace(input_str):
 
 
 def query_device_status():
-    return santise_whitespace(subprocess.check_output(
-        ["python", str(LEWIS_CONTROL_PATH), "device"]).decode())
+    return santise_whitespace(
+        subprocess.check_output(["python", str(LEWIS_CONTROL_PATH), "device"]).decode()
+    )
 
 
 class TestLewis:
@@ -78,8 +86,7 @@ class TestLewis:
             result = query_device_status()
         verify(result, self.reporter)
 
-    def test_on_change_set_point_and_circulate_temperature_goes_to_setpoint(
-            self):
+    def test_on_change_set_point_and_circulate_temperature_goes_to_setpoint(self):
         """
         Given: a running Julabo simulation
         When: the control client sets a new set-point and tells the device to heat

@@ -23,8 +23,8 @@ an :mod:`Adapter <lewis.adapters>`).
 """
 
 from datetime import datetime
-from time import sleep
 from threading import Thread
+from time import sleep
 
 from lewis.core.adapters import AdapterCollection
 from lewis.core.control_server import ControlServer, ExposedObject
@@ -102,38 +102,51 @@ class Simulation(object):
 
         # Constructing the control server must be deferred until the end,
         # because the construction is not complete at this point
-        self._control_server = None  # Just initialize to None and use property setter afterwards
+        self._control_server = (
+            None  # Just initialize to None and use property setter afterwards
+        )
         self._control_server_thread = None
         self.control_server = control_server
 
         self.log.debug(
-            'Created simulation. Device type: %s, Protocol(s): %s, Possible setups for '
-            'switching: %s, Control server: %s', device.__class__.__name__,
-            ', '.join(self._adapters.protocols),
-            ', '.join(device_builder.setups.keys()) if device_builder else None,
-            control_server)
+            "Created simulation. Device type: %s, Protocol(s): %s, Possible setups for "
+            "switching: %s, Control server: %s",
+            device.__class__.__name__,
+            ", ".join(self._adapters.protocols),
+            ", ".join(device_builder.setups.keys()) if device_builder else None,
+            control_server,
+        )
 
     def _create_control_server(self, control_server):
         if control_server is None:
             return None
 
-        return ControlServer({
-            'device': ExposedObject(
-                self._device,
-                exclude_inherited=True,
-                lock=self._adapters.device_lock
-            ),
-            'simulation': ExposedObject(
-                self,
-                exclude=('start', 'control_server', 'log'),
-                exclude_inherited=True
-            ),
-            'interface': ExposedObject(
-                self._adapters,
-                exclude=('device_lock', 'add_adapter', 'remove_adapter', 'handle', 'log'),
-                exclude_inherited=True
-            )},
-            control_server)
+        return ControlServer(
+            {
+                "device": ExposedObject(
+                    self._device,
+                    exclude_inherited=True,
+                    lock=self._adapters.device_lock,
+                ),
+                "simulation": ExposedObject(
+                    self,
+                    exclude=("start", "control_server", "log"),
+                    exclude_inherited=True,
+                ),
+                "interface": ExposedObject(
+                    self._adapters,
+                    exclude=(
+                        "device_lock",
+                        "add_adapter",
+                        "remove_adapter",
+                        "handle",
+                        "log",
+                    ),
+                    exclude_inherited=True,
+                ),
+            },
+            control_server,
+        )
 
     @property
     def setups(self):
@@ -141,7 +154,11 @@ class Simulation(object):
         A list of setups that are available. Use :meth:`switch_setup` to
         change the setup.
         """
-        return list(self._device_builder.setups.keys()) if self._device_builder is not None else []
+        return (
+            list(self._device_builder.setups.keys())
+            if self._device_builder is not None
+            else []
+        )
 
     def switch_setup(self, new_setup):
         """
@@ -155,18 +172,20 @@ class Simulation(object):
         try:
             self._device = self._device_builder.create_device(new_setup)
             self._adapters.set_device(self._device)
-            self.log.info('Switched setup to \'%s\'', new_setup)
+            self.log.info("Switched setup to '%s'", new_setup)
         except Exception as e:
             self.log.error(
-                'Caught an error while trying to switch setups. Setup not switched, '
-                'simulation continues: %s', e)
+                "Caught an error while trying to switch setups. Setup not switched, "
+                "simulation continues: %s",
+                e,
+            )
             raise
 
     def start(self):
         """
         Starts the simulation.
         """
-        self.log.info('Starting simulation')
+        self.log.info("Starting simulation")
 
         self._running = True
         self._started = True
@@ -186,17 +205,20 @@ class Simulation(object):
         self._running = False
         self._started = False
 
-        self.log.info('Simulation has ended.')
+        self.log.info("Simulation has ended.")
 
     def _start_control_server(self):
         if self._control_server is not None and self._control_server_thread is None:
+
             def control_server_loop():
                 self._control_server.start_server()
 
                 while not self._stop_commanded:
                     self._control_server.process(blocking=True)
 
-                self.log.info('Stopped processing control server commands, ending thread.')
+                self.log.info(
+                    "Stopped processing control server commands, ending thread."
+                )
 
             self._control_server_thread = Thread(target=control_server_loop)
             self._control_server_thread.start()
@@ -233,7 +255,7 @@ class Simulation(object):
 
         :param delta: Time delta passed to simulation.
         """
-        self.log.debug('Cycle, dt=%s', delta)
+        self.log.debug("Cycle, dt=%s", delta)
 
         sleep(self._cycle_delay)
 
@@ -257,11 +279,11 @@ class Simulation(object):
     @cycle_delay.setter
     def cycle_delay(self, delay):
         if delay < 0.0:
-            raise ValueError('Cycle delay can not be negative.')
+            raise ValueError("Cycle delay can not be negative.")
 
         self._cycle_delay = delay
 
-        self.log.info('Changed cycle delay to %s', self._cycle_delay)
+        self.log.info("Changed cycle delay to %s", self._cycle_delay)
 
     @property
     def cycles(self):
@@ -292,11 +314,11 @@ class Simulation(object):
     @speed.setter
     def speed(self, new_speed):
         if new_speed < 0:
-            raise ValueError('Speed can not be negative.')
+            raise ValueError("Speed can not be negative.")
 
         self._speed = new_speed
 
-        self.log.info('Changed speed to %s', self._speed)
+        self.log.info("Changed speed to %s", self._speed)
 
     @property
     def runtime(self):
@@ -318,26 +340,28 @@ class Simulation(object):
         :param parameters: Dict of device attribute/values to update the device.
         """
         invalid_parameters = set(parameters.keys()) - set(
-            x for x in dir(self._device) if not callable(getattr(self._device, x)))
+            x for x in dir(self._device) if not callable(getattr(self._device, x))
+        )
         if invalid_parameters:
             raise RuntimeError(
-                'The following parameters do not exist in the device or are methods: {}.'
-                'Parameters not updated.'.format(invalid_parameters))
+                "The following parameters do not exist in the device or are methods: {}."
+                "Parameters not updated.".format(invalid_parameters)
+            )
 
         with self._adapters.device_lock:
             for name, value in parameters.items():
                 setattr(self._device, name, value)
 
-        self.log.debug('Updated device parameters: %s', parameters)
+        self.log.debug("Updated device parameters: %s", parameters)
 
     def pause(self):
         """
         Pause the simulation. Can only be called after start has been called.
         """
         if not self._running:
-            raise RuntimeError('Can only pause a running simulation.')
+            raise RuntimeError("Can only pause a running simulation.")
 
-        self.log.info('Pausing simulation')
+        self.log.info("Pausing simulation")
 
         self._running = False
 
@@ -347,9 +371,9 @@ class Simulation(object):
         and pause have been called.
         """
         if not self._started or self._running:
-            raise RuntimeError('Can only resume a paused simulation.')
+            raise RuntimeError("Can only resume a paused simulation.")
 
-        self.log.info('Resuming simulation')
+        self.log.info("Resuming simulation")
 
         self._running = True
 
@@ -358,7 +382,7 @@ class Simulation(object):
         Stops the simulation entirely.
         """
         if self.is_started:
-            self.log.warning('Stopping simulation')
+            self.log.warning("Stopping simulation")
 
             self._stop_commanded = True
 
@@ -392,7 +416,9 @@ class Simulation(object):
     @control_server.setter
     def control_server(self, control_server):
         if self.is_started and self._control_server:
-            raise RuntimeError('Can not replace control server while simulation is running.')
+            raise RuntimeError(
+                "Can not replace control server while simulation is running."
+            )
 
         self._control_server = self._create_control_server(control_server)
 
@@ -466,4 +492,5 @@ class SimulationFactory(object):
             device=device,
             adapters=adapters,
             device_builder=device_builder,
-            control_server=control_server)
+            control_server=control_server,
+        )

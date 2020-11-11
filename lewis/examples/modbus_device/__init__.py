@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+from lewis.adapters.modbus import ModbusBasicDataBank, ModbusInterface
 from lewis.devices import Device
-from lewis.adapters.modbus import ModbusInterface, ModbusBasicDataBank
 
 
 class ModbusDevice(Device):
@@ -36,10 +36,11 @@ class ExampleModbusInterface(ModbusInterface):
     demonstrate overlaid memory segments. If you want each segment to have its own memory, just
     create separate instances for all four.
     """
+
     di = ModbusBasicDataBank(False)
     co = di
     ir = ModbusBasicDataBank(0)
     hr = ir
 
 
-framework_version = '2.0.0'
+framework_version = "2.0.0"

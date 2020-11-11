@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from lewis.adapters.epics import EpicsInterface, PV
+from lewis.adapters.epics import PV, EpicsInterface
 
 
 class ChopperEpicsInterface(EpicsInterface):
@@ -54,47 +54,62 @@ class ChopperEpicsInterface(EpicsInterface):
 
     The possible commands are part of the PV-specific documentation.
     """
+
     pvs = {
-        'Spd-RB': PV('target_speed', read_only=True,
-                     doc='Readback value of the speed setpoint in Hz.'),
-        'Spd': PV('target_speed',
-                  doc='Speed setpoint in Hz.'),
-        'ActSpd': PV('speed', read_only=True,
-                     doc='Current rotation speed of the chopper disc in Hz.'),
-
-        'Phs-RB': PV('target_phase', read_only=True,
-                     doc='Readback value of phase setpoint in degrees.'),
-        'Phs': PV('target_phase',
-                  doc='Phase setpoint in degrees.'),
-        'ActPhs': PV('phase', read_only=True,
-                     doc='Current phase of the chopper disc in degrees.'),
-
-        'ParkAng-RB': PV('target_parking_position', read_only=True,
-                         doc='Readback value of the discs parking position setpoint in degrees.'),
-        'ParkAng': PV('target_parking_position',
-                      doc='The discs parking position setpoint in degrees.'),
-        'AutoPark': PV('auto_park',
-                       doc='If enabled, the chopper disc will be moved to the parking '
-                           'position automatically when the speed is 0 or the chopper '
-                           'is otherwise stopped. 0 means False, 1 means True, the string '
-                           'representations of the enum values are "false" and "true".',
-                       type='enum', enums=['false', 'true']),
-
-        'State': PV('state', read_only=True, type='string'),
-
-        'CmdS': PV('execute_command', type='string'),
-        'CmdL': PV('last_command', type='string', read_only=True),
+        "Spd-RB": PV(
+            "target_speed",
+            read_only=True,
+            doc="Readback value of the speed setpoint in Hz.",
+        ),
+        "Spd": PV("target_speed", doc="Speed setpoint in Hz."),
+        "ActSpd": PV(
+            "speed",
+            read_only=True,
+            doc="Current rotation speed of the chopper disc in Hz.",
+        ),
+        "Phs-RB": PV(
+            "target_phase",
+            read_only=True,
+            doc="Readback value of phase setpoint in degrees.",
+        ),
+        "Phs": PV("target_phase", doc="Phase setpoint in degrees."),
+        "ActPhs": PV(
+            "phase", read_only=True, doc="Current phase of the chopper disc in degrees."
+        ),
+        "ParkAng-RB": PV(
+            "target_parking_position",
+            read_only=True,
+            doc="Readback value of the discs parking position setpoint in degrees.",
+        ),
+        "ParkAng": PV(
+            "target_parking_position",
+            doc="The discs parking position setpoint in degrees.",
+        ),
+        "AutoPark": PV(
+            "auto_park",
+            doc="If enabled, the chopper disc will be moved to the parking "
+            "position automatically when the speed is 0 or the chopper "
+            "is otherwise stopped. 0 means False, 1 means True, the string "
+            'representations of the enum values are "false" and "true".',
+            type="enum",
+            enums=["false", "true"],
+        ),
+        "State": PV("state", read_only=True, type="string"),
+        "CmdS": PV("execute_command", type="string"),
+        "CmdL": PV("last_command", type="string", read_only=True),
     }
 
-    _commands = {'start': 'start',
-                 'stop': 'stop',
-                 'set_phase': 'lock_phase',
-                 'unlock': 'unlock',
-                 'park': 'park',
-                 'init': 'initialize',
-                 'deinit': 'deinitialize'}
+    _commands = {
+        "start": "start",
+        "stop": "stop",
+        "set_phase": "lock_phase",
+        "unlock": "unlock",
+        "park": "park",
+        "init": "initialize",
+        "deinit": "deinitialize",
+    }
 
-    _last_command = ''
+    _last_command = ""
 
     @property
     def execute_command(self):
@@ -102,7 +117,7 @@ class ChopperEpicsInterface(EpicsInterface):
         Command to execute. Possible commands are start, stop, set_phase,
         unlock, park, init, deinit.
         """
-        return ''
+        return ""
 
     @execute_command.setter
     def execute_command(self, value):
