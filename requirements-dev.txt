@@ -1,5 +1,6 @@
 -r requirements.txt
 approvaltests
+isort
 mock
 sphinx
 sphinx_rtd_theme
