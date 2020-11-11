@@ -29,7 +29,7 @@ import importlib
 from lewis import __version__
 from lewis.core.exceptions import LewisException
 from lewis.core.logging import has_log
-from lewis.core.utils import get_submodules, get_members, is_compatible_with_framework
+from lewis.core.utils import get_members, get_submodules, is_compatible_with_framework
 
 
 @has_log
@@ -64,8 +64,10 @@ class InterfaceBase(object):
         Adapter type that is required to process and expose interfaces of this type. Must be
         implemented in subclasses.
         """
-        raise NotImplementedError('An interface type must specify which adapter it is compatible '
-                                  'with. Please implement the adapter-property.')
+        raise NotImplementedError(
+            "An interface type must specify which adapter it is compatible "
+            "with. Please implement the adapter-property."
+        )
 
     @property
     def device(self):
@@ -98,8 +100,11 @@ def is_device(obj):
     :param obj: Object to test.
     :return: True if obj is a device type.
     """
-    return isinstance(obj, type) and issubclass(
-        obj, DeviceBase) and obj.__module__ not in ('lewis.devices', 'lewis.core.devices')
+    return (
+        isinstance(obj, type)
+        and issubclass(obj, DeviceBase)
+        and obj.__module__ not in ("lewis.devices", "lewis.core.devices")
+    )
 
 
 def is_interface(obj):
@@ -110,10 +115,14 @@ def is_interface(obj):
     :param obj: Object to test.
     :return: True if obj is an interface type.
     """
-    return isinstance(obj, type) and issubclass(
-        obj, InterfaceBase) and not (
-        obj.__module__.startswith('lewis.core.devices') or obj.__module__.startswith(
-            'lewis.adapters'))
+    return (
+        isinstance(obj, type)
+        and issubclass(obj, InterfaceBase)
+        and not (
+            obj.__module__.startswith("lewis.core.devices")
+            or obj.__module__.startswith("lewis.adapters")
+        )
+    )
 
 
 @has_log
@@ -176,16 +185,19 @@ class DeviceBuilder(object):
 
         submodules = get_submodules(self._module)
 
-        self._device_types = self._discover_devices(submodules.get('devices'))
-        self._setups = self._discover_setups(submodules.get('setups'))
-        self._interfaces = self._discover_interfaces(submodules.get('interfaces'))
+        self._device_types = self._discover_devices(submodules.get("devices"))
+        self._setups = self._discover_setups(submodules.get("setups"))
+        self._interfaces = self._discover_interfaces(submodules.get("interfaces"))
 
         self.log.debug(
-            'Discovered the following items in \'%s\': Devices: %s; Setups: %s; Interfaces: %s',
+            "Discovered the following items in '%s': Devices: %s; Setups: %s; Interfaces: %s",
             self._module.__name__,
-            ', '.join(device_t.__name__ for device_t in self._device_types),
-            ', '.join(self._setups.keys()),
-            ', '.join('(%s: %s)' % (k, v.__name__) for k, v in self._interfaces.items()))
+            ", ".join(device_t.__name__ for device_t in self._device_types),
+            ", ".join(self._setups.keys()),
+            ", ".join(
+                "(%s: %s)" % (k, v.__name__) for k, v in self._interfaces.items()
+            ),
+        )
 
     def _discover_devices(self, devices_package):
         devices = list(get_members(self._module, is_device).values())
@@ -199,7 +211,7 @@ class DeviceBuilder(object):
         return devices
 
     def _discover_setups(self, setups_package):
-        setups = getattr(self._module, 'setups', {})
+        setups = getattr(self._module, "setups", {})
 
         all_setups = setups if isinstance(setups, dict) else {}
 
@@ -209,16 +221,20 @@ class DeviceBuilder(object):
 
                 if existing_setup is not None:
                     raise RuntimeError(
-                        'The setup \'{}\' is defined twice in device \'{}\'.'.format(
-                            existing_setup, self.name))
+                        "The setup '{}' is defined twice in device '{}'.".format(
+                            existing_setup, self.name
+                        )
+                    )
 
                 all_setups[name] = {
-                    'device_type': getattr(setup_module, 'device_type', self.default_device_type),
-                    'parameters': getattr(setup_module, 'parameters', {})
+                    "device_type": getattr(
+                        setup_module, "device_type", self.default_device_type
+                    ),
+                    "parameters": getattr(setup_module, "parameters", {}),
                 }
 
-        if 'default' not in all_setups:
-            all_setups['default'] = {'device_type': self.default_device_type}
+        if "default" not in all_setups:
+            all_setups["default"] = {"device_type": self.default_device_type}
 
         return all_setups
 
@@ -227,7 +243,9 @@ class DeviceBuilder(object):
 
         if interface_package is not None:
             for interface_module in get_submodules(interface_package).values():
-                all_interfaces += list(get_members(interface_module, is_interface).values())
+                all_interfaces += list(
+                    get_members(interface_module, is_interface).values()
+                )
 
         all_interfaces += list(get_members(self._module, is_interface).values())
 
@@ -237,12 +255,18 @@ class DeviceBuilder(object):
 
             if existing_interface is not None:
                 raise RuntimeError(
-                    'The protocol \'{}\' is defined in two interfaces for device \'{}\':\n'
-                    '    {} (in {})\n'
-                    '    {} (in {})\n'
-                    'One of the protocol names needs to be changed.'.format(
-                        interface.protocol, self.name, existing_interface.__name__,
-                        existing_interface.__module__, interface.__name__, interface.__module__))
+                    "The protocol '{}' is defined in two interfaces for device '{}':\n"
+                    "    {} (in {})\n"
+                    "    {} (in {})\n"
+                    "One of the protocol names needs to be changed.".format(
+                        interface.protocol,
+                        self.name,
+                        existing_interface.__name__,
+                        existing_interface.__module__,
+                        interface.__name__,
+                        interface.__module__,
+                    )
+                )
 
             interfaces[interface.protocol] = interface
 
@@ -250,14 +274,14 @@ class DeviceBuilder(object):
 
     @property
     def framework_version(self):
-        return getattr(self._module, 'framework_version', None)
+        return getattr(self._module, "framework_version", None)
 
     @property
     def name(self):
         """
         The name of the device, which is also the name of the device module.
         """
-        return self._module.__name__.split('.')[-1]
+        return self._module.__name__.split(".")[-1]
 
     @property
     def device_types(self):
@@ -312,7 +336,7 @@ class DeviceBuilder(object):
 
     def _create_device_instance(self, device_type, **kwargs):
         if device_type not in self.device_types:
-            raise RuntimeError('Can not create instance of non-device type.')
+            raise RuntimeError("Can not create instance of non-device type.")
 
         return device_type(**kwargs)
 
@@ -325,28 +349,36 @@ class DeviceBuilder(object):
         :param setup: Name of the setup from which to create device.
         :return: Device object initialized according to the provided setup.
         """
-        setup_name = setup if setup is not None else 'default'
+        setup_name = setup if setup is not None else "default"
 
         if setup_name not in self.setups:
             raise LewisException(
-                'Failed to find setup \'{}\' for device \'{}\'. '
-                'Available setups are:\n    {}'.format(
-                    setup, self.name, '\n    '.join(self.setups.keys())))
+                "Failed to find setup '{}' for device '{}'. "
+                "Available setups are:\n    {}".format(
+                    setup, self.name, "\n    ".join(self.setups.keys())
+                )
+            )
 
         setup_data = self.setups[setup_name]
-        device_type = setup_data.get('device_type') or self.default_device_type
+        device_type = setup_data.get("device_type") or self.default_device_type
 
-        self.log.debug('Trying to create device \'%s\' (setup: %s, device type: %s)',
-                       self.name, setup_name, device_type.__name__ if device_type else '')
+        self.log.debug(
+            "Trying to create device '%s' (setup: %s, device type: %s)",
+            self.name,
+            setup_name,
+            device_type.__name__ if device_type else "",
+        )
 
         try:
             return self._create_device_instance(
-                device_type, **setup_data.get('parameters', {}))
+                device_type, **setup_data.get("parameters", {})
+            )
         except RuntimeError:
             raise LewisException(
-                'The setup \'{}\' you tried to load does not specify a valid device type, but the '
-                'device module \'{}\' provides multiple device types so that no meaningful '
-                'default can be deduced.'.format(setup_name, self.name))
+                "The setup '{}' you tried to load does not specify a valid device type, but the "
+                "device module '{}' provides multiple device types so that no meaningful "
+                "default can be deduced.".format(setup_name, self.name)
+            )
 
     def get_interface_type(self, protocol=None):
         return self.interfaces[protocol]
@@ -364,15 +396,17 @@ class DeviceBuilder(object):
         """
         protocol = protocol if protocol is not None else self.default_protocol
 
-        self.log.debug('Trying to create interface for protocol \'%s\'', protocol)
+        self.log.debug("Trying to create interface for protocol '%s'", protocol)
 
         try:
             return self.interfaces[protocol](*args, **kwargs)
         except KeyError:
             raise LewisException(
-                '\'{}\' is not a valid protocol for device \'{}\', select one via the -p option.\n'
-                'Available protocols are: \n    {}'.format(
-                    protocol, self.name, '\n    '.join(self.interfaces.keys())))
+                "'{}' is not a valid protocol for device '{}', select one via the -p option.\n"
+                "Available protocols are: \n    {}".format(
+                    protocol, self.name, "\n    ".join(self.interfaces.keys())
+                )
+            )
 
 
 @has_log
@@ -401,15 +435,21 @@ class DeviceRegistry(object):
             self._device_module = importlib.import_module(device_module)
         except ImportError:
             raise LewisException(
-                'Failed to import module \'{}\' for device discovery. '
-                'Make sure that it is in the PYTHONPATH.\n'
-                'See also the -a option of lewis.'.format(device_module))
+                "Failed to import module '{}' for device discovery. "
+                "Make sure that it is in the PYTHONPATH.\n"
+                "See also the -a option of lewis.".format(device_module)
+            )
 
-        self._devices = {name: DeviceBuilder(module) for name, module in
-                         get_submodules(self._device_module).items()}
+        self._devices = {
+            name: DeviceBuilder(module)
+            for name, module in get_submodules(self._device_module).items()
+        }
 
-        self.log.debug('Devices loaded from \'%s\': %s', device_module,
-                       ', '.join(self._devices.keys()))
+        self.log.debug(
+            "Devices loaded from '%s': %s",
+            device_module,
+            ", ".join(self._devices.keys()),
+        )
 
     @property
     def devices(self):
@@ -442,24 +482,33 @@ class DeviceRegistry(object):
 
             if not compatible:
                 self.log.warning(
-                    'Device \'%s\' is specified for a different framework version '
-                    '(required: %s, current: %s). This means that the device might not work '
-                    'as expected. Contact the device author about updating the device or use a '
-                    'different version of lewis to run this device.',
-                    builder.name, builder.framework_version, __version__)
+                    "Device '%s' is specified for a different framework version "
+                    "(required: %s, current: %s). This means that the device might not work "
+                    "as expected. Contact the device author about updating the device or use a "
+                    "different version of lewis to run this device.",
+                    builder.name,
+                    builder.framework_version,
+                    __version__,
+                )
 
-                if strict_versions or (compatible is not None and strict_versions is None):
+                if strict_versions or (
+                    compatible is not None and strict_versions is None
+                ):
                     raise LewisException(
-                        'Not loading device \'{}\' with different framework version '
-                        '(required: {}, current: {}) in strict mode. Use the --ignore-versions '
-                        'option of lewis to load the device anyway.'.format(
-                            builder.name, builder.framework_version, __version__))
+                        "Not loading device '{}' with different framework version "
+                        "(required: {}, current: {}) in strict mode. Use the --ignore-versions "
+                        "option of lewis to load the device anyway.".format(
+                            builder.name, builder.framework_version, __version__
+                        )
+                    )
 
             return builder
 
         except KeyError:
             raise LewisException(
-                'No device with the name \'{}\' could be found. '
-                'Possible names are:\n    {}\n'
-                'See also the -k option to add inspect a different module.'.format(
-                    name, '\n    '.join(self.devices)))
+                "No device with the name '{}' could be found. "
+                "Possible names are:\n    {}\n"
+                "See also the -k option to add inspect a different module.".format(
+                    name, "\n    ".join(self.devices)
+                )
+            )

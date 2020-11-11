@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
+from lewis.adapters.stream import Cmd, StreamInterface, Var
 from lewis.devices import Device
-
-from lewis.adapters.stream import StreamInterface, Var, Cmd
 
 
 class VerySimpleDevice(Device):
@@ -47,15 +46,21 @@ class VerySimpleInterface(StreamInterface):
      - ``R`` or ``r``: Returns the number 4.
 
     """
+
     commands = {
-        Cmd('get_param', pattern='^V$', return_mapping='The value is {}'.format),
-        Cmd('set_param', pattern='^V=(.+)$', argument_mappings=(int,)),
-        Var('param', read_pattern='^P$', write_pattern='^P=(.+)$', doc='The only parameter.'),
-        Cmd(lambda: 4, pattern='^R$(?i)', doc='"Random" number (4).')
+        Cmd("get_param", pattern="^V$", return_mapping="The value is {}".format),
+        Cmd("set_param", pattern="^V=(.+)$", argument_mappings=(int,)),
+        Var(
+            "param",
+            read_pattern="^P$",
+            write_pattern="^P=(.+)$",
+            doc="The only parameter.",
+        ),
+        Cmd(lambda: 4, pattern="^R$(?i)", doc='"Random" number (4).'),
     }
 
-    in_terminator = '\r\n'
-    out_terminator = '\r\n'
+    in_terminator = "\r\n"
+    out_terminator = "\r\n"
 
     def get_param(self):
         """Returns the device parameter."""
@@ -66,7 +71,7 @@ class VerySimpleInterface(StreamInterface):
         self.device.param = new_param
 
     def handle_error(self, request, error):
-        return 'An error occurred: ' + repr(error)
+        return "An error occurred: " + repr(error)
 
 
-framework_version = '2.0.0'
+framework_version = "2.0.0"

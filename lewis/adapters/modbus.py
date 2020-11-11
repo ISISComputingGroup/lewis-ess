@@ -32,12 +32,9 @@ were used as guidelines and references for implementing the protocol:
     at lewis/examples/modbus_device.
 """
 
-from __future__ import division
-
-import socket
 import asyncore
+import socket
 import struct
-
 from copy import deepcopy
 from math import ceil
 
@@ -58,8 +55,8 @@ class ModbusDataBank(object):
     """
 
     def __init__(self, **kwargs):
-        self._data = kwargs['data']
-        self._start_addr = kwargs['start_addr']
+        self._data = kwargs["data"]
+        self._start_addr = kwargs["start_addr"]
 
     def get(self, addr, count):
         """
@@ -71,11 +68,12 @@ class ModbusDataBank(object):
         :except IndexError: Raised if address range falls outside valid range
         """
         addr -= self._start_addr
-        data = self._data[addr:addr + count]
+        data = self._data[addr : addr + count]
         if len(data) != count:
             addr += self._start_addr
-            raise IndexError("Invalid address range [{:#06x} - {:#06x}]"
-                             .format(addr, addr + count))
+            raise IndexError(
+                "Invalid address range [{:#06x} - {:#06x}]".format(addr, addr + count)
+            )
         return data
 
     def set(self, addr, values):
@@ -90,8 +88,11 @@ class ModbusDataBank(object):
         end = addr + len(values)
         if not 0 <= addr <= end <= len(self._data):
             addr += self._start_addr
-            raise IndexError("Invalid address range [{:#06x} - {:#06x}]"
-                             .format(addr, addr + len(values)))
+            raise IndexError(
+                "Invalid address range [{:#06x} - {:#06x}]".format(
+                    addr, addr + len(values)
+                )
+            )
         self._data[addr:end] = values
 
 
@@ -114,8 +115,7 @@ class ModbusBasicDataBank(ModbusDataBank):
 
     def __init__(self, default_value=0, start_addr=0x0000, last_addr=0xFFFF):
         super(ModbusBasicDataBank, self).__init__(
-            start_addr=start_addr,
-            data=[default_value] * (last_addr - start_addr + 1)
+            start_addr=start_addr, data=[default_value] * (last_addr - start_addr + 1)
         )
 
 
@@ -131,6 +131,7 @@ class ModbusDataStore(object):
 
 class MBEX(object):
     """Modbus standard exception codes"""
+
     ILLEGAL_FUNCTION = 0x01
     DATA_ADDRESS = 0x02
     DATA_VALUE = 0x03
@@ -179,7 +180,7 @@ class ModbusTCPFrame(object):
         :param stream: bytearray to consume data from to construct this frame.
         :except EOFError: Not enough data for complete frame; no data consumed.
         """
-        fmt = '>HHHBB'
+        fmt = ">HHHBB"
         size_header = struct.calcsize(fmt)
         if len(stream) < size_header:
             raise EOFError
@@ -189,7 +190,7 @@ class ModbusTCPFrame(object):
             self.protocol_id,
             self.length,
             self.unit_id,
-            self.fcode
+            self.fcode,
         ) = struct.unpack(fmt, bytes(stream[:size_header]))
 
         size_total = size_header + self.length - 2
@@ -205,14 +206,16 @@ class ModbusTCPFrame(object):
 
         :return: bytearray representation of this frame.
         """
-        header = bytearray(struct.pack(
-            '>HHHBB',
-            self.transaction_id,
-            self.protocol_id,
-            self.length,
-            self.unit_id,
-            self.fcode
-        ))
+        header = bytearray(
+            struct.pack(
+                ">HHHBB",
+                self.transaction_id,
+                self.protocol_id,
+                self.length,
+                self.unit_id,
+                self.fcode,
+            )
+        )
         return header + self.data
 
     def is_valid(self):
@@ -306,13 +309,17 @@ class ModbusProtocol(object):
         with device_lock:
             for request in self._buffered_requests():
                 self.log.debug(
-                    'Request: %s', str(['{:#04x}'.format(c) for c in request.to_bytearray()]))
+                    "Request: %s",
+                    str(["{:#04x}".format(c) for c in request.to_bytearray()]),
+                )
 
                 handler = self._get_handler(request.fcode)
                 response = handler(request)
 
                 self.log.debug(
-                    'Response: %s', str(['{:#04x}'.format(c) for c in response.to_bytearray()]))
+                    "Response: %s",
+                    str(["{:#04x}".format(c) for c in response.to_bytearray()]),
+                )
 
                 self._send(response)
 
@@ -339,7 +346,9 @@ class ModbusProtocol(object):
 
     def _illegal_function_exception(self, request):
         """Log and return an illegal function code exception"""
-        self.log.error("Unsupported Function Code: {0} ({0:#04x})".format(request.fcode))
+        self.log.error(
+            "Unsupported Function Code: {0} ({0:#04x})".format(request.fcode)
+        )
         return request.create_exception(MBEX.ILLEGAL_FUNCTION)
 
     def _handle_read_coils(self, request):
@@ -370,7 +379,7 @@ class ModbusProtocol(object):
         :param request: ModbusTCPFrame containing the request
         :return: ModbusTCPFrame response to the request
         """
-        addr, count = struct.unpack('>HH', bytes(request.data))
+        addr, count = struct.unpack(">HH", bytes(request.data))
 
         if not 0x0001 <= count <= 0x07D0:
             return request.create_exception(MBEX.DATA_VALUE)
@@ -385,10 +394,10 @@ class ModbusProtocol(object):
         byte_count = int(ceil(len(bits) / 8))
         byte_list = bytearray(byte_count)
         for i, bit in enumerate(bits):
-            byte_list[i // 8] |= (bit << i % 8)
+            byte_list[i // 8] |= bit << i % 8
 
         # Construct response
-        data = struct.pack('>B%dB' % byte_count, byte_count, *list(byte_list))
+        data = struct.pack(">B%dB" % byte_count, byte_count, *list(byte_list))
         return request.create_response(data)
 
     def _handle_read_holding_registers(self, request):
@@ -419,7 +428,7 @@ class ModbusProtocol(object):
         :param request: ModbusTCPFrame containing the request
         :return: ModbusTCPFrame response to the request
         """
-        addr, count = struct.unpack('>HH', bytes(request.data))
+        addr, count = struct.unpack(">HH", bytes(request.data))
 
         if not 0x0001 <= count <= 0x007D:
             return request.create_exception(MBEX.DATA_VALUE)
@@ -431,7 +440,7 @@ class ModbusProtocol(object):
             return request.create_exception(MBEX.DATA_ADDRESS)
 
         # Construct response
-        data = struct.pack('>B%dH' % len(words), len(words) * 2, *words)
+        data = struct.pack(">B%dH" % len(words), len(words) * 2, *words)
         return request.create_response(data)
 
     def _handle_write_single_coil(self, request):
@@ -442,7 +451,7 @@ class ModbusProtocol(object):
         :param request: ModbusTCPFrame containing the request
         :return: ModbusTCPFrame response to the request
         """
-        addr, value = struct.unpack('>HH', bytes(request.data))
+        addr, value = struct.unpack(">HH", bytes(request.data))
         value = {0x0000: False, 0xFF00: True}.get(value, None)
 
         if value is None:
@@ -464,7 +473,7 @@ class ModbusProtocol(object):
         :param request: ModbusTCPFrame containing the request
         :return: ModbusTCPFrame response to the request
         """
-        addr, value = struct.unpack('>HH', bytes(request.data))
+        addr, value = struct.unpack(">HH", bytes(request.data))
 
         try:
             self._datastore.hr.set(addr, [value])
@@ -482,7 +491,7 @@ class ModbusProtocol(object):
         :param request: ModbusTCPFrame containing the request
         :return: ModbusTCPFrame response to the request
         """
-        addr, bit_count, byte_count = struct.unpack('>HHB', bytes(request.data[:5]))
+        addr, bit_count, byte_count = struct.unpack(">HHB", bytes(request.data[:5]))
         data = request.data[5:]
 
         if not 0x0001 <= bit_count <= 0x07B0 or byte_count != ceil(bit_count / 8):
@@ -509,14 +518,14 @@ class ModbusProtocol(object):
         :param request: ModbusTCPFrame containing the request
         :return: ModbusTCPFrame response to the request
         """
-        addr, reg_count, byte_count = struct.unpack('>HHB', bytes(request.data[:5]))
+        addr, reg_count, byte_count = struct.unpack(">HHB", bytes(request.data[:5]))
         data = request.data[5:]
 
         if not 0x0001 <= reg_count <= 0x007B or byte_count != reg_count * 2:
             return request.create_exception(MBEX.DATA_VALUE)
 
         try:
-            words = list(struct.unpack('>%dH' % reg_count, data))
+            words = list(struct.unpack(">%dH" % reg_count, data))
             self._datastore.hr.set(addr, words)
         except IndexError:
             return request.create_exception(MBEX.DATA_ADDRESS)
@@ -529,19 +538,21 @@ class ModbusProtocol(object):
 class ModbusHandler(asyncore.dispatcher_with_send):
     def __init__(self, sock, interface, server):
         asyncore.dispatcher_with_send.__init__(self, sock=sock)
-        self._datastore = ModbusDataStore(interface.di, interface.co, interface.ir, interface.hr)
+        self._datastore = ModbusDataStore(
+            interface.di, interface.co, interface.ir, interface.hr
+        )
         self._modbus = ModbusProtocol(self.send, self._datastore)
         self._server = server
 
         self._set_logging_context(interface)
-        self.log.info('Client connected from %s:%s', *sock.getpeername())
+        self.log.info("Client connected from %s:%s", *sock.getpeername())
 
     def handle_read(self):
         data = self.recv(8192)
         self._modbus.process(data, self._server.device_lock)
 
     def handle_close(self):
-        self.log.info('Closing connection to client %s:%s', *self.socket.getpeername())
+        self.log.info("Closing connection to client %s:%s", *self.socket.getpeername())
         self._server.remove_handler(self)
         self.close()
 
@@ -558,7 +569,7 @@ class ModbusServer(asyncore.dispatcher):
         self.listen(5)
 
         self._set_logging_context(interface)
-        self.log.info('Listening on %s:%s', host, port)
+        self.log.info("Listening on %s:%s", host, port)
 
         self._accepted_connections = []
 
@@ -573,7 +584,7 @@ class ModbusServer(asyncore.dispatcher):
         self._accepted_connections.remove(handler)
 
     def handle_close(self):
-        self.log.info('Shutting down server, closing all remaining client connections.')
+        self.log.info("Shutting down server, closing all remaining client connections.")
 
         for handler in self._accepted_connections:
             handler.close()
@@ -582,10 +593,7 @@ class ModbusServer(asyncore.dispatcher):
 
 
 class ModbusAdapter(Adapter):
-    default_options = {
-        'bind_address': '0.0.0.0',
-        'port': 502
-    }
+    default_options = {"bind_address": "0.0.0.0", "port": 502}
 
     def __init__(self, options=None):
         super(ModbusAdapter, self).__init__(options)
@@ -593,7 +601,11 @@ class ModbusAdapter(Adapter):
 
     def start_server(self):
         self._server = ModbusServer(
-            self._options.bind_address, self._options.port, self.interface, self.device_lock)
+            self._options.bind_address,
+            self._options.port,
+            self.interface,
+            self.device_lock,
+        )
 
     def stop_server(self):
         if self._server is not None:
@@ -609,7 +621,7 @@ class ModbusAdapter(Adapter):
 
 
 class ModbusInterface(InterfaceBase):
-    protocol = 'modbus'
+    protocol = "modbus"
     di = None
     co = None
     ir = None

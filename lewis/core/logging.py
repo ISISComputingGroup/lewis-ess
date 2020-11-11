@@ -32,12 +32,10 @@ of the standard `logging`_ library.
 .. _logging: https://docs.python.org/2/library/logging.html
 """
 
-from __future__ import absolute_import
-
 import logging
 
-root_logger_name = 'lewis'
-default_log_format = '%(asctime)s %(levelname)s %(name)s: %(message)s'
+root_logger_name = "lewis"
+default_log_format = "%(asctime)s %(levelname)s %(name)s: %(message)s"
 
 
 def has_log(target):
@@ -99,11 +97,11 @@ def has_log(target):
         log_names = [root_logger_name, logger_name]
 
         if context is not None:
-            log_names.insert(1,
-                             context if isinstance(context,
-                                                   str) else context.__class__.__name__)
+            log_names.insert(
+                1, context if isinstance(context, str) else context.__class__.__name__
+            )
 
-        return '.'.join(log_names)
+        return ".".join(log_names)
 
     def _set_logging_context(obj, context):
         """

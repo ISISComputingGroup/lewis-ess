@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from lewis.adapters.stream import StreamInterface, Cmd
+from lewis.adapters.stream import Cmd, StreamInterface
 
 
 class LinkamT95StreamInterface(StreamInterface):
@@ -35,15 +35,15 @@ class LinkamT95StreamInterface(StreamInterface):
     """
 
     commands = {
-        Cmd('get_status', '^T$'),
-        Cmd('set_rate', '^R1([0-9]+)$'),
-        Cmd('set_limit', '^L1([0-9]+)$'),
-        Cmd('start', '^S$'),
-        Cmd('stop', '^E$'),
-        Cmd('hold', '^O$'),
-        Cmd('heat', '^H$'),
-        Cmd('cool', '^C$'),
-        Cmd('pump_command', '^P(a0|m0|[0123456789:;<=>?@ABCDEFGHIJKLMN]{1})$'),
+        Cmd("get_status", "^T$"),
+        Cmd("set_rate", "^R1([0-9]+)$"),
+        Cmd("set_limit", "^L1([0-9]+)$"),
+        Cmd("start", "^S$"),
+        Cmd("stop", "^E$"),
+        Cmd("hold", "^O$"),
+        Cmd("heat", "^H$"),
+        Cmd("cool", "^C$"),
+        Cmd("pump_command", "^P(a0|m0|[0123456789:;<=>?@ABCDEFGHIJKLMN]{1})$"),
     }
 
     def get_status(self):
@@ -62,10 +62,10 @@ class LinkamT95StreamInterface(StreamInterface):
 
         # Status byte (SB1)
         Tarray[0] = {
-            'stopped': 0x01,
-            'heat': 0x10,
-            'cool': 0x20,
-            'hold': 0x30,
+            "stopped": 0x01,
+            "heat": 0x10,
+            "cool": 0x20,
+            "hold": 0x30,
         }.get(self.device._csm.state, 0x01)
 
         if Tarray[0] == 0x30 and self.device.hold_commanded:
@@ -80,9 +80,11 @@ class LinkamT95StreamInterface(StreamInterface):
         Tarray[2] = 0x80 + self.device.pump_speed
 
         # Temperature
-        Tarray[6:10] = [ord(x) for x in "%04x" % (int(self.device.temperature * 10) & 0xFFFF)]
+        Tarray[6:10] = [
+            ord(x) for x in "%04x" % (int(self.device.temperature * 10) & 0xFFFF)
+        ]
 
-        return ''.join(chr(c) for c in Tarray)
+        return "".join(chr(c) for c in Tarray)
 
     def set_rate(self, param):
         """

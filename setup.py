@@ -18,49 +18,57 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 
 # as suggested on http://python-packaging.readthedocs.io/en/latest/metadata.html
 def readme():
-    with open('README.rst') as f:
+    with open("README.rst") as f:
         return f.read()
 
 
 setup(
-    name='lewis',
-    version='2.0.0',
-    description='LeWIS - Let\'s Write Intricate Simulators!',
+    name="lewis",
+    version="2.0.0",
+    description="LeWIS - Let's Write Intricate Simulators!",
     long_description=readme(),
-    url='https://github.com/ess-dmsc/lewis',
-    author='ScreamingUdder',
-    license='GPL v3',
+    url="https://github.com/ess-dmsc/lewis",
+    author="ScreamingUdder",
+    license="GPL v3",
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Console',
-        'Intended Audience :: Developers',
-        'Intended Audience :: Science/Research',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Software Development :: Libraries',
-        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3',
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Software Development :: Libraries",
+        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3",
     ],
-    keywords='hardware simulation controls',
+    keywords="hardware simulation controls",
     packages=find_packages(exclude=["test", "tests.*"]),
     python_requires=">=3.6.0",
-    install_requires=['pyzmq', 'json-rpc', 'semantic_version',
-                      'PyYAML', 'scanf'],
+    install_requires=["pyzmq", "json-rpc", "semantic_version", "PyYAML", "scanf"],
     extras_require={
-        'epics': ['pcaspy'],
-        'dev': ['flake8', 'mock', 'sphinx', 'sphinx_rtd_theme',
-                'pytest', 'pytest-cov', 'coverage', 'tox',
-                'approvaltests', 'pytest-approvaltests'],
+        "epics": ["pcaspy"],
+        "dev": [
+            "flake8",
+            "mock",
+            "sphinx",
+            "sphinx_rtd_theme",
+            "pytest",
+            "pytest-cov",
+            "coverage",
+            "tox",
+            "approvaltests",
+            "pytest-approvaltests",
+        ],
     },
     entry_points={
-        'console_scripts': [
-            'lewis=lewis.scripts.run:run_simulation',
-            'lewis-control=lewis.scripts.control:control_simulation'
+        "console_scripts": [
+            "lewis=lewis.scripts.run:run_simulation",
+            "lewis-control=lewis.scripts.control:control_simulation",
         ],
     },
 )

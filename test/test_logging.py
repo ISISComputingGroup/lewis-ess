@@ -30,7 +30,7 @@ class TestHasLog(unittest.TestCase):
 
         a = Foo()
 
-        self.assertEqual(a.log.name, '{}.Foo'.format(root_logger_name))
+        self.assertEqual(a.log.name, "{}.Foo".format(root_logger_name))
 
     def test_setting_context_changes_name(self):
         @has_log
@@ -38,18 +38,18 @@ class TestHasLog(unittest.TestCase):
             pass
 
         a = Foo()
-        self.assertEqual(a.log.name, '{}.Foo'.format(root_logger_name))
+        self.assertEqual(a.log.name, "{}.Foo".format(root_logger_name))
 
-        a._set_logging_context('some_context')
-        self.assertEqual(a.log.name, '{}.some_context.Foo'.format(root_logger_name))
+        a._set_logging_context("some_context")
+        self.assertEqual(a.log.name, "{}.some_context.Foo".format(root_logger_name))
 
         a._set_logging_context(None)
-        self.assertEqual(a.log.name, '{}.Foo'.format(root_logger_name))
+        self.assertEqual(a.log.name, "{}.Foo".format(root_logger_name))
 
     def test_decorate_function(self):
         @has_log
         def foo(bar):
             return bar
 
-        self.assertTrue(hasattr(foo, 'log'))
-        self.assertEqual(foo.log.name, '{}.foo'.format(root_logger_name))
+        self.assertTrue(hasattr(foo, "log"))
+        self.assertEqual(foo.log.name, "{}.foo".format(root_logger_name))

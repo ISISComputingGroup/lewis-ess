@@ -31,16 +31,17 @@ class SimulatedBearings(CanProcess, MagneticBearings):
     def __init__(self):
         super(SimulatedBearings, self).__init__()
 
-        self._csm = StateMachine({
-            'initial': 'resting',
-
-            'transitions': {
-                ('resting', 'levitating'): lambda: self._levitate,
-                ('levitating', 'levitated'): self.levitationComplete,
-                ('levitated', 'delevitating'): lambda: not self._levitate,
-                ('delevitating', 'resting'): self.delevitationComplete,
+        self._csm = StateMachine(
+            {
+                "initial": "resting",
+                "transitions": {
+                    ("resting", "levitating"): lambda: self._levitate,
+                    ("levitating", "levitated"): self.levitationComplete,
+                    ("levitated", "delevitating"): lambda: not self._levitate,
+                    ("delevitating", "resting"): self.delevitationComplete,
+                },
             }
-        })
+        )
 
         self._levitate = False
 
@@ -67,11 +68,11 @@ class SimulatedBearings(CanProcess, MagneticBearings):
 
     @property
     def ready(self):
-        return self._csm.state == 'levitated' and self._levitate
+        return self._csm.state == "levitated" and self._levitate
 
     @property
     def idle(self):
-        return self._csm.state == 'resting' and not self._levitate
+        return self._csm.state == "resting" and not self._levitate
 
 
 class SimulatedChopper(StateMachineDevice):
@@ -101,57 +102,60 @@ class SimulatedChopper(StateMachineDevice):
 
     def _get_state_handlers(self):
         return {
-            'init': states.DefaultInitState(),
-            'bearings': {'in_state': self._bearings},
-            'stopped': states.DefaultStoppedState(),
-            'stopping': states.DefaultStoppingState(),
-            'accelerating': states.DefaultAcceleratingState(),
-            'phase_locking': states.DefaultPhaseLockingState(),
-            'phase_locked': states.DefaultPhaseLockedState(),
-            'idle': states.DefaultIdleState(),
-            'parking': states.DefaultParkingState(),
-            'parked': states.DefaultParkedState(),
+            "init": states.DefaultInitState(),
+            "bearings": {"in_state": self._bearings},
+            "stopped": states.DefaultStoppedState(),
+            "stopping": states.DefaultStoppingState(),
+            "accelerating": states.DefaultAcceleratingState(),
+            "phase_locking": states.DefaultPhaseLockingState(),
+            "phase_locked": states.DefaultPhaseLockedState(),
+            "idle": states.DefaultIdleState(),
+            "parking": states.DefaultParkingState(),
+            "parked": states.DefaultParkedState(),
         }
 
     def _get_initial_state(self):
-        return 'init'
+        return "init"
 
     def _get_transition_handlers(self):
-        return OrderedDict([
-            (('init', 'bearings'), lambda: self.initialized),
-            (('bearings', 'stopped'), lambda: self._bearings.ready),
-            (('bearings', 'init'), lambda: self._bearings.idle),
-
-            (('parking', 'parked'), lambda: self.parking_position == self.target_parking_position),
-            (('parking', 'stopping'), lambda: self._stop_commanded),
-
-            (('parked', 'stopping'), lambda: self._stop_commanded),
-            (('parked', 'accelerating'), lambda: self._start_commanded),
-
-            (('stopped', 'accelerating'), lambda: self._start_commanded),
-            (('stopped', 'parking'), lambda: self._park_commanded),
-            (('stopped', 'bearings'), lambda: self._shutdown_commanded),
-
-            (('accelerating', 'stopping'), lambda: self._stop_commanded),
-            (('accelerating', 'idle'), lambda: self._idle_commanded),
-            (('accelerating', 'phase_locking'), lambda: self.speed == self.target_speed),
-
-            (('idle', 'accelerating'), lambda: self._start_commanded),
-            (('idle', 'stopping'), lambda: self._stop_commanded),
-
-            (('phase_locking', 'stopping'), lambda: self._stop_commanded),
-            (('phase_locking', 'phase_locked'), lambda: self.phase == self.target_phase),
-            (('phase_locking', 'idle'), lambda: self._idle_commanded),
-
-            (('phase_locked', 'accelerating'), lambda: self._start_commanded),
-            (('phase_locked', 'phase_locking'), lambda: self._phase_commanded),
-            (('phase_locked', 'stopping'), lambda: self._stop_commanded),
-            (('phase_locked', 'idle'), lambda: self._idle_commanded),
-
-            (('stopping', 'accelerating'), lambda: self._start_commanded),
-            (('stopping', 'stopped'), lambda: self.speed == 0.0),
-            (('stopping', 'idle'), lambda: self._idle_commanded),
-        ])
+        return OrderedDict(
+            [
+                (("init", "bearings"), lambda: self.initialized),
+                (("bearings", "stopped"), lambda: self._bearings.ready),
+                (("bearings", "init"), lambda: self._bearings.idle),
+                (
+                    ("parking", "parked"),
+                    lambda: self.parking_position == self.target_parking_position,
+                ),
+                (("parking", "stopping"), lambda: self._stop_commanded),
+                (("parked", "stopping"), lambda: self._stop_commanded),
+                (("parked", "accelerating"), lambda: self._start_commanded),
+                (("stopped", "accelerating"), lambda: self._start_commanded),
+                (("stopped", "parking"), lambda: self._park_commanded),
+                (("stopped", "bearings"), lambda: self._shutdown_commanded),
+                (("accelerating", "stopping"), lambda: self._stop_commanded),
+                (("accelerating", "idle"), lambda: self._idle_commanded),
+                (
+                    ("accelerating", "phase_locking"),
+                    lambda: self.speed == self.target_speed,
+                ),
+                (("idle", "accelerating"), lambda: self._start_commanded),
+                (("idle", "stopping"), lambda: self._stop_commanded),
+                (("phase_locking", "stopping"), lambda: self._stop_commanded),
+                (
+                    ("phase_locking", "phase_locked"),
+                    lambda: self.phase == self.target_phase,
+                ),
+                (("phase_locking", "idle"), lambda: self._idle_commanded),
+                (("phase_locked", "accelerating"), lambda: self._start_commanded),
+                (("phase_locked", "phase_locking"), lambda: self._phase_commanded),
+                (("phase_locked", "stopping"), lambda: self._stop_commanded),
+                (("phase_locked", "idle"), lambda: self._idle_commanded),
+                (("stopping", "accelerating"), lambda: self._start_commanded),
+                (("stopping", "stopped"), lambda: self.speed == 0.0),
+                (("stopping", "idle"), lambda: self._idle_commanded),
+            ]
+        )
 
     @property
     def state(self):
@@ -166,53 +170,53 @@ class SimulatedChopper(StateMachineDevice):
         return self._initialized
 
     def initialize(self):
-        if self._csm.can('bearings') and not self.initialized:
+        if self._csm.can("bearings") and not self.initialized:
             self._initialized = True
             self._bearings.engage()
 
     def deinitialize(self):
-        if self._csm.can('bearings') and self.initialized:
+        if self._csm.can("bearings") and self.initialized:
             self._shutdown_commanded = True
             self._bearings.disengage()
 
     def park(self):
-        if self._csm.can('parking'):
+        if self._csm.can("parking"):
             self._park_commanded = True
 
     @property
     def parked(self):
-        return self._csm.state == 'parked'
+        return self._csm.state == "parked"
 
     def stop(self):
-        if self._csm.can('stopping'):
+        if self._csm.can("stopping"):
             self._stop_commanded = True
 
     @property
     def stopped(self):
-        return self._csm.state == 'stopped'
+        return self._csm.state == "stopped"
 
     def start(self):
-        if self._csm.can('accelerating') and self.target_speed > 0.0:
+        if self._csm.can("accelerating") and self.target_speed > 0.0:
             self._start_commanded = True
         else:
             self.stop()
 
     @property
     def started(self):
-        return self._csm.state == 'accelerating'
+        return self._csm.state == "accelerating"
 
     def unlock(self):
-        if self._csm.can('idle'):
+        if self._csm.can("idle"):
             self._idle_commanded = True
 
     @property
     def idle(self):
-        return self._csm.state == 'idle'
+        return self._csm.state == "idle"
 
     def lock_phase(self):
-        if self._csm.can('phase_locking'):
+        if self._csm.can("phase_locking"):
             self._phase_commanded = True
 
     @property
     def phase_locked(self):
-        return self._csm.state == 'phase_locked'
+        return self._csm.state == "phase_locked"

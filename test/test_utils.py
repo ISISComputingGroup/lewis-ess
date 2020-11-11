@@ -21,14 +21,22 @@ import importlib
 import unittest
 from datetime import datetime
 
-from .utils import assertRaisesNothing, TestWithPackageStructure
 from mock import patch
 
-from lewis.core.utils import dict_strict_update, extract_module_name, \
-    get_submodules, get_members, seconds_since, FromOptionalDependency, \
-    format_doc_text, check_limits, is_compatible_with_framework
-
 from lewis.core.exceptions import LewisException, LimitViolationException
+from lewis.core.utils import (
+    FromOptionalDependency,
+    check_limits,
+    dict_strict_update,
+    extract_module_name,
+    format_doc_text,
+    get_members,
+    get_submodules,
+    is_compatible_with_framework,
+    seconds_since,
+)
+
+from .utils import TestWithPackageStructure, assertRaisesNothing
 
 
 class TestDictStrictUpdate(unittest.TestCase):
@@ -57,20 +65,20 @@ class TestDictStrictUpdate(unittest.TestCase):
 
 class TestExtractModuleName(TestWithPackageStructure):
     def test_directory_basename_is_returned(self):
-        self.assertEqual(extract_module_name(self._dirs['valid']), 'some_dir')
+        self.assertEqual(extract_module_name(self._dirs["valid"]), "some_dir")
 
     def test_directory_invalid_name(self):
-        self.assertEqual(extract_module_name(self._dirs['invalid_underscore']), None)
-        self.assertEqual(extract_module_name(self._dirs['invalid_dot']), None)
+        self.assertEqual(extract_module_name(self._dirs["invalid_underscore"]), None)
+        self.assertEqual(extract_module_name(self._dirs["invalid_dot"]), None)
 
     def test_file_invalid_name(self):
-        self.assertEqual(extract_module_name(self._files['invalid_name']), None)
+        self.assertEqual(extract_module_name(self._files["invalid_name"]), None)
 
     def test_file_invalid_extension(self):
-        self.assertEqual(extract_module_name(self._files['invalid_ext']), None)
+        self.assertEqual(extract_module_name(self._files["invalid_ext"]), None)
 
     def test_file_basename_without_extension(self):
-        self.assertEqual(extract_module_name(self._files['valid']), 'some_file')
+        self.assertEqual(extract_module_name(self._files["valid"]), "some_file")
 
 
 class TestGetSubmodules(TestWithPackageStructure):
@@ -80,47 +88,46 @@ class TestGetSubmodules(TestWithPackageStructure):
     def test_correct_modules_are_returned(self):
         submodules = get_submodules(importlib.import_module(self._tmp_package_name))
 
-        self.assertEqual(sorted(submodules.keys()),
-                         sorted(self._expected_modules))
+        self.assertEqual(sorted(submodules.keys()), sorted(self._expected_modules))
 
 
 class TestGetMembers(unittest.TestCase):
     def test_returns_all_members_if_predicate_is_missing(self):
         class Foo(object):
             bar = 3.0
-            baz = 'test'
+            baz = "test"
 
         members = get_members(Foo())
 
         self.assertEqual(len(members), 2)
-        self.assertIn('bar', members)
-        self.assertIn('baz', members)
+        self.assertIn("bar", members)
+        self.assertIn("baz", members)
 
     def test_predicate(self):
         class Foo(object):
             bar = 3.0
-            baz = 'test'
+            baz = "test"
 
         members = get_members(Foo(), lambda x: isinstance(x, str))
 
         self.assertEqual(len(members), 1)
-        self.assertIn('baz', members)
+        self.assertIn("baz", members)
 
 
 class TestSecondsSince(unittest.TestCase):
-    @patch('lewis.core.utils.datetime')
+    @patch("lewis.core.utils.datetime")
     def test_seconds_since_past(self, datetime_mock):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 
         self.assertEqual(seconds_since(datetime(2016, 9, 1, 1, 0)), 3600.0)
 
-    @patch('lewis.core.utils.datetime')
+    @patch("lewis.core.utils.datetime")
     def test_seconds_since_future(self, datetime_mock):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 
         self.assertEqual(seconds_since(datetime(2016, 9, 1, 3, 0)), -3600.0)
 
-    @patch('lewis.core.utils.datetime')
+    @patch("lewis.core.utils.datetime")
     def test_seconds_since_none(self, datetime_mock):
         datetime_mock.now.return_value = datetime(2016, 9, 1, 2, 0)
 
@@ -129,7 +136,7 @@ class TestSecondsSince(unittest.TestCase):
 
 class TestFromOptionalDependency(unittest.TestCase):
     def test_existing_module_works(self):
-        a = FromOptionalDependency('time').do_import('sleep')
+        a = FromOptionalDependency("time").do_import("sleep")
 
         from time import sleep as b
 
@@ -137,51 +144,54 @@ class TestFromOptionalDependency(unittest.TestCase):
 
     def test_non_existing_members_in_module_dont_work(self):
         self.assertRaises(
-            AttributeError, FromOptionalDependency('time').do_import, 'sleep', 'bleep')
+            AttributeError, FromOptionalDependency("time").do_import, "sleep", "bleep"
+        )
 
     def test_non_existing_module_works(self):
-        A, B = FromOptionalDependency('invalid_module').do_import('A', 'B')
+        A, B = FromOptionalDependency("invalid_module").do_import("A", "B")
 
-        self.assertEqual(A.__name__, 'A')
-        self.assertEqual(B.__name__, 'B')
+        self.assertEqual(A.__name__, "A")
+        self.assertEqual(B.__name__, "B")
 
-        self.assertRaises(LewisException, A, 'argument_one')
-        self.assertRaises(LewisException, B, 'argument_one', 'argument_two')
+        self.assertRaises(LewisException, A, "argument_one")
+        self.assertRaises(LewisException, B, "argument_one", "argument_two")
 
     def test_string_exception_is_raised(self):
-        A = FromOptionalDependency('invalid_module', 'test').do_import('A')
+        A = FromOptionalDependency("invalid_module", "test").do_import("A")
 
         self.assertRaises(LewisException, A)
 
     def test_custom_exception_is_raised(self):
-        A = FromOptionalDependency('invalid_module', ValueError('test')).do_import('A')
+        A = FromOptionalDependency("invalid_module", ValueError("test")).do_import("A")
 
         self.assertRaises(ValueError, A)
 
     def test_exception_does_not_accept_arbitrary_type(self):
-        self.assertRaises(RuntimeError, FromOptionalDependency, 'invalid_module', 6.0)
+        self.assertRaises(RuntimeError, FromOptionalDependency, "invalid_module", 6.0)
 
 
 class TestFormatDocText(unittest.TestCase):
     def test_lines_are_preserved_and_indented(self):
-        text = 'This is\na test\nwith multiple lines.'
-        expected = '    This is\n    a test\n    with multiple lines.'
+        text = "This is\na test\nwith multiple lines."
+        expected = "    This is\n    a test\n    with multiple lines."
         self.assertEqual(format_doc_text(text), expected)
 
     def test_indented_lines_are_cleaned_up(self):
-        text = '  This is\n  a test\n  with multiple lines.'
-        expected = '    This is\n    a test\n    with multiple lines.'
+        text = "  This is\n  a test\n  with multiple lines."
+        expected = "    This is\n    a test\n    with multiple lines."
         self.assertEqual(format_doc_text(text), expected)
 
     def test_long_lines_are_broken(self):
-        text = ' '.join(['ab'] * 44)
-        expected = '    ' + ' '.join(['ab'] * 32) + '\n' + '    ' + ' '.join(['ab'] * 12)
+        text = " ".join(["ab"] * 44)
+        expected = (
+            "    " + " ".join(["ab"] * 32) + "\n" + "    " + " ".join(["ab"] * 12)
+        )
 
         self.assertEqual(format_doc_text(text), expected)
 
     def test_no_lines_above_99(self):
-        text = ' '.join(['abc'] * 143)
-        converted = format_doc_text(text).split('\n')
+        text = " ".join(["abc"] * 143)
+        converted = format_doc_text(text).split("\n")
 
         self.assertTrue(all([len(line) <= 99 for line in converted]))
 
@@ -235,7 +245,7 @@ class TestCheckLimits(unittest.TestCase):
             bar_min = 0
             bar_max = 15
 
-            @check_limits('bar_min', 'bar_max')
+            @check_limits("bar_min", "bar_max")
             def set_bar(self, new_bar):
                 self.bar = new_bar
 
@@ -281,14 +291,14 @@ class TestCheckLimits(unittest.TestCase):
 
 class TestCompatibleWithFramework(unittest.TestCase):
     def test_invalid_version_spec(self):
-        self.assertRaises(ValueError, is_compatible_with_framework, 'gsdf')
+        self.assertRaises(ValueError, is_compatible_with_framework, "gsdf")
 
     def test_none_is_compatible_with_nothing(self):
-        with patch('lewis.core.utils.__version__', '10.0.0'):
+        with patch("lewis.core.utils.__version__", "10.0.0"):
             self.assertFalse(is_compatible_with_framework(None))
 
     def test_specs(self):
-        with patch('lewis.core.utils.__version__', '10.5.2'):
-            self.assertTrue(is_compatible_with_framework('10.5.2'))
-            self.assertFalse(is_compatible_with_framework('1.0.3'))
-            self.assertFalse(is_compatible_with_framework('10.5.1'))
+        with patch("lewis.core.utils.__version__", "10.5.2"):
+            self.assertTrue(is_compatible_with_framework("10.5.2"))
+            self.assertFalse(is_compatible_with_framework("1.0.3"))
+            self.assertFalse(is_compatible_with_framework("10.5.1"))

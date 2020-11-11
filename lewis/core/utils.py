@@ -22,20 +22,18 @@ This module contains some useful helper classes and functions that are not speci
 module contained in the Core API.
 """
 
-from __future__ import absolute_import
-
-import importlib
-import textwrap
-import inspect
 import functools
+import importlib
+import inspect
+import textwrap
 from datetime import datetime
+from os import listdir
+from os import path as osp
+
 from semantic_version import Version
 
-from os import path as osp
-from os import listdir
-
-from .exceptions import LewisException, LimitViolationException
 from lewis import __version__
+from lewis.core.exceptions import LewisException, LimitViolationException
 from lewis.core.logging import has_log
 
 
@@ -51,12 +49,13 @@ def get_submodules(module):
     """
     if not inspect.ismodule(module):
         raise RuntimeError(
-            'Can only extract submodules from a module object, '
-            'for example imported via importlib.import_module')
+            "Can only extract submodules from a module object, "
+            "for example imported via importlib.import_module"
+        )
 
     submodules = get_members(module, inspect.ismodule)
 
-    module_path = list(getattr(module, '__path__', [None]))[0]
+    module_path = list(getattr(module, "__path__", [None]))[0]
 
     if module_path is not None:
         for item in listdir(module_path):
@@ -65,12 +64,16 @@ def get_submodules(module):
             if module_name is not None:
                 try:
                     submodules[module_name] = importlib.import_module(
-                        '.{}'.format(module_name), package=module.__name__)
+                        ".{}".format(module_name), package=module.__name__
+                    )
                 except ImportError as import_error:
                     # This is necessary in case random directories are in the path or things can
                     # just not be imported due to other ImportErrors.
-                    get_submodules.log.error("ImportError for {module}: {error}"
-                                             .format(module=module_name, error=import_error))
+                    get_submodules.log.error(
+                        "ImportError for {module}: {error}".format(
+                            module=module_name, error=import_error
+                        )
+                    )
 
     return submodules
 
@@ -88,7 +91,11 @@ def get_members(obj, predicate=None):
                       part of the resulting dict.
     :return: Dict with name-object pairs of members of obj for which predicate returns true.
     """
-    members = {member: getattr(obj, member) for member in dir(obj) if not member.startswith('__')}
+    members = {
+        member: getattr(obj, member)
+        for member in dir(obj)
+        if not member.startswith("__")
+    }
 
     if predicate is None:
         return members
@@ -110,7 +117,7 @@ def extract_module_name(absolute_path):
 
     # If the basename starts with _ it's probably __init__.py or __pycache__ or something internal.
     # At the moment there seems to be no use case for those
-    if base_name[0] in ('.', '_'):
+    if base_name[0] in (".", "_"):
         return None
 
     # If it's a directory, there's nothing else to check, so it can be returned directly
@@ -120,7 +127,7 @@ def extract_module_name(absolute_path):
     module_name, extension = osp.splitext(base_name)
 
     # If it's a file, it must have a .py ending
-    if extension == '.py':
+    if extension == ".py":
         return module_name
 
     return None
@@ -140,9 +147,10 @@ def dict_strict_update(base_dict, update_dict):
     additional_keys = set(update_dict.keys()) - set(base_dict.keys())
     if len(additional_keys) > 0:
         raise RuntimeError(
-            'The update dictionary contains keys that are not part of '
-            'the base dictionary: {}'.format(str(additional_keys)),
-            additional_keys)
+            "The update dictionary contains keys that are not part of "
+            "the base dictionary: {}".format(str(additional_keys)),
+            additional_keys,
+        )
 
     base_dict.update(update_dict)
 
@@ -212,16 +220,19 @@ class FromOptionalDependency(object):
         self._module = module
 
         if exception is None:
-            exception = 'The optional dependency \'{}\' is required for the ' \
-                        'functionality you tried to use.'.format(self._module)
+            exception = (
+                "The optional dependency '{}' is required for the "
+                "functionality you tried to use.".format(self._module)
+            )
 
         if isinstance(exception, str):
             exception = LewisException(exception)
 
         if not isinstance(exception, BaseException):
             raise RuntimeError(
-                'The exception parameter has to be either a string or a an instance of an '
-                'exception type (derived from BaseException).')
+                "The exception parameter has to be either a string or a an instance of an "
+                "exception type (derived from BaseException)."
+            )
 
         self._exception = exception
 
@@ -240,11 +251,13 @@ class FromOptionalDependency(object):
 
             objects = tuple(getattr(module_object, name) for name in names)
         except ImportError:
+
             def failing_init(obj, *args, **kwargs):
                 raise self._exception
 
-            objects = tuple(type(name, (object,), {'__init__': failing_init})
-                            for name in names)
+            objects = tuple(
+                type(name, (object,), {"__init__": failing_init}) for name in names
+            )
 
         return objects if len(objects) != 1 else objects[0]
 
@@ -260,9 +273,10 @@ def format_doc_text(text):
     :return: The formatted doc text.
     """
 
-    return '\n'.join(
-        textwrap.fill(line, width=99, initial_indent='    ', subsequent_indent='    ')
-        for line in inspect.cleandoc(text).splitlines())
+    return "\n".join(
+        textwrap.fill(line, width=99, initial_indent="    ", subsequent_indent="    ")
+        for line in inspect.cleandoc(text).splitlines()
+    )
 
 
 class check_limits(object):
@@ -341,17 +355,26 @@ class check_limits(object):
     def __call__(self, f):
         @functools.wraps(f)
         def limit_checked(obj, new_value):
-            lower = getattr(obj, self._lower) if isinstance(self._lower,
-                                                            str) else self._lower
-            upper = getattr(obj, self._upper) if isinstance(self._upper,
-                                                            str) else self._upper
+            lower = (
+                getattr(obj, self._lower)
+                if isinstance(self._lower, str)
+                else self._lower
+            )
+            upper = (
+                getattr(obj, self._upper)
+                if isinstance(self._upper, str)
+                else self._upper
+            )
 
-            if (lower is None or lower <= new_value) and (upper is None or new_value <= upper):
+            if (lower is None or lower <= new_value) and (
+                upper is None or new_value <= upper
+            ):
                 return f(obj, new_value)
 
             if not self._silent:
                 raise LimitViolationException(
-                    '%f is outside limits (%r, %r)' % (new_value, lower, upper))
+                    "%f is outside limits (%r, %r)" % (new_value, lower, upper)
+                )
 
         return limit_checked
 

@@ -49,13 +49,13 @@ class CanProcess(object):
         self.process(dt)
 
     def process(self, dt=0):
-        if hasattr(self, 'doProcess'):
-            if hasattr(self, 'doBeforeProcess'):
+        if hasattr(self, "doProcess"):
+            if hasattr(self, "doBeforeProcess"):
                 self.doBeforeProcess(dt)
 
             self.doProcess(dt)
 
-            if hasattr(self, 'doAfterProcess'):
+            if hasattr(self, "doAfterProcess"):
                 self.doAfterProcess(dt)
 
 

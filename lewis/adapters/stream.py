@@ -45,7 +45,7 @@ class StreamHandler(asynchat.async_chat):
         self._target.handler = self
 
         self._set_logging_context(target)
-        self.log.info('Client connected from %s:%s', *sock.getpeername())
+        self.log.info("Client connected from %s:%s", *sock.getpeername())
 
     def process(self, msec):
         if not self._buffer:
@@ -59,7 +59,9 @@ class StreamHandler(asynchat.async_chat):
                 self._readtimer = 0
                 request = self._get_request()
                 with self._stream_server.device_lock:
-                    error = RuntimeError("ReadTimeout while waiting for command terminator.")
+                    error = RuntimeError(
+                        "ReadTimeout while waiting for command terminator."
+                    )
                     reply = self._handle_error(request, error)
                 self._send_reply(reply)
 
@@ -71,18 +73,18 @@ class StreamHandler(asynchat.async_chat):
         self._readtimer = 0
 
     def _get_request(self):
-        request = b''.join(self._buffer)
+        request = b"".join(self._buffer)
         self._buffer = []
-        self.log.debug('Got request %s', request)
+        self.log.debug("Got request %s", request)
         return request
 
     def _send_reply(self, reply):
         if reply is not None:
-            self.log.debug('Sending reply %s', reply)
+            self.log.debug("Sending reply %s", reply)
             self.push((reply + self._target.out_terminator).encode())
 
     def _handle_error(self, request, error):
-        self.log.debug('Error while processing request', exc_info=error)
+        self.log.debug("Error while processing request", exc_info=error)
         return self._target.handle_error(request, error)
 
     def found_terminator(self):
@@ -92,14 +94,23 @@ class StreamHandler(asynchat.async_chat):
 
         with self._stream_server.device_lock:
             try:
-                cmd = next((cmd for cmd in self._target.bound_commands
-                            if cmd.can_process(request)), None)
+                cmd = next(
+                    (
+                        cmd
+                        for cmd in self._target.bound_commands
+                        if cmd.can_process(request)
+                    ),
+                    None,
+                )
 
                 if cmd is None:
-                    raise RuntimeError('None of the device\'s commands matched.')
+                    raise RuntimeError("None of the device's commands matched.")
 
                 self.log.info(
-                    'Processing request %s using command %s', request, cmd.matcher.pattern)
+                    "Processing request %s using command %s",
+                    request,
+                    cmd.matcher.pattern,
+                )
 
                 reply = cmd.process_request(request)
 
@@ -109,11 +120,11 @@ class StreamHandler(asynchat.async_chat):
         self._send_reply(reply)
 
     def unsolicited_reply(self, reply):
-        self.log.debug('Sending unsolicited reply %s', reply)
+        self.log.debug("Sending unsolicited reply %s", reply)
         self.push((reply + self._target.out_terminator).encode())
 
     def handle_close(self):
-        self.log.info('Closing connection to client %s:%s', *self.socket.getpeername())
+        self.log.info("Closing connection to client %s:%s", *self.socket.getpeername())
         self._stream_server.remove_handler(self)
         asynchat.async_chat.handle_close(self)
 
@@ -130,7 +141,7 @@ class StreamServer(asyncore.dispatcher):
         self.listen(5)
 
         self._set_logging_context(target)
-        self.log.info('Listening on %s:%s', host, port)
+        self.log.info("Listening on %s:%s", host, port)
 
         self._accepted_connections = []
 
@@ -149,7 +160,7 @@ class StreamServer(asyncore.dispatcher):
         # As this is an old style class, the base class method must
         # be called directly. This is important to still perform all
         # the teardown-work that asyncore.dispatcher does.
-        self.log.info('Shutting down server, closing all remaining client connections.')
+        self.log.info("Shutting down server, closing all remaining client connections.")
         asyncore.dispatcher.close(self)
 
         # But in addition, close all open sockets and clear the connection list.
@@ -187,12 +198,12 @@ class PatternMatcher(object):
     @property
     def arg_count(self):
         """Number of arguments that are matched in a request."""
-        raise NotImplementedError('The arg_count property must be implemented.')
+        raise NotImplementedError("The arg_count property must be implemented.")
 
     @property
     def argument_mappings(self):
         """Mapping functions that can be applied to the arguments returned by :meth:`match`."""
-        raise NotImplementedError('The argument_mappings property must be implemented.')
+        raise NotImplementedError("The argument_mappings property must be implemented.")
 
     def match(self, request):
         """
@@ -202,7 +213,7 @@ class PatternMatcher(object):
         :param request: Request to attempt matching.
         :return: List of matched argument values (possibly empty) or None if not matching.
         """
-        raise NotImplementedError('The match-method must be implemented.')
+        raise NotImplementedError("The match-method must be implemented.")
 
 
 class regex(PatternMatcher):
@@ -263,7 +274,7 @@ class scanf(regex):
         regex_pattern = generated_regex.pattern
 
         if exact_match:
-            regex_pattern = '^{}$'.format(regex_pattern)
+            regex_pattern = "^{}$".format(regex_pattern)
 
         super(scanf, self).__init__(regex_pattern)
 
@@ -321,9 +332,13 @@ class Func(object):
     .. _re: https://docs.python.org/2/library/re.html#regular-expression-syntax
     """
 
-    def __init__(self, func, pattern, argument_mappings=None, return_mapping=None, doc=None):
+    def __init__(
+        self, func, pattern, argument_mappings=None, return_mapping=None, doc=None
+    ):
         if not callable(func):
-            raise RuntimeError('Can not construct a Func-object from a non callable object.')
+            raise RuntimeError(
+                "Can not construct a Func-object from a non callable object."
+            )
 
         self.func = func
 
@@ -339,18 +354,24 @@ class Func(object):
             inspect.getcallargs(func, *[None] * self.matcher.arg_count)
         except TypeError:
             raise RuntimeError(
-                'The number of arguments for function \'{}\' matched by pattern '
-                '\'{}\' is not compatible with number of defined '
-                'groups in pattern ({}).'.format(
-                    getattr(func, '__name__', repr(func)), self.matcher.pattern,
-                    self.matcher.arg_count
-                ))
+                "The number of arguments for function '{}' matched by pattern "
+                "'{}' is not compatible with number of defined "
+                "groups in pattern ({}).".format(
+                    getattr(func, "__name__", repr(func)),
+                    self.matcher.pattern,
+                    self.matcher.arg_count,
+                )
+            )
 
-        if argument_mappings is not None and (self.matcher.arg_count != len(argument_mappings)):
+        if argument_mappings is not None and (
+            self.matcher.arg_count != len(argument_mappings)
+        ):
             raise RuntimeError(
-                'Supplied argument mappings for function matched by pattern \'{}\' specify {} '
-                'argument(s), but the function has {} arguments.'.format(
-                    self.matcher, len(argument_mappings), self.matcher.arg_count))
+                "Supplied argument mappings for function matched by pattern '{}' specify {} "
+                "argument(s), but the function has {} arguments.".format(
+                    self.matcher, len(argument_mappings), self.matcher.arg_count
+                )
+            )
 
         self.argument_mappings = argument_mappings
         self.return_mapping = return_mapping
@@ -363,7 +384,7 @@ class Func(object):
         match = self.matcher.match(request)
 
         if match is None:
-            raise RuntimeError('Request can not be processed.')
+            raise RuntimeError("Request can not be processed.")
 
         args = self.map_arguments(match)
 
@@ -439,7 +460,9 @@ class CommandBase(object):
     :param doc: Description of the command. If not supplied, the docstring is used.
     """
 
-    def __init__(self, func, pattern, argument_mappings=None, return_mapping=None, doc=None):
+    def __init__(
+        self, func, pattern, argument_mappings=None, return_mapping=None, doc=None
+    ):
         super(CommandBase, self).__init__()
 
         self.func = func
@@ -449,7 +472,7 @@ class CommandBase(object):
         self.doc = doc
 
     def bind(self, target):
-        raise NotImplementedError('Binders need to implement the bind method.')
+        raise NotImplementedError("Binders need to implement the bind method.")
 
 
 class Cmd(CommandBase):
@@ -491,10 +514,15 @@ class Cmd(CommandBase):
     :param doc: Description of the command. If not supplied, the docstring is used.
     """
 
-    def __init__(self, func, pattern, argument_mappings=None,
-                 return_mapping=lambda x: None if x is None else str(x), doc=None):
-        super(Cmd, self).__init__(func, pattern, argument_mappings, return_mapping,
-                                  doc)
+    def __init__(
+        self,
+        func,
+        pattern,
+        argument_mappings=None,
+        return_mapping=lambda x: None if x is None else str(x),
+        doc=None,
+    ):
+        super(Cmd, self).__init__(func, pattern, argument_mappings, return_mapping, doc)
 
     def bind(self, target):
         method = self.func if callable(self.func) else getattr(target, self.func, None)
@@ -502,8 +530,15 @@ class Cmd(CommandBase):
         if method is None:
             return None
 
-        return [Func(method, self.pattern, self.argument_mappings, self.return_mapping,
-                     self.doc)]
+        return [
+            Func(
+                method,
+                self.pattern,
+                self.argument_mappings,
+                self.return_mapping,
+                self.doc,
+            )
+        ]
 
 
 class Var(CommandBase):
@@ -553,10 +588,18 @@ class Var(CommandBase):
                 attributes the only way to get docs is to supply this argument.
     """
 
-    def __init__(self, target_member, read_pattern=None, write_pattern=None,
-                 argument_mappings=None, return_mapping=lambda x: None if x is None else str(x),
-                 doc=None):
-        super(Var, self).__init__(target_member, None, argument_mappings, return_mapping, doc)
+    def __init__(
+        self,
+        target_member,
+        read_pattern=None,
+        write_pattern=None,
+        argument_mappings=None,
+        return_mapping=lambda x: None if x is None else str(x),
+        doc=None,
+    ):
+        super(Var, self).__init__(
+            target_member, None, argument_mappings, return_mapping, doc
+        )
 
         self.target = None
 
@@ -570,29 +613,43 @@ class Var(CommandBase):
         funcs = []
 
         if self.read_pattern is not None:
+
             def getter():
                 return getattr(target, self.func)
 
             # Copy docstring if target is a @property
             prop = getattr(type(target), self.func, None)
             if prop and inspect.isdatadescriptor(prop):
-                getter.__doc__ = 'Getter: ' + inspect.getdoc(prop)
+                getter.__doc__ = "Getter: " + inspect.getdoc(prop)
 
             funcs.append(
-                Func(getter, self.read_pattern, return_mapping=self.return_mapping, doc=self.doc))
+                Func(
+                    getter,
+                    self.read_pattern,
+                    return_mapping=self.return_mapping,
+                    doc=self.doc,
+                )
+            )
 
         if self.write_pattern is not None:
+
             def setter(new_value):
                 setattr(target, self.func, new_value)
 
             # Copy docstring if target is a @property
             prop = getattr(type(target), self.func, None)
             if prop and inspect.isdatadescriptor(prop):
-                setter.__doc__ = 'Setter: ' + inspect.getdoc(prop)
+                setter.__doc__ = "Setter: " + inspect.getdoc(prop)
 
             funcs.append(
-                Func(setter, self.write_pattern, argument_mappings=self.argument_mappings,
-                     return_mapping=self.return_mapping, doc=self.doc))
+                Func(
+                    setter,
+                    self.write_pattern,
+                    argument_mappings=self.argument_mappings,
+                    return_mapping=self.return_mapping,
+                    doc=self.doc,
+                )
+            )
 
         return funcs
 
@@ -611,11 +668,7 @@ class StreamAdapter(Adapter):
     :param options: Dictionary with options.
     """
 
-    default_options = {
-        'telnet_mode': False,
-        'bind_address': '0.0.0.0',
-        'port': 9999
-    }
+    default_options = {"telnet_mode": False, "bind_address": "0.0.0.0", "port": 9999}
 
     def __init__(self, options=None):
         super(StreamAdapter, self).__init__(options)
@@ -623,19 +676,34 @@ class StreamAdapter(Adapter):
 
     @property
     def documentation(self):
-        commands = ['{}:\n{}'.format(
-            cmd.matcher.pattern,
-            format_doc_text(cmd.doc or inspect.getdoc(cmd.func) or ''))
-            for cmd in sorted(self.interface.bound_commands, key=lambda x: x.matcher.pattern)]
+        commands = [
+            "{}:\n{}".format(
+                cmd.matcher.pattern,
+                format_doc_text(cmd.doc or inspect.getdoc(cmd.func) or ""),
+            )
+            for cmd in sorted(
+                self.interface.bound_commands, key=lambda x: x.matcher.pattern
+            )
+        ]
 
         options = format_doc_text(
-            'Listening on: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}'.format(
-                self._options.bind_address, self._options.port,
-                repr(self.interface.in_terminator), repr(self.interface.out_terminator)))
+            "Listening on: {}\nPort: {}\nRequest terminator: {}\nReply terminator: {}".format(
+                self._options.bind_address,
+                self._options.port,
+                repr(self.interface.in_terminator),
+                repr(self.interface.out_terminator),
+            )
+        )
 
-        return '\n\n'.join(
-            [inspect.getdoc(self.interface) or '',
-             'Parameters\n==========', options, 'Commands\n========'] + commands)
+        return "\n\n".join(
+            [
+                inspect.getdoc(self.interface) or "",
+                "Parameters\n==========",
+                options,
+                "Commands\n========",
+            ]
+            + commands
+        )
 
     def start_server(self):
         """
@@ -648,11 +716,15 @@ class StreamAdapter(Adapter):
         """
         if self._server is None:
             if self._options.telnet_mode:
-                self.interface.in_terminator = '\r\n'
-                self.interface.out_terminator = '\r\n'
+                self.interface.in_terminator = "\r\n"
+                self.interface.out_terminator = "\r\n"
 
-            self._server = StreamServer(self._options.bind_address, self._options.port,
-                                        self.interface, self.device_lock)
+            self._server = StreamServer(
+                self._options.bind_address,
+                self._options.port,
+                self.interface,
+                self.device_lock,
+            )
 
     def stop_server(self):
         if self._server is not None:
@@ -722,10 +794,10 @@ class StreamInterface(InterfaceBase):
     In addition, the :meth:`handle_error`-method can be overridden. It is called when an exception
     is raised while handling commands.
     """
-    protocol = 'stream'
+    protocol = "stream"
 
-    in_terminator = '\r'
-    out_terminator = '\r'
+    in_terminator = "\r"
+    out_terminator = "\r"
 
     readtimeout = 100
 
@@ -753,15 +825,17 @@ class StreamInterface(InterfaceBase):
 
             if bound is None:
                 raise RuntimeError(
-                    'Unable to produce callable object for non-existing member \'{}\' '
-                    'of device or interface.'.format(cmd.func))
+                    "Unable to produce callable object for non-existing member '{}' "
+                    "of device or interface.".format(cmd.func)
+                )
 
             for bound_cmd in bound:
                 pattern = bound_cmd.matcher.pattern
                 if pattern in patterns:
                     raise RuntimeError(
-                        'The regular expression {} is '
-                        'associated with multiple commands.'.format(pattern))
+                        "The regular expression {} is "
+                        "associated with multiple commands.".format(pattern)
+                    )
 
                 patterns.add(pattern)
 

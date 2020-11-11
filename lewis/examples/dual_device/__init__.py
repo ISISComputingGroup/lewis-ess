@@ -17,11 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from lewis.devices import Device
-
-from lewis.adapters.epics import EpicsInterface, PV
+from lewis.adapters.epics import PV, EpicsInterface
 from lewis.adapters.stream import StreamInterface, Var
 from lewis.core.utils import check_limits
+from lewis.devices import Device
 
 
 class VerySimpleDevice(Device):
@@ -44,7 +43,7 @@ class VerySimpleDevice(Device):
         return self._second
 
     @second.setter
-    @check_limits('lower_limit', 'upper_limit')
+    @check_limits("lower_limit", "upper_limit")
     def second(self, new_second):
         self._second = new_second
 
@@ -54,17 +53,18 @@ class VerySimpleInterface(EpicsInterface):
     This is the EPICS interface to a quite simple device. It offers 5 PVs that expose
     different things that are part of the device, the interface or neither.
     """
+
     pvs = {
-        'Param-Raw': PV('param', type='int', doc='The raw underlying parameter.'),
-        'Param': PV(('get_param', 'set_param'), type='int'),
-        'Second': PV('second', meta_data_property='param_raw_meta'),
-        'Second-Int': PV('second_int', type='int'),
-        'Constant': PV(lambda: 4, doc='A constant number.')
+        "Param-Raw": PV("param", type="int", doc="The raw underlying parameter."),
+        "Param": PV(("get_param", "set_param"), type="int"),
+        "Second": PV("second", meta_data_property="param_raw_meta"),
+        "Second-Int": PV("second_int", type="int"),
+        "Constant": PV(lambda: 4, doc="A constant number."),
     }
 
     @property
     def param_raw_meta(self):
-        return {'lolo': self.device.lower_limit, 'hihi': self.device.upper_limit}
+        return {"lolo": self.device.lower_limit, "hihi": self.device.upper_limit}
 
     @property
     def second_int(self):
@@ -76,12 +76,17 @@ class VerySimpleStreamInterface(StreamInterface):
     """This is a TCP stream interface to the epics device, which only exposes param."""
 
     commands = {
-        Var('param', read_pattern=r'P\?$', write_pattern=r'P=(\d+)', argument_mappings=(int,),
-            doc='An integer parameter.')
+        Var(
+            "param",
+            read_pattern=r"P\?$",
+            write_pattern=r"P=(\d+)",
+            argument_mappings=(int,),
+            doc="An integer parameter.",
+        )
     }
 
-    in_terminator = '\r\n'
-    out_terminator = '\r\n'
+    in_terminator = "\r\n"
+    out_terminator = "\r\n"
 
 
-framework_version = '2.0.0'
+framework_version = "2.0.0"

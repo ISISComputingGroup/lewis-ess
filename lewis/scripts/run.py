@@ -20,116 +20,179 @@
 import argparse
 import os
 import sys
+
 import yaml
 
 from lewis import __version__
 from lewis.core.exceptions import LewisException
-from lewis.core.logging import logging, default_log_format
+from lewis.core.logging import default_log_format, logging
 from lewis.core.simulation import SimulationFactory
 from lewis.scripts import get_usage_text
 
 parser = argparse.ArgumentParser(
-    description='This script starts a simulated device that is exposed via the specified '
-                'communication protocol. Complete documentation of Lewis is available in '
-                'the online documentation: '
-                'https://lewis.readthedocs.io/en/v{}/'.format(__version__),
-    add_help=False, prog='lewis')
+    description="This script starts a simulated device that is exposed via the specified "
+    "communication protocol. Complete documentation of Lewis is available in "
+    "the online documentation: "
+    "https://lewis.readthedocs.io/en/v{}/".format(__version__),
+    add_help=False,
+    prog="lewis",
+)
 
-positional_args = parser.add_argument_group('Positional arguments')
+positional_args = parser.add_argument_group("Positional arguments")
 
 positional_args.add_argument(
-    'device', nargs='?',
-    help='Name of the device to simulate, omitting this argument prints out a list '
-         'of available devices.')
+    "device",
+    nargs="?",
+    help="Name of the device to simulate, omitting this argument prints out a list "
+    "of available devices.",
+)
 
 device_args = parser.add_argument_group(
-    'Device related parameters',
-    'Parameters that influence the selected device, such as setup or protocol.')
+    "Device related parameters",
+    "Parameters that influence the selected device, such as setup or protocol.",
+)
 
 device_args.add_argument(
-    '-s', '--setup', default=None,
-    help='Name of the setup to load. If not provided, the default setup is selected. If there'
-         'is no default, a list of setups is printed.')
+    "-s",
+    "--setup",
+    default=None,
+    help="Name of the setup to load. If not provided, the default setup is selected. If there"
+    "is no default, a list of setups is printed.",
+)
 
 interface_args = device_args.add_mutually_exclusive_group()
 interface_args.add_argument(
-    '-n', '--no-interface', default=False, action='store_true',
-    help='If supplied, the device simulation will not have any communication interface.')
+    "-n",
+    "--no-interface",
+    default=False,
+    action="store_true",
+    help="If supplied, the device simulation will not have any communication interface.",
+)
 interface_args.add_argument(
-    '-p', '--adapter-options', default=[], action='append',
-    help='Supply the protocol name and adapter options in the format '
-         '"name:{opt1: val, opt2: val}". Use the -l flag to see which protocols '
-         'are available for the selected device. Can be supplied multiple times for '
-         'multiple protocols.')
+    "-p",
+    "--adapter-options",
+    default=[],
+    action="append",
+    help="Supply the protocol name and adapter options in the format "
+    '"name:{opt1: val, opt2: val}". Use the -l flag to see which protocols '
+    "are available for the selected device. Can be supplied multiple times for "
+    "multiple protocols.",
+)
 device_args.add_argument(
-    '-l', '--list-protocols', action='store_true',
-    help='List available protocols for selected device.')
+    "-l",
+    "--list-protocols",
+    action="store_true",
+    help="List available protocols for selected device.",
+)
 device_args.add_argument(
-    '-L', '--list-adapter-options', action='store_true',
-    help='List available configuration options and their value. Values that have not been '
-         'modified in the -p argument are default values.')
+    "-L",
+    "--list-adapter-options",
+    action="store_true",
+    help="List available configuration options and their value. Values that have not been "
+    "modified in the -p argument are default values.",
+)
 device_args.add_argument(
-    '-i', '--show-interface', action='store_true',
-    help='Show command interface of device interface.')
+    "-i",
+    "--show-interface",
+    action="store_true",
+    help="Show command interface of device interface.",
+)
 device_args.add_argument(
-    '-k', '--device-package', default='lewis.devices',
-    help='Name of packages where devices are found.')
+    "-k",
+    "--device-package",
+    default="lewis.devices",
+    help="Name of packages where devices are found.",
+)
 device_args.add_argument(
-    '-a', '--add-path', default=None,
-    help='Path where the device package exists. Is added to the path.')
+    "-a",
+    "--add-path",
+    default=None,
+    help="Path where the device package exists. Is added to the path.",
+)
 
 simulation_args = parser.add_argument_group(
-    'Simulation related parameters',
-    'Parameters that influence the simulation itself, such as timing and speed.')
+    "Simulation related parameters",
+    "Parameters that influence the simulation itself, such as timing and speed.",
+)
 
 simulation_args.add_argument(
-    '-c', '--cycle-delay', type=float, default=0.1,
-    help='Approximate time to spend in each cycle of the simulation. '
-         '0 for maximum simulation rate.')
+    "-c",
+    "--cycle-delay",
+    type=float,
+    default=0.1,
+    help="Approximate time to spend in each cycle of the simulation. "
+    "0 for maximum simulation rate.",
+)
 simulation_args.add_argument(
-    '-e', '--speed', type=float, default=1.0,
-    help='Simulation speed. The actually elapsed time between two cycles is '
-         'multiplied with this speed to determine the simulated time.')
+    "-e",
+    "--speed",
+    type=float,
+    default=1.0,
+    help="Simulation speed. The actually elapsed time between two cycles is "
+    "multiplied with this speed to determine the simulated time.",
+)
 simulation_args.add_argument(
-    '-r', '--rpc-host', default=None,
-    help='HOST:PORT format string for exposing the device and the simulation via '
-         'JSON-RPC over ZMQ. Use lewis-control to access this service from the command line.')
+    "-r",
+    "--rpc-host",
+    default=None,
+    help="HOST:PORT format string for exposing the device and the simulation via "
+    "JSON-RPC over ZMQ. Use lewis-control to access this service from the command line.",
+)
 
-other_args = parser.add_argument_group('Other arguments')
+other_args = parser.add_argument_group("Other arguments")
 
 other_args.add_argument(
-    '-o', '--output-level', default='info',
-    choices=['none', 'critical', 'error', 'warning', 'info', 'debug'],
-    help='Level of detail for logging to stderr.')
+    "-o",
+    "--output-level",
+    default="info",
+    choices=["none", "critical", "error", "warning", "info", "debug"],
+    help="Level of detail for logging to stderr.",
+)
 other_args.add_argument(
-    '-V', '--verify', action='store_true',
-    help='Sets the output level to \'debug\' and aborts before starting the device simulation. '
-         'This is intended to help with diagnosing problems with devices or input arguments.')
+    "-V",
+    "--verify",
+    action="store_true",
+    help="Sets the output level to 'debug' and aborts before starting the device simulation. "
+    "This is intended to help with diagnosing problems with devices or input arguments.",
+)
 
 version_handling = other_args.add_mutually_exclusive_group()
 version_handling.add_argument(
-    '-I', '--ignore-versions', action='store_true',
-    help='Ignore version mismatches between device and framework. A warning will still '
-         'be logged.')
+    "-I",
+    "--ignore-versions",
+    action="store_true",
+    help="Ignore version mismatches between device and framework. A warning will still "
+    "be logged.",
+)
 version_handling.add_argument(
-    '-S', '--strict-versions', action='store_true',
-    help='Do not allow devices which do not specify a framework version they are '
-         'compatible with.')
+    "-S",
+    "--strict-versions",
+    action="store_true",
+    help="Do not allow devices which do not specify a framework version they are "
+    "compatible with.",
+)
 other_args.add_argument(
-    '-v', '--version', action='store_true',
-    help='Prints the version and exits.')
+    "-v", "--version", action="store_true", help="Prints the version and exits."
+)
 other_args.add_argument(
-    '-h', '--help', action='help',
-    help='Shows this help message and exits.')
+    "-h", "--help", action="help", help="Shows this help message and exits."
+)
 
-deprecated_args = parser.add_argument_group('Deprecated arguments')
+deprecated_args = parser.add_argument_group("Deprecated arguments")
 deprecated_args.add_argument(
-    '-R', '--relaxed-versions', action='store_true',
-    help='Renamed to --I/--ignore-versions. Using this old option produces an error '
-         'and it will be removed in a future release.')
+    "-R",
+    "--relaxed-versions",
+    action="store_true",
+    help="Renamed to --I/--ignore-versions. Using this old option produces an error "
+    "and it will be removed in a future release.",
+)
 
-__doc__ = 'This script is the main interaction point of the user with Lewis. The usage ' \
-          'is as follows:\n\n.. code-block:: none\n\n{}'.format(get_usage_text(parser, indent=4))
+__doc__ = (
+    "This script is the main interaction point of the user with Lewis. The usage "
+    "is as follows:\n\n.. code-block:: none\n\n{}".format(
+        get_usage_text(parser, indent=4)
+    )
+)
 
 
 def parse_adapter_options(raw_adapter_options):
@@ -143,12 +206,13 @@ def parse_adapter_options(raw_adapter_options):
             adapter_options = yaml.safe_load(option_string)
         except yaml.YAMLError:
             raise LewisException(
-                'It was not possible to parse this adapter option specification:\n'
-                '    %s\n'
-                'Correct formats for the -p argument are:\n'
-                '    -p protocol\n'
-                '    -p "protocol: {option: \'val\', option2: 34}"\n'
-                'The spaces after the colons are significant!' % option_string)
+                "It was not possible to parse this adapter option specification:\n"
+                "    %s\n"
+                "Correct formats for the -p argument are:\n"
+                "    -p protocol\n"
+                "    -p \"protocol: {option: 'val', option2: 34}\"\n"
+                "The spaces after the colons are significant!" % option_string
+            )
 
         if isinstance(adapter_options, str):
             protocols[adapter_options] = {}
@@ -185,41 +249,52 @@ def run_simulation(argument_list=None):  # noqa: C901
             return
 
         if arguments.relaxed_versions:
-            print('Unknown option --relaxed-versions. Did you mean --ignore-versions?')
+            print("Unknown option --relaxed-versions. Did you mean --ignore-versions?")
             return
 
-        loglevel = 'debug' if arguments.verify else arguments.output_level
-        if loglevel != 'none':
+        loglevel = "debug" if arguments.verify else arguments.output_level
+        if loglevel != "none":
             logging.basicConfig(
-                level=getattr(logging, loglevel.upper()), format=default_log_format)
+                level=getattr(logging, loglevel.upper()), format=default_log_format
+            )
 
         if arguments.add_path is not None:
             additional_path = os.path.abspath(arguments.add_path)
-            logging.getLogger().debug('Extending path with: %s', additional_path)
+            logging.getLogger().debug("Extending path with: %s", additional_path)
             sys.path.append(additional_path)
 
-        strict_versions = use_strict_versions(arguments.strict_versions, arguments.ignore_versions)
+        strict_versions = use_strict_versions(
+            arguments.strict_versions, arguments.ignore_versions
+        )
 
-        simulation_factory = SimulationFactory(arguments.device_package, strict_versions)
+        simulation_factory = SimulationFactory(
+            arguments.device_package, strict_versions
+        )
 
         if not arguments.device:
-            devices = ['Please specify a device to simulate. The following devices are available:']
+            devices = [
+                "Please specify a device to simulate. The following devices are available:"
+            ]
 
             for dev in sorted(simulation_factory.devices):
-                devices.append('    ' + dev)
+                devices.append("    " + dev)
 
-            print('\n'.join(devices))
+            print("\n".join(devices))
             return
 
         if arguments.list_protocols:
-            print('\n'.join(simulation_factory.get_protocols(arguments.device)))
+            print("\n".join(simulation_factory.get_protocols(arguments.device)))
             return
 
-        protocols = parse_adapter_options(arguments.adapter_options) \
-            if not arguments.no_interface else {}
+        protocols = (
+            parse_adapter_options(arguments.adapter_options)
+            if not arguments.no_interface
+            else {}
+        )
 
         simulation = simulation_factory.create(
-            arguments.device, arguments.setup, protocols, arguments.rpc_host)
+            arguments.device, arguments.setup, protocols, arguments.rpc_host
+        )
 
         if arguments.show_interface:
             print(simulation._adapters.documentation())
@@ -229,10 +304,10 @@ def run_simulation(argument_list=None):  # noqa: C901
             configurations = simulation._adapters.configuration()
 
             for protocol, options in configurations.items():
-                print('{}:'.format(protocol))
+                print("{}:".format(protocol))
 
                 for opt, val in options.items():
-                    print('    {} = {}'.format(opt, val))
+                    print("    {} = {}".format(opt, val))
 
             return
 
@@ -243,10 +318,10 @@ def run_simulation(argument_list=None):  # noqa: C901
             try:
                 simulation.start()
             except KeyboardInterrupt:
-                print('\nInterrupt received; shutting down. Goodbye, cruel world!')
-                simulation.log.critical('Simulation aborted by user interaction')
+                print("\nInterrupt received; shutting down. Goodbye, cruel world!")
+                simulation.log.critical("Simulation aborted by user interaction")
             finally:
                 simulation.stop()
 
     except LewisException as e:
-        print('\n'.join(('An error occurred:', str(e))))
+        print("\n".join(("An error occurred:", str(e))))

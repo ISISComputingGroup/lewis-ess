@@ -21,7 +21,12 @@ import unittest
 
 from mock import Mock, patch
 
-from lewis.core.statemachine import StateMachine, State, Transition, StateMachineException
+from lewis.core.statemachine import (
+    State,
+    StateMachine,
+    StateMachineException,
+    Transition,
+)
 
 
 class TestStateMachine(unittest.TestCase):
@@ -32,75 +37,67 @@ class TestStateMachine(unittest.TestCase):
         self.assertTrue("must include 'initial'" in str(context.exception))
 
     def test_state_machine_starts_in_None(self):
-        sm = StateMachine({'initial': 'foobar'})
+        sm = StateMachine({"initial": "foobar"})
         self.assertIsNone(sm.state, "StateMachine should start in the 'None' non-state")
 
     def test_first_cycle_transitions_to_initial(self):
-        sm = StateMachine({'initial': 'foobar'})
+        sm = StateMachine({"initial": "foobar"})
         sm.process(0.1)
-        self.assertEqual(sm.state, 'foobar', "StateMachine failed to transition into "
-                                             "initial state on first cycle")
+        self.assertEqual(
+            sm.state,
+            "foobar",
+            "StateMachine failed to transition into " "initial state on first cycle",
+        )
 
     def test_can_transition_with_lambda(self):
-        sm = StateMachine({
-            'initial': 'foo',
-            'transitions': {
-                ('foo', 'bar'): lambda: True
-            }
-        })
+        sm = StateMachine(
+            {"initial": "foo", "transitions": {("foo", "bar"): lambda: True}}
+        )
 
         self.assertIsNone(sm.state)
         sm.process(0.1)
-        self.assertEqual(sm.state, 'foo')
+        self.assertEqual(sm.state, "foo")
         sm.process(0.2)
-        self.assertEqual(sm.state, 'bar')
+        self.assertEqual(sm.state, "bar")
 
     def test_can_transition_with_callable(self):
         transition = Mock(return_value=True)
-        sm = StateMachine({
-            'initial': 'foo',
-            'transitions': {
-                ('foo', 'bar'): transition
-            }
-        })
+        sm = StateMachine(
+            {"initial": "foo", "transitions": {("foo", "bar"): transition}}
+        )
 
         transition.assert_not_called()
         self.assertIsNone(sm.state)
         sm.process(0.1)
         transition.assert_not_called()
-        self.assertEqual(sm.state, 'foo')
+        self.assertEqual(sm.state, "foo")
         sm.process(0.2)
         self.assertTrue(transition.called)
-        self.assertEqual(sm.state, 'bar')
+        self.assertEqual(sm.state, "bar")
 
-    @patch.object(Transition, '__call__', return_value=True)
+    @patch.object(Transition, "__call__", return_value=True)
     def test_can_transition_with_Transition(self, tr_call):
         transition = Transition()
-        sm = StateMachine({
-            'initial': 'foo',
-            'transitions': {
-                ('foo', 'bar'): transition
-            }
-        })
+        sm = StateMachine(
+            {"initial": "foo", "transitions": {("foo", "bar"): transition}}
+        )
 
         tr_call.assert_not_called()
         self.assertIsNone(sm.state)
         sm.process(0.1)
         tr_call.assert_not_called()
-        self.assertEqual(sm.state, 'foo')
+        self.assertEqual(sm.state, "foo")
         sm.process(0.2)
         self.assertTrue(tr_call.called)
-        self.assertEqual(sm.state, 'bar')
+        self.assertEqual(sm.state, "bar")
 
     def test_Transition_receives_Context(self):
         transition = Transition()
         context = object()
-        StateMachine({
-            'initial': 'foo',
-            'transitions': {
-                ('foo', 'bar'): transition
-            }
-        }, context=context)
+        StateMachine(
+            {"initial": "foo", "transitions": {("foo", "bar"): transition}},
+            context=context,
+        )
 
         self.assertEqual(transition._context, context)
 
@@ -108,15 +105,19 @@ class TestStateMachine(unittest.TestCase):
         on_entry = Mock()
         in_state = Mock()
         on_exit = Mock()
-        sm = StateMachine({
-            'initial': 'foo',
-            'states': {
-                'foo': {'on_entry': on_entry, 'in_state': in_state, 'on_exit': on_exit},
-            },
-            'transitions': {
-                ('foo', 'bar'): lambda: True
+        sm = StateMachine(
+            {
+                "initial": "foo",
+                "states": {
+                    "foo": {
+                        "on_entry": on_entry,
+                        "in_state": in_state,
+                        "on_exit": on_exit,
+                    },
+                },
+                "transitions": {("foo", "bar"): lambda: True},
             }
-        })
+        )
 
         # First cycle enters and executes initial state, but forces delta T to zero
         sm.process(1.0)
@@ -142,15 +143,15 @@ class TestStateMachine(unittest.TestCase):
         on_entry = Mock()
         in_state = Mock()
         on_exit = Mock()
-        sm = StateMachine({
-            'initial': 'foo',
-            'states': {
-                'foo': [on_entry, in_state, on_exit],
-            },
-            'transitions': {
-                ('foo', 'bar'): lambda: True
+        sm = StateMachine(
+            {
+                "initial": "foo",
+                "states": {
+                    "foo": [on_entry, in_state, on_exit],
+                },
+                "transitions": {("foo", "bar"): lambda: True},
             }
-        })
+        )
 
         # First cycle enters and executes initial state, but forces delta T to zero
         sm.process(1.0)
@@ -172,22 +173,22 @@ class TestStateMachine(unittest.TestCase):
         in_state.assert_not_called()
         on_exit.assert_not_called()
 
-    @patch.object(State, 'on_entry')
-    @patch.object(State, 'in_state')
-    @patch.object(State, 'on_exit')
+    @patch.object(State, "on_entry")
+    @patch.object(State, "in_state")
+    @patch.object(State, "on_exit")
     def test_can_specify_state_handlers_as_State(self, *_):
         foo = State()
         bar = State()
-        sm = StateMachine({
-            'initial': 'foo',
-            'states': {
-                'foo': foo,
-                'bar': bar,
-            },
-            'transitions': {
-                ('foo', 'bar'): lambda: True
+        sm = StateMachine(
+            {
+                "initial": "foo",
+                "states": {
+                    "foo": foo,
+                    "bar": bar,
+                },
+                "transitions": {("foo", "bar"): lambda: True},
             }
-        })
+        )
 
         # First cycle enters and executes initial state, but forces delta T to zero
         sm.process(1.0)
@@ -216,23 +217,15 @@ class TestStateMachine(unittest.TestCase):
     def test_State_receives_Context(self):
         state = State()
         context = object()
-        StateMachine({
-            'initial': 'foo',
-            'states': {
-                'foo': state
-            }
-        }, context=context)
+        StateMachine({"initial": "foo", "states": {"foo": state}}, context=context)
 
         self.assertEqual(state._context, context)
 
     def test_bind_handlers_by_name_default_behaviour(self):
         target = Mock()
-        sm = StateMachine({
-            'initial': 'foo',
-            'transitions': {
-                ('foo', 'bar'): lambda: True
-            }
-        })
+        sm = StateMachine(
+            {"initial": "foo", "transitions": {("foo", "bar"): lambda: True}}
+        )
         sm.bind_handlers_by_name(target)
 
         # First cycle enters and executes initial state, but forces delta T to zero
@@ -261,17 +254,17 @@ class TestStateMachine(unittest.TestCase):
 
     def test_bind_handlers_by_name_custom_prefix(self):
         target = Mock()
-        sm = StateMachine({
-            'initial': 'foo',
-            'transitions': {
-                ('foo', 'bar'): lambda: True
-            }
-        })
-        sm.bind_handlers_by_name(target, prefix={
-            'on_entry': 'enter_',
-            'in_state': 'do_',
-            'on_exit': 'exit_',
-        })
+        sm = StateMachine(
+            {"initial": "foo", "transitions": {("foo", "bar"): lambda: True}}
+        )
+        sm.bind_handlers_by_name(
+            target,
+            prefix={
+                "on_entry": "enter_",
+                "in_state": "do_",
+                "on_exit": "exit_",
+            },
+        )
 
         # First cycle enters and executes initial state, but forces delta T to zero
         sm.process(1.0)
@@ -302,14 +295,11 @@ class TestStateMachine(unittest.TestCase):
         first = Mock()
 
         # second target will 'override' the events for bar
-        second = Mock(spec=['_on_entry_bar', '_in_state_bar', '_on_exit_bar'])
+        second = Mock(spec=["_on_entry_bar", "_in_state_bar", "_on_exit_bar"])
 
-        sm = StateMachine({
-            'initial': 'foo',
-            'transitions': {
-                ('foo', 'bar'): lambda: True
-            }
-        })
+        sm = StateMachine(
+            {"initial": "foo", "transitions": {("foo", "bar"): lambda: True}}
+        )
         sm.bind_handlers_by_name(first)
         sm.bind_handlers_by_name(second, override=True)
 
@@ -343,60 +333,59 @@ class TestStateMachine(unittest.TestCase):
         first._on_exit_bar.assert_not_called()
 
     def test_reset(self):
-        sm = StateMachine({
-            'initial': 'foo',
-            'transitions': {
-                ('foo', 'bar'): lambda: True
-            }
-        })
+        sm = StateMachine(
+            {"initial": "foo", "transitions": {("foo", "bar"): lambda: True}}
+        )
 
         self.assertIsNone(sm.state)
         sm.reset()
         self.assertIsNone(sm.state)
 
         sm.process(0.1)
-        self.assertEqual(sm.state, 'foo')
+        self.assertEqual(sm.state, "foo")
         sm.reset()
         self.assertIsNone(sm.state)
 
         sm.process(0.2)
         sm.process(0.3)
-        self.assertEqual(sm.state, 'bar')
+        self.assertEqual(sm.state, "bar")
         sm.reset()
         self.assertIsNone(sm.state)
 
     def test_can(self):
-        sm = StateMachine({
-            'initial': 'init',
-            'transitions': {
-                ('init', 'foo'): lambda: True,
-                ('foo', 'bar'): lambda: True,
-                ('bar', 'foo'): lambda: True,
-                ('bar', 'init'): lambda: True,
-                ('bar', 'bar'): lambda: True
+        sm = StateMachine(
+            {
+                "initial": "init",
+                "transitions": {
+                    ("init", "foo"): lambda: True,
+                    ("foo", "bar"): lambda: True,
+                    ("bar", "foo"): lambda: True,
+                    ("bar", "init"): lambda: True,
+                    ("bar", "bar"): lambda: True,
+                },
             }
-        })
+        )
 
         self.assertEqual(sm.state, None)
-        self.assertIs(sm.can('init'), True)
-        self.assertIs(sm.can('foo'), False)
-        self.assertIs(sm.can('bar'), False)
+        self.assertIs(sm.can("init"), True)
+        self.assertIs(sm.can("foo"), False)
+        self.assertIs(sm.can("bar"), False)
         self.assertIs(sm.can(None), False)
 
         sm.process()
-        self.assertEqual(sm.state, 'init')
-        self.assertIs(sm.can('foo'), True)
-        self.assertIs(sm.can('bar'), False)
-        self.assertIs(sm.can('init'), False)
+        self.assertEqual(sm.state, "init")
+        self.assertIs(sm.can("foo"), True)
+        self.assertIs(sm.can("bar"), False)
+        self.assertIs(sm.can("init"), False)
 
         sm.process()
-        self.assertEqual(sm.state, 'foo')
-        self.assertIs(sm.can('bar'), True)
-        self.assertIs(sm.can('init'), False)
-        self.assertIs(sm.can('foo'), False)
+        self.assertEqual(sm.state, "foo")
+        self.assertIs(sm.can("bar"), True)
+        self.assertIs(sm.can("init"), False)
+        self.assertIs(sm.can("foo"), False)
 
         sm.process()
-        self.assertEqual(sm.state, 'bar')
-        self.assertIs(sm.can('foo'), True)
-        self.assertIs(sm.can('init'), True)
-        self.assertIs(sm.can('bar'), True)
+        self.assertEqual(sm.state, "bar")
+        self.assertIs(sm.can("foo"), True)
+        self.assertIs(sm.can("init"), True)
+        self.assertIs(sm.can("bar"), True)

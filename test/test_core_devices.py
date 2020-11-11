@@ -18,17 +18,24 @@
 # *********************************************************************
 
 import unittest
-from mock import patch
-
-from .utils import assertRaisesNothing, TestWithPackageStructure
 from types import ModuleType
 from uuid import uuid4
 
+from mock import patch
+
 from lewis.adapters.stream import StreamInterface
-from lewis.core.devices import is_device, DeviceRegistry, DeviceBuilder, DeviceBase, \
-    is_interface, InterfaceBase
+from lewis.core.devices import (
+    DeviceBase,
+    DeviceBuilder,
+    DeviceRegistry,
+    InterfaceBase,
+    is_device,
+    is_interface,
+)
 from lewis.core.exceptions import LewisException
 from lewis.devices import Device, StateMachineDevice
+
+from .utils import TestWithPackageStructure, assertRaisesNothing
 
 
 class TestIsDevice(unittest.TestCase):
@@ -63,9 +70,9 @@ class TestDeviceBuilderSimpleModule(unittest.TestCase):
             pass
 
         class DummyInterface(InterfaceBase):
-            protocol = 'dummy'
+            protocol = "dummy"
 
-        cls.module = ModuleType('simple_dummy_module')
+        cls.module = ModuleType("simple_dummy_module")
         cls.module.DummyDevice = DummyDevice
         cls.module.DummyAdapter = DummyInterface
 
@@ -86,14 +93,14 @@ class TestDeviceBuilderSimpleModule(unittest.TestCase):
 
         setups = builder.setups
         self.assertEqual(len(setups), 1)
-        self.assertIn('default', setups)
+        self.assertIn("default", setups)
 
     def test_protocols(self):
         builder = DeviceBuilder(self.module)
 
         protocols = builder.protocols
         self.assertEqual(len(protocols), 1)
-        self.assertIn('dummy', protocols)
+        self.assertIn("dummy", protocols)
 
     def test_create_device(self):
         builder = DeviceBuilder(self.module)
@@ -101,16 +108,17 @@ class TestDeviceBuilderSimpleModule(unittest.TestCase):
         device = builder.create_device()
         self.assertIsInstance(device, self.module.DummyDevice)
 
-        self.assertRaises(LewisException, builder.create_device, 'invalid_setup')
+        self.assertRaises(LewisException, builder.create_device, "invalid_setup")
 
     def test_create_interface(self):
         builder = DeviceBuilder(self.module)
 
         self.assertIsInstance(builder.create_interface(), self.module.DummyAdapter)
         self.assertIsInstance(
-            builder.create_interface('dummy'), self.module.DummyAdapter)
+            builder.create_interface("dummy"), self.module.DummyAdapter
+        )
 
-        self.assertRaises(LewisException, builder.create_interface, 'invalid_protocol')
+        self.assertRaises(LewisException, builder.create_interface, "invalid_protocol")
 
 
 class TestDeviceBuilderMultipleDevicesAndProtocols(unittest.TestCase):
@@ -123,12 +131,12 @@ class TestDeviceBuilderMultipleDevicesAndProtocols(unittest.TestCase):
             pass
 
         class DummyInterface(InterfaceBase):
-            protocol = 'dummy'
+            protocol = "dummy"
 
         class OtherDummyInterface(InterfaceBase):
-            protocol = 'other_dummy'
+            protocol = "other_dummy"
 
-        cls.module = ModuleType('multiple_devices_dummy_module')
+        cls.module = ModuleType("multiple_devices_dummy_module")
         cls.module.DummyDevice = DummyDevice
         cls.module.OtherDummyDevice = OtherDummyDevice
         cls.module.DummyAdapter = DummyInterface
@@ -145,21 +153,21 @@ class TestDeviceBuilderMultipleDevicesAndProtocols(unittest.TestCase):
 
         setups = builder.setups
         self.assertEqual(len(setups), 1)
-        self.assertIn('default', setups)
+        self.assertIn("default", setups)
 
     def test_protocols(self):
         builder = DeviceBuilder(self.module)
 
         protocols = builder.protocols
         self.assertEqual(len(protocols), 2)
-        self.assertIn('dummy', protocols)
-        self.assertIn('other_dummy', protocols)
+        self.assertIn("dummy", protocols)
+        self.assertIn("other_dummy", protocols)
 
     def test_create_device(self):
         builder = DeviceBuilder(self.module)
 
         self.assertRaises(LewisException, builder.create_device)
-        self.assertRaises(LewisException, builder.create_device, 'default')
+        self.assertRaises(LewisException, builder.create_device, "default")
 
 
 class TestDeviceBuilderComplexModule(unittest.TestCase):
@@ -172,23 +180,23 @@ class TestDeviceBuilderComplexModule(unittest.TestCase):
             pass
 
         class DummyInterface(InterfaceBase):
-            protocol = 'dummy'
+            protocol = "dummy"
 
         class OtherDummyInterface(InterfaceBase):
-            protocol = 'other_dummy'
+            protocol = "other_dummy"
 
-        cls.module = ModuleType('complex_dummy_module')
+        cls.module = ModuleType("complex_dummy_module")
         cls.module.DummyDevice = DummyDevice
         cls.module.OtherDummyDevice = OtherDummyDevice
-        cls.module.interfaces = ModuleType('interfaces')
-        cls.module.interfaces.dummy = ModuleType('dummy')
+        cls.module.interfaces = ModuleType("interfaces")
+        cls.module.interfaces.dummy = ModuleType("dummy")
         cls.module.interfaces.dummy.DummyAdapter = DummyInterface
-        cls.module.interfaces.other_dummy = ModuleType('other_dummy')
+        cls.module.interfaces.other_dummy = ModuleType("other_dummy")
         cls.module.interfaces.other_dummy.OtherDummyAdapter = OtherDummyInterface
-        cls.module.setups = ModuleType('setups')
-        cls.module.setups.default = ModuleType('default')
+        cls.module.setups = ModuleType("setups")
+        cls.module.setups.default = ModuleType("default")
         cls.module.setups.default.device_type = DummyDevice
-        cls.module.setups.other = ModuleType('other')
+        cls.module.setups.other = ModuleType("other")
         cls.module.setups.other.device_type = OtherDummyDevice
 
     def test_defaults(self):
@@ -202,27 +210,29 @@ class TestDeviceBuilderComplexModule(unittest.TestCase):
 
         setups = builder.setups
         self.assertEqual(len(setups), 2)
-        self.assertIn('default', setups)
-        self.assertIn('other', setups)
+        self.assertIn("default", setups)
+        self.assertIn("other", setups)
 
     def test_create_device(self):
         builder = DeviceBuilder(self.module)
 
         self.assertIsInstance(builder.create_device(), self.module.DummyDevice)
-        self.assertIsInstance(builder.create_device('default'), self.module.DummyDevice)
-        self.assertIsInstance(builder.create_device('other'), self.module.OtherDummyDevice)
+        self.assertIsInstance(builder.create_device("default"), self.module.DummyDevice)
+        self.assertIsInstance(
+            builder.create_device("other"), self.module.OtherDummyDevice
+        )
 
 
 class TestDeviceBuilderWithDuplicateProtocols(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         class DummyInterface(InterfaceBase):
-            protocol = 'dummy'
+            protocol = "dummy"
 
         class DummyInterfaceTwo(InterfaceBase):
-            protocol = 'dummy'
+            protocol = "dummy"
 
-        cls.module = ModuleType('simple_dummy_module')
+        cls.module = ModuleType("simple_dummy_module")
         cls.module.DummyAdapter = DummyInterface
         cls.module.DummyAdapterTwo = DummyInterfaceTwo
 
@@ -240,35 +250,49 @@ class TestDeviceRegistry(TestWithPackageStructure):
 
         devices = registry.devices
         self.assertEqual(len(devices), 2)
-        self.assertIn('some_file', devices)
-        self.assertIn('some_dir', devices)
+        self.assertIn("some_file", devices)
+        self.assertIn("some_dir", devices)
 
     def test_device_builder(self):
         registry = DeviceRegistry(self._tmp_package_name)
 
-        with patch('lewis.core.devices.is_compatible_with_framework', return_value=True):
-            builder = registry.device_builder('some_file')
-            self.assertEqual(builder.name, 'some_file')
+        with patch(
+            "lewis.core.devices.is_compatible_with_framework", return_value=True
+        ):
+            builder = registry.device_builder("some_file")
+            self.assertEqual(builder.name, "some_file")
 
-        with patch('lewis.core.devices.is_compatible_with_framework', return_value=False):
-            builder = registry.device_builder('some_file', strict_versions=False)
-            self.assertEqual(builder.name, 'some_file')
+        with patch(
+            "lewis.core.devices.is_compatible_with_framework", return_value=False
+        ):
+            builder = registry.device_builder("some_file", strict_versions=False)
+            self.assertEqual(builder.name, "some_file")
 
-            self.assertRaises(LewisException, registry.device_builder, 'some_file')
-            self.assertRaises(LewisException, registry.device_builder, 'some_file',
-                              strict_versions=True)
+            self.assertRaises(LewisException, registry.device_builder, "some_file")
+            self.assertRaises(
+                LewisException,
+                registry.device_builder,
+                "some_file",
+                strict_versions=True,
+            )
 
-        with patch('lewis.core.devices.is_compatible_with_framework', return_value=None):
-            builder = registry.device_builder('some_file', strict_versions=False)
-            self.assertEqual(builder.name, 'some_file')
+        with patch(
+            "lewis.core.devices.is_compatible_with_framework", return_value=None
+        ):
+            builder = registry.device_builder("some_file", strict_versions=False)
+            self.assertEqual(builder.name, "some_file")
 
-            builder = registry.device_builder('some_dir')
-            self.assertEqual(builder.name, 'some_dir')
+            builder = registry.device_builder("some_dir")
+            self.assertEqual(builder.name, "some_dir")
 
-            self.assertRaises(LewisException, registry.device_builder, 'some_file',
-                              strict_versions=True)
+            self.assertRaises(
+                LewisException,
+                registry.device_builder,
+                "some_file",
+                strict_versions=True,
+            )
 
-        self.assertRaises(LewisException, registry.device_builder, 'invalid_device')
+        self.assertRaises(LewisException, registry.device_builder, "invalid_device")
 
 
 class TestIsInterface(unittest.TestCase):

@@ -37,4 +37,4 @@ def get_usage_text(parser, indent=None):
     if indent is None:
         return usage_string
 
-    return '\n'.join([' ' * indent + line for line in usage_string.split('\n')])
+    return "\n".join([" " * indent + line for line in usage_string.split("\n")])
