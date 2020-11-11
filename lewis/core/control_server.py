@@ -35,8 +35,8 @@ import socket
 import zmq
 from jsonrpc import JSONRPCResponseManager
 
-from .exceptions import LewisException
-from .logging import has_log
+from lewis.core.exceptions import LewisException
+from lewis.core.logging import has_log
 
 
 class ExposedObject(object):

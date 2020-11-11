@@ -33,9 +33,8 @@ from os import path as osp
 from semantic_version import Version
 
 from lewis import __version__
+from lewis.core.exceptions import LewisException, LimitViolationException
 from lewis.core.logging import has_log
-
-from .exceptions import LewisException, LimitViolationException
 
 
 @has_log
