@@ -28,8 +28,6 @@ this infrastructure in :class:`~lewis.core.simulation.Simulation`.
 
 """
 
-from __future__ import absolute_import
-
 import inspect
 import json
 import socket

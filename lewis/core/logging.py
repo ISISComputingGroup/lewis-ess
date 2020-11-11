@@ -32,8 +32,6 @@ of the standard `logging`_ library.
 .. _logging: https://docs.python.org/2/library/logging.html
 """
 
-from __future__ import absolute_import
-
 import logging
 
 root_logger_name = "lewis"

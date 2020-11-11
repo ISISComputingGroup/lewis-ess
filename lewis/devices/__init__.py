@@ -23,8 +23,6 @@ or from :class:`StateMachineDevice` for devices that are more complex and can be
 using a state machine.
 """
 
-from __future__ import absolute_import
-
 from lewis.core.devices import DeviceBase
 from lewis.core.processor import CanProcess, CanProcessComposite
 from lewis.core.statemachine import StateMachine

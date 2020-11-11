@@ -22,8 +22,6 @@ This module contains some useful helper classes and functions that are not speci
 module contained in the Core API.
 """
 
-from __future__ import absolute_import
-
 import functools
 import importlib
 import inspect

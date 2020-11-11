@@ -26,8 +26,6 @@ This module provides client code for objects exposed via JSON-RPC over ZMQ.
     in the module :mod:`~lewis.core.control_server`.
 """
 
-from __future__ import absolute_import, division
-
 import types
 import uuid
 

@@ -32,8 +32,6 @@ were used as guidelines and references for implementing the protocol:
     at lewis/examples/modbus_device.
 """
 
-from __future__ import division
-
 import asyncore
 import socket
 import struct
