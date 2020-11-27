@@ -25,7 +25,7 @@ from lewis.core.logging import has_log, root_logger_name
 class TestHasLog(unittest.TestCase):
     def test_logger_name(self):
         @has_log
-        class Foo(object):
+        class Foo:
             pass
 
         a = Foo()
@@ -34,7 +34,7 @@ class TestHasLog(unittest.TestCase):
 
     def test_setting_context_changes_name(self):
         @has_log
-        class Foo(object):
+        class Foo:
             pass
 
         a = Foo()

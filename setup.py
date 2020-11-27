@@ -29,7 +29,7 @@ def readme():
 
 setup(
     name="lewis",
-    version="2.0.0",
+    version="1.3.0",
     description="LeWIS - Let's Write Intricate Simulators!",
     long_description=readme(),
     url="https://github.com/ess-dmsc/lewis",
