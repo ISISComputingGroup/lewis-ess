@@ -125,6 +125,20 @@ The ``twine`` utility can be used to upload the packages to PyPI:
 
 .. code-block:: bash
 
-   $ twine register dist/lewis-x.y.z.tar.gz
-   $ twine register dist/lewis-x.y.z-py3-none-any.whl
    $ twine upload dist/*
+
+Note: requires a PyPi account and lewis permissions.
+
+Uploading the documentation
+---------------------------
+
+Building the documentation locally:
+
+.. code-block:: bash
+
+    $ sphinx-build -b html docs/ docs/_build/html
+
+Fix any errors if it fails to build and commit them.
+
+Log on to https://readthedocs.org and check the lewis build passes.
+
