@@ -39,7 +39,7 @@ from lewis.core.exceptions import LewisException
 from lewis.core.logging import has_log
 
 
-class ExposedObject(object):
+class ExposedObject:
     """
     ExposedObject is a class that makes it easy to expose an object via the
     JSONRPCResponseManager from the json-rpc package, where it can serve as a dispatcher.
@@ -248,7 +248,7 @@ class ExposedObjectCollection(ExposedObject):
 
 
 @has_log
-class ControlServer(object):
+class ControlServer:
     """
     This server opens a ZMQ REP-socket at the given host and port when start_server
     is called.

@@ -25,7 +25,7 @@ calculations based on an elapsed time Δt.
 """
 
 
-class CanProcess(object):
+class CanProcess:
     """
     The CanProcess class is meant as a base for all things that
     are able to process on the basis of a time delta (dt).

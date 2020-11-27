@@ -67,7 +67,7 @@ class ProtocolException(Exception):
     """
 
 
-class ControlClient(object):
+class ControlClient:
     """
     This class provides an interface to a ControlServer instance on
     the server side. Proxies to exposed objects can be obtained either
@@ -156,7 +156,7 @@ class ControlClient(object):
         return {obj: self.get_object(obj) for obj in object_names}
 
 
-class ObjectProxy(object):
+class ObjectProxy:
     """
     This class serves as a base class for dynamically created classes on the
     client side that represent server-side objects. Upon initialization,

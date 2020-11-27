@@ -32,7 +32,7 @@ from lewis.core.utils import get_members, get_submodules
 
 
 @has_log
-class DeviceBase(object):
+class DeviceBase:
     """
     This class is a common base for :class:`~lewis.devices.Device` and
     :class:`~lewis.devices.StateMachineDevice`. It is mainly used in the device
@@ -41,7 +41,7 @@ class DeviceBase(object):
 
 
 @has_log
-class InterfaceBase(object):
+class InterfaceBase:
     """
     This class is a common base for protocol specific interfaces that are exposed by a subclass of
     :class:`~lewis.core.adapters.Adapter`. This base class is not meant to be used directly in
@@ -125,7 +125,7 @@ def is_interface(obj):
 
 
 @has_log
-class DeviceBuilder(object):
+class DeviceBuilder:
     """
     This class takes a module object (for example imported via importlib.import_module or via the
     :class:`DeviceRegistry`) and inspects it so that it's possible to construct devices and
@@ -409,7 +409,7 @@ class DeviceBuilder(object):
 
 
 @has_log
-class DeviceRegistry(object):
+class DeviceRegistry:
     """
     This class takes the name of a module and constructs a :class:`DeviceBuilder` from
     each sub-module. The available devices can be queried and a DeviceBuilder can be

@@ -34,7 +34,7 @@ from lewis.core.utils import seconds_since
 
 
 @has_log
-class Simulation(object):
+class Simulation:
     """
     The Simulation class controls certain aspects of a device simulation,
     the most important one being time.

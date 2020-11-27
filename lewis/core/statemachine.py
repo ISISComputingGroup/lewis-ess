@@ -37,7 +37,7 @@ class StateMachineException(Exception):
     pass
 
 
-class HasContext(object):
+class HasContext:
     """
     Mixin to provide a Context.
 
