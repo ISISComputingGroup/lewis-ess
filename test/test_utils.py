@@ -32,7 +32,6 @@ from lewis.core.utils import (
     format_doc_text,
     get_members,
     get_submodules,
-    is_compatible_with_framework,
     seconds_since,
 )
 
@@ -287,18 +286,3 @@ class TestCheckLimits(unittest.TestCase):
 
         # Updates must have been ignored.
         self.assertEqual(f.bar, 15)
-
-
-class TestCompatibleWithFramework(unittest.TestCase):
-    def test_invalid_version_spec(self):
-        self.assertRaises(ValueError, is_compatible_with_framework, "gsdf")
-
-    def test_none_is_compatible_with_nothing(self):
-        with patch("lewis.core.utils.__version__", "10.0.0"):
-            self.assertFalse(is_compatible_with_framework(None))
-
-    def test_specs(self):
-        with patch("lewis.core.utils.__version__", "10.5.2"):
-            self.assertTrue(is_compatible_with_framework("10.5.2"))
-            self.assertFalse(is_compatible_with_framework("1.0.3"))
-            self.assertFalse(is_compatible_with_framework("10.5.1"))

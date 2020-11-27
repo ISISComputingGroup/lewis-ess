@@ -21,8 +21,6 @@ import unittest
 from types import ModuleType
 from uuid import uuid4
 
-from mock import patch
-
 from lewis.adapters.stream import StreamInterface
 from lewis.core.devices import (
     DeviceBase,
@@ -256,42 +254,8 @@ class TestDeviceRegistry(TestWithPackageStructure):
     def test_device_builder(self):
         registry = DeviceRegistry(self._tmp_package_name)
 
-        with patch(
-            "lewis.core.devices.is_compatible_with_framework", return_value=True
-        ):
-            builder = registry.device_builder("some_file")
-            self.assertEqual(builder.name, "some_file")
-
-        with patch(
-            "lewis.core.devices.is_compatible_with_framework", return_value=False
-        ):
-            builder = registry.device_builder("some_file", strict_versions=False)
-            self.assertEqual(builder.name, "some_file")
-
-            self.assertRaises(LewisException, registry.device_builder, "some_file")
-            self.assertRaises(
-                LewisException,
-                registry.device_builder,
-                "some_file",
-                strict_versions=True,
-            )
-
-        with patch(
-            "lewis.core.devices.is_compatible_with_framework", return_value=None
-        ):
-            builder = registry.device_builder("some_file", strict_versions=False)
-            self.assertEqual(builder.name, "some_file")
-
-            builder = registry.device_builder("some_dir")
-            self.assertEqual(builder.name, "some_dir")
-
-            self.assertRaises(
-                LewisException,
-                registry.device_builder,
-                "some_file",
-                strict_versions=True,
-            )
-
+        builder = registry.device_builder("some_file")
+        self.assertEqual(builder.name, "some_file")
         self.assertRaises(LewisException, registry.device_builder, "invalid_device")
 
 

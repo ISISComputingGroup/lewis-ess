@@ -426,11 +426,11 @@ class Simulation(object):
             self._control_server.start_server()
 
 
-class SimulationFactory(object):
+class SimulationFactory:
     """
     This class is used to create :class:`Simulation`-objects according to a certain
     set of parameters, such as device, setup and protocol. To create a simulation, it needs to
-    know where devices are stored and how strict device versions should be handled:
+    know where devices are stored:
 
     .. sourcecode:: Python
 
@@ -447,9 +447,8 @@ class SimulationFactory(object):
     .. warning:: This class is meant for internal use at the moment and may change frequently.
     """
 
-    def __init__(self, devices_package, strict_versions=None):
+    def __init__(self, devices_package):
         self._reg = DeviceRegistry(devices_package)
-        self._rv = strict_versions
 
     @property
     def devices(self):
@@ -458,7 +457,7 @@ class SimulationFactory(object):
 
     def get_protocols(self, device):
         """Returns a list of available protocols for the specified device."""
-        return self._reg.device_builder(device, self._rv).protocols
+        return self._reg.device_builder(device).protocols
 
     def create(self, device, setup=None, protocols=None, control_server=None):
         """
@@ -473,7 +472,7 @@ class SimulationFactory(object):
         :return: Simulation object according to input parameters.
         """
 
-        device_builder = self._reg.device_builder(device, self._rv)
+        device_builder = self._reg.device_builder(device)
         device = device_builder.create_device(setup)
 
         adapters = []
