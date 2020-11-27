@@ -26,10 +26,9 @@ produces factory-like objects that create device instances and interfaces based 
 
 import importlib
 
-from lewis import __version__
 from lewis.core.exceptions import LewisException
 from lewis.core.logging import has_log
-from lewis.core.utils import get_members, get_submodules, is_compatible_with_framework
+from lewis.core.utils import get_members, get_submodules
 
 
 @has_log
@@ -456,7 +455,7 @@ class DeviceRegistry(object):
         """All available device names."""
         return self._devices.keys()
 
-    def device_builder(self, name, strict_versions=None):
+    def device_builder(self, name):
         """
         Returns a :class:`DeviceBuilder` instance that can be used to create device objects
         based on setups, as well as device interfaces. If the device name is not stored
@@ -471,39 +470,10 @@ class DeviceRegistry(object):
         is accepted unless ``strict_versions`` is set to ``True``.
 
         :param name: Name of the device.
-        :param strict_versions: If ``True`` or ``None``, raise an exception when version of device
-                                does not match framework version.
         :return: :class:`DeviceBuilder`-object for requested device.
         """
         try:
-            builder = self._devices[name]
-
-            compatible = is_compatible_with_framework(builder.framework_version)
-
-            if not compatible:
-                self.log.warning(
-                    "Device '%s' is specified for a different framework version "
-                    "(required: %s, current: %s). This means that the device might not work "
-                    "as expected. Contact the device author about updating the device or use a "
-                    "different version of lewis to run this device.",
-                    builder.name,
-                    builder.framework_version,
-                    __version__,
-                )
-
-                if strict_versions or (
-                    compatible is not None and strict_versions is None
-                ):
-                    raise LewisException(
-                        "Not loading device '{}' with different framework version "
-                        "(required: {}, current: {}) in strict mode. Use the --ignore-versions "
-                        "option of lewis to load the device anyway.".format(
-                            builder.name, builder.framework_version, __version__
-                        )
-                    )
-
-            return builder
-
+            return self._devices[name]
         except KeyError:
             raise LewisException(
                 "No device with the name '{}' could be found. "

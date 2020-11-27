@@ -72,6 +72,3 @@ class VerySimpleInterface(StreamInterface):
 
     def handle_error(self, request, error):
         return "An error occurred: " + repr(error)
-
-
-framework_version = "2.0.0"

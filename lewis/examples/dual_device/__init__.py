@@ -87,6 +87,3 @@ class VerySimpleStreamInterface(StreamInterface):
 
     in_terminator = "\r\n"
     out_terminator = "\r\n"
-
-
-framework_version = "2.0.0"

@@ -164,13 +164,6 @@ version_handling.add_argument(
     help="Ignore version mismatches between device and framework. A warning will still "
     "be logged.",
 )
-version_handling.add_argument(
-    "-S",
-    "--strict-versions",
-    action="store_true",
-    help="Do not allow devices which do not specify a framework version they are "
-    "compatible with.",
-)
 other_args.add_argument(
     "-v", "--version", action="store_true", help="Prints the version and exits."
 )
@@ -223,15 +216,6 @@ def parse_adapter_options(raw_adapter_options):
     return protocols
 
 
-def use_strict_versions(strict_versions, ignore_versions):
-    if ignore_versions:
-        return False
-    elif strict_versions:
-        return True
-
-    return None
-
-
 def run_simulation(argument_list=None):  # noqa: C901
     """
     This is effectively the main function of a typical simulation run. Arguments passed in are
@@ -263,13 +247,7 @@ def run_simulation(argument_list=None):  # noqa: C901
             logging.getLogger().debug("Extending path with: %s", additional_path)
             sys.path.append(additional_path)
 
-        strict_versions = use_strict_versions(
-            arguments.strict_versions, arguments.ignore_versions
-        )
-
-        simulation_factory = SimulationFactory(
-            arguments.device_package, strict_versions
-        )
+        simulation_factory = SimulationFactory(arguments.device_package)
 
         if not arguments.device:
             devices = [

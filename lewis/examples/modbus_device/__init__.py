@@ -41,6 +41,3 @@ class ExampleModbusInterface(ModbusInterface):
     co = di
     ir = ModbusBasicDataBank(0)
     hr = ir
-
-
-framework_version = "2.0.0"
