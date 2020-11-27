@@ -226,9 +226,6 @@ Usually, you would use this API to write a Python script, but for demo purposes 
 ::
 
     $ python
-    Python 2.7.12 (default, Nov 19 2016, 06:48:10)
-    [GCC 5.4.0 20160609] on linux2
-    Type "help", "copyright", "credits" or "license" for more information.
     >>> from lewis.core.control_client import ControlClient
     >>>
     >>> client = ControlClient(host='localhost', port='10000')

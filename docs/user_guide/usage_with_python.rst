@@ -3,8 +3,8 @@ Usage with Python
 
 To use Lewis directly via Python you must first install its dependencies:
 
--  Python 2.7+ or 3.4+
--  PIP 8.1+
+-  Python 3.6+
+-  pip (latest)
 
 On most linux systems these can be installed via the distribution's package manager.
 
