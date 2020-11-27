@@ -174,7 +174,7 @@ class StreamServer(asyncore.dispatcher):
             handler.process(msec)
 
 
-class PatternMatcher(object):
+class PatternMatcher:
     """
     This class defines an interface for general command-matchers that use any kind of
     technique to match a certain request in string form. It is used by :class:`Func` to check
@@ -287,7 +287,7 @@ class scanf(regex):
         return self._argument_mappings
 
 
-class Func(object):
+class Func:
     """
     Objects of this type connect a callable object to a pattern matcher (:class:`PatternMatcher`),
     which currently comprises :class:`regex` and :class:`scanf`. Strings are also
@@ -421,7 +421,7 @@ class Func(object):
         return return_value
 
 
-class CommandBase(object):
+class CommandBase:
     """
     This is the common base class of :class:`Cmd` and :class:`Var`. The concept of commands for
     the stream adapter is based on connecting a callable object to a pattern that matches an

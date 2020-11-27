@@ -43,7 +43,7 @@ from lewis.core.devices import InterfaceBase
 from lewis.core.logging import has_log
 
 
-class ModbusDataBank(object):
+class ModbusDataBank:
     """
     Preliminary DataBank implementation for Modbus.
 
@@ -119,7 +119,7 @@ class ModbusBasicDataBank(ModbusDataBank):
         )
 
 
-class ModbusDataStore(object):
+class ModbusDataStore:
     """Convenience struct to hold the four types of DataBanks in Modbus"""
 
     def __init__(self, di=None, co=None, ir=None, hr=None):
@@ -129,7 +129,7 @@ class ModbusDataStore(object):
         self.hr = hr
 
 
-class MBEX(object):
+class MBEX:
     """Modbus standard exception codes"""
 
     ILLEGAL_FUNCTION = 0x01
@@ -143,7 +143,7 @@ class MBEX(object):
     GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND = 0x0B
 
 
-class ModbusTCPFrame(object):
+class ModbusTCPFrame:
     """
     This class models a frame of the Modbus TCP protocol.
 
@@ -259,7 +259,7 @@ class ModbusTCPFrame(object):
 
 
 @has_log
-class ModbusProtocol(object):
+class ModbusProtocol:
     """
     This class implements the Modbus TCP Protocol.
 

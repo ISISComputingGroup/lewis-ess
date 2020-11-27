@@ -18,7 +18,7 @@
 # *********************************************************************
 
 
-class Bearings(object):
+class Bearings:
     def __init__(self):
         pass
 

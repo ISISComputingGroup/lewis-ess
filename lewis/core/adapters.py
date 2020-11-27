@@ -31,7 +31,7 @@ from lewis.core.logging import has_log
 from lewis.core.utils import dict_strict_update
 
 
-class NoLock(object):
+class NoLock:
     """
     A dummy context manager that raises a RuntimeError when it's used. This makes it easier to
     detect cases where an :class:`Adapter` has not received the proper lock-object to make sure
@@ -49,7 +49,7 @@ class NoLock(object):
 
 
 @has_log
-class Adapter(object):
+class Adapter:
     """
     Base class for adapters
 
@@ -200,7 +200,7 @@ class Adapter(object):
 
 
 @has_log
-class AdapterCollection(object):
+class AdapterCollection:
     """
     A container to manage the adapters of a device
 

@@ -33,7 +33,7 @@ from lewis.core.exceptions import LewisException
 from .utils import assertRaisesNothing
 
 
-class DummyObject(object):
+class DummyObject:
     a = 10
     b = 20
 

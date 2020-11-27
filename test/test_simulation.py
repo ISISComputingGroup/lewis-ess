@@ -254,7 +254,7 @@ class TestSimulation(unittest.TestCase):
         )
 
     def test_set_parameters(self):
-        class TestDevice(object):
+        class TestDevice:
             foo = 10
             bar = "str"
 
@@ -279,7 +279,7 @@ class TestSimulation(unittest.TestCase):
         self.assertEqual(sim.setups, [])
 
     def test_setups(self):
-        class MockBuilder(object):
+        class MockBuilder:
             setups = {"foo": 1, "bar": 2}
 
         sim = Simulation(device=Mock(), device_builder=MockBuilder())
@@ -287,7 +287,7 @@ class TestSimulation(unittest.TestCase):
         self.assertEqual(set(sim.setups), {"foo", "bar"})
 
     def test_switch_setup(self):
-        class MockBuilder(object):
+        class MockBuilder:
             setups = {"foo": None}
 
             def create_device(self, setup):

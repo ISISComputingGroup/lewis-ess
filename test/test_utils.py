@@ -92,7 +92,7 @@ class TestGetSubmodules(TestWithPackageStructure):
 
 class TestGetMembers(unittest.TestCase):
     def test_returns_all_members_if_predicate_is_missing(self):
-        class Foo(object):
+        class Foo:
             bar = 3.0
             baz = "test"
 
@@ -103,7 +103,7 @@ class TestGetMembers(unittest.TestCase):
         self.assertIn("baz", members)
 
     def test_predicate(self):
-        class Foo(object):
+        class Foo:
             bar = 3.0
             baz = "test"
 
@@ -197,7 +197,7 @@ class TestFormatDocText(unittest.TestCase):
 
 class TestCheckLimits(unittest.TestCase):
     def test_static_limits(self):
-        class Foo(object):
+        class Foo:
             bar = 0
 
             @check_limits(0, 15)
@@ -214,7 +214,7 @@ class TestCheckLimits(unittest.TestCase):
         self.assertRaises(LimitViolationException, f.set_bar, 16)
 
     def test_upper_lower_only(self):
-        class Foo(object):
+        class Foo:
             bar = 0
             baz = 1
 
@@ -239,7 +239,7 @@ class TestCheckLimits(unittest.TestCase):
         self.assertRaises(LimitViolationException, f.set_baz, -5)
 
     def test_property_limits(self):
-        class Foo(object):
+        class Foo:
             bar = 0
             bar_min = 0
             bar_max = 15
@@ -269,7 +269,7 @@ class TestCheckLimits(unittest.TestCase):
         assertRaisesNothing(self, f.set_bar, -352622234)
 
     def test_silent_mode(self):
-        class Foo(object):
+        class Foo:
             bar = 0
 
             @check_limits(0, 15, silent=True)

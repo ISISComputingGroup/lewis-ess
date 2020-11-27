@@ -163,7 +163,7 @@ def seconds_since(start):
     return (datetime.now() - start).total_seconds()
 
 
-class FromOptionalDependency(object):
+class FromOptionalDependency:
     """
     This is a utility class for importing classes from a module or
     replacing them with dummy types if the module can not be loaded.
@@ -276,7 +276,7 @@ def format_doc_text(text):
     )
 
 
-class check_limits(object):
+class check_limits:
     """
     This decorator helps to make sure that the parameter of a property setter (or any other
     method with one argument) is within certain numerical limits.
@@ -285,7 +285,7 @@ class check_limits(object):
 
     .. sourcecode:: Python
 
-        class Foo(object):
+        class Foo:
             _bar = 0
 
             @property
@@ -302,7 +302,7 @@ class check_limits(object):
 
     .. sourcecode:: Python
 
-        class Foo(object):
+        class Foo:
             _bar = 0
 
             bar_min = 0
@@ -326,7 +326,7 @@ class check_limits(object):
 
     .. sourcecode:: Python
 
-        class Foo(object):
+        class Foo:
             _temp = 273.15
 
             @check_limits(lower=0)

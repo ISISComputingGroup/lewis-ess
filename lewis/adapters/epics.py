@@ -51,7 +51,7 @@ pcaspy_manager = FromOptionalDependency(
 ).do_import("manager")
 
 
-class BoundPV(object):
+class BoundPV:
     """
     Class to represent PVs that are bound to an adapter
 
@@ -128,7 +128,7 @@ class BoundPV(object):
         )
 
 
-class PV(object):
+class PV:
     """
     The PV-class is used to declare the EPICS-interface exposed by a sub-class of
     EpicsAdapter. The ``target_property`` argument specifies which property of the adapter
