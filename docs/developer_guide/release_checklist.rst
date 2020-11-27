@@ -74,7 +74,9 @@ This should be done in a clean directory.
    $ . build/bin/activate
    (build) $ git clone https://github.com/ess-dmsc/lewis.git
    (build) $ cd lewis
+   (build) $ pip install twine wheel
    (build) $ python setup.py sdist bdist_wheel
+   (build) $ twine check dist/*
    (build) $ deactivate
 
 
@@ -97,7 +99,7 @@ Make sure tests are run in a fresh virtual environment:
 
    $ python -m venv whl
    $ . whl/bin/activate
-   (whl) $ pip install lewis/dist/lewis-X.Y.Z-py2.py3-none-any.whl
+   (whl) $ pip install lewis/dist/lewis-X.Y.Z-py3-none-any.whl
    (whl) $ lewis linkam_t95
    ...
    (whl) $ deactivate
@@ -123,7 +125,6 @@ The ``twine`` utility can be used to upload the packages to PyPI:
 
 .. code-block:: bash
 
-   $ pip install twine
    $ twine register dist/lewis-x.y.z.tar.gz
    $ twine register dist/lewis-x.y.z-py2.py3-none-any.whl
    $ twine upload dist/*
