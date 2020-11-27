@@ -126,5 +126,5 @@ The ``twine`` utility can be used to upload the packages to PyPI:
 .. code-block:: bash
 
    $ twine register dist/lewis-x.y.z.tar.gz
-   $ twine register dist/lewis-x.y.z-py2.py3-none-any.whl
+   $ twine register dist/lewis-x.y.z-py3-none-any.whl
    $ twine upload dist/*
