@@ -36,7 +36,7 @@ class LinkamT95StreamInterface(StreamInterface):
     device instance are also generated dynamically.
     """
 
-    out_terminator = b""
+    out_terminator = b"\r"
 
     commands = {
         Cmd("get_status", "^T$", return_mapping=lambda x: x),
