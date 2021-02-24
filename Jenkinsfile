@@ -2,9 +2,7 @@
 import ecdcpipeline.ContainerBuildNode
 import ecdcpipeline.PipelineBuilder
 
-project = "just-bin-it"
-
-python = "python3.6"
+project = "lewis"
 
 container_build_nodes = [
   'centos7-release': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc8')
@@ -64,10 +62,6 @@ node {
     scm_vars = checkout scm
   }
 
-  if ( env.CHANGE_ID ) {
-      builders['system tests'] = get_system_tests_pipeline()
-  }
-
   try {
     parallel builders
   } catch (e) {
@@ -78,53 +72,3 @@ node {
   cleanWs()
 }
 
-def get_system_tests_pipeline() {
-  return {
-    node('system-test') {
-      cleanWs()
-      dir("${project}") {
-        try {
-          stage("System tests: Checkout") {
-            checkout scm
-          }  // stage
-          stage("System tests: Install requirements") {
-            sh """
-            ${python} -m venv test_env
-            source test_env/bin/activate
-            which python
-            pip install --upgrade pip
-            pip install -r requirements-dev.txt
-            pip install -r system-tests/requirements.txt
-            """
-          }  // stage
-          stage("System tests: Run") {
-            // Stop and remove any containers that may have been from the job before,
-            // i.e. if a Jenkins job has been aborted.
-            sh "docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true"
-            timeout(time: 30, activity: true){
-              sh """
-              source test_env/bin/activate
-              cd system-tests/
-              python -m pytest -s --junitxml=./SystemTestsOutput.xml .
-              """
-            }
-          }  // stage
-        } finally {
-          stage ("System tests: Clean Up") {
-            // The statements below return true because the build should pass
-            // even if there are no docker containers or output files to be
-            // removed.
-            sh """
-            rm -rf test_env
-            rm -rf system-tests/output-files/* || true
-            docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
-            """
-          }  // stage
-          stage("System tests: Archive") {
-            junit "system-tests/SystemTestsOutput.xml"
-          }
-        }  // try/finally
-      } // dir
-    }  // node
-  }  // return
-} // def
