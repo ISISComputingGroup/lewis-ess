@@ -4,6 +4,7 @@ LICENSE
 MANIFEST.in
 README.rst
 requirements-dev.txt
+requirements-sphinx.txt
 requirements.txt
 setup.py
 tox.ini
@@ -43,6 +44,7 @@ docs/release_notes/release_1_1_1.rst
 docs/release_notes/release_1_2_0.rst
 docs/release_notes/release_1_2_1.rst
 docs/release_notes/release_1_2_2.rst
+docs/release_notes/release_1_3_0.rst
 docs/resources/diagrams/SimulationCycles.png
 docs/resources/diagrams/SimulationCycles.xml
 docs/resources/diagrams/chopper.fsm
