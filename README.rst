@@ -96,8 +96,6 @@ Additional Documentation
 Documentation can be found at `ReadTheDocs <http://lewis.readthedocs.io/>`__.
 
 
-.. |Build Status| image:: https://travis-ci.org/ess-dmsc/lewis.svg?branch=master
-   :target: https://travis-ci.org/ess-dmsc/lewis
 .. |Codacy| image:: https://api.codacy.com/project/badge/Grade/77aef653cf5d42f5a9a8a5a2c929a628
    :target: https://www.codacy.com/app/DMSC/lewis?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DMSC-Instrument-Data/lewis&amp;utm_campaign=Badge_Grade
 .. |Coverage Status| image:: https://coveralls.io/repos/github/DMSC-Instrument-Data/lewis/badge.svg?branch=master
