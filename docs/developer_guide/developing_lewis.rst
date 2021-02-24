@@ -34,8 +34,8 @@ intended, run the unit tests and check for pep8 errors, as well as build the doc
 
 ::
 
-    (lewis-dev)$ pytest test
-    (lewis-dev)$ flake8 setup.py lewis scripts system-tests test
+    (lewis-dev)$ pytest tests
+    (lewis-dev)$ flake8 setup.py lewis scripts system-tests tests
     (lewis-dev)$ sphinx-build -W -b html docs/ docs/_build/html
 
 There are also system-tests that (partially) test Lewis from the application/run-time level. These tests are based on
