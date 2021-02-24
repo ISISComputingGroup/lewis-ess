@@ -203,4 +203,6 @@ class LinkamT95StreamInterface(StreamInterface):
             error: problem
 
         """
-        self.log.error("An error occurred at request " + repr(request) + ": " + repr(error))
+        self.log.error(
+            "An error occurred at request " + repr(request) + ": " + repr(error)
+        )
