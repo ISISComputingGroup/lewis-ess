@@ -3,7 +3,7 @@
 |Lewis|
 =======
 
-LeWIS - Let's Write Intricate Simulators.
+Lewis - Let's write intricate simulators.
 
 Lewis is a Python framework for simulating hardware devices. It is
 compatible with Python 3.6 or higher.
