@@ -30,7 +30,7 @@ def readme():
 setup(
     name="lewis",
     version="1.3.0",
-    description="LeWIS - Let's Write Intricate Simulators!",
+    description="Lewis - Let's write intricate simulators!",
     long_description=readme(),
     url="https://github.com/ess-dmsc/lewis",
     author="ScreamingUdder",
@@ -47,7 +47,7 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     keywords="hardware simulation controls",
-    packages=find_packages(exclude=["test", "tests.*"]),
+    packages=find_packages(exclude=["tests", "tests.*"]),
     python_requires=">=3.6.0",
     install_requires=["pyzmq", "json-rpc", "semantic_version", "PyYAML", "scanf"],
     extras_require={

@@ -34,8 +34,8 @@ intended, run the unit tests and check for pep8 errors, as well as build the doc
 
 ::
 
-    (lewis-dev)$ pytest test
-    (lewis-dev)$ flake8 setup.py lewis scripts system-tests test
+    (lewis-dev)$ pytest tests
+    (lewis-dev)$ flake8 setup.py lewis scripts system-tests tests
     (lewis-dev)$ sphinx-build -W -b html docs/ docs/_build/html
 
 There are also system-tests that (partially) test Lewis from the application/run-time level. These tests are based on
@@ -50,7 +50,7 @@ values can be compared against the expected status (the "golden master"). The te
     (lewis-dev)$ pytest system_tests\lewis_tests.py
 
 It is good practice to run these tests regularly during development and, also, look for opportunities to add
-more tests. The tests will also be run via Travis CI.
+more tests. The tests will also be run via the CI system.
 
 A more comprehensive way of running all tests is to use ``tox``, which creates fresh virtual
 environments for all of these tasks:
@@ -94,7 +94,7 @@ members of the development team can see what's going on (even before a pull requ
 
 During development it is good practice to regularly test that changes do not break existing
 or new tests. Before opening a pull request on github (which will run all the tests again
-under different Python environments via Travis CI), it is recommended to run tox one last time
+under different Python environments via the CI system), it is recommended to run tox one last time
 locally, as that resembles the conditions in the CI environment quite closely.
 
 
