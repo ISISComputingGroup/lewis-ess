@@ -18,8 +18,10 @@
 # *********************************************************************
 
 from lewis.adapters.stream import Cmd, StreamInterface
+from lewis.core.logging import has_log
 
 
+@has_log
 class LinkamT95StreamInterface(StreamInterface):
     """
     Linkam T95 TCP stream interface
@@ -34,8 +36,10 @@ class LinkamT95StreamInterface(StreamInterface):
     device instance are also generated dynamically.
     """
 
+    out_terminator = b"\r"
+
     commands = {
-        Cmd("get_status", "^T$"),
+        Cmd("get_status", "^T$", return_mapping=lambda x: x),
         Cmd("set_rate", "^R1([0-9]+)$"),
         Cmd("set_limit", "^L1([0-9]+)$"),
         Cmd("start", "^S$"),
@@ -84,7 +88,7 @@ class LinkamT95StreamInterface(StreamInterface):
             ord(x) for x in "%04x" % (int(self.device.temperature * 10) & 0xFFFF)
         ]
 
-        return "".join(chr(c) for c in Tarray)
+        return bytes(Tarray)
 
     def set_rate(self, param):
         """
@@ -100,7 +104,7 @@ class LinkamT95StreamInterface(StreamInterface):
         rate = int(param)
         if 1 <= rate <= 15000:
             self.device.temperature_rate = rate / 100.0
-        return ""
+        return b""
 
     def set_limit(self, param):
         """
@@ -115,7 +119,7 @@ class LinkamT95StreamInterface(StreamInterface):
         limit = int(param)
         if -2000 <= limit <= 6000:
             self.device.temperature_limit = limit / 10.0
-        return ""
+        return b""
 
     def start(self):
         """
@@ -127,7 +131,7 @@ class LinkamT95StreamInterface(StreamInterface):
         :return: Empty string.
         """
         self.device.start_commanded = True
-        return ""
+        return b""
 
     def stop(self):
         """
@@ -138,7 +142,7 @@ class LinkamT95StreamInterface(StreamInterface):
         :return: Empty string.
         """
         self.device.stop_commanded = True
-        return ""
+        return b""
 
     def hold(self):
         """
@@ -149,7 +153,7 @@ class LinkamT95StreamInterface(StreamInterface):
         :return: Empty string.
         """
         self.device.hold_commanded = True
-        return ""
+        return b""
 
     def heat(self):
         """
@@ -159,7 +163,7 @@ class LinkamT95StreamInterface(StreamInterface):
         """
         # TODO: Is this really all it does?
         self.device.hold_commanded = False
-        return ""
+        return b""
 
     def cool(self):
         """
@@ -169,7 +173,7 @@ class LinkamT95StreamInterface(StreamInterface):
         """
         # TODO: Is this really all it does?
         self.device.hold_commanded = False
-        return ""
+        return b""
 
     def pump_command(self, param):
         """
@@ -180,13 +184,25 @@ class LinkamT95StreamInterface(StreamInterface):
         :param param: 'a0' for auto, 'm0' for manual, [0-N] for speed.
         :return:
         """
-        lookup = [c for c in "0123456789:;<=>?@ABCDEFGHIJKLMN"]
+        lookup = b"0123456789:;<=>?@ABCDEFGHIJKLMN"
 
-        if param == "a0":
+        if param == b"a0":
             self.device.pump_manual_mode = False
-        elif param == "m0":
+        elif param == b"m0":
             self.device.pump_manual_mode = True
         elif param in lookup:
             self.device.manual_target_speed = lookup.index(param)
+        return b""
 
-        return ""
+    def handle_error(self, request, error):
+        """
+        If command is not recognised print and error
+
+        Args:
+            request: requested string
+            error: problem
+
+        """
+        self.log.error(
+            "An error occurred at request " + repr(request) + ": " + repr(error)
+        )

@@ -1,4 +1,0 @@
-[console_scripts]
-lewis = lewis.scripts.run:run_simulation
-lewis-control = lewis.scripts.control:control_simulation
-

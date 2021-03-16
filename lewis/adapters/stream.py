@@ -78,10 +78,17 @@ class StreamHandler(asynchat.async_chat):
         self.log.debug("Got request %s", request)
         return request
 
+    def _push(self, reply):
+        if isinstance(reply, str):
+            reply_message = (reply + self._target.out_terminator).encode()
+        else:
+            reply_message = reply + self._target.out_terminator
+        self.push(reply_message)
+
     def _send_reply(self, reply):
         if reply is not None:
             self.log.debug("Sending reply %s", reply)
-            self.push((reply + self._target.out_terminator).encode())
+            self._push(reply)
 
     def _handle_error(self, request, error):
         self.log.debug("Error while processing request", exc_info=error)
@@ -121,7 +128,7 @@ class StreamHandler(asynchat.async_chat):
 
     def unsolicited_reply(self, reply):
         self.log.debug("Sending unsolicited reply %s", reply)
-        self.push((reply + self._target.out_terminator).encode())
+        self._push(reply)
 
     def handle_close(self):
         self.log.info("Closing connection to client %s:%s", *self.socket.getpeername())
