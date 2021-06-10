@@ -1,6 +1,6 @@
 import time
 
-import six
+from functools import wraps
 from lewis.core.logging import has_log
 
 
@@ -38,7 +38,7 @@ def conditional_reply(property_name, reply=None):
             return ACK
     """
     def decorator(func):
-        @six.wraps(func)
+        @wraps(func)
         def wrapper(self, *args, **kwargs):
 
             device = _get_device_from(self)
@@ -84,7 +84,7 @@ def timed_reply(action, reply=None, minimum_time_delay=0):
             return ACK
     """
     def decorator(func):
-        @six.wraps(func)
+        @wraps(func)
         def wrapper(self, *args, **kwargs):
             try:
                 new_input_time = int(round(time.time() * 1000))

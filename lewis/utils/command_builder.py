@@ -26,7 +26,7 @@ class CmdBuilder(object):
     the interface should call set_pres with that number. Now use:
     >>> CmdBuilder("set_pres").escape("pres ").float().build()
     this add float as a regularly expression capture group for your argument. It is equivalent to:
-    >>> Cmd("set_pres", r"pres ([+-]?\d+\.?\d*)")
+    >>> Cmd("set_pres", "pres ([+-]?\\d+\\.?\\d*)")
     There are various arguments like int and digit. Finally some special characters are included so if your protocol
     uses enquirey character ascii 5 you can match is using
     >>> CmdBuilder("set_pres").escape("pres?").enq().build()
@@ -70,7 +70,7 @@ class CmdBuilder(object):
     def escape(self, text):
         """
         Add some text to the regex which is escaped.
-        
+
         :param text: text to add
         :return: builder
         """
