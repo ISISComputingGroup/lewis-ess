@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # *********************************************************************
 # lewis - a library for creating hardware device simulators
@@ -18,9 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-"""
-This package contains helpful utilities for people that are building emulators.
-"""
 import struct
 
 BYTE = 2**8
