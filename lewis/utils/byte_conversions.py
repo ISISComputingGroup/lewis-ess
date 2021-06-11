@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # *********************************************************************
 # lewis - a library for creating hardware device simulators
@@ -18,12 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-"""
-This package contains helpful utilities for people that are building emulators.
-"""
 import struct
 
-BYTE = 2**8
+BYTE = 2 ** 8
 
 
 def _get_byteorder_name(low_byte_first):
@@ -32,7 +28,7 @@ def _get_byteorder_name(low_byte_first):
     :param low_byte_first: True for low byte first; False for MSB first
     :return: name
     """
-    return 'little' if low_byte_first else 'big'
+    return "little" if low_byte_first else "big"
 
 
 def int_to_raw_bytes(integer, length, low_byte_first) -> bytes:
@@ -50,7 +46,9 @@ def int_to_raw_bytes(integer, length, low_byte_first) -> bytes:
     Returns:
         string representation of the bytes.
     """
-    return integer.to_bytes(length=length, byteorder=_get_byteorder_name(low_byte_first), signed=integer < 0)
+    return integer.to_bytes(
+        length=length, byteorder=_get_byteorder_name(low_byte_first), signed=integer < 0
+    )
 
 
 def raw_bytes_to_int(raw_bytes, low_bytes_first=True):
@@ -93,4 +91,4 @@ def raw_bytes_to_float(raw_bytes):
     Returns:
         float: The floating point number represented by the given bytes.
     """
-    return struct.unpack('f', raw_bytes[::-1])[0]
+    return struct.unpack("f", raw_bytes[::-1])[0]

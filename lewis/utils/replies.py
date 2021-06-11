@@ -1,6 +1,25 @@
-import time
+# -*- coding: utf-8 -*-
+# *********************************************************************
+# lewis - a library for creating hardware device simulators
+# Copyright (C) 2016-2021 European Spallation Source ERIC
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# *********************************************************************
 
+import time
 from functools import wraps
+
 from lewis.core.logging import has_log
 
 
@@ -11,7 +30,9 @@ def _get_device_from(instance):
         try:
             device = instance._device
         except AttributeError:
-            raise AttributeError("Expected device to be accessible as either self.device or self._device")
+            raise AttributeError(
+                "Expected device to be accessible as either self.device or self._device"
+            )
     return device
 
 
@@ -37,6 +58,7 @@ def conditional_reply(property_name, reply=None):
         def acknowledge_pressure(channel):
             return ACK
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -47,11 +69,15 @@ def conditional_reply(property_name, reply=None):
                 do_reply = getattr(device, property_name)
             except AttributeError:
                 raise AttributeError(
-                    "Expected device to contain an attribute called '{}' but it wasn't found.".format(property_name))
+                    "Expected device to contain an attribute called '{}' but it wasn't found.".format(
+                        property_name
+                    )
+                )
 
             return func(self, *args, **kwargs) if do_reply else reply
 
         return wrapper
+
     return decorator
 
 
@@ -83,6 +109,7 @@ def timed_reply(action, reply=None, minimum_time_delay=0):
         def acknowledge_pressure(channel):
             return ACK
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -94,7 +121,11 @@ def timed_reply(action, reply=None, minimum_time_delay=0):
                     _LastInput.last_input_time = new_input_time
                     return func(self, *args, **kwargs)
                 else:
-                    self.log.info("Violated time tolerance ({}ms) was {}ms. Calling action ({}) on device".format(minimum_time_delay, time_since_last_request, action))
+                    self.log.info(
+                        "Violated time tolerance ({}ms) was {}ms. Calling action ({}) on device".format(
+                            minimum_time_delay, time_since_last_request, action
+                        )
+                    )
                     device = _get_device_from(self)
                     action_function = getattr(device, action)
                     action_function()
@@ -102,7 +133,11 @@ def timed_reply(action, reply=None, minimum_time_delay=0):
 
             except AttributeError:
                 raise AttributeError(
-                    "Expected device to contain an attribute called '{}' but it wasn't found.".format(self.action))
+                    "Expected device to contain an attribute called '{}' but it wasn't found.".format(
+                        self.action
+                    )
+                )
 
         return wrapper
+
     return decorator

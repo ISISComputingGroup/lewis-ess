@@ -1,12 +1,31 @@
+# -*- coding: utf-8 -*-
+# *********************************************************************
+# lewis - a library for creating hardware device simulators
+# Copyright (C) 2016-2021 European Spallation Source ERIC
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# *********************************************************************
+
 """
 A fluent command builder for lewis.
 """
 
 import re
-from lewis.adapters.stream import Cmd, regex
-
-from lewis.utils.constants import STX, ACK, EOT, ETX, ENQ
 from functools import partial
+
+from lewis.adapters.stream import Cmd, regex
+from lewis.utils.constants import ACK, ENQ, EOT, ETX, STX
 
 string_arg = partial(str, encoding="utf-8")
 
@@ -94,7 +113,10 @@ class CmdBuilder(object):
         :param allowed_values: the values this function is allowed to match
         :return:  builder
         """
-        self._add_to_regex("({})".format("|".join([re.escape(arg) for arg in allowed_values])), is_arg=True)
+        self._add_to_regex(
+            "({})".format("|".join([re.escape(arg) for arg in allowed_values])),
+            is_arg=True,
+        )
         self.argument_mappings.append(string_arg)
         return self
 
@@ -187,7 +209,7 @@ class CmdBuilder(object):
         Returns: builder
         """
         regex = r"[+-]?\d+"
-        return self.regex(regex)if ignore else self.arg(regex, mapping)
+        return self.regex(regex) if ignore else self.arg(regex, mapping)
 
     def any(self):
         """
@@ -217,7 +239,13 @@ class CmdBuilder(object):
             pattern.compiled_pattern = re.compile(self._reg_ex.encode(), re.IGNORECASE)
         else:
             pattern = self._reg_ex
-        return Cmd(self._target_method, pattern, argument_mappings=self.argument_mappings, *args, **kwargs)
+        return Cmd(
+            self._target_method,
+            pattern,
+            argument_mappings=self.argument_mappings,
+            *args,
+            **kwargs
+        )
 
     def add_ascii_character(self, char_number):
         """
@@ -286,5 +314,7 @@ class CmdBuilder(object):
         :param command_separator: Character(s) that separate commands
         :return: builder
         """
-        self.arg("[^" + re.escape(command_separator) + "]*").escape(command_separator).arg(".*")
+        self.arg("[^" + re.escape(command_separator) + "]*").escape(
+            command_separator
+        ).arg(".*")
         return self
