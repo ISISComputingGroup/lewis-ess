@@ -47,6 +47,10 @@ class StreamHandler(asynchat.async_chat):
         self._set_logging_context(target)
         self.log.info("Client connected from %s:%s", *sock.getpeername())
 
+        initial_message = self._target.initial_message()
+        if initial_message:
+            self.unsolicited_reply(initial_message)
+
     def process(self, msec):
         if not self._buffer:
             return
@@ -856,3 +860,9 @@ class StreamInterface(InterfaceBase):
         :param request: The request that resulted in the error.
         :param error: The exception that was raised.
         """
+
+    def initial_message(self):
+        """
+        Override this method to send an initial message when a new client connects.
+        """
+        return None
