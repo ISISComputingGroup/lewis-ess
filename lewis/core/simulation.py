@@ -88,6 +88,8 @@ class Simulation:
 
         self._device = device
         self._adapters = AdapterCollection(*adapters)
+        # WIP to send event messages THIS IS VERY CRUDE to let device know of adapters
+        self._device._adapters = self._adapters
 
         self._speed = 1.0  # Multiplier for delta t
         self._cycle_delay = 0.1  # Target time between cycles
