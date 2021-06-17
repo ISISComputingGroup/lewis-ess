@@ -22,6 +22,7 @@ import asyncore
 import inspect
 import re
 import socket
+from collections import deque
 
 from scanf import scanf_compile
 
@@ -47,6 +48,7 @@ class StreamHandler(asynchat.async_chat):
         self._set_logging_context(target)
         self.log.info("Client connected from %s:%s", *sock.getpeername())
 
+        self._send_event_message_queue = deque([])
         initial_message = self._target.initial_message()
         if initial_message:
             self.unsolicited_reply(initial_message)
@@ -57,6 +59,11 @@ class StreamHandler(asynchat.async_chat):
             self.unsolicited_reply(event_message)
 
     def process(self, msec):
+
+        # if there are any event messages to send, send them
+        while len(self._send_event_message_queue) > 0:
+            self.send_event_message(self._send_event_message_queue.popleft())
+
         if not self._buffer:
             return
 
