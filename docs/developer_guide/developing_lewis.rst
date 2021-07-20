@@ -47,7 +47,7 @@ values can be compared against the expected status (the "golden master"). The te
 
 ::
 
-    (lewis-dev)$ pytest system_tests\lewis_tests.py
+    (lewis-dev)$ pytest system_tests/lewis_tests.py
 
 It is good practice to run these tests regularly during development and, also, look for opportunities to add
 more tests. The tests will also be run via the CI system.
