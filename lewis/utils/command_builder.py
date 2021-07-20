@@ -111,7 +111,7 @@ class CmdBuilder(object):
         Matches one of a set of specified strings.
 
         :param allowed_values: the values this function is allowed to match
-        :return:  builder
+        :return: builder
         """
         self._add_to_regex(
             "({})".format("|".join([re.escape(arg) for arg in allowed_values])),
@@ -123,10 +123,9 @@ class CmdBuilder(object):
     def spaces(self, at_least_one=False):
         """
         Add a regex for any number of spaces
-        Args:
-            at_least_one: true there must be at least one space; false there can be any number including zero
 
-        Returns: builder
+        :param at_least_one: true there must be at least one space; false there can be any number including zero
+        :return: builder
 
         """
         wildcard = "+" if at_least_one else "*"
@@ -150,6 +149,7 @@ class CmdBuilder(object):
     def string(self, length=None):
         """
         Add an argument which is a string of a given length (if blank string is any length)
+
         :param length: length of string; None for any length
         :return: builder
         """
@@ -163,11 +163,9 @@ class CmdBuilder(object):
         """
         Add a float argument.
 
-        Args:
-            mapping: The type to cast the response to (default: float)
-            ignore: True to match with a float but ignore the returned value (default: False)
-
-        Returns: builder
+        :param mapping: The type to cast the response to (default: float)
+        :param ignore: True to match with a float but ignore the returned value (default: False)
+        :return: builder
         """
         regex = r"[+-]?\d+\.?\d*"
         return self.regex(regex) if ignore else self.arg(regex, mapping)
@@ -176,11 +174,9 @@ class CmdBuilder(object):
         """
         Add a single digit argument.
 
-        Args:
-            mapping: The type to cast the response to (default: int)
-            ignore: True to match with a digit but ignore the returned value (default: False)
-
-        Returns: builder
+        :param mapping: The type to cast the response to (default: int)
+        :param ignore: True to match with a digit but ignore the returned value (default: False)
+        :return: builder
         """
         return self.regex(r"\d") if ignore else self.arg(r"\d", mapping)
 
@@ -188,12 +184,9 @@ class CmdBuilder(object):
         """
         Add a single character argument.
 
-        Args:
-            not_chars: characters that the character can not be; None for can be anything
-            ignore: True to match with a char but ignore the returned value (default: False)
-
-        Returns: builder
-
+        :param not_chars: characters that the character can not be; None for can be anything
+        :param ignore: True to match with a char but ignore the returned value (default: False)
+        :return: builder
         """
         regex = r"." if not_chars is None else "[^{}]".format("".join(not_chars))
         return self.regex(regex) if ignore else self.arg(regex)
@@ -202,11 +195,9 @@ class CmdBuilder(object):
         """
         Add an integer argument.
 
-        Args:
-            mapping: The type to cast the response to (default: int)
-            ignore: True to match with a int but ignore the returned value (default: False)
-
-        Returns: builder
+        :param mapping: The type to cast the response to (default: int)
+        :param ignore: True to match with a int but ignore the returned value (default: False)
+        :return:  builder
         """
         regex = r"[+-]?\d+"
         return self.regex(regex) if ignore else self.arg(regex, mapping)
@@ -223,6 +214,9 @@ class CmdBuilder(object):
         """
         Adds an argument that matches anything other than a specified character (useful for commands containing
         delimiters)
+
+        :param char: the character not to match
+        :return: builder
         """
         return self.arg(r"[^{}]*".format(re.escape(char)))
 

@@ -39,24 +39,22 @@ def _get_device_from(instance):
 def conditional_reply(property_name, reply=None):
     """
     Decorator that executes the command and replies if the device has a member called 'property name' and it is True in
-    a boolean context
+    a boolean context. Example usage:
 
-    Args:
-        property_name: The name of the property to look for on the device
-        reply (str): Desired output reply string when condition is false
+    .. sourcecode:: Python
 
-    Returns:
-       The function returns as normal if property is true. The command is not executed and there is no reply if
-       property is false
-
-    Raises:
-        - AttributeError if the first argument of the decorated function (self) does not contain .device or ._device
-        - AttributeError if the device does not contain a property called property_name
-
-    Usage:
         @conditional_reply("connected")
         def acknowledge_pressure(channel):
             return ACK
+
+    :param property_name: The name of the property to look for on the device
+    :param reply: Desired output reply string when condition is false
+
+    :return: The function returns as normal if property is true. The command is not executed and there is no reply if
+       property is false
+
+    :except AttributeError if the first argument of the decorated function (self) does not contain .device or ._device
+    :except AttributeError if the device does not contain a property called property_name
     """
 
     def decorator(func):
@@ -89,25 +87,23 @@ class _LastInput:
 def timed_reply(action, reply=None, minimum_time_delay=0):
     """
     Decorator that inhibits a command and performs a action if call time is less than than some minimum time delay
-    between the the current and last input
+    between the the current and last input.  Example usage:
 
-    Args:
-        action (str): The name of the method to execute for on the device
-        reply (str): Desired output reply string when input time delay is less than the minimum
-        minimum_time_delay (int): The minimum time (ms) between commands sent to the device
+    .. sourcecode:: Python
 
-    Returns:
-       The function returns as normal if minimum delay exceeded. The command is not executed and the action method is
-       called on the device instead
-
-    Raises:
-        - AttributeError if the first argument of the decorated function (self) does not contain .device or ._device
-        - AttributeError if the device does not contain a property called action
-
-    Usage:
         @timed_reply(action="crash_pump", reply="WARNING: Input too quick", minimum_time_delay=150)
         def acknowledge_pressure(channel):
             return ACK
+
+    :param action: The name of the method to execute for on the device
+    :param reply: Desired output reply string when input time delay is less than the minimum
+    :param minimum_time_delay: The minimum time (ms) between commands sent to the device
+
+    :return: The function returns as normal if minimum delay exceeded. The command is not executed and the action method
+     is called on the device instead
+
+    :except AttributeError if the first argument of the decorated function (self) does not contain .device or ._device
+    :except AttributeError if the device does not contain a property called action
     """
 
     def decorator(func):
