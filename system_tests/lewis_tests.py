@@ -39,8 +39,7 @@ def run_control_command(mode, command, value):
 
 
 def santise_whitespace(input_str):
-    result = "\n".join(input_str.split())
-    return result.rstrip()
+    return "\n".join(input_str.split())
 
 
 def query_device_status():
