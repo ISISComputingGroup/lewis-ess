@@ -22,7 +22,7 @@ master_doc = "index"
 
 # General information about the project.
 project = u"lewis"
-copyright = u"2016-2020, European Spallation Source ERIC"
+copyright = u"2016-2021, European Spallation Source ERIC"
 author = u"ScreamingUdder"
 
 version = u"2.0"

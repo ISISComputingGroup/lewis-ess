@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # *********************************************************************
 
-from lewis.scripts.run import run_simulation
-
-if __name__ == "__main__":
-    run_simulation()
+"""
+This package contains helpful utilities for people that are building emulators.
+"""
