@@ -349,8 +349,15 @@ class Func:
 
         self.func = func
 
+        func_name = getattr(func, "__name__", repr(func))
+
         if isinstance(pattern, str):
-            pattern = regex(pattern)
+            try:
+                pattern = regex(pattern)
+            except re.error as e:
+                raise RuntimeError(
+                    f"The pattern '{pattern}' for function '{func_name}' is invalid regex: {e}"
+                )
 
         self.matcher = pattern
 
@@ -364,7 +371,7 @@ class Func:
                 "The number of arguments for function '{}' matched by pattern "
                 "'{}' is not compatible with number of defined "
                 "groups in pattern ({}).".format(
-                    getattr(func, "__name__", repr(func)),
+                    func_name,
                     self.matcher.pattern,
                     self.matcher.arg_count,
                 )
