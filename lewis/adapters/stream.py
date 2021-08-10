@@ -335,6 +335,8 @@ class Func:
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
+    
+    :raises: RuntimeError: Runtime Error if the function cannot be mapped for any reason.
 
     .. _re: https://docs.python.org/2/library/re.html#regular-expression-syntax
     """
