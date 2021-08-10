@@ -335,6 +335,8 @@ class Func:
     :param argument_mappings: Iterable with mapping functions from string to some type.
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
+    
+    :raises: RuntimeError: Runtime Error if the function cannot be mapped for any reason.
 
     .. _re: https://docs.python.org/2/library/re.html#regular-expression-syntax
     """
@@ -349,8 +351,15 @@ class Func:
 
         self.func = func
 
+        func_name = getattr(func, "__name__", repr(func))
+
         if isinstance(pattern, str):
-            pattern = regex(pattern)
+            try:
+                pattern = regex(pattern)
+            except re.error as e:
+                raise RuntimeError(
+                    f"The pattern '{pattern}' for function '{func_name}' is invalid regex: {e}"
+                )
 
         self.matcher = pattern
 
@@ -364,7 +373,7 @@ class Func:
                 "The number of arguments for function '{}' matched by pattern "
                 "'{}' is not compatible with number of defined "
                 "groups in pattern ({}).".format(
-                    getattr(func, "__name__", repr(func)),
+                    func_name,
                     self.matcher.pattern,
                     self.matcher.arg_count,
                 )
