@@ -26,7 +26,7 @@ copyright = u"2016-2021, European Spallation Source ERIC"
 author = u"ScreamingUdder"
 
 version = u"2.0"
-release = u"1.3.0"
+release = u"1.3.1"
 
 language = None
 
