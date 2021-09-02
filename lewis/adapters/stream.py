@@ -86,7 +86,10 @@ class StreamHandler(asynchat.async_chat):
                 else:
                     reply_message = (reply + self._target.out_terminator).encode()
             else:
-                reply_message = reply + self._target.out_terminator
+                if isinstance(self._target.out_terminator, str):
+                    raise TypeError("terminator is str and message is bytes")
+                else:
+                    reply_message = reply + self._target.out_terminator
             self.push(reply_message)
         except TypeError as e:
             self.log.error("Problem creating reply, type error {}!".format(e))
