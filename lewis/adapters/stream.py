@@ -79,11 +79,14 @@ class StreamHandler(asynchat.async_chat):
         return request
 
     def _push(self, reply):
-        if isinstance(reply, str):
-            reply_message = (reply + self._target.out_terminator).encode()
-        else:
-            reply_message = reply + self._target.out_terminator
-        self.push(reply_message)
+        try:
+            if isinstance(reply, str):
+                reply = reply.encode()
+            out_terminator = self._target.out_terminator.encode() if isinstance(self._target.out_terminator, str) \
+                else self._target.out_terminator
+            self.push(reply + out_terminator)
+        except TypeError as e:
+            self.log.error("Problem creating reply, type error {}!".format(e))
 
     def _send_reply(self, reply):
         if reply is not None:
