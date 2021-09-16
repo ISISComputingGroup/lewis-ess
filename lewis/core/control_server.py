@@ -29,11 +29,11 @@ this infrastructure in :class:`~lewis.core.simulation.Simulation`.
 """
 
 import inspect
-import json
+import pickle
 import socket
 
 import zmq
-from jsonrpc import JSONRPCResponseManager
+from lewis.utils.pickle_rpc import PickleRPCResponseManager
 
 from lewis.core.exceptions import LewisException
 from lewis.core.logging import has_log
@@ -326,7 +326,7 @@ class ControlServer:
 
     def _unhandled_exception_response(self, request_id, exception):
         return {
-            "jsonrpc": "2.0",
+            "picklerpc": "1",
             "id": request_id,
             "error": {
                 "message": "Server error",
@@ -362,20 +362,22 @@ class ControlServer:
             )
 
         try:
-            request = self._socket.recv_unicode(
-                flags=zmq.NOBLOCK if not blocking else 0
+            request = self._socket.recv(
+                flags=zmq.NOBLOCK if not blocking else 0,
             )
 
             self.log.debug("Got request %s", request)
 
             try:
-                response = JSONRPCResponseManager.handle(request, self._exposed_object)
-                self._socket.send_unicode(response.json)
+                response = PickleRPCResponseManager.handle(
+                    request, self._exposed_object
+                )
+                self._socket.send(response.pickled)
 
-                self.log.debug("Sent response %s", response.json)
+                self.log.debug("Sent response %s", response.pickled)
             except TypeError as e:
-                self._socket.send_json(
-                    self._unhandled_exception_response(json.loads(request)["id"], e)
+                self._socket.send_pyobj(
+                    self._unhandled_exception_response(pickle.loads(request)["id"], e)
                 )
         except zmq.Again:
             pass

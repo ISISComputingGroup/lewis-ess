@@ -100,7 +100,7 @@ class ControlClient:
         context.setsockopt(zmq.LINGER, 0)
         return context.socket(zmq.REQ)
 
-    def json_rpc(self, method, *args):
+    def pickle_rpc(self, method, *args):
         """
         This method takes a ZMQ REQ-socket and submits a JSON-object containing
         the RPC (JSON-RPC 2.0 format) to the supplied method with the supplied arguments.
@@ -115,11 +115,10 @@ class ControlClient:
         request_id = str(uuid.uuid4())
 
         try:
-            self._socket.send_json(
-                {"method": method, "params": args, "jsonrpc": "2.0", "id": request_id}
+            self._socket.send_pyobj(
+                {"method": method, "params": args, "picklerpc": "1", "id": request_id},
             )
-
-            return self._socket.recv_json(), request_id
+            return self._socket.recv_pyobj(), request_id
         except zmq.error.Again:
             raise ProtocolException(
                 "The ZMQ connection to {} timed out after {:.2f}s.".format(
@@ -128,7 +127,7 @@ class ControlClient:
             )
 
     def get_object(self, object_name=""):
-        api, request_id = self.json_rpc(object_name + ":api")
+        api, request_id = self.pickle_rpc(object_name + ":api")
 
         if "result" not in api or api["id"] != request_id:
             raise ProtocolException("Failed to retrieve API of remote object.")
@@ -203,7 +202,7 @@ class ObjectProxy:
         :param args: Positional arguments to the method call.
         :return: Result of the remote call if successful.
         """
-        response, request_id = self._connection.json_rpc(self._prefix + method, *args)
+        response, request_id = self._connection.pickle_rpc(self._prefix + method, *args)
 
         if "id" not in response:
             raise ProtocolException("JSON-RPC response does not contain ID field.")
