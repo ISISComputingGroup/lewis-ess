@@ -26,7 +26,7 @@ but uses pickle for serialization to allow for sending and receiving of more com
 import inspect
 import pickle
 
-from .pickle_RPC_exceptions import (
+from .pickle_rpc_exceptions import (
     PickleRPCInvalidRequest,
     PickleRPCError,
     PickleRPCInvalidRequestException,
