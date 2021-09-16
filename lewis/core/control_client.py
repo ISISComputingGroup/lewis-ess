@@ -18,7 +18,7 @@
 # *********************************************************************
 
 """
-This module provides client code for objects exposed via JSON-RPC over ZMQ.
+This module provides client code for objects exposed via Pickle-RPC over ZMQ.
 
 .. seealso::
 
@@ -102,15 +102,15 @@ class ControlClient:
 
     def pickle_rpc(self, method, *args):
         """
-        This method takes a ZMQ REQ-socket and submits a JSON-object containing
-        the RPC (JSON-RPC 2.0 format) to the supplied method with the supplied arguments.
+        This method takes a ZMQ REQ-socket and submits a pickled object containing
+        the RPC to the supplied method with the supplied arguments.
         Then it waits for a reply from the server and blocks until it has received
-        a JSON-response. The method returns the response and the id it used to tag
+        a pickled response. The method returns the response and the id it used to tag
         the original request, which is a random UUID (uuid.uuid4).
 
         :param method: Method to call on remote.
         :param args: Arguments to method call.
-        :return: JSON result and request id.
+        :return: pickled esult and request id.
         """
         request_id = str(uuid.uuid4())
 
@@ -193,7 +193,7 @@ class ObjectProxy:
 
     def _make_request(self, method, *args):
         """
-        This method performs a JSON-RPC request via the object's ZMQ socket. If successful,
+        This method performs a Pickle-RPC request via the object's ZMQ socket. If successful,
         the result is returned, otherwise exceptions are raised. Server side exceptions are
         raised using the same type as on the server if they are part of the exceptions-module.
         Otherwise, a RemoteException is raised.
@@ -205,11 +205,11 @@ class ObjectProxy:
         response, request_id = self._connection.pickle_rpc(self._prefix + method, *args)
 
         if "id" not in response:
-            raise ProtocolException("JSON-RPC response does not contain ID field.")
+            raise ProtocolException("Pickle-RPC response does not contain ID field.")
 
         if response["id"] != request_id:
             raise ProtocolException(
-                "ID of JSON-RPC request ({}) did not match response ({}).".format(
+                "ID of Pickle-RPC request ({}) did not match response ({}).".format(
                     request_id, response["id"]
                 )
             )

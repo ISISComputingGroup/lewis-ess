@@ -18,7 +18,7 @@
 # *********************************************************************
 
 """
-This module contains classes to expose objects via a JSON-RPC over ZMQ server. Lewis uses
+This module contains classes to expose objects via a Pickle-RPC over ZMQ server. Lewis uses
 this infrastructure in :class:`~lewis.core.simulation.Simulation`.
 
 .. seealso::
@@ -42,7 +42,7 @@ from lewis.core.logging import has_log
 class ExposedObject:
     """
     ExposedObject is a class that makes it easy to expose an object via the
-    JSONRPCResponseManager from the json-rpc package, where it can serve as a dispatcher.
+    PickleRPCResponseManager from the json-rpc package, where it can serve as a dispatcher.
     For this purpose it exposes a read-only dict-like interface.
 
     The basic problem solved by this wrapper is that plain data members of an object are not
@@ -254,7 +254,7 @@ class ControlServer:
     is called.
 
     The server constructs an :class:`ExposedObjectCollection` from the supplied
-    name: object-dictionary and uses that as a handler for JSON-RPC requests. If it is an
+    name: object-dictionary and uses that as a handler for Pickle-RPC requests. If it is an
     instance of :class:`ExposedObject`, that is used directly.
 
     Each time process is called, the server tries to get request data and responds to that.
@@ -342,7 +342,7 @@ class ControlServer:
     def process(self, blocking=False):
         """
         Each time this method is called, the socket tries to retrieve data and passes
-        it to the JSONRPCResponseManager, which in turn passes the RPC to the
+        it to the PickleRPCResponseManager, which in turn passes the RPC to the
         ExposedObjectCollection.
 
         In case no data are available, the method does nothing. This behavior is required for
