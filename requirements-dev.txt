@@ -3,6 +3,7 @@
 approvaltests
 isort
 mock
+parameterized
 pre-commit
 pytest
 pytest-approvaltests

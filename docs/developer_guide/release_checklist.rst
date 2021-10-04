@@ -41,7 +41,6 @@ Update Version
  - Update ``__version__`` in ``lewis/__init__.py``
  - Update ``release`` in ``docs/conf.py``
  - Update ``version`` in ``setup.py``
- - Update ``framework_version`` for each device under ``devices`` and ``examples``
 
 
 GitHub Release
