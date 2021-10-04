@@ -20,6 +20,7 @@
 import unittest
 from mock import MagicMock, Mock, patch
 from lewis.adapters.stream import Func, scanf
+from parameterized import parameterized
 
 """
 Test Func only
@@ -31,23 +32,21 @@ test additional areas of Func after adding a few tests for invalid regex trigger
 
 class TestFunc(unittest.TestCase):
 
-    def test_func_triggers_runtime_error_when_func_not_callable(self):
+    @parameterized.expand([
+        ("name1", lambda: 0, "[0-9]{1,2}", None),
+        ("name2", lambda x: 5, "([0-8]{1})", [int])
+    ])
+    def test_argument_variations_of_valid_Func_usage_without_return_mapping(self, _, target_member, write_pattern, argument_mapping):
+        self.assertTrue(Func(target_member, write_pattern, argument_mapping))
+
+    @parameterized.expand([
+        ("name1", "invalid_func", "[0-9]{1,2}", int, None),
+        ("name2", lambda x: 5, "[0-9]*{1}", int, None),
+        ("name3", lambda: 0, "[0-9]{1}", [1], 1)
+    ])
+    def test_argument_variations_of_Func_usage(self, _, target_member, write_pattern, argument_mapping, return_mapping):
         with self.assertRaises(RuntimeError):
-            Func("invalid_func", "[0-9]{1}")
-
-    def test_func_triggers_exception_when_passed_invalid_regex(self):
-        with self.assertRaises(RuntimeError):
-            Func(lambda: 0, "[0-9]*{1}")
-
-    def test_func_initialised_correctly_when_passed_valid_regex(self):
-        self.assertTrue(Func(lambda: 0, "[0-9]{1,2}"))
-
-    def test_func_for_incorrect_argument_mappings_to_regex_triggers_runtime_error(self):
-        with self.assertRaises(RuntimeError):
-            Func(lambda: 0, "[0-9]{1}", [1], 1)
-
-    def test_func_passes_for_correct_argument_mappings(self):
-        self.assertTrue(Func(lambda x: 0, "([0-8]{1})", [int]))
+            Func(target_member, write_pattern, argument_mapping, return_mapping)
 
     def test_func_passes_for_correct_return_argument_mappings(self):
         self.assertTrue(Func(lambda x: 5, "([0-8]{1})", [int], int).process_request(b"7"))
