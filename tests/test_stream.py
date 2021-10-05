@@ -33,20 +33,25 @@ test additional areas of Func after adding a few tests for invalid regex trigger
 class TestFunc(unittest.TestCase):
 
     @parameterized.expand([
-        ("name1", lambda: 0, "[0-9]{1,2}", None),
-        ("name2", lambda x: 5, "([0-8]{1})", [int])
+        ("valid_regex", lambda: 0, "[0-9]{1,2}", None),
+        ("valid_regex_and_argument_mapping", lambda x: 5, "([0-8]{1})", [int])
     ])
     def test_argument_variations_of_valid_Func_usage_without_return_mapping(self, _, target_member, write_pattern, argument_mapping):
         self.assertTrue(Func(target_member, write_pattern, argument_mapping))
 
     @parameterized.expand([
-        ("name1", "invalid_func", "[0-9]{1,2}", int, None),
-        ("name2", lambda x: 5, "[0-9]*{1}", int, None),
-        ("name3", lambda: 0, "[0-9]{1}", [1], 1)
+        ("invalid_function", "invalid_func", "[0-9]{1,2}", int, None),
+        ("invalid_regex", lambda x: 5, "[0-9]*{1}", int, None),
+        ("invalid_argument", lambda: 0, "[0-9]{1}", [1], None),
+        ("invalid_argument_and_return_mappings", lambda: 0, "[0-9]{1}", [1], 1)
     ])
     def test_argument_variations_of_Func_usage(self, _, target_member, write_pattern, argument_mapping, return_mapping):
         with self.assertRaises(RuntimeError):
             Func(target_member, write_pattern, argument_mapping, return_mapping)
+
+    def test_argument_invalid_return_mapping_type_returns_TypeError(self):
+        with self.assertRaises(TypeError):
+            Func(lambda: 0,  "[0-9]{1}", int, 1)
 
     def test_func_passes_for_correct_return_argument_mappings(self):
         self.assertTrue(Func(lambda x: 5, "([0-8]{1})", [int], int).process_request(b"7"))
