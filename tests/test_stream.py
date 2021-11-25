@@ -18,26 +18,27 @@
 # *********************************************************************
 
 import unittest
-from mock import MagicMock, Mock, patch
-from lewis.adapters.stream import Func, scanf
+from lewis.adapters.stream import Func
 from parameterized import parameterized
-
-"""
-Test Func only
-Add something to argument mappings as a dict
-may need additional mocking for Func class to operate
-test additional areas of Func after adding a few tests for invalid regex triggering an error
-"""
 
 
 class TestFunc(unittest.TestCase):
+    """Unit tests for lewis.adapters.stream.Func"""
+    def setUp(self):
+        self.target_member = lambda x: 7
+        self.write_pattern = "([0-8]{1})"
+        self.argument_mapping = [int]
+        self.incorrect_argument_mapping = int
+        self.return_mapping = int
+        self.process_request_value = b"7"
+
 
     @parameterized.expand([
         ("valid_regex", lambda: 0, "[0-9]{1,2}", None),
         ("valid_regex_and_argument_mapping", lambda x: 5, "([0-8]{1})", [int])
     ])
-    def test_argument_variations_of_valid_Func_usage_without_return_mapping(self, _, target_member, write_pattern, argument_mapping):
-        self.assertTrue(Func(target_member, write_pattern, argument_mapping))
+    def test_argument_variations_of_valid_Func_without_return_mapping_is_instance_of_Func(self, _, target_member, write_pattern, argument_mapping):
+        self.assertIsInstance(Func(target_member, write_pattern, argument_mapping), Func)
 
     @parameterized.expand([
         ("invalid_function", "invalid_func", "[0-9]{1,2}", int, None),
@@ -50,15 +51,38 @@ class TestFunc(unittest.TestCase):
             Func(target_member, write_pattern, argument_mapping, return_mapping)
 
     def test_argument_invalid_return_mapping_type_returns_TypeError(self):
+        invalid_return_mapping = 1
         with self.assertRaises(TypeError):
-            Func(lambda: 0,  "[0-9]{1}", int, 1)
+            Func(self.target_member, self.write_pattern, self.incorrect_argument_mapping, invalid_return_mapping)
 
-    def test_func_passes_for_correct_return_argument_mappings(self):
-        self.assertTrue(Func(lambda x: 5, "([0-8]{1})", [int], int).process_request(b"7"))
+    def test_func_returns_correct_value_for_return_argument_mapping(self):
+        self.assertEqual(Func(self.target_member, 
+                              self.write_pattern, 
+                              self.argument_mapping, 
+                              self.return_mapping).process_request(self.process_request_value), 7)
+
+    def test_process_request_is_int(self):
+        self.assertIsInstance(Func(self.target_member, 
+                                   self.write_pattern, 
+                                   self.argument_mapping, 
+                                   self.return_mapping).process_request(self.process_request_value), int)
 
     def test_func_fails_for_incorrect_return_argument_mappings(self):
+        string_target_member = lambda x: "string"
         with self.assertRaises(ValueError):
-            Func(lambda x: "string", "([0-8]{1})", [int], int).process_request(b"7")
+            Func(string_target_member, 
+                 self.write_pattern, 
+                 self.argument_mapping, 
+                 self.return_mapping).process_request(self.process_request_value)
 
     def test_process_request(self):
-        Func(lambda x: 7, "([0-8]{1})", [int], int).can_process(b"7")
+        self.assertTrue(Func(self.target_member, 
+                             self.write_pattern, 
+                             self.argument_mapping, 
+                             self.return_mapping).can_process(self.process_request_value))
+
+    def test_incorrect_can_process_request_fails(self):
+        self.assertFalse(Func(self.target_member, 
+                              self.write_pattern, 
+                              self.argument_mapping, 
+                              self.return_mapping).can_process(b"9"))
