@@ -82,8 +82,11 @@ class StreamHandler(asynchat.async_chat):
         try:
             if isinstance(reply, str):
                 reply = reply.encode()
-            out_terminator = self._target.out_terminator.encode() if isinstance(self._target.out_terminator, str) \
+            out_terminator = (
+                self._target.out_terminator.encode()
+                if isinstance(self._target.out_terminator, str)
                 else self._target.out_terminator
+            )
             self.push(reply + out_terminator)
         except TypeError as e:
             self.log.error("Problem creating reply, type error {}!".format(e))
@@ -123,7 +126,6 @@ class StreamHandler(asynchat.async_chat):
                 )
 
                 reply = cmd.process_request(request)
-
             except Exception as error:
                 reply = self._handle_error(request, error)
 
@@ -339,6 +341,8 @@ class Func:
     :param return_mapping: Mapping function for return value of method.
     :param doc: Description of the command. If not supplied, the docstring is used.
 
+    :raises: RuntimeError: If the function cannot be mapped for any reason.
+
     .. _re: https://docs.python.org/2/library/re.html#regular-expression-syntax
     """
 
@@ -352,8 +356,15 @@ class Func:
 
         self.func = func
 
+        func_name = getattr(func, "__name__", repr(func))
+
         if isinstance(pattern, str):
-            pattern = regex(pattern)
+            try:
+                pattern = regex(pattern)
+            except re.error as e:
+                raise RuntimeError(
+                    f"The pattern '{pattern}' for function '{func_name}' is invalid regex: {e}"
+                )
 
         self.matcher = pattern
 
@@ -367,7 +378,7 @@ class Func:
                 "The number of arguments for function '{}' matched by pattern "
                 "'{}' is not compatible with number of defined "
                 "groups in pattern ({}).".format(
-                    getattr(func, "__name__", repr(func)),
+                    func_name,
                     self.matcher.pattern,
                     self.matcher.arg_count,
                 )
