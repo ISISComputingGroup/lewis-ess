@@ -126,7 +126,6 @@ class StreamHandler(asynchat.async_chat):
                 )
 
                 reply = cmd.process_request(request)
-
             except Exception as error:
                 reply = self._handle_error(request, error)
 

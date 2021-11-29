@@ -11,7 +11,7 @@ class TestStreamHandler(unittest.TestCase):
     def setUp(self):
         """Create a mock for the async_chat class"""
         self.target = MagicMock()
-        self.stream_server = MagicMock
+        self.stream_server = MagicMock()
         self.socket = MagicMock()
         self.handler = StreamHandler(self.socket, self.target, self.stream_server)
 
@@ -29,5 +29,5 @@ class TestStreamHandler(unittest.TestCase):
     ):
         self.target.out_terminator = terminator
         self.handler.unsolicited_reply(message)
+
         self.assertEqual(expected, async_push.call_args[0][0])
-        async_push.call.assert_called_once_with(expected)
