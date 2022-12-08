@@ -49,8 +49,8 @@ builders = pipeline_builder.createBuilders { container ->
       python -m pip install --user -r ${project}/requirements-dev.txt
       python -m pytest --junitxml=${test_output}
     """
-    container.copyFrom("${project}/${test_output}", ".")
-    xunit thresholds: [failed(unstableThreshold: '0')], tools: [JUnit(deleteOutputFiles: true, pattern: '*.xml', skipNoTestFiles: false, stopProcessingIfError: true)]
+    // container.copyFrom("${project}/${test_output}", ".")
+    // xunit thresholds: [failed(unstableThreshold: '0')], tools: [JUnit(deleteOutputFiles: true, pattern: '*.xml', skipNoTestFiles: false, stopProcessingIfError: true)]
   } // stage
 
   // pipeline_builder.stage("${container.key}: Test") {
