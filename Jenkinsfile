@@ -5,7 +5,7 @@ import ecdcpipeline.PipelineBuilder
 project = "lewis"
 
 container_build_nodes = [
-  'centos7': new ContainerBuildNode('dockerregistry.esss.dk/ecdc_group/build-node-images/centos7-build-node:10.0.0-dev', '/usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -e -x')
+  'centos7': ContainerBuildNode.getDefaultContainerBuildNode('centos7-pyenv')
 ]
 
 
@@ -43,7 +43,8 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: 3.7") {
     def test_output = "TestResults.xml"
     container.sh """
-      pyenv global 3.7
+      eval "$(pyenv init -)"
+      pyenv local 3.7
       echo $PATH 
       which python
       python --version
@@ -57,6 +58,7 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: 3.8") {
     def test_output = "TestResults.xml"
     container.sh """
+      eval "$(pyenv init -)"
       pyenv local 3.8
       which python
       python --version
@@ -70,6 +72,7 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: 3.9") {
     def test_output = "TestResults.xml"
     container.sh """
+      eval "$(pyenv init -)"
       pyenv local 3.9
       which python
       python --version
