@@ -5,8 +5,9 @@ import ecdcpipeline.PipelineBuilder
 project = "lewis"
 
 container_build_nodes = [
-  'centos7-release': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc8')
+  'centos7': new ContainerBuildNode('dockerregistry.esss.dk/ecdc_group/build-node-images/centos7-build-node:10.0.0-dev', '/usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -e -x')
 ]
+
 
 // Define number of old builds to keep.
 num_artifacts_to_keep = '1'
@@ -41,8 +42,8 @@ builders = pipeline_builder.createBuilders { container ->
 
   pipeline_builder.stage("${container.key}: Dependencies") {
     container.sh """
-      /opt/miniconda/bin/conda init bash
-      export PATH=/opt/miniconda/bin:$PATH
+      pyenv shell 3.8
+      which python
       python --version
       python -m pip install --user -r ${project}/requirements-dev.txt
     """
@@ -51,7 +52,8 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: Test") {
     def test_output = "TestResults.xml"
     container.sh """
-      export PATH=/opt/miniconda/bin:$PATH
+      pyenv shell 3.8
+      which python
       python --version
       cd ${project}
       python -m tox -- --junitxml=${test_output}

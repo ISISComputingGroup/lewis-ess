@@ -10,6 +10,7 @@ pytest-approvaltests==0.2.3
 pytest-cov
 coverage
 tox
+tox-pyenv
 twine
 wheel
 
