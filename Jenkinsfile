@@ -43,7 +43,8 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: 3.7") {
     def test_output = "TestResults.xml"
     container.sh """
-      pyenv local 3.7
+      pyenv init
+      pyenv global 3.7
       which python
       python --version
       python -m pip install --user -r ${project}/requirements-dev.txt
