@@ -40,6 +40,19 @@ builders = pipeline_builder.createBuilders { container ->
     container.copyTo(pipeline_builder.project, pipeline_builder.project)
   }  // stage
 
+  pipeline_builder.stage("${container.key}: 3.7") {
+    def test_output = "TestResults.xml"
+    container.sh """
+      pyenv local 3.7
+      which python
+      python --version
+      python -m pip install --user -r ${project}/requirements-dev.txt
+      python -m pytest --junitxml=${test_output}
+    """
+    // container.copyFrom("${project}/${test_output}", ".")
+    // xunit thresholds: [failed(unstableThreshold: '0')], tools: [JUnit(deleteOutputFiles: true, pattern: '*.xml', skipNoTestFiles: false, stopProcessingIfError: true)]
+  } // stage
+
   pipeline_builder.stage("${container.key}: 3.8") {
     def test_output = "TestResults.xml"
     container.sh """
