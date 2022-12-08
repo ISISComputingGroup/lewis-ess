@@ -53,7 +53,7 @@ builders = pipeline_builder.createBuilders { container ->
      def test_output = "TestResults.xml"
      container.sh """
        pyenv local 3.7 3.8 3.9 
-       pyenv local
+       pyenv version
        which python
        python --version
        cd ${project}
