@@ -42,7 +42,7 @@ builders = pipeline_builder.createBuilders { container ->
 
   pipeline_builder.stage("${container.key}: Dependencies") {
     container.sh """
-      pyenv shell 3.8
+      pyenv local 3.8
       which python
       python --version
       python -m pip install --user -r ${project}/requirements-dev.txt
@@ -52,7 +52,7 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: Test") {
     def test_output = "TestResults.xml"
     container.sh """
-      pyenv shell 3.8
+      pyenv local 3.7 3.8 3.9 
       which python
       python --version
       cd ${project}
