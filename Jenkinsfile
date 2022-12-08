@@ -44,6 +44,7 @@ builders = pipeline_builder.createBuilders { container ->
     def test_output = "TestResults.xml"
     container.sh """
       pyenv global 3.7
+      echo $PATH 
       which python
       python --version
       python -m pip install --user -r ${project}/requirements-dev.txt
