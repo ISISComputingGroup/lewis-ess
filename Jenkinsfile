@@ -43,7 +43,7 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: 3.7") {
     def test_output = "TestResults.xml"
     container.sh """
-      eval "$(pyenv init -)"
+      eval "\$(pyenv init -)"
       pyenv local 3.7
       echo $PATH 
       which python
@@ -58,7 +58,7 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: 3.8") {
     def test_output = "TestResults.xml"
     container.sh """
-      eval "$(pyenv init -)"
+      eval "\$(pyenv init -)"
       pyenv local 3.8
       which python
       python --version
@@ -72,7 +72,7 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: 3.9") {
     def test_output = "TestResults.xml"
     container.sh """
-      eval "$(pyenv init -)"
+      eval "\$(pyenv init -)"
       pyenv local 3.9
       which python
       python --version
