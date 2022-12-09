@@ -6,7 +6,7 @@ project = "lewis"
 
 container_build_nodes = [
   // 'centos7': ContainerBuildNode.getDefaultContainerBuildNode('centos7-pyenv')
-  'centos7': new ContainerBuildNode('dockerregistry.esss.dk/ecdc_group/build-node-images/centos7-build-node:10.0.0-dev', '/usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -e -x')
+  'centos7': new ContainerBuildNode('dockerregistry.esss.dk/ecdc_group/build-node-images/centos7-build-node:10.0.1-dev', '/usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -e -x')
 ]
 
 
