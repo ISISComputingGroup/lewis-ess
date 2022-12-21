@@ -5,7 +5,7 @@ import ecdcpipeline.PipelineBuilder
 project = "lewis"
 
 container_build_nodes = [
-  'centos7': new ContainerBuildNode('dockerregistry.esss.dk/ecdc_group/build-node-images/centos7-build-node:10.0.2-dev', '/usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -e -x')
+  'centos7': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc11')
 ]
 
 
