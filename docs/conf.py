@@ -28,7 +28,7 @@ author = u"ScreamingUdder"
 version = u"2.0"
 release = u"1.3.1"
 
-language = None
+language = 'en'
 
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 

@@ -5,8 +5,9 @@ import ecdcpipeline.PipelineBuilder
 project = "lewis"
 
 container_build_nodes = [
-  'centos7-release': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc8')
+  'centos7': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc11')
 ]
+
 
 // Define number of old builds to keep.
 num_artifacts_to_keep = '1'
@@ -23,6 +24,11 @@ properties([[
   ]
 ]]);
 
+// Set periodic trigger at 3:56 every day.
+properties([
+  pipelineTriggers([cron('56 3 * * *')]),
+])
+
 pipeline_builder = new PipelineBuilder(this, container_build_nodes)
 pipeline_builder.activateEmailFailureNotifications()
 
@@ -35,26 +41,23 @@ builders = pipeline_builder.createBuilders { container ->
   }  // stage
 
   pipeline_builder.stage("${container.key}: Dependencies") {
-    def conan_remote = "ess-dmsc-local"
     container.sh """
-      /opt/miniconda/bin/conda init bash
-      export PATH=/opt/miniconda/bin:$PATH
+      which python
       python --version
       python -m pip install --user -r ${project}/requirements-dev.txt
     """
   } // stage
 
-  pipeline_builder.stage("${container.key}: Test") {
-    def test_output = "TestResults.xml"
-    container.sh """
-      export PATH=/opt/miniconda/bin:$PATH
-      python --version
-      cd ${project}
-      python -m tox -- --junitxml=${test_output}
-    """
-    container.copyFrom("${project}/${test_output}", ".")
-    xunit thresholds: [failed(unstableThreshold: '0')], tools: [JUnit(deleteOutputFiles: true, pattern: '*.xml', skipNoTestFiles: false, stopProcessingIfError: true)]
-  } // stage
+   pipeline_builder.stage("${container.key}: Test") {
+      def test_output = "TestResults.xml"
+      container.sh """
+        pyenv local 3.7 3.8 3.9 
+        cd ${project}
+        python -m tox -- --junitxml=${test_output}
+      """
+      container.copyFrom("${project}/${test_output}", ".")
+      xunit thresholds: [failed(unstableThreshold: '0')], tools: [JUnit(deleteOutputFiles: true, pattern: '*.xml', skipNoTestFiles: false, stopProcessingIfError: true)]
+    } // stage
 }  // createBuilders
 
 node {

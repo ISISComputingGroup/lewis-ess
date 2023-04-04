@@ -9,10 +9,11 @@ pytest
 pytest-approvaltests==0.2.3
 pytest-cov
 coverage
-tox
+tox==3.27.1
+tox-pyenv
 twine
 wheel
 
 # Pin to match versions in pre-commit hooks
-black==20.8b1
+black==22.6.0
 flake8==3.8.4
