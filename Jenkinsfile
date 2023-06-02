@@ -45,6 +45,7 @@ builders = pipeline_builder.createBuilders { container ->
       which python
       python --version
       python -m pip install --user -r ${project}/requirements-dev.txt
+      pip install 'requests<2.30.0'
     """
   } // stage
 
