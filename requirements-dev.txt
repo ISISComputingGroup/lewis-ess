@@ -9,7 +9,6 @@ pytest
 pytest-approvaltests==0.2.3
 pytest-cov
 coverage
-requests<2.30.0   # Keep jenkins happy
 tox==3.27.1
 tox-pyenv
 twine
