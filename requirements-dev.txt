@@ -1,12 +1,11 @@
 -r requirements.txt
 -r requirements-sphinx.txt
-approvaltests==3.0.0
+approvaltests
 isort
 mock
 parameterized
 pre-commit
 pytest
-pytest-approvaltests==0.2.3
 pytest-cov
 coverage
 tox==3.27.1
