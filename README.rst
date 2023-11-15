@@ -1,5 +1,3 @@
-|Codacy| |Coverage Status| |Documentation|
-
 |Lewis|
 =======
 
