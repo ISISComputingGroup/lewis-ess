@@ -1,5 +1,3 @@
-|Codacy| |Coverage Status| |Documentation|
-
 |Lewis|
 =======
 
@@ -8,12 +6,10 @@ Lewis - Let's write intricate simulators.
 Lewis is a Python framework for simulating hardware devices. It is
 compatible with Python 3.6 or higher.
 
-Lewis can be installed via pip or ran from source. See relevant usage sections at
-`ReadTheDocs <http://lewis.readthedocs.io/>`__ for more details.
+Lewis can be installed via pip or ran from source. See relevant usage sections of the docs for more details.
 
 Resources:
 `GitHub <https://github.com/ess-dmsc/lewis>`__ --
-`ReadTheDocs <http://lewis.readthedocs.io/>`__ --
 `PyPI <https://pypi.python.org/pypi/lewis>`__
 
 Lewis was previously named "Plankton" but, due to a
@@ -90,16 +86,4 @@ What Can You Do With Lewis?
 -  Control server can be accessed via command-line utility, Python bindings, or
    JSON RPC.
 
-Additional Documentation
-------------------------
-
-Documentation can be found at `ReadTheDocs <http://lewis.readthedocs.io/>`__.
-
-
-.. |Codacy| image:: https://api.codacy.com/project/badge/Grade/77aef653cf5d42f5a9a8a5a2c929a628
-   :target: https://www.codacy.com/app/DMSC/lewis?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DMSC-Instrument-Data/lewis&amp;utm_campaign=Badge_Grade
-.. |Coverage Status| image:: https://coveralls.io/repos/github/DMSC-Instrument-Data/lewis/badge.svg?branch=master
-   :target: https://coveralls.io/github/DMSC-Instrument-Data/lewis?branch=master
-.. |Documentation| image:: https://readthedocs.org/projects/lewis/badge/?version=latest
-   :target: http://lewis.readthedocs.io/en/latest/?badge=latest
 .. |Lewis| image:: https://github.com/ess-dmsc/lewis/raw/master/docs/resources/logo/lewis-logo.png
