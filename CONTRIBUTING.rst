@@ -49,7 +49,7 @@ The Pull Request description should detail the purpose of the Pull Request, and
 where appropriate should include some instructions on how to test the changes.
 
 Please ensure your Pull Request passes all integration tests and is able to be
-merged with master automatically.
+merged with the main branch automatically.
 
 
 Submitting Devices

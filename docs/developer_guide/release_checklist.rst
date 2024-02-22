@@ -52,7 +52,7 @@ GitHub Release
 Merge Changes
 -------------
 
- - Merge any changes made in this section into master
+ - Merge any changes made in this section into the main branch
  - Ensure this pull request is also tagged for the current version
 
 
