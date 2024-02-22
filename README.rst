@@ -69,7 +69,7 @@ by Lewis. The ``Device`` and ``Interface`` are instantiated as part of a
 ``Simulation`` that provides a cycle "heart beat" and manages other
 environmental aspects and services.
 
-.. image:: https://github.com/ess-dmsc/lewis/raw/master/docs/resources/diagrams/SimulationCycles.png
+.. image:: https://github.com/ess-dmsc/lewis/raw/main/docs/resources/diagrams/SimulationCycles.png
 
 What Can You Do With Lewis?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -86,4 +86,4 @@ What Can You Do With Lewis?
 -  Control server can be accessed via command-line utility, Python bindings, or
    JSON RPC.
 
-.. |Lewis| image:: https://github.com/ess-dmsc/lewis/raw/master/docs/resources/logo/lewis-logo.png
+.. |Lewis| image:: https://github.com/ess-dmsc/lewis/raw/main/docs/resources/logo/lewis-logo.png

@@ -427,7 +427,7 @@ Once a device is developed far enough, it's time to submit a pull
 request. As an external contributor, this happens via a fork on github.
 Members of the development team will review the code and may make
 suggestions for changes. Once the code is acceptable, it will be merged
-into Lewis' master branch and become a part of the distribution.
+into Lewis' main branch and become a part of the distribution.
 
 If a second interface is added to a device, either using a different
 interface type or the same but with different commands, the interface
