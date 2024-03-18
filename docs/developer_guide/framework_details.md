@@ -1,19 +1,15 @@
-Framework Details
-=================
+# Framework Details
 
 The Lewis framework is built around a cycle-driven core which in turn drives
 the device simulation, including an optional StateMachine, and shared protocol
 adapters that separate the communication layer from the simulated device.
 
-.. figure:: /resources/diagrams/SimulationCycles.png
+![The simulation cycle diagram.](../resources/diagrams/SimulationCycles.png)
 
-   Overview of Lewis framework architecture.
-
-Cycle-driven
-------------
+## Cycle-driven
 
 All processing in the framework occurs during "heartbeat" simulation ticks
-which propagate calls to ``process`` methods throughout the simulation,
+which propagate calls to `process` methods throughout the simulation,
 along with a Δt parameter that contains the time that has
 passed since the last tick. The device simulation is then responsible for
 updating its state based on how much time has passed and what input has
@@ -40,11 +36,9 @@ The above traits are very desirable both for running automated tests
 against the simulation, and for debugging any issues that are
 identified.
 
-Statemachine
-------------
+## Statemachine
 
-A :class:`~lewis.core.statemachine.StateMachine` class designed
-for a cycle-driven approach is provided to allow modeling complex
+A class designed for a cycle-driven approach is provided to allow modeling complex
 device behaviour in an event-driven fashion.
 
 A device may initialize a statemachine on construction, telling it what
@@ -54,30 +48,27 @@ eligible (exiting current state) transition conditions every cycle and
 perform transitions as necessary, triggering callbacks for any event
 that occurs. The following events are available for every state:
 
- - :meth:`~lewis.core.statemachine.StateMachine.on_exit` is triggered once
-   just before exiting the state
- - :meth:`~lewis.core.statemachine.StateMachine.on_entry` is triggered once
-   when entering the state
- - :meth:`~lewis.core.statemachine.StateMachine.in_state` is triggered
-   every cycle that ends in the state
+ - `on_exit` is triggered once just before exiting the state
+ - `on_entry` is triggered once when entering the state
+ - `in_state` is triggered every cycle that ends in the state
 
-Every cycle will trigger exactly one ``in_state`` event. This will
+Every cycle will trigger exactly one `in_state` event. This will
 always be the last event of the cycle. When no transition occurs, this
 is the only event. On the very first cycle of a simulation run,
-``on_entry`` is raised against the initial state before raising an
-``in_state`` against it. Any other cycles that involve a transition
-first raise ``on_exit`` against the current state, and then raise
-``on_entry`` and ``in_state`` against the new state. Only one transition
+`on_entry` is raised against the initial state before raising an
+`in_state` against it. Any other cycles that involve a transition
+first raise `on_exit` against the current state, and then raise
+`on_entry` and `in_state` against the new state. Only one transition
 may occur per cycle.
 
 There are three ways to specify event handlers when initializing the
 statemachine:
 
 -  Object-Oriented: Implement one class per state, derived from
-   :class:`~lewis.core.statemachine.State`, which optionally contains up to
+   `lewis.core.statemachine.State`, which optionally contains up to
    one of each event handler
 -  Function-Driven: Bind individual functions to individual events that
    need handling
 -  Implicit: Implement handlers in the device class, with standard names
-   like ``on_entry_init`` for a state called "init", and call
-   ``bindHandlersByName()``
+   like `on_entry_init` for a state called "init", and call
+   `bindHandlersByName()`
