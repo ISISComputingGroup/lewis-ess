@@ -48,7 +48,7 @@ setup(
     ],
     keywords="hardware simulation controls",
     packages=find_packages(exclude=["tests", "tests.*"]),
-    python_requires=">=3.6.0",
+    python_requires=">=3.7.0",
     install_requires=["pyzmq", "json-rpc", "semantic_version", "PyYAML", "scanf"],
     extras_require={
         "epics": ["pcaspy"],

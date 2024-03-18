@@ -1,4 +1,4 @@
-pyzmq==23.2.1
+pyzmq
 json-rpc
 semantic_version
 PyYAML

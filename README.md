@@ -2,7 +2,7 @@
 Lewis - Let's write intricate simulators.
 
 Lewis is a Python framework for simulating hardware devices. It is
-compatible with Python 3.6 or higher.
+compatible with Python 3.7 or higher.
 
 Lewis can be installed via pip or ran from source. See relevant usage sections of the docs for more details.
 
