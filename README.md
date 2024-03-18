@@ -1,6 +1,4 @@
-|Lewis|
-=======
-
+# Lewis
 Lewis - Let's write intricate simulators.
 
 Lewis is a Python framework for simulating hardware devices. It is
@@ -9,19 +7,17 @@ compatible with Python 3.6 or higher.
 Lewis can be installed via pip or ran from source. See relevant usage sections of the docs for more details.
 
 Resources:
-`GitHub <https://github.com/ess-dmsc/lewis>`__ --
-`PyPI <https://pypi.python.org/pypi/lewis>`__
+[GitHub](https://github.com/ess-dmsc/lewis)
+[PyPI](https://pypi.python.org/pypi/lewis)
 
 Lewis was previously named "Plankton" but, due to a
 package with the same name on PyPI, we decided to rename the project.
 
 Lewis is licensed under GPL v3 or later.
 
-Purpose and Use Cases
----------------------
-
+## Purpose and Use Cases
 Lewis is being developed in the context of instrument control at the
-`ESS <http://europeanspallationsource.se>`__, but it is general enough
+[ESS](http://europeanspallationsource.se), but it is general enough
 to be used in many other contexts that require detailed, stateful
 software simulations of hardware devices.
 
@@ -38,7 +34,6 @@ replication and allows the developer of a simulated device to focus on
 capturing device behaviour.
 
 Potential use cases for detailed device simulators include:
-
 -  Replacing the physical device when developing and testing software
    that interfaces with the device
 -  Testing failure conditions without risking damage to the physical
@@ -52,12 +47,8 @@ Using a simulation for the above has the added benefit that, unlike most
 real devices, a simulation may be sped up / fast-forwarded past any
 lengthy delays or processes that occur in the device.
 
-Features
---------
-
-Brief Terminology
-~~~~~~~~~~~~~~~~~
-
+## Features
+### Brief Terminology
 ``Device``\ s and ``Interface``\ s are two independent concepts in
 Lewis. The ``Device`` is model for the device behaviour and internal
 memory. A ``Device`` can be represented using a ``StateMachine``, but it
@@ -69,11 +60,7 @@ by Lewis. The ``Device`` and ``Interface`` are instantiated as part of a
 ``Simulation`` that provides a cycle "heart beat" and manages other
 environmental aspects and services.
 
-.. image:: https://github.com/ess-dmsc/lewis/raw/main/docs/resources/diagrams/SimulationCycles.png
-
-What Can You Do With Lewis?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+### What Can You Do With Lewis?
 -  Create new ``Device``\ s to closely imitate the internal behaviour
    and memory of something
 -  Optionally make a ``Device`` work as a ``StateMachine`` via
@@ -86,4 +73,4 @@ What Can You Do With Lewis?
 -  Control server can be accessed via command-line utility, Python bindings, or
    JSON RPC.
 
-.. |Lewis| image:: https://github.com/ess-dmsc/lewis/raw/main/docs/resources/logo/lewis-logo.png
+[Getting started](docs/quickstart.md)
