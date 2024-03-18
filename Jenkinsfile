@@ -52,7 +52,7 @@ builders = pipeline_builder.createBuilders { container ->
    pipeline_builder.stage("${container.key}: Test") {
       def test_output = "TestResults.xml"
       container.sh """
-        pyenv local 3.7 3.8 3.9 
+        pyenv local 3.7 3.8 3.9 3.10 3.11
         cd ${project}
         python -m tox -- --junitxml=${test_output}
       """
