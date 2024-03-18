@@ -3,7 +3,7 @@
 Begin by checking-out the source from GitHub:
 
 ```
-    (lewis-dev)$ git clone https://github.com/ess-dmsc/lewis.git
+(lewis-dev)$ git clone https://github.com/ess-dmsc/lewis.git
 ```
 
 To develop Lewis, it is strongly recommended to work in a dedicated virtual environment, otherwise
@@ -12,8 +12,8 @@ it is not possible to have another version of Lewis installed system wide in par
 With the virtual environment activated, Lewis can be installed as an editable package:
 
 ```
-    (lewis-dev)$ cd lewis
-    (lewis-dev)$ python -m pip install ".[dev]"
+(lewis-dev)$ cd lewis
+(lewis-dev)$ python -m pip install ".[dev]"
 ```
 
 Now the Lewis package that resides in ``lewis`` can be modified, while it is still treated like a
@@ -22,17 +22,17 @@ normal package that has been installed via ``pip``.
 Alternatively, Lewis can be run from source. For this it is necessary to install the requirements first:
 
 ```
-    (lewis-dev)$ cd lewis
-    (lewis-dev)$ python -m pip install -r requirements-dev.txt
+(lewis-dev)$ cd lewis
+(lewis-dev)$ python -m pip install -r requirements-dev.txt
 ```
 
 Either way, to make sure that everything is working as
 intended, run the unit tests and check for pep8 errors, as well as build the documentation:
 
 ```
-    (lewis-dev)$ pytest tests
-    (lewis-dev)$ flake8 setup.py lewis scripts system-tests tests
-    (lewis-dev)$ sphinx-build -W -b html docs/ docs/_build/html
+(lewis-dev)$ pytest tests
+(lewis-dev)$ flake8 setup.py lewis scripts system-tests tests
+(lewis-dev)$ sphinx-build -W -b html docs/ docs/_build/html
 ```
 
 There are also system-tests that (partially) test Lewis from the application/run-time level. These tests are based on
@@ -43,7 +43,7 @@ on a simulated device in ``lewis`` is changed via ``lewis-control``` then by que
 values can be compared against the expected status (the "golden master"). The tests can be run like so:
 
 ```
-    (lewis-dev)$ pytest system_tests/lewis_tests.py
+(lewis-dev)$ pytest system_tests/lewis_tests.py
 ```
 
 It is good practice to run these tests regularly during development and, also, look for opportunities to add
@@ -53,7 +53,7 @@ A more comprehensive way of running all tests is to use ``tox``, which creates f
 environments for all of these tasks:
 
 ```
-    (lewis-dev)$ tox
+(lewis-dev)$ tox
 ```
 
 The advantage of tox is that it generates a source package from the source tree and installs
@@ -65,13 +65,13 @@ Before starting development it is important to install the pre-commit hooks, so 
 are performed before code is committed:
 
 ```
-    (lewis-dev)$ pre-commit install
+(lewis-dev)$ pre-commit install
 ```
 
 To test that the hooks are installed correctly and to run them manually use the following command:
 
 ```
-   (lewis-dev)$ pre-commit run --all-files
+(lewis-dev)$ pre-commit run --all-files
 ```
 
 Development should happen in a separate branch. If the work is related to a specific issue,
@@ -79,14 +79,14 @@ it is good practice to include the issue number in the branch name, along with a
 summary of a few words, for example:
 
 ```
-    (lewis-dev)$ git checkout -b 123_enhance_logic_flow
+(lewis-dev)$ git checkout -b 123_enhance_logic_flow
 ```
 
 It's also good practice to push the branch back to github from time to time, so that other
 members of the development team can see what's going on (even before a pull request is opened):
 
 ```
-    (lewis-dev)$ git push origin 123_enhance_logic_flow
+(lewis-dev)$ git push origin 123_enhance_logic_flow
 ```
 
 During development it is good practice to regularly test that changes do not break existing
