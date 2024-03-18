@@ -153,21 +153,18 @@ Lewis `1.0.3`:
  - Devices must now specify a ``framework_version`` in the global namespace of their top-level
    ``__init__.py``, like this:
 
-   ::
-
-      framework_version = '1.0.3'
+```
+   framework_version = '1.0.3'
+```
 
    This will need to be updated with every release. If this version is missing or does not match
    the current Lewis framework version, attempting to run the device simulation will fail with a
    message informing the user of the mismatch. This can be bypassed by starting Lewis with the
    following parameter:
 
-   ::
-
-      $ lewis linkam_t95 -R
-      $ lewis linkam_t95 --relaxed-versions
-      
-   :: warning:
-
-      In the next release, specifying ``framework_version`` becomes optional and 
+```
+   $ lewis linkam_t95 -R
+   $ lewis linkam_t95 --relaxed-versions
+```
+   Warning: in the next release, specifying ``framework_version`` becomes optional and 
       ``--relaxed-versions`` is renamed to ``--ignore-versions``. 
