@@ -171,6 +171,32 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
         """
         pass
 
+    def stream_event_message(self, message):
+        """Call this method in the device to send periodic or other event messages that were not solicited
+
+        Args:
+            message ([str]): a message to send to active clients
+
+        # TODO: make it handle binary and str
+        """
+
+        # determine if can send message and then send it
+        if self._adapters._adapters["stream"].is_running and getattr(
+            self._adapters._adapters["stream"].interface, "handler", None
+        ):
+            try:
+                stream_server = self._adapters._adapters["stream"]._server
+                # send message to all connected stream handlers
+                for handler in stream_server._accepted_connections:
+                    if handler.connected:
+                        handler._send_event_message_queue.append(message)
+                    # else:
+                    #     self.log.debug(
+                    #         f"Device _stream_event_message,  Handler:{handler} is not connected"
+                    #     )
+            except Exception as e:
+                self.log.error(f"Device _stream_event_message:  Exception: {e}")
+
     def _get_final_state_handlers(self, overrides):
         states = self._get_state_handlers()
 

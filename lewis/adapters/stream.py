@@ -22,6 +22,7 @@ import asyncore
 import inspect
 import re
 import socket
+from collections import deque
 
 from scanf import scanf_compile
 
@@ -47,7 +48,22 @@ class StreamHandler(asynchat.async_chat):
         self._set_logging_context(target)
         self.log.info("Client connected from %s:%s", *sock.getpeername())
 
+        self._send_event_message_queue = deque([])
+        initial_message = self._target.initial_message()
+        if initial_message:
+            self.unsolicited_reply(initial_message)
+
+    def send_event_message(self, message):
+        event_message = self._target.event_message(message)
+        if event_message:
+            self.unsolicited_reply(event_message)
+
     def process(self, msec):
+
+        # if there are any event messages to send, send them
+        while len(self._send_event_message_queue) > 0:
+            self.send_event_message(self._send_event_message_queue.popleft())
+
         if not self._buffer:
             return
 
@@ -156,6 +172,7 @@ class StreamServer(asyncore.dispatcher):
         self.log.info("Listening on %s:%s", host, port)
 
         self._accepted_connections = []
+        self._device_event_message = None
 
     def handle_accept(self):
         pair = self.accept()
@@ -183,7 +200,12 @@ class StreamServer(asyncore.dispatcher):
 
     def process(self, msec):
         for handler in self._accepted_connections:
+            if self._device_event_message:
+                handler.send_event_message(self._device_event_message)
             handler.process(msec)
+        # after processing all handlers, clear the event message to not repeat sending
+        if self._device_event_message:
+            self._device_event_message = None
 
 
 class PatternMatcher:
@@ -870,3 +892,16 @@ class StreamInterface(InterfaceBase):
         :param request: The request that resulted in the error.
         :param error: The exception that was raised.
         """
+
+    def initial_message(self):
+        """
+        Override this method to send an initial message when a new client connects.
+        """
+        return None
+
+    def event_message(self, message):
+        """
+        Override this method to handle and custom process at the interface level an event message.
+        returning None inhibts the message going out
+        """
+        return message
