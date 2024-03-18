@@ -32,8 +32,7 @@ from lewis.scripts import get_usage_text
 parser = argparse.ArgumentParser(
     description="This script starts a simulated device that is exposed via the specified "
     "communication protocol. Complete documentation of Lewis is available in "
-    "the online documentation: "
-    "https://lewis.readthedocs.io/en/v{}/".format(__version__),
+    "the online documentation on GitHub https://github.com/ess-dmsc/lewis/",
     add_help=False,
     prog="lewis",
 )
