@@ -24,6 +24,7 @@ be used to store multiple adapters and manage them together.
 """
 
 import inspect
+import logging
 import threading
 from collections import namedtuple
 from types import TracebackType
@@ -237,6 +238,7 @@ class AdapterCollection:
         self._threads = {}
         self._running = {}
         self._lock = threading.Lock()
+        self.log: logging.Logger
 
         for adapter in args:
             self.add_adapter(adapter)
@@ -301,7 +303,7 @@ class AdapterCollection:
 
     def _start_server(self, adapter: Adapter) -> None:
         if adapter.protocol not in self._threads:
-            self.log.info("Connecting device interface for protocol '%s'", adapter.protocol)  # type: ignore not sure?
+            self.log.info("Connecting device interface for protocol '%s'", adapter.protocol)
 
             adapter_thread = threading.Thread(target=self._adapter_loop, args=(adapter, 0.01))
             adapter_thread.daemon = True
@@ -322,7 +324,7 @@ class AdapterCollection:
 
         self._running[adapter.protocol].set()
 
-        self.log.debug("Starting adapter loop for protocol %s.", adapter.protocol)  # type: ignore not sure?
+        self.log.debug("Starting adapter loop for protocol %s.", adapter.protocol)
         while self._running[adapter.protocol].is_set():
             adapter.handle(dt)
 
@@ -340,7 +342,7 @@ class AdapterCollection:
 
     def _stop_server(self, adapter: Adapter) -> None:
         if adapter.protocol in self._threads:
-            self.log.info("Disconnecting device interface for protocol '%s'", adapter.protocol)  # type: ignore not sure?
+            self.log.info("Disconnecting device interface for protocol '%s'", adapter.protocol)
 
             self._running[adapter.protocol].clear()
             self._threads[adapter.protocol].join()

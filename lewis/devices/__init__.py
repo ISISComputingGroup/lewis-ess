@@ -23,6 +23,7 @@ or from :class:`StateMachineDevice` for devices that are more complex and can be
 using a state machine.
 """
 
+import logging
 from typing import Callable
 
 from lewis.core.devices import DeviceBase
@@ -103,7 +104,8 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
     ) -> None:
         super(StateMachineDevice, self).__init__()
 
-        self.log.info("Creating device, setting up state machine")  # type: ignore not sure?
+        self.log: logging.Logger
+        self.log.info("Creating device, setting up state machine")
 
         self._initialize_data()
         self._override_data(override_initial_data)
@@ -193,7 +195,7 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
         """
         if overrides is not None:
             for name, val in overrides.items():
-                self.log.debug("Trying to override initial data (%s=%s)", name, val)  # type: ignore not sure?
+                self.log.debug("Trying to override initial data (%s=%s)", name, val)
                 if name not in dir(self):
                     raise AttributeError(
                         "Can not override non-existing attribute" "'{}' of class '{}'.".format(
