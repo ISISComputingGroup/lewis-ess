@@ -29,13 +29,14 @@ import textwrap
 from datetime import datetime
 from os import listdir
 from os import path as osp
+from types import ModuleType
 
 from lewis.core.exceptions import LewisException, LimitViolationException
 from lewis.core.logging import has_log
 
 
 @has_log
-def get_submodules(module):
+def get_submodules(module) -> dict[str, ModuleType]:
     """
     This function imports all sub-modules of the supplied module and returns a dictionary
     with module names as keys and the sub-module objects as values. If the supplied parameter
@@ -88,11 +89,7 @@ def get_members(obj, predicate=None):
                       part of the resulting dict.
     :return: Dict with name-object pairs of members of obj for which predicate returns true.
     """
-    members = {
-        member: getattr(obj, member)
-        for member in dir(obj)
-        if not member.startswith("__")
-    }
+    members = {member: getattr(obj, member) for member in dir(obj) if not member.startswith("__")}
 
     if predicate is None:
         return members
@@ -192,7 +189,7 @@ class FromOptionalDependency:
 
     .. sourcecode:: Python
 
-        C, D = FromOptionalDependency('b').do_import('C', 'D')
+        C, D = FromOptionalDependency("b").do_import("C", "D")
 
     which is not as pretty as the actual syntax, but at least it
     can be read in a similar way. If the module 'b' can not be imported,
@@ -252,9 +249,7 @@ class FromOptionalDependency:
             def failing_init(obj, *args, **kwargs):
                 raise self._exception
 
-            objects = tuple(
-                type(name, (object,), {"__init__": failing_init}) for name in names
-            )
+            objects = tuple(type(name, (object,), {"__init__": failing_init}) for name in names)
 
         return objects if len(objects) != 1 else objects[0]
 
@@ -313,7 +308,7 @@ class check_limits:
                 return self._bar
 
             @bar.setter
-            @check_limits('bar_min', 'bar_max')
+            @check_limits("bar_min", "bar_max")
             def bar(self, new_value):
                 self._bar = new_value
 
@@ -352,20 +347,10 @@ class check_limits:
     def __call__(self, f):
         @functools.wraps(f)
         def limit_checked(obj, new_value):
-            lower = (
-                getattr(obj, self._lower)
-                if isinstance(self._lower, str)
-                else self._lower
-            )
-            upper = (
-                getattr(obj, self._upper)
-                if isinstance(self._upper, str)
-                else self._upper
-            )
+            lower = getattr(obj, self._lower) if isinstance(self._lower, str) else self._lower
+            upper = getattr(obj, self._upper) if isinstance(self._upper, str) else self._upper
 
-            if (lower is None or lower <= new_value) and (
-                upper is None or new_value <= upper
-            ):
+            if (lower is None or lower <= new_value) and (upper is None or new_value <= upper):
                 return f(obj, new_value)
 
             if not self._silent:

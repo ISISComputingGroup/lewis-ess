@@ -66,13 +66,14 @@ def has_log(target):
 
         from lewis.core.logging import has_log
 
+
         @has_log
         class Foo(Base):
             def __init__(self):
                 super(Foo, self).__init__()
 
             def bar(self, baz):
-                self.log.debug('Called bar with parameter baz=%s', baz)
+                self.log.debug("Called bar with parameter baz=%s", baz)
                 return baz is not None
 
     It works similarly for free functions, although the actual logging calls are a bit different:
@@ -81,9 +82,10 @@ def has_log(target):
 
         from lewis.core.logging import has_log
 
+
         @has_log
         def foo(bar):
-            foo.log.info('Called with argument bar=%s', bar)
+            foo.log.info("Called with argument bar=%s", bar)
             return bar
 
     The name of the logger is ``lewis.foo``, the context could also be modified by calling
@@ -97,9 +99,7 @@ def has_log(target):
         log_names = [root_logger_name, logger_name]
 
         if context is not None:
-            log_names.insert(
-                1, context if isinstance(context, str) else context.__class__.__name__
-            )
+            log_names.insert(1, context if isinstance(context, str) else context.__class__.__name__)
 
         return ".".join(log_names)
 

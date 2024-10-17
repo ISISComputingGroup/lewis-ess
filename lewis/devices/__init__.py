@@ -110,17 +110,13 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
         initial = override_initial_state or self._get_initial_state()
 
         if initial not in state_handlers:
-            raise RuntimeError(
-                "Initial state '{}' is not a valid state.".format(initial)
-            )
+            raise RuntimeError("Initial state '{}' is not a valid state.".format(initial))
 
         self._csm = StateMachine(
             {
                 "initial": initial,
                 "states": state_handlers,
-                "transitions": self._get_final_transition_handlers(
-                    override_transitions
-                ),
+                "transitions": self._get_final_transition_handlers(override_transitions),
             },
             context=self,
         )
@@ -146,9 +142,7 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
 
         :return: The initial state of the state machine.
         """
-        raise NotImplementedError(
-            "_get_initial_state must be implemented in a StateMachineDevice."
-        )
+        raise NotImplementedError("_get_initial_state must be implemented in a StateMachineDevice.")
 
     def _get_transition_handlers(self):
         """
@@ -198,8 +192,9 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
                 self.log.debug("Trying to override initial data (%s=%s)", name, val)
                 if name not in dir(self):
                     raise AttributeError(
-                        "Can not override non-existing attribute"
-                        "'{}' of class '{}'.".format(name, type(self).__name__)
+                        "Can not override non-existing attribute" "'{}' of class '{}'.".format(
+                            name, type(self).__name__
+                        )
                     )
 
                 setattr(self, name, val)
