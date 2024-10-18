@@ -98,7 +98,7 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
     def __init__(
         self,
         override_states: dict[str, State] | None = None,
-        override_transitions: dict[tuple[State, State], Callable] | None = None,
+        override_transitions: dict[tuple[State, State], Callable[[], bool]] | None = None,
         override_initial_state: State | None = None,
         override_initial_data: dict[str, float] | None = None,
     ) -> None:
@@ -148,7 +148,7 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
         """
         raise NotImplementedError("_get_initial_state must be implemented in a StateMachineDevice.")
 
-    def _get_transition_handlers(self) -> dict[tuple[State, State], Callable]:
+    def _get_transition_handlers(self) -> dict[tuple[State, State], Callable[[], bool]]:
         """
         Implement this method to return transition handlers for the internal state machine.
         The keys should be (state, state)-tuples and the values functions that return true
@@ -178,8 +178,8 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
         return states
 
     def _get_final_transition_handlers(
-        self, overrides: dict[tuple[State, State], Callable] | None
-    ) -> dict[tuple[State, State], Callable]:
+        self, overrides: dict[tuple[State, State], Callable[[], bool]] | None
+    ) -> dict[tuple[State, State], Callable[[], bool]]:
         transitions = self._get_transition_handlers()
 
         if overrides is not None:
