@@ -23,13 +23,13 @@ from setuptools import find_packages, setup
 
 # as suggested on http://python-packaging.readthedocs.io/en/latest/metadata.html
 def readme():
-    with open("README.rst") as f:
+    with open("README.md") as f:
         return f.read()
 
 
 setup(
     name="lewis",
-    version="1.3.1",
+    version="1.3.3",
     description="Lewis - Let's write intricate simulators!",
     long_description=readme(),
     url="https://github.com/ess-dmsc/lewis",
@@ -48,7 +48,7 @@ setup(
     ],
     keywords="hardware simulation controls",
     packages=find_packages(exclude=["tests", "tests.*"]),
-    python_requires=">=3.6.0",
+    python_requires=">=3.7.0",
     install_requires=["pyzmq", "json-rpc", "semantic_version", "PyYAML", "scanf"],
     extras_require={
         "epics": ["pcaspy"],

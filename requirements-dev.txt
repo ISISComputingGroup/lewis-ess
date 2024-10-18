@@ -1,5 +1,4 @@
 -r requirements.txt
--r requirements-sphinx.txt
 approvaltests
 isort
 mock
@@ -13,6 +12,5 @@ tox-pyenv
 twine
 wheel
 
-# Pin to match versions in pre-commit hooks
 black==22.6.0
 flake8==3.8.4
