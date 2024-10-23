@@ -22,10 +22,15 @@ This module contains :class:`Adapter`, which serves as a base class for concrete
 implementations in :mod:`lewis.adapters`. It also contains :class:`AdapterCollection` which can
 be used to store multiple adapters and manage them together.
 """
+
 import inspect
+import logging
 import threading
 from collections import namedtuple
+from types import TracebackType
+from typing import Any, Optional, Type
 
+from lewis.core.devices import DeviceBase, InterfaceBase
 from lewis.core.exceptions import LewisException
 from lewis.core.logging import has_log
 from lewis.core.utils import dict_strict_update
@@ -38,13 +43,18 @@ class NoLock:
     that device/interface access is synchronous.
     """
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         raise RuntimeError(
             "The attempted action requires a proper threading.Lock-object, "
             "but none was available."
         )
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exctype: Optional[Type[BaseException]],
+        excinst: Optional[BaseException],
+        exctb: Optional[TracebackType],
+    ) -> None:
         pass
 
 
@@ -89,11 +99,11 @@ class Adapter:
 
     default_options = {}
 
-    def __init__(self, options=None):
+    def __init__(self, options: dict[str, Any] | None = None) -> None:
         super(Adapter, self).__init__()
         self._interface = None
 
-        self.device_lock = NoLock()
+        self.device_lock: threading.Lock | NoLock = NoLock()
 
         options = options or {}
         combined_options = dict(self.default_options)
@@ -111,14 +121,14 @@ class Adapter:
         self._options = options_type(**combined_options)
 
     @property
-    def protocol(self):
+    def protocol(self) -> str | None:
         if self.interface is None:
             return None
 
         return self.interface.protocol
 
     @property
-    def interface(self):
+    def interface(self) -> InterfaceBase | None:
         """
         The device property contains the device-object exposed by the adapter.
 
@@ -129,18 +139,18 @@ class Adapter:
         return self._interface
 
     @interface.setter
-    def interface(self, new_interface):
+    def interface(self, new_interface: InterfaceBase | None) -> None:
         self._interface = new_interface
 
     @property
-    def documentation(self):
+    def documentation(self) -> str:
         """
         This property can be overridden in a sub-class to provide protocol documentation to users
         at runtime. By default it returns the indentation cleaned-up docstring of the class.
         """
         return inspect.getdoc(self) or ""
 
-    def start_server(self):
+    def start_server(self) -> None:
         """
         This method must be re-implemented to start the infrastructure required for the
         protocol in question. These startup operations are not supposed to be carried out on
@@ -159,7 +169,7 @@ class Adapter:
             "required for network communication."
         )
 
-    def stop_server(self):
+    def stop_server(self) -> None:
         """
         This method must be re-implemented to stop and tear down anything that has been setup
         in :meth:`start_server`. This method should close all connections to clients that have
@@ -176,7 +186,7 @@ class Adapter:
         )
 
     @property
-    def is_running(self):
+    def is_running(self) -> bool:
         """
         This property indicates whether the Adapter's server is running and listening. The result
         of calls to :meth:`start_server` and :meth:`stop_server` should be reflected as expected.
@@ -186,7 +196,7 @@ class Adapter:
             "a server is currently running and listening for requests."
         )
 
-    def handle(self, cycle_delay=0.1):
+    def handle(self, cycle_delay: float = 0.1) -> None:
         """
         This function is called on each cycle of a simulation. It should process requests that are
         made via the protocol that exposes the device. The time spent processing should be
@@ -222,18 +232,19 @@ class AdapterCollection:
     :param args: List of adapters to add to the container
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Adapter) -> None:
         self._adapters = {}
 
         self._threads = {}
         self._running = {}
         self._lock = threading.Lock()
+        self.log: logging.Logger
 
         for adapter in args:
             self.add_adapter(adapter)
 
     @property
-    def device_lock(self):
+    def device_lock(self) -> threading.Lock:
         """
         This lock is passed to each adapter when it's started. It's supposed to be used to ensure
         that the device is only accessed from one thread at a time, for example during network IO.
@@ -242,12 +253,12 @@ class AdapterCollection:
         """
         return self._lock
 
-    def set_device(self, new_device):
+    def set_device(self, new_device: DeviceBase) -> None:
         """Bind the new device to all interfaces managed by the adapters in the collection."""
         for adapter in self._adapters.values():
             adapter.interface.device = new_device
 
-    def add_adapter(self, adapter):
+    def add_adapter(self, adapter: Adapter) -> None:
         """
         Adds the supplied adapter to the container but raises a ``RuntimeError`` if there's
         already an adapter registered for the same protocol.
@@ -256,14 +267,12 @@ class AdapterCollection:
         """
         if adapter.protocol in self._adapters:
             raise RuntimeError(
-                "Adapter for protocol '{}' is already registered.".format(
-                    adapter.protocol
-                )
+                "Adapter for protocol '{}' is already registered.".format(adapter.protocol)
             )
 
         self._adapters[adapter.protocol] = adapter
 
-    def remove_adapter(self, protocol):
+    def remove_adapter(self, protocol: str) -> None:
         """
         Tries to remove the adapter for the specified protocol, raises a ``RuntimeError`` if there
         is no adapter registered for that particular protocol.
@@ -272,37 +281,31 @@ class AdapterCollection:
         """
         if protocol not in self._adapters:
             raise RuntimeError(
-                "Can not remove adapter for protocol '{}', none registered.".format(
-                    protocol
-                )
+                "Can not remove adapter for protocol '{}', none registered.".format(protocol)
             )
 
         del self._adapters[protocol]
 
     @property
-    def protocols(self):
+    def protocols(self) -> list[str]:
         """List of protocols for which adapters are registered."""
         return list(self._adapters.keys())
 
-    def connect(self, *args):
+    def connect(self, *args: str) -> None:
         """
         This method starts an adapter for each specified protocol in a separate thread, if the
         adapter is not already running.
 
         :param args: List of protocols for which to start adapters or empty for all.
         """
-        for adapter in self._get_adapters(args):
+        for adapter in self._get_adapters(list(args)):
             self._start_server(adapter)
 
-    def _start_server(self, adapter):
+    def _start_server(self, adapter: Adapter) -> None:
         if adapter.protocol not in self._threads:
-            self.log.info(
-                "Connecting device interface for protocol '%s'", adapter.protocol
-            )
+            self.log.info("Connecting device interface for protocol '%s'", adapter.protocol)
 
-            adapter_thread = threading.Thread(
-                target=self._adapter_loop, args=(adapter, 0.01)
-            )
+            adapter_thread = threading.Thread(target=self._adapter_loop, args=(adapter, 0.01))
             adapter_thread.daemon = True
 
             self._threads[adapter.protocol] = adapter_thread
@@ -313,14 +316,10 @@ class AdapterCollection:
             # Block until server is actually listening
             self._running[adapter.protocol].wait(2.0)
             if not self._running[adapter.protocol].is_set():
-                raise LewisException(
-                    "Adapter for '%s' failed to start!" % adapter.protocol
-                )
+                raise LewisException("Adapter for '%s' failed to start!" % adapter.protocol)
 
-    def _adapter_loop(self, adapter, dt):
-        adapter.device_lock = (
-            self._lock
-        )  # This ensures that the adapter is using the correct lock
+    def _adapter_loop(self, adapter: Adapter, dt: float) -> None:
+        adapter.device_lock = self._lock  # This ensures that the adapter is using the correct lock
         adapter.start_server()
 
         self._running[adapter.protocol].set()
@@ -331,21 +330,19 @@ class AdapterCollection:
 
         adapter.stop_server()
 
-    def disconnect(self, *args):
+    def disconnect(self, *args: str) -> None:
         """
         Stops all adapters for the specified protocols. The method waits for each adapter thread
         to join, so it might hang if the thread is not terminating correctly.
 
         :param args: List of protocols for which to stop adapters or empty for all.
         """
-        for adapter in self._get_adapters(args):
+        for adapter in self._get_adapters(list(args)):
             self._stop_server(adapter)
 
-    def _stop_server(self, adapter):
+    def _stop_server(self, adapter: Adapter) -> None:
         if adapter.protocol in self._threads:
-            self.log.info(
-                "Disconnecting device interface for protocol '%s'", adapter.protocol
-            )
+            self.log.info("Disconnecting device interface for protocol '%s'", adapter.protocol)
 
             self._running[adapter.protocol].clear()
             self._threads[adapter.protocol].join()
@@ -353,7 +350,7 @@ class AdapterCollection:
             del self._threads[adapter.protocol]
             del self._running[adapter.protocol]
 
-    def is_connected(self, *args):
+    def is_connected(self, *args: str) -> bool | dict[str | None, bool]:
         """
         If only one protocol is supplied, a single bool is returned with the connection status.
         Otherwise, this method returns a dictionary of adapter connection statuses for the supplied
@@ -363,15 +360,18 @@ class AdapterCollection:
         :return: Boolean for single adapter or dict of statuses for multiple.
         """
         status_dict = {
-            adapter.protocol: adapter.is_running for adapter in self._get_adapters(args)
+            adapter.protocol: adapter.is_running for adapter in self._get_adapters(list(args))
         }
 
         if len(args) == 1:
-            return list(status_dict.values())[0]
+            status = list(status_dict.values())[0]
+            if status is None:
+                return False
+            return status
 
         return status_dict
 
-    def configuration(self, *args):
+    def configuration(self, *args: str) -> dict[str | None, dict[str, Any]]:
         """
         Returns a dictionary that contains the options for the specified adapter. The dictionary
         keys are the adapter protocols.
@@ -381,10 +381,10 @@ class AdapterCollection:
         """
         return {
             adapter.protocol: adapter._options._asdict()
-            for adapter in self._get_adapters(args)
+            for adapter in self._get_adapters(list(args))
         }
 
-    def documentation(self, *args):
+    def documentation(self, *args: str) -> str:
         """
         Returns the concatenated documentation for the adapters specified by the supplied
         protocols or all of them if no arguments are provided.
@@ -392,11 +392,9 @@ class AdapterCollection:
         :param args: List of protocols for which to get documentation or empty for all.
         :return: Documentation for all selected adapters.
         """
-        return "\n\n".join(
-            adapter.documentation for adapter in self._get_adapters(args)
-        )
+        return "\n\n".join(adapter.documentation for adapter in self._get_adapters(list(args)))
 
-    def _get_adapters(self, protocols):
+    def _get_adapters(self, protocols: list[str]) -> list[Adapter]:
         """
         Internal method to map protocols back to adapters. If the list of protocols contains an
         invalid entry (e.g. a protocol for which there is no adapter), a ``RuntimeError``
@@ -409,9 +407,7 @@ class AdapterCollection:
 
         if invalid_protocols:
             raise RuntimeError(
-                "No adapter registered for protocols: {}".format(
-                    ", ".join(invalid_protocols)
-                )
+                "No adapter registered for protocols: {}".format(", ".join(invalid_protocols))
             )
 
         return [self._adapters[proto] for proto in protocols or self.protocols]

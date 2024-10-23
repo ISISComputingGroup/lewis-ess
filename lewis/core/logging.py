@@ -33,9 +33,24 @@ of the standard `logging`_ library.
 """
 
 import logging
+from typing import Callable, overload, ParamSpec, TypeVar, Type, Protocol
+
+
+class HasLog(Protocol):
+    log: logging.Logger
+
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 root_logger_name = "lewis"
 default_log_format = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+
+
+@overload
+def has_log(target: Type[T]) -> Type[T]: ...
+@overload
+def has_log(target: Callable[P, T]) -> Callable[P, T]: ...
 
 
 def has_log(target):
@@ -66,13 +81,14 @@ def has_log(target):
 
         from lewis.core.logging import has_log
 
+
         @has_log
         class Foo(Base):
             def __init__(self):
                 super(Foo, self).__init__()
 
             def bar(self, baz):
-                self.log.debug('Called bar with parameter baz=%s', baz)
+                self.log.debug("Called bar with parameter baz=%s", baz)
                 return baz is not None
 
     It works similarly for free functions, although the actual logging calls are a bit different:
@@ -81,9 +97,10 @@ def has_log(target):
 
         from lewis.core.logging import has_log
 
+
         @has_log
         def foo(bar):
-            foo.log.info('Called with argument bar=%s', bar)
+            foo.log.info("Called with argument bar=%s", bar)
             return bar
 
     The name of the logger is ``lewis.foo``, the context could also be modified by calling
@@ -93,17 +110,15 @@ def has_log(target):
     """
     logger_name = target.__name__
 
-    def get_logger_name(context=None):
+    def get_logger_name(context: object = None) -> str:
         log_names = [root_logger_name, logger_name]
 
         if context is not None:
-            log_names.insert(
-                1, context if isinstance(context, str) else context.__class__.__name__
-            )
+            log_names.insert(1, context if isinstance(context, str) else context.__class__.__name__)
 
         return ".".join(log_names)
 
-    def _set_logging_context(obj, context):
+    def _set_logging_context(obj: HasLog, context: object) -> None:
         """
         Changes the logger name of this class using the supplied context
         according to the rules described in the documentation of :func:`has_log`. To

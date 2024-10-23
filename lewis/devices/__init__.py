@@ -23,9 +23,12 @@ or from :class:`StateMachineDevice` for devices that are more complex and can be
 using a state machine.
 """
 
+import logging
+from typing import Callable
+
 from lewis.core.devices import DeviceBase
 from lewis.core.processor import CanProcess, CanProcessComposite
-from lewis.core.statemachine import StateMachine
+from lewis.core.statemachine import State, StateMachine
 from lewis.core.utils import dict_strict_update
 
 
@@ -39,7 +42,7 @@ class Device(DeviceBase, CanProcess):
     simulations of real devices.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super(Device, self).__init__()
 
 
@@ -94,13 +97,14 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
 
     def __init__(
         self,
-        override_states=None,
-        override_transitions=None,
-        override_initial_state=None,
-        override_initial_data=None,
-    ):
+        override_states: dict[str, State] | None = None,
+        override_transitions: dict[tuple[State, State], Callable[[], bool]] | None = None,
+        override_initial_state: State | None = None,
+        override_initial_data: dict[str, float] | None = None,
+    ) -> None:
         super(StateMachineDevice, self).__init__()
 
+        self.log: logging.Logger
         self.log.info("Creating device, setting up state machine")
 
         self._initialize_data()
@@ -110,24 +114,20 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
         initial = override_initial_state or self._get_initial_state()
 
         if initial not in state_handlers:
-            raise RuntimeError(
-                "Initial state '{}' is not a valid state.".format(initial)
-            )
+            raise RuntimeError("Initial state '{}' is not a valid state.".format(initial))
 
         self._csm = StateMachine(
             {
                 "initial": initial,
                 "states": state_handlers,
-                "transitions": self._get_final_transition_handlers(
-                    override_transitions
-                ),
+                "transitions": self._get_final_transition_handlers(override_transitions),
             },
             context=self,
         )
 
         self.add_processor(self._csm)
 
-    def _get_state_handlers(self):
+    def _get_state_handlers(self) -> dict[str, State]:
         """
         Implement this method to return a dict-like object with state handlers
         (see :class:`~lewis.core.statemachine.State`) for each state of the state machine.
@@ -139,18 +139,16 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
             "_get_state_handlers must be implemented in a StateMachineDevice."
         )
 
-    def _get_initial_state(self):
+    def _get_initial_state(self) -> State:
         """
         Implement this method to return the initial state of the internal state machine.
         The default implementation raises a ``NotImplementedError``.
 
         :return: The initial state of the state machine.
         """
-        raise NotImplementedError(
-            "_get_initial_state must be implemented in a StateMachineDevice."
-        )
+        raise NotImplementedError("_get_initial_state must be implemented in a StateMachineDevice.")
 
-    def _get_transition_handlers(self):
+    def _get_transition_handlers(self) -> dict[tuple[State, State], Callable[[], bool]]:
         """
         Implement this method to return transition handlers for the internal state machine.
         The keys should be (state, state)-tuples and the values functions that return true
@@ -163,7 +161,7 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
             "_get_transition_handlers must be implemented in a StateMachineDevice."
         )
 
-    def _initialize_data(self):
+    def _initialize_data(self) -> None:
         """
         Implement this method to initialize data members of the device, such as temperature,
         speed and others. It gets called first in the __init__-method. The default implementation
@@ -171,7 +169,7 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
         """
         pass
 
-    def _get_final_state_handlers(self, overrides):
+    def _get_final_state_handlers(self, overrides: dict[str, State] | None) -> dict[str, State]:
         states = self._get_state_handlers()
 
         if overrides is not None:
@@ -179,7 +177,9 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
 
         return states
 
-    def _get_final_transition_handlers(self, overrides):
+    def _get_final_transition_handlers(
+        self, overrides: dict[tuple[State, State], Callable[[], bool]] | None
+    ) -> dict[tuple[State, State], Callable[[], bool]]:
         transitions = self._get_transition_handlers()
 
         if overrides is not None:
@@ -187,7 +187,7 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
 
         return transitions
 
-    def _override_data(self, overrides):
+    def _override_data(self, overrides: dict[str, float] | None) -> None:
         """
         This method overrides data members of the class, but does not allow for adding new members.
 
@@ -198,8 +198,9 @@ class StateMachineDevice(DeviceBase, CanProcessComposite):
                 self.log.debug("Trying to override initial data (%s=%s)", name, val)
                 if name not in dir(self):
                     raise AttributeError(
-                        "Can not override non-existing attribute"
-                        "'{}' of class '{}'.".format(name, type(self).__name__)
+                        "Can not override non-existing attribute" "'{}' of class '{}'.".format(
+                            name, type(self).__name__
+                        )
                     )
 
                 setattr(self, name, val)
